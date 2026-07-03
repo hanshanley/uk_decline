@@ -1,4 +1,4 @@
-# uk_decline
+# Social, Economic, and Political Decline in the United Kingdom
 
 A data-driven look at the **United Kingdom's relative decline** across the economy, financial
 markets, public services, and society — benchmarked against the US and European peers.
