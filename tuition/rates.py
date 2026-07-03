@@ -1,11 +1,12 @@
 """Currency conversion rates from the World Bank API (no API key required).
 
-Pulls, per country, the latest available:
-  * ``PA.NUS.FCRF`` — official exchange rate, LCU per US$ (period average)  -> nominal USD
-  * ``PA.NUS.PPP``  — PPP conversion factor, GDP, LCU per international $    -> PPP USD
+Pulls, per country, the latest available exchange rate ``PA.NUS.FCRF`` (LCU per US$,
+period average) for nominal-USD conversion. Real-terms (constant-dollar) deflation uses
+CPI ``FP.CPI.TOTL`` via :func:`fetch_series`. (PPP conversion was intentionally dropped —
+PPP baskets distort tuition comparisons; we use market FX + CPI-deflated constant dollars.)
 
-Falls back to :data:`tuition.config.FALLBACK_FX` / ``FALLBACK_PPP`` (keyed by currency)
-when the network is unavailable, so the pipeline still runs offline.
+Falls back to :data:`tuition.config.FALLBACK_FX` (keyed by currency) when the network is
+unavailable, so the pipeline still runs offline.
 """
 
 from __future__ import annotations
@@ -19,19 +20,9 @@ from .http import get_json
 
 
 def _fallback_record(country: config.Country) -> dict:
-    """Build a rate record from the config fallback tables (offline path)."""
-    if country.currency == "USD":  # USD is the base currency
-        fx = ppp = 1.0
-    else:
-        fx = config.FALLBACK_FX.get(country.currency)
-        ppp = config.FALLBACK_PPP.get(country.currency)
-    return {
-        "currency": country.currency,
-        "fx_lcu_per_usd": fx,
-        "fx_year": None,
-        "ppp_lcu_per_intl": ppp,
-        "ppp_year": None,
-    }
+    """Build a rate record from the config fallback table (offline path)."""
+    fx = 1.0 if country.currency == "USD" else config.FALLBACK_FX.get(country.currency)
+    return {"currency": country.currency, "fx_lcu_per_usd": fx, "fx_year": None}
 
 
 def _fetch_series(indicator: str, iso3s: list[str], start: int, end: int) -> dict[str, dict[int, float]]:
@@ -74,16 +65,14 @@ def fetch_rates(
     start: int = 2015,
     end: int = 2025,
 ) -> dict[str, dict]:
-    """Fetch FX + PPP per country, falling back to config tables on failure.
+    """Fetch the latest FX per country, falling back to config tables on failure.
 
-    Returns ``{iso3: {currency, fx_lcu_per_usd, fx_year, ppp_lcu_per_intl, ppp_year}}``.
+    Returns ``{iso3: {currency, fx_lcu_per_usd, fx_year}}``.
     """
     codes = list(iso3s) if iso3s is not None else config.iso3_codes()
     fx: dict[str, tuple[int, float]] = {}
-    ppp: dict[str, tuple[int, float]] = {}
     try:
         fx = _fetch_latest(config.WB_FX_INDICATOR, codes, start, end)
-        ppp = _fetch_latest(config.WB_PPP_INDICATOR, codes, start, end)
     except Exception as exc:  # pragma: no cover - network failure path
         print(f"[rates] World Bank fetch failed ({exc}); using fallback tables.")
 
@@ -93,18 +82,15 @@ def fetch_rates(
         rec = _fallback_record(country)  # start from fallback, override with fetched
         if iso3 in fx:
             rec["fx_year"], rec["fx_lcu_per_usd"] = fx[iso3]
-        if iso3 in ppp:
-            rec["ppp_year"], rec["ppp_lcu_per_intl"] = ppp[iso3]
-        # USD is the base currency: exchange/PPP to itself is 1.0.
-        if country.currency == "USD":
-            rec["fx_lcu_per_usd"], rec["ppp_lcu_per_intl"] = 1.0, 1.0
+        if country.currency == "USD":  # USD is the base currency
+            rec["fx_lcu_per_usd"] = 1.0
         out[iso3] = rec
     return out
 
 
 def save_rates(rates: dict[str, dict], path: Optional[str] = None) -> str:
     path = path or config.RATES_CSV
-    fields = ["iso3", "currency", "fx_lcu_per_usd", "fx_year", "ppp_lcu_per_intl", "ppp_year"]
+    fields = ["iso3", "currency", "fx_lcu_per_usd", "fx_year"]
     with open(path, "w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=fields)
         writer.writeheader()

@@ -118,6 +118,10 @@ def test_summary_content() -> None:
         assert "Caveat:" in text
         # A rising bad metric is flagged worse.
         assert "worse" in text
+        # Proper organisational citations are rendered.
+        assert "Data sources & citations" in text
+        assert "NHS England" in text and "Public Health Scotland" in text
+        assert "Office for National Statistics" in text
 
 
 def test_add_per_capita_uses_real_population(monkeypatch) -> None:

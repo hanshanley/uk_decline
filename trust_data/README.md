@@ -17,38 +17,49 @@ comparators. Two complementary angles (different scales — read each on its own
 
 ---
 
-## Data sources (all free, no API key)
+## Data sources & citations
 
-Every value in this pipeline is fetched from, or traceable to, one of the sources below.
-**Nothing is hand-authored or estimated.** The `source` column on every tidy row records
-which one it came from, and each chart prints that same attribution as a caption.
+Every value in this pipeline is fetched from, or traceable to, the sources below, **credited
+to the organisation that collected the data**. **Nothing is hand-authored or estimated.** The
+`source` column on every tidy row records which one it came from; each chart prints a short
+citation caption; and `trust_data/citations.py` is the single source of truth for the full
+citations reproduced here.
 
 ### 1. World Bank — Worldwide Governance Indicators (WGI)  → governance metrics
-- **Endpoint:** `https://api.worldbank.org/v2/country/{ISO3}/indicator/{IND}?source=3&format=json`
-- **Indicators (database `source=3`):**
-  `GOV_WGI_VA.EST` (Voice & Accountability), `GOV_WGI_GE.EST` (Government Effectiveness),
-  `GOV_WGI_RL.EST` (Rule of Law), `GOV_WGI_CC.EST` (Control of Corruption) — the *estimate*
-  series (≈ −2.5…+2.5).
-- **Coverage:** UK 1996–2024 (biennial 1996–2002, annual thereafter).
-- **Fetched live** each run by `trust_data/worldbank.py`.
-- **Source column value:** `World Bank WGI`.
 
-### 2. OECD "Trust in national government" (via Our World in Data)  → survey metric
-- **Primary source:** OECD *Trust in Government* / *Government at a Glance* (based on the
-  Gallup World Poll question on confidence in national government).
-- **Machine-readable file actually used:** Our World in Data grapher CSV, which republishes
-  the OECD series per country:
+> Kaufmann, Daniel & Aart C. Kraay (2024). "The Worldwide Governance Indicators: Methodology
+> and 2024 Update." Policy Research Working Paper. Washington, DC: World Bank Group. Dataset:
+> *Worldwide Governance Indicators (WGI)*, 2024 update, World Bank Group, Washington, DC.
+> https://www.govindicators.org
+
+- **Collected/compiled by:** the World Bank Group (WGI draws on 30+ underlying sources).
+- **Accessed via:** `https://api.worldbank.org/v2/country/{ISO3}/indicator/{IND}?source=3` —
+  indicators `GOV_WGI_VA.EST`, `GOV_WGI_GE.EST`, `GOV_WGI_RL.EST`, `GOV_WGI_CC.EST` (estimate
+  series, ≈ −2.5…+2.5).
+- **Coverage:** UK 1996–2024. **Fetched live** by `trust_data/worldbank.py`.
+- **`source` column value:** `World Bank WGI`.
+
+### 2. OECD — trust in national government (via Our World in Data)  → survey metric
+
+> OECD (2026), with major processing by Our World in Data. "OECD average trust in
+> governments" [dataset]. Original data: OECD, *How's Life? Well-being Database* — survey item
+> from the Gallup World Poll ("In this country, do you have confidence in national government,
+> or not?"). https://ourworldindata.org/grapher/oecd-average-trust-in-governments
+
+- **Collected/compiled by:** the OECD (in its *How's Life? Well-being Database*); the
+  underlying survey is the **Gallup World Poll**. Redistributed/processed by **Our World in
+  Data**.
+- **Machine-readable file used:**
   `https://ourworldindata.org/grapher/oecd-average-trust-in-governments.csv?csvType=full&useColumnShortNames=true`
-  (column `trust_in_government`).
-- **Coverage:** UK 2007–2024 (survey waves, roughly triennial); 27 of our 29 countries.
+  (column `trust_in_government`, a percentage).
+- **Coverage:** UK 2007–2024 (survey waves); 27 of our 29 countries.
 - **How the seed was built:** `data/trust/raw/manual_trust.csv` was generated **verbatim**
-  from the OWID CSV above (filtered to our country set; values only rounded to 2 dp). It is
-  re-verified against a fresh download in `tests`/audit — 187/187 rows match exactly.
+  from the OWID CSV above (filtered to our country set; values only rounded to 2 dp), and is
+  re-verified against a fresh download — 187/187 rows match exactly (audit below).
 - **Live attempt:** `trust_data/oecd.py` also tries the OECD SDMX API directly
-  (`OECD.GOV.GIP,DSD_GOV_INT@DF_GOV_TDG_2025`, measure `TRUST_NG`). The OECD API rate-limits
-  aggressively (HTTP 429), so the pipeline falls back to the OWID-sourced seed above. Live
-  OECD rows, when available, take precedence over the seed.
-- **Source column value:**
+  (`OECD.GOV.GIP,DSD_GOV_INT@DF_GOV_TDG_2025`, measure `TRUST_NG`); it rate-limits (HTTP 429),
+  so the pipeline falls back to the OWID-sourced seed. Live rows take precedence when present.
+- **`source` column value:**
   `OECD Trust in Government via Our World in Data (grapher: oecd-average-trust-in-governments)`.
 
 > **Provenance guarantee.** Run the audit below to confirm every seed value still matches the
@@ -71,9 +82,9 @@ which one it came from, and each chart prints that same attribution as a caption
 ## How to run
 
 ```bash
-python fetch_trust.py                 # all sources, 1974-current (WGI 1996+, survey 2007+)
-python fetch_trust.py --charts --summary
-python fetch_trust.py --sources worldbank --start 1996 --end 2024
+python -m trust_data.fetch_trust                 # all sources, 1974-current (WGI 1996+, survey 2007+)
+python -m trust_data.fetch_trust --charts --summary
+python -m trust_data.fetch_trust --sources worldbank --start 1996 --end 2024
 ```
 
 Outputs (written to `data/trust/`):
@@ -85,7 +96,7 @@ Outputs (written to `data/trust/`):
 | `trust_combined_long.csv` / `trust_combined_wide.csv` | Combined tidy tables |
 | `manifest.json` | Run metadata: row counts, year span, **the exact `sources` list** |
 | `processed/trust_summary.csv` | UK trend summary (first/latest/change/direction, vs EU-27 & US) |
-| `charts/*.png` | One trend chart per metric, UK highlighted, **with a source caption** |
+| `../outputs/trust/*.png` | One trend chart per metric, UK highlighted, **with a source caption** |
 
 ## Figures
 

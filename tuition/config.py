@@ -1,7 +1,7 @@
 """Static configuration: country tables, regions, sources, paths, fallback rates.
 
 The authoritative tuition figures live in ``data/raw/manual_tuition.csv`` (each row
-carries its own ``source`` + ``year``). Currency conversion (nominal FX and PPP) is
+carries its own ``source`` + ``year``). Currency conversion (nominal FX and CPI) is
 pulled live from the World Bank API by :mod:`tuition.rates`; the ``FALLBACK_*`` tables
 below are only used when the network is unavailable (e.g. offline unit tests).
 """
@@ -100,7 +100,6 @@ EURYDICE_HINT = (
 )
 WORLD_BANK_BASE = "https://api.worldbank.org/v2"
 WB_FX_INDICATOR = "PA.NUS.FCRF"   # official exchange rate, LCU per US$ (period avg)
-WB_PPP_INDICATOR = "PA.NUS.PPP"   # PPP conversion factor, GDP, LCU per international $
 WB_CPI_INDICATOR = "FP.CPI.TOTL"  # consumer price index (for real-terms deflation)
 
 # --- Paths ------------------------------------------------------------------
@@ -109,7 +108,7 @@ ROOT = os.path.dirname(PKG_DIR)
 DATA_DIR = os.path.join(ROOT, "data")
 RAW_DIR = os.path.join(DATA_DIR, "raw")
 PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
-OUTPUTS_DIR = os.path.join(ROOT, "outputs")  # generated figures
+OUTPUTS_DIR = os.path.join(ROOT, "outputs", "tuition")  # generated figures
 
 MANUAL_CSV = os.path.join(RAW_DIR, "manual_tuition.csv")
 HISTORY_MANUAL_CSV = os.path.join(RAW_DIR, "tuition_history_manual.csv")
@@ -138,17 +137,4 @@ FALLBACK_FX: dict[str, float] = {
     "PLN": 3.98,
     "RON": 4.60,
     "SEK": 10.60,
-}
-# LCU per international $ (PPP, ~2023 World Bank PA.NUS.PPP). Offline fallback only.
-FALLBACK_PPP: dict[str, float] = {
-    "USD": 1.00,
-    "EUR": 0.72,
-    "GBP": 0.70,
-    "BGN": 0.70,
-    "CZK": 13.0,
-    "DKK": 6.60,
-    "HUF": 155.0,
-    "PLN": 1.80,
-    "RON": 1.75,
-    "SEK": 8.80,
 }

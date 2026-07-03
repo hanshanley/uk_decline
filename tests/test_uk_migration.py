@@ -82,30 +82,32 @@ def test_aggregate_can_keep_partial_year():
     assert out == [(2021, "all", 99.0)]
 
 
-def test_ons_ltim_parse_takes_ye_dec_all_nationalities():
+def test_ons_ltim_parse_by_group_and_ye_dec():
+    # Table 1 columns: Flow, Period, All, British, EU+, Non-EU+
     rows = [
-        ("Flow", "Period", "All Nationalities", "British"),
-        ("Immigration", "YE Jun 22", 1167000, 1),
-        ("Immigration", "YE Dec 22", 1398000, 1),
-        ("Emigration", "YE Dec 22", 486000, 1),
-        ("Net migration", "YE Dec 24 R", 331000, 1),
-        ("Net migration", "YE Dec 25 P", 171000, 1),
+        ("Flow", "Period", "All Nationalities", "British", "EU+", "Non-EU+"),
+        ("Immigration", "YE Jun 22", 1167000, 70000, 500000, 597000),
+        ("Immigration", "YE Dec 22", 1398000, 74000, 550000, 774000),
+        ("Emigration", "YE Dec 22", 486000, 60000, 200000, 226000),
+        ("Net migration", "YE Dec 24 R", 331000, 10000, 100000, 221000),
+        ("Net migration", "YE Dec 25 P", 171000, 5000, 60000, 106000),
         # 4-digit-year label must not be truncated to 2020:
-        ("Immigration", "YE Dec 2026", 800000, 1),
-        ("Immigration", "not a period", 999, 1),
+        ("Immigration", "YE Dec 2026", 800000, 40000, 300000, 460000),
+        ("Immigration", "not a period", 999, 1, 1, 1),
     ]
     out = ons_ltim.parse(rows)
-    by = {(r["metric"], r["period"]): r for r in out}
-    assert by[("immigration", 2022)]["value"] == 1398000.0
-    assert by[("immigration", 2022)]["legality"] == schema.LEGAL
-    assert by[("immigration", 2022)]["flow_type"] == schema.INFLOW
-    assert by[("emigration", 2022)]["flow_type"] == schema.OUTFLOW
-    assert by[("net_migration", 2024)]["legality"] == schema.TOTAL
-    assert by[("net_migration", 2024)]["flow_type"] == schema.NET
-    assert by[("net_migration", 2025)]["value"] == 171000.0
-    assert by[("immigration", 2026)]["value"] == 800000.0  # 4-digit year handled
+    by = {(r["metric"], r["category"], r["period"]): r for r in out}
+    assert by[("immigration", "all", 2022)]["value"] == 1398000.0
+    assert by[("immigration", "british", 2022)]["value"] == 74000.0
+    assert by[("immigration", "eu", 2022)]["value"] == 550000.0
+    assert by[("immigration", "non_eu", 2022)]["value"] == 774000.0
+    assert by[("immigration", "all", 2022)]["legality"] == schema.LEGAL
+    assert by[("emigration", "all", 2022)]["flow_type"] == schema.OUTFLOW
+    assert by[("net_migration", "all", 2024)]["legality"] == schema.TOTAL
+    assert by[("net_migration", "non_eu", 2025)]["value"] == 106000.0
+    assert by[("immigration", "all", 2026)]["value"] == 800000.0  # 4-digit year handled
     # YE Jun and the junk period are excluded
-    assert ("immigration", 2021) not in by
+    assert ("immigration", "all", 2021) not in by
     assert all(r["value"] != 999 for r in out)
 
 
@@ -195,3 +197,37 @@ def test_normalize_per_capita_is_exact_ratio_of_real_series():
     # stock (not whitelisted) and the population-less year are excluded
     assert all("migrant_stock" not in r["metric"] for r in out)
     assert all(r["period"] != 1975 for r in out)
+
+
+def test_ons_ips_history_parse_by_origin_in_thousands():
+    from uk_migration.sources import ons_ips_history
+    # Minimal replica of the IPS "Data" sheet: header rows then year rows.
+    # Columns: 0=Year, 1..3 All(Imm,Emi,Net), 4..6 British, 7..9 Non-British, 10..12 EU
+    W = 25
+
+    def rrow(*vals):
+        r = list(vals) + [""] * (W - len(vals))
+        return tuple(r)
+
+    rows = [
+        rrow("Table 1"),
+        rrow(""),
+        rrow("", "All Citizenships", "", "", "British Citizenship"),
+        rrow("Year", "Immigration", "Emigration", "Net Migration",
+             "Immigration", "Emigration", "Net Migration"),
+        # 1964: All imm=211k, emi=271k, net=-60k ; British imm=71k ; EU '-' (missing)
+        rrow(1964.0, 211.0, 271.0, -60.0, 71.0, 202.0, -131.0, " - ", " - ", " - ",
+             " - ", " - ", " - "),
+        rrow("footer text"),
+    ]
+    out = ons_ips_history.parse(rows)
+    by = {(r["metric"], r["category"]): r for r in out}
+    # thousands are scaled to people
+    assert by[("immigration_by_origin", "all")]["value"] == 211_000.0
+    assert by[("immigration_by_origin", "all")]["period"] == 1964
+    assert by[("net_migration_by_origin", "all")]["value"] == -60_000.0
+    assert by[("net_migration_by_origin", "all")]["flow_type"] == schema.NET
+    assert by[("immigration_by_origin", "british")]["value"] == 71_000.0
+    assert by[("immigration_by_origin", "british")]["legality"] == schema.LEGAL
+    # '-' cells are skipped, not turned into 0
+    assert ("immigration_by_origin", "eu") not in by

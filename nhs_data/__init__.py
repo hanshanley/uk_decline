@@ -23,6 +23,7 @@ __all__ = [
     "nations",
     "metrics",
     "population",
+    "sources",
     "scotland",
     "wales",
     "england",

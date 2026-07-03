@@ -13,23 +13,7 @@ import json
 import os
 from typing import Iterable
 
-from . import metrics
-
-# Human-readable references for each source string that can appear in the data.
-SOURCE_REFERENCES: dict[str, str] = {
-    "World Bank WGI": (
-        "World Bank — Worldwide Governance Indicators (WGI), estimate series "
-        "`GOV_WGI_{VA,GE,RL,CC}.EST` (database `source=3`). "
-        "https://databank.worldbank.org/source/worldwide-governance-indicators — "
-        "fetched live via https://api.worldbank.org/v2"
-    ),
-    "OECD Trust in Government via Our World in Data (grapher: oecd-average-trust-in-governments)": (
-        "OECD — Trust in Government / Government at a Glance (Gallup World Poll basis), "
-        "republished per country by Our World in Data: "
-        "https://ourworldindata.org/grapher/oecd-average-trust-in-governments "
-        "(CSV: `?csvType=full&useColumnShortNames=true`, column `trust_in_government`)."
-    ),
-}
+from . import citations, metrics
 
 
 def _load_rows(long_csv: str) -> list[dict]:
@@ -42,7 +26,7 @@ def _load_rows(long_csv: str) -> list[dict]:
 
 
 def _reference_for(source: str) -> str:
-    return SOURCE_REFERENCES.get(source, source)
+    return citations.full_citation(source)
 
 
 def write_showcase(
@@ -76,10 +60,11 @@ def write_showcase(
     )
 
     # Data sources (only those actually present in the data).
-    lines.append("## Data sources\n")
+    lines.append("## Data sources & citations\n")
     lines.append(
-        "Every value is fetched from, or traceable to, the sources below — nothing is "
-        "hand-authored or estimated. Each figure also prints its source as a caption.\n"
+        "Every value is fetched from, or traceable to, the sources below \u2014 credited to the "
+        "organisation that collected the data. Nothing is hand-authored or estimated. Each "
+        "figure also prints a short citation as a caption.\n"
     )
     for src in sorted({r["source"] for r in rows}):
         lines.append(f"- {_reference_for(src)}")

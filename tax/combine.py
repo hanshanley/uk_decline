@@ -115,6 +115,7 @@ def write_manifest(rows: list[dict], path: str, extra: dict | None = None) -> No
         "metrics": metrics,
         "sources": sorted({r["source"] for r in rows}),
         "caveats": {m: config.CAVEATS.get(m, "") for m in metrics},
+        "citations": config.CITATIONS,
     }
     if extra:
         manifest.update(extra)

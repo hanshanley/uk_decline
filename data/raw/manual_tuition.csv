@@ -1,0 +1,32 @@
+country,iso3,region,annual_tuition_local,currency,year,include_primary,source,notes
+Austria,AUT,EU,0,EUR,2023,1,Eurydice National Student Fee 2023/24,No tuition for regular EU/EEA students within min duration + 2 tolerance semesters
+Belgium,BEL,EU,979.6,EUR,2023,1,Eurydice National Student Fee 2023/24,Flemish Community fee (Eurydice); French Community is EUR 835
+Bulgaria,BGR,EU,880,BGN,2023,1,Eurydice National Student Fee 2023/24,APPROXIMATE - fees vary by field/university; verify against primary Eurydice report
+Croatia,HRV,EU,0,EUR,2023,1,Eurydice National Student Fee 2023/24,No fee for full-time students meeting ECTS requirements (majority)
+Cyprus,CYP,EU,0,EUR,2023,1,Eurydice National Student Fee 2023/24,State covers tuition for first bachelor's degree of EU students
+Czechia,CZE,EU,0,CZK,2023,1,Eurydice National Student Fee 2023/24,Free for study in Czech at public HEIs
+Denmark,DNK,EU,0,DKK,2023,1,Eurydice National Student Fee 2023/24,Free for Danish/EU/EEA students
+Estonia,EST,EU,0,EUR,2023,1,Eurydice National Student Fee 2023/24,Free for full-time study in Estonian progressing normally
+Finland,FIN,EU,0,EUR,2023,1,Eurydice National Student Fee 2023/24,Free for EU/EEA students
+France,FRA,EU,170,EUR,2023,1,Eurydice National Student Fee 2023/24,National licence fee (EUR 175 in 2024/25)
+Germany,DEU,EU,0,EUR,2023,1,Eurydice National Student Fee 2023/24,No tuition at public universities (semester admin contribution excluded)
+Greece,GRC,EU,0,EUR,2023,1,Eurydice National Student Fee 2023/24,Public first-cycle free for home students
+Hungary,HUN,EU,0,HUF,2023,1,Eurydice National Student Fee 2023/24,State-funded students pay no tuition (most common)
+Ireland,IRL,EU,3000,EUR,2023,1,Eurydice National Student Fee 2023/24,Student contribution charge (Free Fees Initiative covers tuition)
+Italy,ITA,EU,1508,EUR,2023,1,Eurydice National Student Fee 2023/24,National average; income-dependent
+Latvia,LVA,EU,0,EUR,2023,1,Eurydice National Student Fee 2023/24,State-funded (budget) places pay no fee; fee-paying EUR 1300-2000
+Lithuania,LTU,EU,0,EUR,2023,1,Eurydice National Student Fee 2023/24,State-funded places pay no fee; fee-paying EUR 1000-1500
+Luxembourg,LUX,EU,400,EUR,2023,1,Eurydice National Student Fee 2023/24,First-year bachelor EUR 400; EUR 200 subsequent years
+Malta,MLT,EU,0,EUR,2023,1,Eurydice National Student Fee 2023/24,Free for Maltese/EU students
+Netherlands,NLD,EU,2314,EUR,2023,1,Eurydice National Student Fee 2023/24,Statutory tuition fee for home/EU students (EUR 2530 in 2024/25)
+Poland,POL,EU,0,PLN,2023,1,Eurydice National Student Fee 2023/24,No tuition for full-time home/EU students at public HEIs
+Portugal,PRT,EU,697,EUR,2023,1,Eurydice National Student Fee 2023/24,Regulated maximum annual propina
+Romania,ROU,EU,0,RON,2023,1,Eurydice National Student Fee 2023/24,State-funded places pay no fee (most common); fee-paying EUR 500-1000
+Slovakia,SVK,EU,0,EUR,2023,1,Eurydice National Student Fee 2023/24,Free for full-time study in Slovak
+Slovenia,SVN,EU,0,EUR,2023,1,Eurydice National Student Fee 2023/24,No tuition for full-time home/EU students at public HEIs
+Spain,ESP,EU,1100,EUR,2023,1,Eurydice National Student Fee 2023/24,APPROXIMATE - per-credit fees set regionally (range ~EUR 800-1600); verify against primary Eurydice report
+Sweden,SWE,EU,0,SEK,2023,1,Eurydice National Student Fee 2023/24,Free for EU/EEA students
+United Kingdom,GBR,UK,9250,GBP,2024,1,UK Government / Student Finance England (fee cap),England full-time home undergraduate fee cap 2024/25
+United Kingdom (Scotland),GBR,UK,0,GBP,2024,0,Student Awards Agency Scotland (SAAS),Reference: no tuition for Scottish-domiciled students (excluded from primary UK figure)
+United States,USA,US,11610,USD,2024,1,College Board Trends in College Pricing 2024,Average published in-state tuition and fees at public four-year institutions (2024/25)
+United States (private nonprofit),USA,US,43350,USD,2024,0,College Board Trends in College Pricing 2024,Reference: average published tuition and fees at private nonprofit four-year (excluded from primary US figure)

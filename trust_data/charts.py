@@ -77,11 +77,14 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ax.grid(True, alpha=0.3)
     ax.legend(fontsize=9)
 
-    # Stamp the data source(s) straight from the data's own `source` column, so the caption
-    # is always traceable to the rows that were plotted (never hand-typed / fabricated).
+    # Stamp the data source(s) straight from the data's own `source` column, mapped to a
+    # formal short citation, so the caption is always traceable to the plotted rows.
+    from . import citations
+
     sources = sorted(str(s) for s in sub["source"].dropna().unique())
+    cites = "; ".join(citations.short_citation(s) for s in sources)
     year_lo, year_hi = int(sub["year"].min()), int(sub["year"].max())
-    caption = f"Source: {'; '.join(sources)}. Data: {year_lo}-{year_hi}."
+    caption = f"Source: {cites}. Data: {year_lo}\u2013{year_hi}."
     fig.text(0.01, 0.01, caption, fontsize=7, color="#444444", ha="left", va="bottom")
     fig.tight_layout(rect=(0, 0.035, 1, 1))
 

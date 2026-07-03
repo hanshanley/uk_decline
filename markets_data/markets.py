@@ -48,7 +48,8 @@ METRICS: dict[str, Metric] = {
         "CM.MKT.LCAP.CD",
         description=(
             "Total market value of listed domestic companies, in current (nominal) US "
-            "dollars. The headline measure of absolute size, but not inflation-adjusted."
+            "dollars converted at market exchange rates (not PPP). The headline measure "
+            "of absolute size, but not inflation-adjusted."
         ),
     ),
     "market_cap_usd_real": Metric(
@@ -58,7 +59,8 @@ METRICS: dict[str, Metric] = {
         None,  # derived: market_cap_usd deflated by US CPI (see combine/deflator)
         description=(
             "The nominal market-cap series deflated by US CPI to constant US dollars, so "
-            "sizes are comparable across years after removing US-dollar inflation."
+            "sizes are comparable across years after removing US-dollar inflation. Values "
+            "stay at market exchange rates (constant dollars, not PPP)."
         ),
     ),
     "market_cap_pct_gdp": Metric(
@@ -101,9 +103,11 @@ CAVEATS: dict[str, str] = {
     "market_cap_usd_real": (
         "Derived: the nominal current-US$ series deflated by US CPI (World Bank "
         "FP.CPI.TOTL) to constant US dollars of the base year noted in the manifest/"
-        "summary. This removes US-dollar inflation; for non-US markets it does not "
-        "remove exchange-rate effects. Only years with both market-cap and CPI data "
-        "are computed (US CPI ends 2024), so the newest year may be absent."
+        "summary. This uses market exchange rates, i.e. constant dollars -- NOT PPP, "
+        "which would distort market values by adjusting for domestic price levels. It "
+        "removes US-dollar inflation; for non-US markets it does not remove exchange-rate "
+        "effects. Only years with both market-cap and CPI data are computed (US CPI ends "
+        "2024), so the newest year may be absent."
     ),
     "market_cap_pct_gdp": (
         "The more comparable 'size relative to the economy' measure, but sensitive to "
@@ -116,6 +120,87 @@ CAVEATS: dict[str, str] = {
         "across exchanges with different listing rules."
     ),
 }
+
+# Formal data provenance: the organization that actually collected each series, the
+# database it lives in, and the World Bank indicator that redistributes it. Sourced
+# from the World Bank indicator metadata (`sourceOrganization`). Used to build proper
+# citations in the figures, summary, README, and manifest.
+CITATIONS: dict[str, dict[str, str]] = {
+    "market_cap_usd": {
+        "collector": "World Federation of Exchanges (WFE)",
+        "database": "WFE database",
+        "indicator": "Market capitalization of listed domestic companies (current US$)",
+        "code": "CM.MKT.LCAP.CD",
+        "distributor": "World Bank, World Development Indicators",
+        "url": "https://data.worldbank.org/indicator/CM.MKT.LCAP.CD",
+    },
+    "market_cap_pct_gdp": {
+        "collector": "World Federation of Exchanges (WFE)",
+        "database": "WFE database",
+        "indicator": "Market capitalization of listed domestic companies (% of GDP)",
+        "code": "CM.MKT.LCAP.GD.ZS",
+        "distributor": "World Bank, World Development Indicators",
+        "url": "https://data.worldbank.org/indicator/CM.MKT.LCAP.GD.ZS",
+    },
+    "listed_domestic_companies": {
+        "collector": "World Federation of Exchanges (WFE)",
+        "database": "WFE database",
+        "indicator": "Listed domestic companies, total",
+        "code": "CM.MKT.LDOM.NO",
+        "distributor": "World Bank, World Development Indicators",
+        "url": "https://data.worldbank.org/indicator/CM.MKT.LDOM.NO",
+    },
+    "cpi": {
+        "collector": "International Monetary Fund (IMF)",
+        "database": "International Financial Statistics",
+        "indicator": "Consumer price index, United States (2010 = 100)",
+        "code": "FP.CPI.TOTL",
+        "distributor": "World Bank, World Development Indicators",
+        "url": "https://data.worldbank.org/indicator/FP.CPI.TOTL",
+    },
+}
+
+
+def _citation_keys(metric_id: str) -> list[str]:
+    """Which CITATIONS entries back a metric (the real series combines two)."""
+    if metric_id == "market_cap_usd_real":
+        return ["market_cap_usd", "cpi"]
+    return [metric_id]
+
+
+def citation(metric_id: str, accessed: str | None = None) -> str:
+    """Full formal citation(s) for a metric, naming the collecting organization.
+
+    Example: 'World Federation of Exchanges (WFE), WFE database. Market
+    capitalization of listed domestic companies (current US$) (CM.MKT.LCAP.CD).
+    Distributed by World Bank, World Development Indicators.
+    https://data.worldbank.org/indicator/CM.MKT.LCAP.CD (accessed 2026-07-03).'
+    """
+    parts: list[str] = []
+    for key in _citation_keys(metric_id):
+        c = CITATIONS[key]
+        tail = f" (accessed {accessed})." if accessed else "."
+        parts.append(
+            f"{c['collector']}, {c['database']}. {c['indicator']} ({c['code']}). "
+            f"Distributed by {c['distributor']}. {c['url']}{tail}"
+        )
+    return " ".join(parts)
+
+
+def citation_short(metric_id: str, accessed: str | None = None) -> str:
+    """Compact source attribution for a figure footnote, naming the collector(s)."""
+    collectors: list[str] = []
+    codes: list[str] = []
+    for key in _citation_keys(metric_id):
+        c = CITATIONS[key]
+        if c["collector"] not in collectors:
+            collectors.append(c["collector"])
+        codes.append(c["code"])
+    tail = f"; accessed {accessed}" if accessed else ""
+    return (
+        f"Data: {' & '.join(collectors)}, via World Bank World Development "
+        f"Indicators ({', '.join(codes)}{tail})."
+    )
 
 
 def make_row(

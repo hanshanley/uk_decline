@@ -60,17 +60,16 @@ def _plt():
     return plt
 
 
-def _source_note(sub, metric_id: str) -> str:
-    """Build a figure footnote that cites the exact sources behind this metric.
+def _source_note(metric_id: str) -> str:
+    """Build a figure footnote that cites the organization that collected the data.
 
-    Sources are read from the data rows themselves (the ``source`` column), so every
-    figure is traceable to the real series it was built from.
+    Uses the formal citation registry (``markets.citation_short``) so every figure
+    names its collecting organization (e.g. the World Federation of Exchanges) and
+    the World Bank indicator that redistributes it, dated to the run.
     """
-    meta = markets.METRICS[metric_id]
-    srcs = sorted(str(s) for s in sub["source"].dropna().unique())
-    src = "; ".join(srcs) if srcs else markets.SOURCE
-    indicator = meta.wb_indicator or f"derived: nominal deflated by {markets.CPI_INDICATOR}"
-    return f"Source: {src}. Indicator: {indicator}. No API key."
+    import datetime as _dt
+
+    return markets.citation_short(metric_id, accessed=_dt.date.today().isoformat())
 
 
 def _footnote(fig, note: str = SOURCE_NOTE) -> None:
@@ -130,7 +129,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         )
     ax.grid(axis="y")
     ax.legend(title="Region", loc="upper left")
-    _footnote(fig, _source_note(sub, metric_id))
+    _footnote(fig, _source_note(metric_id))
     fig.tight_layout(rect=[0, 0.02, 1, 1])
 
     out = _save(fig, out_dir, f"stock_{metric_id}.png")
@@ -162,7 +161,7 @@ def chart_uk_us_ratio(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ax.get_yaxis().set_major_formatter(mticker.FuncFormatter(lambda v, _p: f"{v:.0f}%"))
     ax.grid(axis="y")
     ax.set_ylim(bottom=0)
-    _footnote(fig, _source_note(sub, metric_id))
+    _footnote(fig, _source_note(metric_id))
     fig.tight_layout(rect=[0, 0.02, 1, 1])
 
     out = _save(fig, out_dir, f"stock_uk_us_ratio_{metric_id}.png")

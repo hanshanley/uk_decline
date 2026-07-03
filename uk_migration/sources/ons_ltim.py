@@ -33,6 +33,11 @@ _FLOWS: dict[str, tuple[str, str, str]] = {
     "Net migration": ("net_migration", schema.TOTAL, schema.NET),
 }
 
+# Table 1 nationality-group columns -> tidy category. The admin-based series reports
+# All Nationalities plus British / EU+ / Non-EU+, so we can carry the by-origin split
+# forward to the present (the IPS series in ``ons_ips_history`` stops in 2015).
+_GROUP_COL: dict[int, str] = {2: "all", 3: "british", 4: "eu", 5: "non_eu"}
+
 # e.g. "YE Dec 24 R" / "YE Dec 25 P" -> year 2024 / 2025. Accept 2- or 4-digit years so a
 # future 4-digit ONS label ("YE Dec 2026") is not silently truncated to year 2020.
 _YE_DEC = re.compile(r"YE\s+Dec\s+(\d{4}|\d{2})\b")
@@ -43,7 +48,11 @@ def _to_year(digits: str) -> int:
 
 
 def parse(rows) -> list[dict]:
-    """Parse ONS LTIM Table 1 rows into tidy annual immigration/emigration/net rows."""
+    """Parse ONS LTIM Table 1 rows into tidy annual rows by nationality group.
+
+    Emits the ``all`` category plus ``british`` / ``eu`` (EU+) / ``non_eu`` (Non-EU+)
+    for each flow, keyed to the ``YE Dec`` (calendar-year) periods.
+    """
     out: list[dict] = []
     for row in rows:
         if not row or len(row) < 3:
@@ -55,22 +64,24 @@ def parse(rows) -> list[dict]:
         match = _YE_DEC.search(period)
         if not match:
             continue
-        value = row[2]  # "All Nationalities" column
-        if not isinstance(value, (int, float)):
-            continue
         metric, legality, flow_type = _FLOWS[flow]
-        out.append(
-            schema.row(
-                period=_to_year(match.group(1)),
-                metric=metric,
-                value=float(value),
-                unit="people",
-                legality=legality,
-                flow_type=flow_type,
-                source=SOURCE,
-                category="all",
+        year = _to_year(match.group(1))
+        for col, category in _GROUP_COL.items():
+            value = row[col] if col < len(row) else None
+            if not isinstance(value, (int, float)):
+                continue
+            out.append(
+                schema.row(
+                    period=year,
+                    metric=metric,
+                    value=float(value),
+                    unit="people",
+                    legality=legality,
+                    flow_type=flow_type,
+                    source=SOURCE,
+                    category=category,
+                )
             )
-        )
     return out
 
 

@@ -26,6 +26,7 @@ __all__ = [
     "charts",
     "summary",
     "report",
+    "citations",
     "paths",
 ]
 

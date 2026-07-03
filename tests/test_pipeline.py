@@ -47,6 +47,18 @@ def test_maddison_metric_in_wide_order() -> None:
     assert "2011" in maddison.UNIT and "real" in maddison.UNIT.lower()
 
 
+def test_headline_gdp_is_constant_usd_not_ppp() -> None:
+    # Headline GDP metric must be real constant-US$ (NON-PPP), per the chosen methodology.
+    from europe_data import plot_uk_decline
+    from europe_data import combine, worldbank
+    assert plot_uk_decline.GDP_METRIC == "gdp_per_capita_constant_usd"
+    assert "PPP" not in plot_uk_decline.GDP_METRIC.upper()
+    # It comes from World Bank NY.GDP.PCAP.KD and flows into the wide table.
+    assert worldbank.INDICATORS["NY.GDP.PCAP.KD"][0] == "gdp_per_capita_constant_usd"
+    assert "2015 US$" in worldbank.INDICATORS["NY.GDP.PCAP.KD"][1]
+    assert "gdp_per_capita_constant_usd" in combine.METRIC_ORDER
+
+
 def test_eurostat_decoder() -> None:
     # Minimal JSON-stat: 1 statinfo x 2 geo x 2 time = 4 obs (row-major).
     payload = {

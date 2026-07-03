@@ -60,10 +60,7 @@ plt.rcParams.update(
 SERIES_COLORS = {"uk": ACCENT, "europe_median": BLUE, "us": GOLD}
 SERIES_LABELS = {"uk": "United Kingdom", "europe_median": "Europe (median)", "us": "United States"}
 
-SOURCE_NOTE = (
-    "Source: OECD Revenue Statistics (tax-to-GDP) & Taxing Wages (labour tax wedge, "
-    "net personal average tax rate); free OECD SDMX API."
-)
+SOURCE_NOTE = config.FIGURE_SOURCE_NOTE
 
 _LABEL_STROKE = [pe.withStroke(linewidth=3, foreground="white")]
 

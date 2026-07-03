@@ -10,7 +10,7 @@ ROOT = os.path.dirname(PKG_DIR)
 OUT_DIR = os.path.join(ROOT, "data", "trust")
 RAW_DIR = os.path.join(OUT_DIR, "raw")
 PROCESSED_DIR = os.path.join(OUT_DIR, "processed")
-CHART_DIR = os.path.join(OUT_DIR, "charts")
+CHART_DIR = os.path.join(ROOT, "outputs", "trust")
 
 DEFAULT_LONG_CSV = os.path.join(OUT_DIR, "trust_combined_long.csv")
 SUMMARY_CSV = os.path.join(PROCESSED_DIR, "trust_summary.csv")

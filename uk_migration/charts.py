@@ -14,17 +14,19 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.lines import Line2D
 from matplotlib.ticker import MaxNLocator
 
 from .combine import COMBINED_CSV
 
 # Showcase charts are written here (a committable, non-git-ignored folder matching the
 # sibling projects' `outputs/` convention). Each PNG carries a data-source caption.
-FIGURES_DIR = Path("outputs/uk_migration")
+FIGURES_DIR = Path("outputs/migration")
 
 # Canonical data-source citations (stable landing pages / indicator IDs, not volatile
 # per-quarter file URLs). Rendered as a caption on each chart and into SOURCES.md.
 SOURCE_ONS = "ONS Long-Term International Migration (ons.gov.uk)"
+SOURCE_ONS_IPS = "ONS IPS Long-Term International Migration, 1964\u20132015, ad hoc 006408 (ons.gov.uk)"
 SOURCE_HO = "Home Office Immigration System Statistics (gov.uk)"
 SOURCE_WB = "World Bank WDI (api.worldbank.org)"
 
@@ -215,9 +217,65 @@ def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
     return _save(fig, "net_migration_per_capita.png", f"{SOURCE_ONS}; {SOURCE_WB} (population)")
 
 
+_ORIGIN_GROUPS = [
+    ("all", SUBSTACK_TEXT, "All citizenships"),
+    ("british", SUBSTACK_MUTED, "British"),
+    ("eu", SUBSTACK_BLUE, "EU / EU+"),
+    ("non_eu", SUBSTACK_ACCENT, "Non-EU / Non-EU+"),
+]
+
+# solid = historical IPS series (1964-2015); dashed = admin-based ONS series (2012+).
+_METHOD_LEGEND = [
+    Line2D([0], [0], color=SUBSTACK_TEXT, linestyle="-", label="IPS survey (1964\u20132015)"),
+    Line2D([0], [0], color=SUBSTACK_TEXT, linestyle="--", label="Admin-based (2012\u20132025)"),
+]
+_SOURCE_BY_ORIGIN = f"{SOURCE_ONS_IPS}; {SOURCE_ONS} (admin-based, 2012+)"
+
+
+def _chart_by_origin(df: pd.DataFrame, ips_metric: str, admin_metric: str,
+                     title: str, ylabel: str, name: str, zero_line: bool) -> Path:
+    fig, ax = plt.subplots(figsize=(11, 6))
+    for cat, color, label in _ORIGIN_GROUPS:
+        ips = _series(df, ips_metric, cat)
+        if not ips.empty:
+            ax.plot(ips["period"], ips["value"], marker="o", markersize=3, color=color, label=label)
+        admin = _series(df, admin_metric, cat)
+        if not admin.empty:
+            ax.plot(admin["period"], admin["value"], marker="o", markersize=3,
+                    linestyle="--", color=color)
+    if zero_line:
+        ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
+    _style_title(ax, title)
+    ax.set_xlabel("Year")
+    ax.set_ylabel(ylabel)
+    group_legend = ax.legend(loc="upper left", frameon=False)
+    ax.add_artist(group_legend)
+    ax.legend(handles=_METHOD_LEGEND, loc="lower right", frameon=False, fontsize=9)
+    _style_axes(ax)
+    return _save(fig, name, _SOURCE_BY_ORIGIN)
+
+
+def chart_immigration_by_origin(df: pd.DataFrame) -> Path:
+    return _chart_by_origin(
+        df, "immigration_by_origin", "immigration",
+        "UK immigration by citizenship group (1964\u20132025)",
+        "Immigration per year", "immigration_by_origin.png", zero_line=False,
+    )
+
+
+def chart_net_migration_by_origin(df: pd.DataFrame) -> Path:
+    return _chart_by_origin(
+        df, "net_migration_by_origin", "net_migration",
+        "UK net migration by citizenship group (1964\u20132025)",
+        "Net migration per year", "net_migration_by_origin.png", zero_line=True,
+    )
+
+
 CHARTS = (
     chart_net_migration,
     chart_inflow_outflow,
+    chart_immigration_by_origin,
+    chart_net_migration_by_origin,
     chart_visas_by_category,
     chart_asylum,
     chart_irregular,
@@ -230,6 +288,8 @@ _CHART_DOCS: list[tuple[str, str, str]] = [
     ("net_migration.png", "UK net long-term migration over time (1960+)",
      f"{SOURCE_ONS}; {SOURCE_WB} (SM.POP.NETM)"),
     ("immigration_vs_emigration.png", "Annual immigration vs emigration flows (2012+)", SOURCE_ONS),
+    ("immigration_by_origin.png", "Immigration by citizenship group, 1964\u20132025 (IPS + admin-based)", _SOURCE_BY_ORIGIN),
+    ("net_migration_by_origin.png", "Net migration by citizenship group, 1964\u20132025 (IPS + admin-based)", _SOURCE_BY_ORIGIN),
     ("visas_by_category.png", "Entry-clearance visas granted by category (2005+)",
      f"{SOURCE_HO}, entry-clearance-visa-outcomes dataset"),
     ("asylum_applications.png", "Asylum applications, main applicants (2001+)",
@@ -257,6 +317,9 @@ def write_sources_doc() -> Path:
         "",
         "- **ONS Long-Term International Migration** — immigration, emigration, net migration.",
         "  <https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/internationalmigration/datasets/longterminternationalimmigrationemigrationandnetmigrationflowsprovisional>",
+        "- **ONS IPS Long-Term International Migration, 1964\u20132015, by citizenship** (ad hoc 006408)",
+        "  \u2014 the long-run historical series (International Passenger Survey), values in thousands.",
+        "  <https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/internationalmigration/adhocs/006408longterminternationalmigrationintoandoutoftheukbycitizenship1964to2015>",
         "- **Home Office Immigration System Statistics** — visas, asylum, irregular arrivals.",
         "  <https://www.gov.uk/government/statistical-data-sets/immigration-system-statistics-data-tables>",
         "- **World Bank WDI** (country `GBR`) — migrant stock, net migration, and total population",

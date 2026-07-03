@@ -8,6 +8,7 @@ listed for context. Definitional caveats are included to keep comparisons honest
 
 from __future__ import annotations
 
+import datetime as _dt
 from pathlib import Path
 
 from . import markets, regions
@@ -58,13 +59,15 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
 
     df = df.copy()
     ylo, yhi = int(df["year"].min()), int(df["year"].max())
-    all_sources = sorted(str(s) for s in df["source"].dropna().unique())
+    accessed = _dt.date.today().isoformat()
     real = df[df["metric"] == "market_cap_usd_real"]
     base_year = int(real["year"].max()) if not real.empty else None
     lines.append(
         f"Coverage: **{ylo}\u2013{yhi}** across {df['region_code'].nunique()} regions. "
-        f"Sources: {', '.join(all_sources)} (no API key). The comparison is anchored on "
-        "the UK vs the US; World / EU / Japan / China are shown for context."
+        "Data collected by the World Federation of Exchanges (WFE) and the IMF, "
+        "redistributed via the World Bank's World Development Indicators (no API key). "
+        "The comparison is anchored on the UK vs the US; World / EU / Japan / China are "
+        "shown for context. See full citations at the end."
     )
     if base_year is not None:
         lines.append(
@@ -103,14 +106,17 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
                 f"(peak {ratio.max() * 100:.0f}% in {peak_year})."
             )
 
-        # Cite the exact source(s) and indicator behind this metric.
-        srcs = sorted(str(s) for s in sub["source"].dropna().unique())
-        indicator = meta.wb_indicator or f"derived: nominal deflated by {markets.CPI_INDICATOR}"
-        lines.append(f"\n_Source: {'; '.join(srcs)} — indicator {indicator}._")
+        # Cite the organization that collected this metric's data.
+        lines.append(f"\n_{markets.citation_short(metric_id, accessed)}_")
 
         caveat = markets.CAVEATS.get(metric_id)
         if caveat:
             lines.append(f"\n> Caveat: {caveat}")
+
+    # Full formal citations, naming the collecting organizations.
+    lines.append("\n## Data citations\n")
+    for key in ("market_cap_usd", "market_cap_pct_gdp", "listed_domestic_companies", "cpi"):
+        lines.append(f"- {markets.citation(key, accessed)}")
 
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

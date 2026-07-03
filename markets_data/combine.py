@@ -145,6 +145,24 @@ def build(
                 m.id: (m.wb_indicator or f"derived: deflated by {markets.CPI_INDICATOR}")
                 for m in markets.METRICS.values()
             },
+            "citations": {
+                key: markets.CITATIONS[key]
+                for key in (
+                    "market_cap_usd",
+                    "market_cap_pct_gdp",
+                    "listed_domestic_companies",
+                    "cpi",
+                )
+            },
+            "citations_text": [
+                markets.citation(key, _dt.date.today().isoformat())
+                for key in (
+                    "market_cap_usd",
+                    "market_cap_pct_gdp",
+                    "listed_domestic_companies",
+                    "cpi",
+                )
+            ],
         },
     )
     print(f"[markets_data] wrote manifest -> {mpath}", file=sys.stderr)

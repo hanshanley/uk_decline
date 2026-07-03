@@ -207,6 +207,27 @@ def _workbook(url: str) -> dict[str, pd.DataFrame]:
     return data
 
 
+CORE_HSC_TRUSTS = frozenset(
+    {"Belfast", "Northern", "South Eastern", "Southern", "Western"}
+)
+
+
+def _complete_quarters(df: pd.DataFrame, trust_col: str = "HSC Trust") -> set:
+    """Quarters (in the ``date`` column) where all five HSC trusts are present.
+
+    NI migrated trusts to the 'encompass' patient-record system on a rolling
+    schedule (South Eastern Nov 2023, Belfast Jun 2024, Northern Nov 2024,
+    Southern & Western May 2025). A trust's data is briefly absent right after its
+    migration, so that quarter's NI-wide total is incomplete. We keep only quarters
+    with all five trusts present, so every emitted figure is a complete,
+    source-traceable total — incomplete quarters are dropped, never interpolated.
+    """
+    tmp = df.dropna(subset=["date"]).copy()
+    tmp["_trust"] = tmp[trust_col].astype(str).str.strip()
+    present = tmp.groupby("date")["_trust"].apply(set)
+    return {q for q, trusts in present.items() if CORE_HSC_TRUSTS <= trusts}
+
+
 def _fetch_outpatient_waiting_list() -> list[dict]:
     url, _page = _find_attachment_on_pages(
         (OUTPATIENT_PUBLICATION_PAGE,),
@@ -215,9 +236,9 @@ def _fetch_outpatient_waiting_list() -> list[dict]:
     )
     frames = []
     for sheet_name, df in _workbook(url).items():
-        if "Quarter Ending" not in df.columns or "Total Waiting" not in df.columns:
+        if not {"Quarter Ending", "HSC Trust", "Total Waiting"}.issubset(df.columns):
             continue
-        frame = df[["Quarter Ending", "Total Waiting"]].copy()
+        frame = df[["Quarter Ending", "HSC Trust", "Total Waiting"]].copy()
         frame["sheet"] = sheet_name
         frames.append(frame)
     if not frames:
@@ -226,8 +247,10 @@ def _fetch_outpatient_waiting_list() -> list[dict]:
     df = pd.concat(frames, ignore_index=True)
     df["date"] = _dates(df["Quarter Ending"])
     df["value"] = _number_series(df["Total Waiting"])
+    df = df.dropna(subset=["date", "value"])
+    complete = _complete_quarters(df, "HSC Trust")
     grouped = (
-        df.dropna(subset=["date", "value"])
+        df[df["date"].isin(complete)]
         .groupby("date", as_index=False)["value"]
         .sum()
         .sort_values("date")
@@ -326,9 +349,11 @@ def _fetch_diagnostics_6week_breach() -> list[dict]:
     )
     frames = []
     for sheet_name, df in _workbook(url).items():
-        if not {"Quarter Ending", "0 - 6 weeks", "Total"}.issubset(df.columns):
+        if not {"Quarter Ending", "HSC Trust", "0 - 6 weeks", "Total"}.issubset(
+            df.columns
+        ):
             continue
-        frame = df[["Quarter Ending", "0 - 6 weeks", "Total"]].copy()
+        frame = df[["Quarter Ending", "HSC Trust", "0 - 6 weeks", "Total"]].copy()
         frame["sheet"] = sheet_name
         frames.append(frame)
     if not frames:
@@ -338,8 +363,10 @@ def _fetch_diagnostics_6week_breach() -> list[dict]:
     df["date"] = _dates(df["Quarter Ending"])
     df["within_6w"] = _number_series(df["0 - 6 weeks"])
     df["total"] = _number_series(df["Total"])
+    df = df.dropna(subset=["date", "within_6w", "total"])
+    complete = _complete_quarters(df, "HSC Trust")
     grouped = (
-        df.dropna(subset=["date", "within_6w", "total"])
+        df[df["date"].isin(complete)]
         .groupby("date", as_index=False)[["within_6w", "total"]]
         .sum()
         .sort_values("date")

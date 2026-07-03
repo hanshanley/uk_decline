@@ -19,6 +19,6 @@ DEFAULT_CSV = DATA_DIR / "stock_market_size.csv"
 DEFAULT_WIDE_CSV = DATA_DIR / "stock_market_size_wide.csv"
 DEFAULT_MANIFEST = DATA_DIR / "stock_market_size_manifest.json"
 
-# Committable showcase outputs (charts + summary) under outputs/.
-CHART_DIR = OUTPUT_DIR / "charts"
-DEFAULT_SUMMARY = OUTPUT_DIR / "stock_market_size_summary.md"
+# Committable showcase outputs (charts + summary) under outputs/stock_markets/.
+CHART_DIR = OUTPUT_DIR / "stock_markets"
+DEFAULT_SUMMARY = OUTPUT_DIR / "stock_markets" / "stock_market_size_summary.md"

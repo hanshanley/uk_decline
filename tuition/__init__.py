@@ -6,7 +6,7 @@ Scope (see README):
   * Regions = UK (own category), EU-27, US.
 
 Figures are collected as *annual* tuition in national currency, normalized to USD
-(nominal) and PPP-adjusted USD, then aggregated per region (median & average). A
+(nominal, market FX) and constant 2022 USD, then aggregated per region (median & average). A
 four-year total is reported as annual x DEGREE_YEARS.
 """
 

@@ -26,6 +26,10 @@ NORMALISE: tuple[tuple[str, str], ...] = (
     ("emigration", "all"),
     ("net_migration", "all"),
     ("net_migration_wb", "all"),
+    # long-run IPS series by origin (1964+) — enables population-adjusted history:
+    ("immigration_by_origin", "all"),
+    ("emigration_by_origin", "all"),
+    ("net_migration_by_origin", "all"),
     ("asylum_applications", "main_applicant"),
     ("irregular_arrivals", "all"),
     ("visas_granted", "work"),

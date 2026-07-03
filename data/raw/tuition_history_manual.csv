@@ -1,0 +1,9 @@
+country,iso3,region,year,annual_tuition_local,currency,source,source_url
+United Kingdom,GBR,UK,1971,0,GBP,No tuition fees for home undergraduates before 1998 (means-tested grants),https://commonslibrary.parliament.uk/research-briefings/cbp-8151/
+United Kingdom,GBR,UK,1998,1000,GBP,Teaching and Higher Education Act 1998 (fees introduced 1998/99),https://www.legislation.gov.uk/ukpga/1998/30
+United Kingdom,GBR,UK,2006,3000,GBP,Higher Education Act 2004 (variable fees up to GBP 3000 from 2006/07),https://www.legislation.gov.uk/ukpga/2004/8
+United Kingdom,GBR,UK,2012,9000,GBP,Higher Education (Higher Amount) (England) Regulations 2010 (from 2012/13),https://www.legislation.gov.uk/uksi/2010/3021
+United Kingdom,GBR,UK,2017,9250,GBP,Higher Education (Basic Amount and Higher Amount) (England) Regulations 2016 (from 2017/18),https://www.legislation.gov.uk/uksi/2016/1206
+United Kingdom,GBR,UK,2022,9250,GBP,England fee cap frozen at GBP 9250,https://commonslibrary.parliament.uk/research-briefings/cbp-8151/
+Germany,DEU,EU,1971,0,EUR,Public universities free for home students (no general tuition),https://www.study.eu/article/the-history-of-tuition-fees-in-germany
+Germany,DEU,EU,2022,0,EUR,Free (no general tuition; brief partial state fees ~EUR 1000/yr in ~7 states 2007-2014 only),https://eurydice.eacea.ec.europa.eu/publications/national-student-fee-and-support-systems-european-higher-education-202324

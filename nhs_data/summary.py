@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import _util, metrics, nations
+from . import _util, metrics, nations, sources
 from .paths import DEFAULT_CSV, DEFAULT_SUMMARY
 
 
@@ -86,6 +86,8 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
         caveat = metrics.CAVEATS.get(metric_id)
         if caveat:
             lines.append(f"\n> Caveat: {caveat}")
+
+    lines.append("\n" + sources.render_markdown())
 
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

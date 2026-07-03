@@ -6,12 +6,13 @@ import csv
 from pathlib import Path
 
 from . import normalize, schema
-from .sources import asylum, irregular, ons_ltim, visas, worldbank
+from .sources import asylum, irregular, ons_ips_history, ons_ltim, visas, worldbank
 
 # name -> fetch callable
 SOURCES = {
     "worldbank": worldbank.fetch,
     "ons_ltim": ons_ltim.fetch,
+    "ons_ips_history": ons_ips_history.fetch,
     "visas": visas.fetch,
     "asylum": asylum.fetch,
     "irregular": irregular.fetch,

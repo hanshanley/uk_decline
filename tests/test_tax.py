@@ -191,7 +191,7 @@ def test_fetch_tax_scopes_fallback_per_source(tmp_path, monkeypatch):
     """Offline run must not leak one source's metrics into another's per-source CSV."""
     import csv as _csv
 
-    import fetch_tax
+    from tax import fetch_tax
 
     # Force both live fetchers to yield nothing so both fall back.
     monkeypatch.setattr(fetch_tax.revenue, "fetch", lambda *a, **k: [])

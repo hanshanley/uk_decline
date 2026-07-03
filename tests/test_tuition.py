@@ -12,8 +12,8 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import build_dataset
-import plot_tuition
+from tuition import build_dataset
+from tuition import plot_tuition
 from tuition import config, dataset
 from tuition.stats import aggregate_by_region, average, median
 
@@ -62,34 +62,31 @@ def test_currency_mapping_examples():
 
 
 # --- currency conversion (build_dataset.convert) ----------------------------
-def test_convert_usd_and_ppp():
+def test_convert_usd_and_constant_2022():
     rows = [{
         "country": "United Kingdom", "iso3": "GBR", "region": "UK",
         "annual_tuition_local": "9250", "currency": "GBP", "year": "2024",
         "include_primary": "1", "source": "s", "notes": "n",
     }]
-    rates = {"GBR": {
-        "currency": "GBP", "fx_lcu_per_usd": 0.80, "fx_year": 2024,
-        "ppp_lcu_per_intl": 0.70, "ppp_year": 2024,
-    }}
-    out = build_dataset.convert(rows, rates)[0]
-    assert out["annual_tuition_usd"] == round(9250 / 0.80, 2)
-    assert out["annual_tuition_usd_ppp"] == round(9250 / 0.70, 2)
+    rates = {"GBR": {"currency": "GBP", "fx_lcu_per_usd": 0.80, "fx_year": 2024}}
+    deflator = {2024: 0.95}  # US CPI_2022 / CPI_2024
+    out = build_dataset.convert(rows, rates, deflator)[0]
+    nominal = round(9250 / 0.80, 2)
+    assert out["annual_tuition_usd"] == nominal
+    assert out["annual_tuition_usd_real2022"] == round(nominal * 0.95, 2)
+    assert "annual_tuition_usd_ppp" not in out  # PPP removed
 
 
-def test_convert_usd_base_currency_is_identity():
+def test_convert_usd_base_currency_and_no_deflator():
     rows = [{
         "country": "United States", "iso3": "USA", "region": "US",
         "annual_tuition_local": "11610", "currency": "USD", "year": "2024",
         "include_primary": "1", "source": "s", "notes": "n",
     }]
-    rates = {"USA": {
-        "currency": "USD", "fx_lcu_per_usd": 1.0, "fx_year": 2024,
-        "ppp_lcu_per_intl": 1.0, "ppp_year": 2024,
-    }}
-    out = build_dataset.convert(rows, rates)[0]
+    rates = {"USA": {"currency": "USD", "fx_lcu_per_usd": 1.0, "fx_year": 2024}}
+    out = build_dataset.convert(rows, rates)[0]  # no deflator -> factor 1.0
     assert out["annual_tuition_usd"] == 11610.0
-    assert out["annual_tuition_usd_ppp"] == 11610.0
+    assert out["annual_tuition_usd_real2022"] == 11610.0
 
 
 # --- primary-row inclusion (shared by analyze + plots) ----------------------
@@ -135,7 +132,7 @@ def test_plot_region_comparison_missing_region_no_crash():
 
 
 # --- historical deflation (real-terms, inflation-adjusted) -------------------
-import build_history
+from tuition import build_history
 
 
 def test_real_base_usd_deflation():

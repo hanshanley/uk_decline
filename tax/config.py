@@ -182,6 +182,31 @@ CAVEATS: dict[str, str] = {
 }
 
 
+# --- Citations (proper bibliographic form; the organisation that collected the data) ---
+# Access date recorded for the live pulls performed while building this section.
+ACCESS_DATE = "2026-07-03"
+
+CITATIONS: dict[str, str] = {
+    "oecd_revenue_statistics": (
+        "OECD (2024). Revenue Statistics — Comparative tables. OECD Tax Statistics "
+        "(database). Paris: Organisation for Economic Co-operation and Development. "
+        f"Retrieved {ACCESS_DATE} via the OECD SDMX API ({SDMX_BASE}), dataflow "
+        f"{REV_DATAFLOW}."
+    ),
+    "oecd_taxing_wages": (
+        "OECD (2024). Taxing Wages — Comparative tables. OECD Tax Statistics (database). "
+        "Paris: Organisation for Economic Co-operation and Development. Retrieved "
+        f"{ACCESS_DATE} via the OECD SDMX API ({SDMX_BASE}), dataflow {TW_DATAFLOW}."
+    ),
+}
+
+# One-line proper citation for figure source-notes.
+FIGURE_SOURCE_NOTE = (
+    "Data: OECD, Revenue Statistics & Taxing Wages (OECD Tax Statistics database), "
+    f"Paris, via the OECD SDMX API. Accessed {ACCESS_DATE}."
+)
+
+
 def variant_key(metric: str, household: str, earnings: str) -> str:
     """Build a stable wide-table column key for a metric variant.
 

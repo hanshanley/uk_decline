@@ -35,6 +35,35 @@ interpolated. The one derived series, `rtt_waiting_list_per_1000`, is computed a
 `waiting_list ÷ real ONS mid-year population × 1,000`, and is only produced for
 years that have a published ONS estimate (no projection/extrapolation).
 
+### Citations
+
+Cite the collecting/publishing organisation for each dataset (single source of
+truth: `nhs_data/sources.py`, rendered into the generated summary):
+
+- **NHS England** — *Consultant-led Referral to Treatment (RTT) Waiting Times;
+  A&E Attendances and Emergency Admissions; Cancer Waiting Times; and Monthly
+  Diagnostic Waiting Times and Activity (DM01).* NHS England statistical work
+  areas, https://www.england.nhs.uk/statistics/statistical-work-areas/.
+- **Public Health Scotland** — *NHS Scotland waiting times: Stage of Treatment
+  (ongoing waits); Accident & Emergency activity and waiting times; Cancer
+  waiting times; and Diagnostic waiting times.* Scottish Health and Social Care
+  Open Data platform, https://www.opendata.nhs.scot/.
+- **Welsh Government (StatsWales)** — *NHS activity and performance: Referral to
+  treatment times; A&E 4-hour performance; Suspected cancer pathway; and
+  Diagnostic and therapy services waiting times.* StatsWales open data API,
+  https://statswales.gov.wales/.
+- **Department of Health (Northern Ireland), Information & Analysis Directorate**
+  — *Northern Ireland Waiting Time Statistics: Outpatient, Diagnostic and Cancer
+  Waiting Times; and Emergency Care Waiting Times.* https://www.health-ni.gov.uk/
+  and OpenDataNI, https://www.opendatani.gov.uk/.
+- **Office for National Statistics (ONS); National Records of Scotland (NRS);
+  Northern Ireland Statistics and Research Agency (NISRA)** — *Mid-year
+  population estimates (dataset NM_2002_1)*, used only for the derived per-1,000
+  series. Nomis (operated by Durham University on behalf of ONS),
+  https://www.nomisweb.co.uk/.
+
+Contains public sector information licensed under the Open Government Licence v3.0.
+
 ## Tidy schema (long format)
 
 Every source module returns rows with these columns
@@ -50,21 +79,21 @@ period-end.
 ## Usage
 
 ```bash
-# Fetch everything, write data/nhs_waiting_times.csv, charts, and summary:
+# Fetch everything, write ../outputs/nhs/nhs_waiting_times.csv, charts, and summary:
 .venv/bin/python -m nhs_data
 
 # Restrict the year range:
 .venv/bin/python -m nhs_data --start 2015 --end 2025
 
 # Rebuild charts/summary from an existing CSV (no fetching):
-.venv/bin/python -m nhs_data --from-csv data/nhs_waiting_times.csv
+.venv/bin/python -m nhs_data --from-csv ../outputs/nhs/nhs_waiting_times.csv
 ```
 
 Outputs:
-- `data/nhs_waiting_times.csv` — combined tidy table
-- `data/charts/<metric>.png` — one per-nation trend chart per metric (each chart
+- `../outputs/nhs/nhs_waiting_times.csv` — combined tidy table
+- `../outputs/nhs/<metric>.png` — one per-nation trend chart per metric (each chart
   embeds a source-attribution note; the per-1,000 chart also credits ONS)
-- `data/nhs_waiting_times_summary.md` — headline trend summary
+- `../outputs/nhs/nhs_waiting_times_summary.md` — headline trend summary
 
 The chart-generation code is `nhs_data/charts.py` (matplotlib; run via the CLI
 above or `nhs_data.charts.make_charts(df)`).

@@ -15,6 +15,8 @@ BASE = "https://api.worldbank.org/v2"
 
 # indicator id -> (metric name, unit label)
 INDICATORS: dict[str, tuple[str, str]] = {
+    "NY.GDP.PCAP.KD": ("gdp_per_capita_constant_usd", "real, constant 2015 US$"),
+    "NY.GDP.PCAP.CD": ("gdp_per_capita_nominal_usd", "nominal, current US$"),
     "NY.GDP.PCAP.PP.CD": ("gdp_per_capita_ppp_current", "current international $"),
     "NY.GDP.PCAP.PP.KD": ("gdp_per_capita_ppp_constant", "constant 2021 international $"),
 }
