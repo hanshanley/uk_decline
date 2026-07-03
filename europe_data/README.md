@@ -4,33 +4,37 @@ Reproducible pipeline documenting the **UK's relative economic performance** vs.
 European peers, using **only real, publicly-sourced data** (every value is fetched live
 from an official API — nothing is hand-entered, mocked, interpolated, or synthesized).
 
-The headline GDP measure is **real GDP per capita in constant 2015 US$** (inflation-adjusted,
-market exchange rates — **not** PPP). PPP conversions can distort cross-country levels, so
-they are kept in the dataset for reference but are not the headline.
+The headline GDP measure is **real GDP per capita in constant 2015 US$** — GDP per capita in
+current US$ (World Bank `NY.GDP.PCAP.CD`) **deflated by US CPI** (`FP.CPI.TOTL`) to constant
+2015 dollars. It is inflation-adjusted and at **market exchange rates** (not PPP), so it
+reflects the actual dollar value of output each year with inflation removed. (PPP and the
+World Bank fixed-exchange-rate series are also kept in the dataset for reference.)
 
 ## Headline results (figures in [`../outputs/`](../outputs))
 
 ### Real GDP per capita, 1970–2024 (constant 2015 US$)
 ![Real GDP per capita, UK vs peers, 1970–2024](../outputs/gdp_income/gdp_per_capita_real_over_time.png)
 
-In real, constant-US$ terms the UK **leads its European peers** (Germany, France, Italy) but
-the **US pulls steadily away**: US real GDP per capita reaches ~$67k by 2024 vs the UK's ~$48k.
-*Source: World Bank WDI `NY.GDP.PCAP.KD` — real GDP per capita, constant 2015 US$
+The UK's real GDP per capita rose to **draw level with the US in 2007** (UK ≈ $57.9k vs US
+≈ $54.9k, constant 2015 US$) — then **collapsed relative to the US**, falling to ~$40k by 2024
+while the US climbed to ~$65k.
+*Source: World Bank WDI `NY.GDP.PCAP.CD` deflated by US CPI (`FP.CPI.TOTL`) to constant 2015 US$
 (inflation-adjusted, market exchange rates).*
 
-### UK relative to the EU average and the US
-![UK GDP per capita as a share of the EU average and the US](../outputs/gdp_income/uk_gdp_relative_to_peers.png)
+### UK relative to its peers (US, Germany, France, EU average, Poland)
+![UK GDP per capita as a % of each peer](../outputs/gdp_income/uk_gdp_relative_to_peers.png)
 
-The UK slid from **~83% of US real GDP per capita in 2007 to ~72% in 2024** (it was 77% in
-1970). Against the **EU average** the UK sits well above (~137–149% throughout — the EU-27
-aggregate includes lower-income members). So the UK's real-terms shortfall is specifically
-**vs the US**, not vs Europe as a whole.
+On a log scale (ratios span 45%→1100%): the UK **overtook the US in 2007 (105%)** then fell to
+**62% by 2024**; it is roughly at parity with Germany (~95%) and above France; and it is being
+**caught by Poland** — the UK went from ~11× Poland's GDP per capita to ~2× as Poland's
+economy converged.
 
-> **Note on "weren't the UK and US equal around 2008?"** They were — but only in *nominal*
-> (current-US$) terms, because sterling was ~$2 in 2007 (UK nominal GDP/capita was ~105% of
-> the US in 2007). That is an exchange-rate effect, not a real one. In **inflation-adjusted**
-> terms (constant-US$ or PPP) the UK has always been below the US. The nominal series is in
-> the dataset (`gdp_per_capita_nominal_usd`) so this is fully traceable.
+> **Which "constant US$"?** Two constructions exist: (a) *current US$ deflated by US CPI*
+> (used here — preserves each year's actual exchange rate, so the strong 2007 pound shows up),
+> and (b) World Bank `NY.GDP.PCAP.KD` (fixes the exchange rate at 2015, which erases the 2007
+> crossover). We use (a) because it reflects the dollar value the UK economy actually reached.
+> Note: in **PPP** terms Poland is ~85% of the UK (its lower price level makes market-FX
+> understate it) — that series is in the dataset (`gdp_per_capita_ppp_*`).
 
 ### Median disposable income (a "typical household" measure)
 ![Median disposable income, PPS](../outputs/gdp_income/median_disposable_income_pps.png)

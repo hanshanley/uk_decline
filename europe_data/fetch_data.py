@@ -67,6 +67,12 @@ def main(argv: list[str] | None = None) -> int:
     for name in tqdm(args.sources, desc="sources", unit="src"):
         stem, fn = fetchers[name]
         rows = fn(args.start, args.end)
+        # Add the CPI-deflated real-US$ GDP series (constant 2015 US$, market FX) alongside
+        # the World Bank indicators — this is the headline GDP measure used by the charts.
+        if name == "worldbank":
+            cpi = worldbank.us_cpi(args.start, args.end)
+            real_rows = worldbank.deflate_to_real_usd(rows, cpi)
+            rows = rows + real_rows
         tqdm.write(f"  {name}: {len(rows)} rows")
         grouped.append((stem, rows))
 

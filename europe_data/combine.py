@@ -12,6 +12,7 @@ LONG_FIELDS = ["iso3", "country", "year", "metric", "value", "unit", "source"]
 
 # Wide-table column order (one row per country-year).
 METRIC_ORDER = [
+    "gdp_per_capita_real_usd",
     "gdp_per_capita_constant_usd",
     "gdp_per_capita_nominal_usd",
     "gdp_per_capita_real_maddison",

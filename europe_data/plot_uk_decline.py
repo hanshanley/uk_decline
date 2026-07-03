@@ -69,6 +69,7 @@ plt.rcParams.update({
     "axes.spines.right": False,
     "xtick.major.size": 0,
     "ytick.major.size": 0,
+    "text.parse_math": False,
 })
 
 LABEL_STROKE = [pe.withStroke(linewidth=3.5, foreground="white")]
@@ -88,10 +89,11 @@ EU_EUROSTAT = ("European Union (27, 2020)", SUBSTACK_MUTED, "--", 1.6)  # Eurost
 # GDP per capita is shown in REAL, constant 2015 US$ (inflation-adjusted, market exchange
 # rates — NOT PPP). World Bank series NY.GDP.PCAP.KD, which covers 1960+ so it reaches the
 # 1970s. (PPP/Maddison series remain in the dataset but are not plotted.)
-GDP_METRIC = "gdp_per_capita_constant_usd"
+GDP_METRIC = "gdp_per_capita_real_usd"
 
-SOURCE_GDP = ("Data: World Bank Group, World Development Indicators \u2014 real GDP per capita, "
-              "constant 2015 US$ (NY.GDP.PCAP.KD; inflation-adjusted, market exchange rates).")
+SOURCE_GDP = ("Data: World Bank Group, World Development Indicators \u2014 GDP per capita in "
+              "current US$ (NY.GDP.PCAP.CD) deflated by US CPI (FP.CPI.TOTL) to constant 2015 US$ "
+              "(inflation-adjusted, market exchange rates).")
 SOURCE_EUROSTAT = ("Data: Eurostat (European Commission), EU-SILC \u2014 median equivalised net "
                    "income, PPS (ilc_di03). UK series ends ~2018 (post-Brexit).")
 SOURCE_PIP = ("Data: World Bank Group, Poverty and Inequality Platform \u2014 median income, "
@@ -164,43 +166,53 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
 def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
     metric = GDP_METRIC  # real constant-US$ series (a country-vs-country ratio is inflation-invariant)
     uk = _series(df, "United Kingdom", metric).set_index("year")[metric]
-    fig, ax = plt.subplots(figsize=(11, 6))
+    fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
+    # UK as a % of each reference. Ratios span ~70% (vs US) to ~600% (vs Poland),
+    # so a log y-axis keeps every line legible on one panel.
     refs = [
-        ("European Union", SUBSTACK_BLUE, "vs EU average"),
-        ("United States", SUBSTACK_TEXT, "vs United States"),
+        ("United States", SUBSTACK_TEXT, "-", 2.8, "vs United States"),
+        ("Germany", SUBSTACK_BLUE, "-", 2.0, "vs Germany"),
+        ("France", SUBSTACK_GOLD, "-", 2.0, "vs France"),
+        ("European Union", SUBSTACK_MUTED, "--", 2.0, "vs EU average"),
+        ("Poland", SUBSTACK_GREEN, "-", 2.0, "vs Poland"),
     ]
-    for country, color, label in refs:
+    for country, color, ls, lw, label in refs:
         ref = _series(df, country, metric).set_index("year")[metric]
         ratio = (uk / ref).dropna() * 100.0
         if ratio.empty:
             continue
-        ax.plot(ratio.index, ratio.values, color=color, linewidth=2.4)
+        ax.plot(ratio.index, ratio.values, color=color, linewidth=lw, linestyle=ls)
         _end_label(ax, ratio.index, ratio.values, label, color)
-        # Highlight the post-2007 slide vs the US — the core takeaway.
-        if country == "United States" and 2007 in ratio.index and ratio.index.max() >= 2022:
-            y07 = ratio.loc[2007]
-            ylast = ratio.loc[ratio.index.max()]
-            ax.scatter([2007, ratio.index.max()], [y07, ylast], s=28,
-                       color=SUBSTACK_ACCENT, zorder=5)
-            ax.annotate(
-                f"UK slips from {y07:.0f}% to {ylast:.0f}% of US\nsince the 2007 peak",
-                xy=(ratio.index.max(), ylast), xytext=(1998, 76.5),
-                fontsize=10.5, color=SUBSTACK_ACCENT, fontweight="bold", va="center",
+
+    ax.set_yscale("log")
+    ax.axhline(100, color=SUBSTACK_ACCENT, linewidth=1.2, linestyle=":")
+    ax.text(ax.get_xlim()[0], 101, "parity with UK (100%)", fontsize=9,
+            color=SUBSTACK_ACCENT, style="italic", va="bottom")
+
+    # Callouts: UK below the US (and the gap widening); Poland closing fast.
+    us = (uk / _series(df, "United States", metric).set_index("year")[metric]).dropna() * 100
+    pl = (uk / _series(df, "Poland", metric).set_index("year")[metric]).dropna() * 100
+    ax.annotate(f"UK is now {us.iloc[-1]:.0f}% of US\n(was {us.max():.0f}% at its peak)",
+                xy=(us.index[-1], us.iloc[-1]), xytext=(1994, 66),
+                fontsize=10, color=SUBSTACK_TEXT, fontweight="bold", va="center",
+                path_effects=LABEL_STROKE)
+    ax.annotate(f"Poland closing fast:\nUK fell from {pl.max():.0f}% to {pl.iloc[-1]:.0f}% above it",
+                xy=(pl.index[-1], pl.iloc[-1]), xytext=(1996, 430),
+                fontsize=10, color=SUBSTACK_GREEN, fontweight="bold", va="center",
                 path_effects=LABEL_STROKE)
 
-    ax.axhline(100, color=SUBSTACK_MUTED, linewidth=1.0, linestyle=":")
-    ax.text(ax.get_xlim()[0], 100.6, "parity (100%)", fontsize=9,
-            color=SUBSTACK_MUTED, style="italic", va="bottom")
-
     ax.set_xlabel("Year", labelpad=2)
-    ax.set_ylabel("UK GDP per capita as % of reference", labelpad=2)
-    ax.yaxis.set_major_formatter(mtick.PercentFormatter())
-    ax.set_title("UK real GDP per capita relative to the EU average\nand the United States, "
-                 "1970\u20132024 (constant 2015 US$)", fontweight="bold", pad=14)
+    ax.set_ylabel("UK GDP per capita as % of reference (log scale)", labelpad=2)
+    ax.yaxis.set_major_locator(mtick.FixedLocator([50, 70, 100, 150, 200, 300, 500, 1000]))
+    ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}%"))
+    ax.yaxis.set_minor_formatter(mtick.NullFormatter())
+    ax.set_title("UK real GDP per capita vs its peers, 1970\u20132024\n"
+                 "(above 100% = UK richer; below = UK poorer; constant 2015 US$)",
+                 fontweight="bold", pad=14)
     ax.grid(axis="y", linestyle="-", linewidth=0.5)
     ax.tick_params(axis="both", pad=2)
-    ax.margins(x=0.1)
+    ax.margins(x=0.03)
     _source_note(fig, SOURCE_GDP)
     plt.tight_layout(pad=0.5)
     plt.subplots_adjust(bottom=0.12)
@@ -221,7 +233,7 @@ def main(argv: list[str] | None = None) -> int:
 
     _line_chart(
         df, GDP_METRIC,
-        "Real GDP per capita: the US pulls away from the UK, 1970\u20132024",
+        "Real GDP per capita: the UK drew level with the US in 2007,\nthen fell behind \u2014 1970\u20132024",
         "Real GDP per capita (000s, constant 2015 US$)",
         lambda v, _: f"${v:.0f}k", SOURCE_GDP,
         "gdp_per_capita_real_over_time.png", out,

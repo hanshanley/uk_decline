@@ -80,3 +80,45 @@ def fetch(
     for indicator in ind_list:
         out.extend(_fetch_indicator(indicator, iso3_list, start, end))
     return out
+
+
+def us_cpi(start: int, end: int) -> dict[int, float]:
+    """US CPI index (FP.CPI.TOTL) by year — used to deflate current-US$ to constant US$.
+
+    Always fetched from 1960 so the 2015 base year is present regardless of ``start``.
+    """
+    out: dict[int, float] = {}
+    payload = get_json(
+        f"{BASE}/country/USA/indicator/FP.CPI.TOTL",
+        params={"format": "json", "per_page": 1000, "date": f"{min(start, 1960)}:{end}"},
+    )
+    if isinstance(payload, list) and len(payload) > 1 and payload[1]:
+        for row in payload[1]:
+            if row.get("value") is not None:
+                out[int(row["date"])] = float(row["value"])
+    return out
+
+
+def deflate_to_real_usd(rows: list[dict], cpi: dict[int, float], base_year: int = 2015) -> list[dict]:
+    """Add a ``gdp_per_capita_real_usd`` metric: current-US$ GDP per capita expressed in
+    constant ``base_year`` US$ by deflating with US CPI (market exchange rates preserved,
+    inflation removed). This is the series in which the UK eclipsed the US in 2007.
+    """
+    base = cpi.get(base_year)
+    if not base:
+        return []
+    real: list[dict] = []
+    for r in rows:
+        if r["metric"] != "gdp_per_capita_nominal_usd":
+            continue
+        c = cpi.get(r["year"])
+        if not c:
+            continue
+        real.append({
+            **r,
+            "metric": "gdp_per_capita_real_usd",
+            "value": r["value"] * base / c,
+            "unit": f"real, constant {base_year} US$ (US-CPI deflated, market FX)",
+            "source": "World Bank WDI (NY.GDP.PCAP.CD deflated by US CPI, FP.CPI.TOTL)",
+        })
+    return real

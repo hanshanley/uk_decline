@@ -26,10 +26,11 @@ All output images live in one place: **[`outputs/`](outputs)**, one subfolder pe
 
 ## Key results
 
-### GDP per capita — the US pulls away from the UK
-![UK GDP per capita relative to the EU average and the US](outputs/gdp_income/uk_gdp_relative_to_peers.png)
-UK real GDP per capita slid from **~83% of the US in 2007 to ~72% in 2024** (it stays above
-the EU-27 average). *Source: World Bank, World Development Indicators (NY.GDP.PCAP.KD), constant 2015 US$.*
+### GDP per capita — the UK reached US levels in 2007, then fell behind
+![UK GDP per capita vs its peers](outputs/gdp_income/uk_gdp_relative_to_peers.png)
+In real terms (constant 2015 US$), UK GDP per capita **drew level with the US in 2007 (105%)**
+then fell to **62% by 2024** — and even Poland has closed most of the gap. *Source: World Bank
+WDI (NY.GDP.PCAP.CD deflated by US CPI, FP.CPI.TOTL), constant 2015 US$.*
 
 ### Stock market — the UK shrinks against the US
 ![UK/US stock-market cap ratio (real)](outputs/stock_markets/stock_uk_us_ratio_market_cap_usd_real.png)
