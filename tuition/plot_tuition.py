@@ -46,42 +46,43 @@ def _finalize(fig, out_path: str, bottom: float) -> None:
 
 def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path: str) -> None:
     agg = aggregate_by_region(rows, value_key)
-    regions = [r for r in (config.UK, config.EU, config.US) if r in agg]
-    labels = [REGION_LABELS[r] for r in regions]
-    means = [agg[r]["mean_annual"] for r in regions]
-    medians = [agg[r]["median_annual"] for r in regions]
+    # Typical (median) annual fee per region; UK and US are ~single values so mean≈median,
+    # and the EU median (~free) is the honest "typical" student experience.
+    order = [r for r in (config.EU, config.US, config.UK) if r in agg]  # low -> high (barh)
+    labels = [REGION_LABELS[r] for r in order]
+    vals = [agg[r]["median_annual"] for r in order]
+    means = [agg[r]["mean_annual"] for r in order]
+    colors = [(theme.ACCENT if r == config.UK else theme.TEXT if r == config.US else theme.GREEN)
+              for r in order]
 
-    fig, ax = plt.subplots(figsize=(10, 6.5))
-    x = range(len(regions))
-    width = 0.38
-    bars_mean = ax.bar([i - width / 2 for i in x], means, width, label="Average",
-                       color=theme.BLUE, edgecolor=theme.BG, linewidth=0.6)
-    bars_med = ax.bar([i + width / 2 for i in x], medians, width, label="Median",
-                      color=theme.GOLD, edgecolor=theme.BG, linewidth=0.6)
+    fig, ax = plt.subplots(figsize=(11, 5.2))
+    ypos = list(range(len(order)))
+    ax.barh(ypos, vals, height=0.62, color=colors, zorder=3)
 
-    for b in bars_mean:
-        ax.annotate(_money(b.get_height()), (b.get_x() + b.get_width() / 2, b.get_height()),
-                    ha="center", va="bottom", fontsize=9, color=theme.TEXT,
-                    xytext=(0, 2), textcoords="offset points")
-    # Label median bars only where they differ from the mean (single-country regions
-    # have mean == median, so a second identical label would just overprint).
-    for i, b in enumerate(bars_med):
-        if abs((medians[i] or 0) - (means[i] or 0)) > 1:
-            ax.annotate(_money(b.get_height()), (b.get_x() + b.get_width() / 2, b.get_height()),
-                        ha="center", va="bottom", fontsize=9, color=theme.TEXT,
-                        xytext=(0, 2), textcoords="offset points")
+    for i, r in enumerate(order):
+        v = vals[i]
+        if v and v > 0:
+            ax.annotate(f"{_money(v)}/yr", (v, i), ha="left", va="center", fontsize=12,
+                        fontweight="bold", color=colors[i], xytext=(6, 0),
+                        textcoords="offset points")
+            ax.annotate(f"\u2248 {_money(v*3)} over a 3-year degree", (v, i), ha="left",
+                        va="center", fontsize=8.5, color=theme.MUTED, xytext=(6, -14),
+                        textcoords="offset points")
+        else:
+            ax.annotate(f"most EU countries: free  (EU-27 average {_money(means[i])}/yr)",
+                        (0, i), ha="left", va="center", fontsize=10, color=theme.GREEN,
+                        fontweight="bold", xytext=(6, 0), textcoords="offset points")
 
-    ax.set_xticks(list(x))
-    ax.set_xticklabels(labels)
-    ax.set_ylabel(f"Annual domestic tuition ({unit})")
-    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
-    ax.set_title("Cost of a bachelor's degree: UK vs EU-27 vs US\nannual domestic tuition (fees only)",
+    ax.set_yticks(ypos)
+    ax.set_yticklabels(labels, fontsize=12)
+    ax.set_xlabel(f"Annual domestic tuition, fees only ({unit})")
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
+    ax.set_xlim(0, max(vals) * 1.35)
+    ax.set_title("A UK degree now costs as much as a US one \u2014 and the rest of the EU is free",
                  fontweight="bold", pad=14)
-    ax.grid(axis="y", linestyle="-", linewidth=0.5)
+    ax.grid(axis="x", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)
-    # Legend sits over the empty EU-27 column so it never overlaps the UK/US bars.
-    ax.legend(loc="upper center", frameon=False)
-    _finalize(fig, out_path, bottom=0.13)
+    _finalize(fig, out_path, bottom=0.14)
 
 
 def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) -> None:

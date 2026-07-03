@@ -55,7 +55,9 @@ def gdp_vs_us():
     M = "gdp_per_capita_real_usd"
     uk = {int(x["year"]): float(x[M]) for x in r if x["country"] == "United Kingdom" and x.get(M)}
     us = {int(x["year"]): float(x[M]) for x in r if x["country"] == "United States" and x.get(M)}
-    ys = sorted(set(uk) & set(us))
+    # Start at 1990: the 1970s/80s market-FX values are anomalously low and would make the
+    # UK look like it "improved". 1990 onward captures the 2007 peak and the fall since.
+    ys = [y for y in sorted(set(uk) & set(us)) if y >= 1990]
     return ys, [100 * uk[y] / us[y] for y in ys]
 
 

@@ -168,51 +168,48 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
     uk = _series(df, "United Kingdom", metric).set_index("year")[metric]
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
-    # UK as a % of each reference. Ratios span ~70% (vs US) to ~600% (vs Poland),
-    # so a log y-axis keeps every line legible on one panel.
+    # Each peer's GDP per capita as a % of the UK (UK = 100). Higher line = richer than the
+    # UK; a rising line = catching up with / overtaking the UK.
     refs = [
-        ("United States", SUBSTACK_TEXT, "-", 2.8, "vs United States"),
-        ("Germany", SUBSTACK_BLUE, "-", 2.0, "vs Germany"),
-        ("France", SUBSTACK_GOLD, "-", 2.0, "vs France"),
-        ("European Union", SUBSTACK_MUTED, "--", 2.0, "vs EU average"),
-        ("Poland", SUBSTACK_GREEN, "-", 2.0, "vs Poland"),
+        ("United States", SUBSTACK_TEXT, "-", 2.8, "United States"),
+        ("Germany", SUBSTACK_BLUE, "-", 2.0, "Germany"),
+        ("France", SUBSTACK_GOLD, "-", 2.0, "France"),
+        ("European Union", SUBSTACK_MUTED, "--", 2.0, "EU average"),
+        ("Poland", SUBSTACK_GREEN, "-", 2.0, "Poland"),
     ]
     for country, color, ls, lw, label in refs:
         ref = _series(df, country, metric).set_index("year")[metric]
-        ratio = (uk / ref).dropna() * 100.0
+        ratio = (ref / uk).dropna() * 100.0  # peer as % of the UK
         if ratio.empty:
             continue
         ax.plot(ratio.index, ratio.values, color=color, linewidth=lw, linestyle=ls)
         _end_label(ax, ratio.index, ratio.values, label, color)
 
-    ax.set_yscale("log")
-    ax.axhline(100, color=SUBSTACK_ACCENT, linewidth=1.2, linestyle=":")
-    ax.text(ax.get_xlim()[0], 101, "parity with UK (100%)", fontsize=9,
-            color=SUBSTACK_ACCENT, style="italic", va="bottom")
+    ax.axhline(100, color=SUBSTACK_ACCENT, linewidth=1.4, linestyle="-")
+    ax.text(ax.get_xlim()[0], 102, "United Kingdom = 100", fontsize=9.5,
+            color=SUBSTACK_ACCENT, style="italic", fontweight="bold", va="bottom")
 
-    # Callouts: UK below the US (and the gap widening); Poland closing fast.
-    us = (uk / _series(df, "United States", metric).set_index("year")[metric]).dropna() * 100
-    pl = (uk / _series(df, "Poland", metric).set_index("year")[metric]).dropna() * 100
-    ax.annotate(f"UK is now {us.iloc[-1]:.0f}% of US\n(was {us.max():.0f}% at its peak)",
-                xy=(us.index[-1], us.iloc[-1]), xytext=(1994, 66),
+    us = (_series(df, "United States", metric).set_index("year")[metric] / uk).dropna() * 100
+    pl = (_series(df, "Poland", metric).set_index("year")[metric] / uk).dropna() * 100
+    ax.annotate(f"US briefly fell to UK's level in 2007,\nthen surged to {us.iloc[-1]:.0f}% of the UK",
+                xy=(us.index[-1], us.iloc[-1]), xytext=(1988, 178),
                 fontsize=10, color=SUBSTACK_TEXT, fontweight="bold", va="center",
                 path_effects=LABEL_STROKE)
-    ax.annotate(f"Poland closing fast:\nUK fell from {pl.max():.0f}% to {pl.iloc[-1]:.0f}% above it",
-                xy=(pl.index[-1], pl.iloc[-1]), xytext=(1996, 430),
+    ax.annotate(f"Poland has climbed from {pl.iloc[0]:.0f}%\nto {pl.iloc[-1]:.0f}% of UK GDP per capita",
+                xy=(pl.index[-1], pl.iloc[-1]), xytext=(1996, 30),
                 fontsize=10, color=SUBSTACK_GREEN, fontweight="bold", va="center",
                 path_effects=LABEL_STROKE)
 
     ax.set_xlabel("Year", labelpad=2)
-    ax.set_ylabel("UK GDP per capita as % of reference (log scale)", labelpad=2)
-    ax.yaxis.set_major_locator(mtick.FixedLocator([50, 70, 100, 150, 200, 300, 500, 1000]))
+    ax.set_ylabel("GDP per capita as % of the UK (UK = 100)", labelpad=2)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}%"))
-    ax.yaxis.set_minor_formatter(mtick.NullFormatter())
-    ax.set_title("UK real GDP per capita vs its peers, 1970\u20132024\n"
-                 "(above 100% = UK richer; below = UK poorer; constant 2015 US$)",
+    ax.set_title("The UK is being caught and overtaken: real GDP per capita\n"
+                 "vs the UK (UK = 100), 1970\u20132024 (constant 2015 US$)",
                  fontweight="bold", pad=14)
     ax.grid(axis="y", linestyle="-", linewidth=0.5)
+    ax.set_axisbelow(True)
     ax.tick_params(axis="both", pad=2)
-    ax.margins(x=0.03)
+    ax.margins(x=0.04)
     _source_note(fig, SOURCE_GDP)
     plt.tight_layout(pad=0.5)
     plt.subplots_adjust(bottom=0.12)
