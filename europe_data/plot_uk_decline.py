@@ -8,7 +8,7 @@ palette, italic source note, no top/right spines).
 
 Figures:
   - gdp_per_capita_ppp_over_time.png   UK vs European peers + EU-27, GDP/capita PPP
-  - uk_gdp_relative_to_peers.png       UK GDP/capita as a share of Germany and the EU-27
+  - uk_gdp_relative_to_peers.png       UK GDP/capita as a share of the EU average and the US
   - median_disposable_income_pps.png   Median income (Eurostat PPS), UK ends ~2018
   - median_income_pip.png              PIP median income (2017 PPP $/day), UK to ~2021
 
@@ -30,41 +30,48 @@ import matplotlib.patheffects as pe
 import matplotlib.ticker as mtick
 import pandas as pd
 
-# ── Substack-style theme (matches pre1870_reapportionment_package figures) ──
-SUBSTACK_BG = "#F7F5F0"
-SUBSTACK_CARD = "#EFEDE8"
-SUBSTACK_TEXT = "#1A1A1A"
-SUBSTACK_MUTED = "#6B6B6B"
-SUBSTACK_ACCENT = "#C85A3D"
-SUBSTACK_BLUE = "#3D6F8C"
-SUBSTACK_GOLD = "#C2993E"
-SUBSTACK_GREEN = "#4A7C59"
-SUBSTACK_GRID = "#D6D3CC"
+# ── Professional house style (clean, modern, editorial) ──────────────────────
+SUBSTACK_BG = "#FFFFFF"      # crisp white background
+SUBSTACK_CARD = "#F3F4F6"
+SUBSTACK_TEXT = "#111827"    # near-black slate (also the US line)
+SUBSTACK_MUTED = "#6B7280"   # muted gray for ticks / secondary text
+SUBSTACK_ACCENT = "#C0392B"  # UK highlight — strong editorial red
+SUBSTACK_BLUE = "#1F5C99"    # Germany
+SUBSTACK_GOLD = "#D19000"    # France — amber
+SUBSTACK_GREEN = "#2A9D8F"   # Italy — teal
+SUBSTACK_GRID = "#E5E7EB"    # light gridlines
 
 plt.rcParams.update({
     "figure.facecolor": SUBSTACK_BG,
     "axes.facecolor": SUBSTACK_BG,
     "savefig.facecolor": SUBSTACK_BG,
     "text.color": SUBSTACK_TEXT,
-    "axes.labelcolor": SUBSTACK_TEXT,
+    "axes.labelcolor": "#374151",
     "xtick.color": SUBSTACK_MUTED,
     "ytick.color": SUBSTACK_MUTED,
-    "axes.edgecolor": SUBSTACK_GRID,
+    "xtick.labelcolor": SUBSTACK_MUTED,
+    "ytick.labelcolor": SUBSTACK_MUTED,
+    "axes.edgecolor": "#D1D5DB",
+    "axes.linewidth": 0.8,
     "grid.color": SUBSTACK_GRID,
-    "grid.alpha": 0.6,
-    "grid.linewidth": 0.5,
-    "font.family": "serif",
+    "grid.alpha": 1.0,
+    "grid.linewidth": 0.9,
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
     "font.size": 12,
-    "axes.titlesize": 16,
-    "axes.labelsize": 13,
+    "axes.titlesize": 17,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 12,
     "figure.titlesize": 18,
     "legend.framealpha": 0.0,
     "legend.fontsize": 11,
     "axes.spines.top": False,
     "axes.spines.right": False,
+    "xtick.major.size": 0,
+    "ytick.major.size": 0,
 })
 
-LABEL_STROKE = [pe.withStroke(linewidth=4, foreground="white")]
+LABEL_STROKE = [pe.withStroke(linewidth=3.5, foreground="white")]
 
 # UK is always the warm accent; peers use the cooler/earthy palette. The US (a key
 # non-European peer) is near-black. Spain removed per request; US added.
@@ -75,6 +82,7 @@ PEERS = [
     ("France", SUBSTACK_GOLD, "-", 1.8),
     ("Italy", SUBSTACK_GREEN, "-", 1.8),
 ]
+EU_WB = ("European Union", SUBSTACK_BLUE, "--", 2.0)                    # World Bank EU aggregate, for GDP
 EU_EUROSTAT = ("European Union (27, 2020)", SUBSTACK_MUTED, "--", 1.6)  # Eurostat, income
 
 # GDP per capita is shown in REAL, constant 2015 US$ (inflation-adjusted, market exchange
@@ -159,7 +167,7 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
     fig, ax = plt.subplots(figsize=(11, 6))
 
     refs = [
-        ("Germany", SUBSTACK_BLUE, "vs Germany"),
+        ("European Union", SUBSTACK_BLUE, "vs EU average"),
         ("United States", SUBSTACK_TEXT, "vs United States"),
     ]
     for country, color, label in refs:
@@ -169,6 +177,17 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
             continue
         ax.plot(ratio.index, ratio.values, color=color, linewidth=2.4)
         _end_label(ax, ratio.index, ratio.values, label, color)
+        # Highlight the post-2007 slide vs the US — the core takeaway.
+        if country == "United States" and 2007 in ratio.index and ratio.index.max() >= 2022:
+            y07 = ratio.loc[2007]
+            ylast = ratio.loc[ratio.index.max()]
+            ax.scatter([2007, ratio.index.max()], [y07, ylast], s=28,
+                       color=SUBSTACK_ACCENT, zorder=5)
+            ax.annotate(
+                f"UK slips from {y07:.0f}% to {ylast:.0f}% of US\nsince the 2007 peak",
+                xy=(ratio.index.max(), ylast), xytext=(1998, 76.5),
+                fontsize=10.5, color=SUBSTACK_ACCENT, fontweight="bold", va="center",
+                path_effects=LABEL_STROKE)
 
     ax.axhline(100, color=SUBSTACK_MUTED, linewidth=1.0, linestyle=":")
     ax.text(ax.get_xlim()[0], 100.6, "parity (100%)", fontsize=9,
@@ -177,7 +196,7 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
     ax.set_xlabel("Year", labelpad=2)
     ax.set_ylabel("UK GDP per capita as % of reference", labelpad=2)
     ax.yaxis.set_major_formatter(mtick.PercentFormatter())
-    ax.set_title("UK real GDP per capita relative to the United States\nand Germany, "
+    ax.set_title("UK real GDP per capita relative to the EU average\nand the United States, "
                  "1970\u20132024 (constant 2015 US$)", fontweight="bold", pad=14)
     ax.grid(axis="y", linestyle="-", linewidth=0.5)
     ax.tick_params(axis="both", pad=2)
@@ -206,7 +225,7 @@ def main(argv: list[str] | None = None) -> int:
         "Real GDP per capita (000s, constant 2015 US$)",
         lambda v, _: f"${v:.0f}k", SOURCE_GDP,
         "gdp_per_capita_real_over_time.png", out,
-        scale=1000.0, source_ha="left",
+        eu_agg=EU_WB, eu_label="EU average", scale=1000.0, source_ha="left",
     )
     fig_uk_relative(df, out)
     _line_chart(

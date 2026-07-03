@@ -22,14 +22,14 @@ import matplotlib.ticker as mtick  # noqa: E402
 from . import config  # noqa: E402
 
 # ── Substack-style theme (matches tax/charts.py + pre1870_reapportionment_package) ──
-BG = "#F7F5F0"
-TEXT = "#1A1A1A"
-MUTED = "#6B6B6B"
-GRID = "#D6D3CC"
-ACCENT = "#C85A3D"   # UK / 65+
-BLUE = "#3D6F8C"     # Europe (median) / 15-64
-GOLD = "#C2993E"     # US / 0-14
-GREEN = "#4A7C59"
+BG = "#FFFFFF"
+TEXT = "#111827"
+MUTED = "#6B7280"
+GRID = "#E5E7EB"
+ACCENT = "#C0392B"   # UK / 65+
+BLUE = "#1F5C99"     # Europe (median) / 15-64
+GOLD = "#D19000"     # US / 0-14
+GREEN = "#2A9D8F"
 
 plt.rcParams.update(
     {
@@ -42,9 +42,9 @@ plt.rcParams.update(
         "ytick.color": MUTED,
         "axes.edgecolor": GRID,
         "grid.color": GRID,
-        "grid.alpha": 0.6,
-        "grid.linewidth": 0.5,
-        "font.family": "serif",
+        "grid.alpha": 1.0,
+        "grid.linewidth": 0.9,
+        "font.family": "sans-serif", "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
         "font.size": 12,
         "axes.titlesize": 16,
         "axes.labelsize": 13,

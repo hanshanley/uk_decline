@@ -13,15 +13,15 @@ matplotlib.use("Agg")  # headless: no display required
 import matplotlib.pyplot as plt
 
 # ── Substack-style theme (matches pre1870_reapportionment_package) ──────────
-BG = "#F7F5F0"
-CARD = "#EFEDE8"
-TEXT = "#1A1A1A"
-MUTED = "#6B6B6B"
-ACCENT = "#C85A3D"
-BLUE = "#3D6F8C"
-GOLD = "#C2993E"
-GREEN = "#4A7C59"
-GRID = "#D6D3CC"
+BG = "#FFFFFF"
+CARD = "#F3F4F6"
+TEXT = "#111827"
+MUTED = "#6B7280"
+ACCENT = "#C0392B"
+BLUE = "#1F5C99"
+GOLD = "#D19000"
+GREEN = "#2A9D8F"
+GRID = "#E5E7EB"
 
 RC_PARAMS = {
     "figure.facecolor": BG,
@@ -33,9 +33,9 @@ RC_PARAMS = {
     "ytick.color": MUTED,
     "axes.edgecolor": GRID,
     "grid.color": GRID,
-    "grid.alpha": 0.6,
-    "grid.linewidth": 0.5,
-    "font.family": "serif",
+    "grid.alpha": 1.0,
+    "grid.linewidth": 0.9,
+    "font.family": "sans-serif", "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
     "font.size": 12,
     "axes.titlesize": 16,
     "axes.labelsize": 13,

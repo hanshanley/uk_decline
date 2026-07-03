@@ -31,14 +31,14 @@ SOURCE_HO = "Home Office Immigration System Statistics (gov.uk)"
 SOURCE_WB = "World Bank WDI (api.worldbank.org)"
 
 # ---- Substack theme (matches pre1870_reapportionment_package) --------------
-SUBSTACK_BG = "#F7F5F0"
-SUBSTACK_TEXT = "#1A1A1A"
-SUBSTACK_MUTED = "#6B6B6B"
-SUBSTACK_ACCENT = "#C85A3D"
-SUBSTACK_BLUE = "#3D6F8C"
-SUBSTACK_GOLD = "#C2993E"
-SUBSTACK_GREEN = "#4A7C59"
-SUBSTACK_GRID = "#D6D3CC"
+SUBSTACK_BG = "#FFFFFF"
+SUBSTACK_TEXT = "#111827"
+SUBSTACK_MUTED = "#6B7280"
+SUBSTACK_ACCENT = "#C0392B"
+SUBSTACK_BLUE = "#1F5C99"
+SUBSTACK_GOLD = "#D19000"
+SUBSTACK_GREEN = "#2A9D8F"
+SUBSTACK_GRID = "#E5E7EB"
 
 _THEME = {
     "figure.facecolor": SUBSTACK_BG,
@@ -50,9 +50,9 @@ _THEME = {
     "ytick.color": SUBSTACK_MUTED,
     "axes.edgecolor": SUBSTACK_GRID,
     "grid.color": SUBSTACK_GRID,
-    "grid.alpha": 0.6,
-    "grid.linewidth": 0.5,
-    "font.family": "serif",
+    "grid.alpha": 1.0,
+    "grid.linewidth": 0.9,
+    "font.family": "sans-serif", "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
     "font.size": 12,
     "axes.titlesize": 16,
     "axes.labelsize": 13,
