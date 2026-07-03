@@ -13,11 +13,12 @@ data/trust/processed/
 !data/trust/raw/
 !data/trust/raw/manual_trust.csv
 data/raw/*.csv
+!data/raw/manual_tax.csv
+!data/raw/manual_age.csv
 data/processed/*.csv
 
-# Generated charts (regenerable)
-figures/*.png
-data/charts/*.png
+# Generated charts: committed showcase outputs live under outputs/<analysis>/ (TRACKED so
+# they render on GitHub). Only truly transient/duplicate chart dirs are ignored.
 
 # Python
 __pycache__/
@@ -25,3 +26,17 @@ __pycache__/
 .venv/
 venv/
 .DS_Store
+.pytest_cache/
+
+# Agent/scratch artifacts — never commit these to the repo
+bug-hunter-report*.md
+plan.md
+plan_*.md
+*.plan.md
+TODO.md
+scratch*.md
+
+# tuition sub-analysis: keep curated primary-source seeds tracked (provenance / showcasing)
+!data/raw/manual_tuition.csv
+!data/raw/tuition_history_manual.csv
+!data/raw/nces_tuition_public4yr.csv
