@@ -165,7 +165,11 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
 
 def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
     metric = GDP_METRIC  # real constant-US$ series (a country-vs-country ratio is inflation-invariant)
+    # Start at 1990: the 1970s/80s market-FX swings are jagged noise; 1990 on is the clean
+    # story (US overtakes the UK, Poland catches up) and covers Poland's full series.
+    start = 1990
     uk = _series(df, "United Kingdom", metric).set_index("year")[metric]
+    uk = uk[uk.index >= start]
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
     # Each peer's GDP per capita as a % of the UK (UK = 100). Higher line = richer than the
@@ -189,22 +193,21 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
     ax.text(ax.get_xlim()[0], 102, "United Kingdom = 100", fontsize=9.5,
             color=SUBSTACK_ACCENT, style="italic", fontweight="bold", va="bottom")
 
-    us = (_series(df, "United States", metric).set_index("year")[metric] / uk).dropna() * 100
-    pl = (_series(df, "Poland", metric).set_index("year")[metric] / uk).dropna() * 100
-    ax.annotate(f"US briefly fell to UK's level in 2007,\nthen surged to {us.iloc[-1]:.0f}% of the UK",
-                xy=(us.index[-1], us.iloc[-1]), xytext=(1988, 178),
-                fontsize=10, color=SUBSTACK_TEXT, fontweight="bold", va="center",
+    us = ((_series(df, "United States", metric).set_index("year")[metric] / uk).dropna() * 100)
+    pl = ((_series(df, "Poland", metric).set_index("year")[metric] / uk).dropna() * 100)
+    ax.annotate(f"US pulled ahead to {us.iloc[-1]:.0f}% of the UK",
+                xy=(us.index[-1], us.iloc[-1]), xytext=(1996, 175),
+                fontsize=10.5, color=SUBSTACK_TEXT, fontweight="bold", va="center",
                 path_effects=LABEL_STROKE)
-    ax.annotate(f"Poland has climbed from {pl.iloc[0]:.0f}%\nto {pl.iloc[-1]:.0f}% of UK GDP per capita",
-                xy=(pl.index[-1], pl.iloc[-1]), xytext=(1996, 30),
-                fontsize=10, color=SUBSTACK_GREEN, fontweight="bold", va="center",
+    ax.annotate(f"Poland has climbed from {pl.iloc[0]:.0f}% to {pl.iloc[-1]:.0f}% of the UK",
+                xy=(pl.index[-1], pl.iloc[-1]), xytext=(1998, 30),
+                fontsize=10.5, color=SUBSTACK_GREEN, fontweight="bold", va="center",
                 path_effects=LABEL_STROKE)
 
     ax.set_xlabel("Year", labelpad=2)
     ax.set_ylabel("GDP per capita as % of the UK (UK = 100)", labelpad=2)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}%"))
-    ax.set_title("The UK is being caught and overtaken: real GDP per capita\n"
-                 "vs the UK (UK = 100), 1970\u20132024 (constant 2015 US$)",
+    ax.set_title("GDP per capita relative to the UK, 1990\u20132024",
                  fontweight="bold", pad=14)
     ax.grid(axis="y", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)

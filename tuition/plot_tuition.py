@@ -44,6 +44,9 @@ def _finalize(fig, out_path: str, bottom: float) -> None:
     print(f"wrote {out_path}")
 
 
+DEGREE_YEARS = {config.UK: 3, config.US: 4, config.EU: 3}  # typical bachelor's length by region
+
+
 def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path: str) -> None:
     agg = aggregate_by_region(rows, value_key)
     # Typical (median) annual fee per region; UK and US are ~single values so mean≈median,
@@ -55,18 +58,19 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
     colors = [(theme.ACCENT if r == config.UK else theme.TEXT if r == config.US else theme.GREEN)
               for r in order]
 
-    fig, ax = plt.subplots(figsize=(11, 5.2))
+    fig, ax = plt.subplots(figsize=(11, 5.4))
     ypos = list(range(len(order)))
     ax.barh(ypos, vals, height=0.62, color=colors, zorder=3)
 
     for i, r in enumerate(order):
         v = vals[i]
         if v and v > 0:
+            yrs = DEGREE_YEARS.get(r, 3)
             ax.annotate(f"{_money(v)}/yr", (v, i), ha="left", va="center", fontsize=12,
                         fontweight="bold", color=colors[i], xytext=(6, 0),
                         textcoords="offset points")
-            ax.annotate(f"\u2248 {_money(v*3)} over a 3-year degree", (v, i), ha="left",
-                        va="center", fontsize=8.5, color=theme.MUTED, xytext=(6, -14),
+            ax.annotate(f"\u2248 {_money(v*yrs)} over a typical {yrs}-year degree", (v, i),
+                        ha="left", va="center", fontsize=8.5, color=theme.MUTED, xytext=(6, -14),
                         textcoords="offset points")
         else:
             ax.annotate(f"most EU countries: free  (EU-27 average {_money(means[i])}/yr)",
@@ -75,14 +79,15 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
 
     ax.set_yticks(ypos)
     ax.set_yticklabels(labels, fontsize=12)
-    ax.set_xlabel(f"Annual domestic tuition, fees only ({unit})")
+    ax.set_xlabel(f"Annual tuition & fees ({unit})")
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
-    ax.set_xlim(0, max(vals) * 1.35)
-    ax.set_title("A UK degree now costs as much as a US one \u2014 and the rest of the EU is free",
+    ax.set_xlim(0, max(vals) * 1.4)
+    ax.set_title("The UK now charges US-level university tuition \u2014 while the rest of the EU is free\n"
+                 "public universities, domestic / in-state students",
                  fontweight="bold", pad=14)
     ax.grid(axis="x", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)
-    _finalize(fig, out_path, bottom=0.14)
+    _finalize(fig, out_path, bottom=0.16)
 
 
 def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) -> None:

@@ -26,40 +26,49 @@ All output images live in one place: **[`outputs/`](outputs)**, one subfolder pe
 
 ## Key results
 
-### GDP per capita — the UK reached US levels in 2007, then fell behind
-![UK GDP per capita vs its peers](outputs/gdp_income/uk_gdp_relative_to_peers.png)
-In real terms (constant 2015 US$), UK GDP per capita **drew level with the US in 2007 (105%)**
-then fell to **62% by 2024** — and even Poland has closed most of the gap. *Source: World Bank
-WDI (NY.GDP.PCAP.CD deflated by US CPI, FP.CPI.TOTL), constant 2015 US$.*
+**The whole thesis in one image — a scorecard of eight measures:**
+
+![The UK in relative decline — a scorecard](outputs/uk_decline_scorecard.png)
+
+Each measure below in detail.
+
+### GDP per capita — the US pulls away, and even Poland is catching up
+![Real GDP per capita relative to the UK (UK = 100)](outputs/gdp_income/uk_gdp_relative_to_peers.png)
+In real terms (constant 2015 US$), the UK drew level with the US in 2007 — but the US then
+surged to **162% of the UK by 2024**, while **Poland climbed from 9% to 47%** of UK GDP per
+capita. *Source: World Bank WDI (NY.GDP.PCAP.CD deflated by US CPI, FP.CPI.TOTL), constant 2015 US$.*
 
 ### Stock market — the UK shrinks against the US
 ![UK/US stock-market cap ratio (real)](outputs/stock_markets/stock_uk_us_ratio_market_cap_usd_real.png)
-UK listed-market capitalisation fell from a peak of **~27% of the US (1990) to ~8% (2022)**.
-*Source: World Federation of Exchanges via World Bank WDI (CM.MKT.LCAP.CD).*
+UK listed-market capitalisation fell from a peak of **~27% of the US (1990) to ~8% (2022)**,
+and the number of UK-listed companies has nearly halved since its 2006 peak.
+*Source: World Federation of Exchanges via World Bank WDI.*
 
-### NHS — waiting lists balloon
-![NHS RTT waiting list total](outputs/nhs/rtt_waiting_list_total.png)
-*Source: NHS England / StatsWales / Public Health Scotland / NI Dept of Health.*
+### NHS — waiting lists have ballooned, and per-head the smaller nations fare worst
+![NHS RTT waiting list per 1,000 people](outputs/nhs/rtt_waiting_list_per_1000.png)
+Adjusted for population, the referral-to-treatment waiting list has roughly doubled across all
+four nations — and **Wales (251) and Northern Ireland (240 per 1,000) now exceed England (128)**.
+*Source: NHS England / Public Health Scotland / StatsWales / DoH Northern Ireland.*
 
 ### Tax burden — rising tax-to-GDP
 ![Tax-to-GDP over time](outputs/tax/tax_to_gdp_over_time.png)
 *Source: OECD Revenue Statistics & Taxing Wages.*
 
-### Tuition — the cost of a UK degree
-![Tuition region comparison (real)](outputs/tuition/tuition_region_comparison_real.png)
-*Source: World Bank / NCES / national caps; constant 2022 USD (CPI-adjusted).*
+### Tuition — a UK degree now costs as much as a US one
+![Tuition: UK vs US vs EU-27](outputs/tuition/tuition_region_comparison_real.png)
+UK annual tuition (~$11.4k) now matches the US, while most of the EU remains free.
+*Source: Eurydice / NCES / UK fee cap; constant 2022 USD (CPI-adjusted).*
 
 ### Institutional trust — confidence in government
 ![Trust in national government](outputs/trust/trust_national_govt_pct.png)
-*Source: OECD & World Bank Worldwide Governance Indicators.*
-
-### Migration — net migration over time
-![UK net migration](outputs/migration/net_migration.png)
-*Source: ONS Long-Term International Migration; UK Home Office.*
+*Source: OECD / Gallup World Poll via Our World in Data.*
 
 ### Ageing — median age rises
 ![UK median age over time](outputs/age/median_age_over_time.png)
-*Source: World Bank WDI (UN Population Division data).*
+*Source: UN Population Division via World Bank WDI.*
+
+*(The repo also includes a standalone [UK migration](uk_migration/README.md) analysis, presented
+descriptively — migration is **not** framed here as a measure of "decline".)*
 
 ## Repository layout
 

@@ -144,7 +144,7 @@ PANELS = [
      "Eurydice / NCES / UK fee cap (constant 2022 US$)"),
     ("Trust in national government", trust_govt, lambda v: f"{v:.0f}%", +1,
      "OECD / Gallup World Poll via OWID"),
-    ("Companies listed on the UK market", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
+    ("UK-listed companies", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
      "WFE via World Bank WDI"),
     ("Median age (years)", median_age, lambda v: f"{v:.0f}", -1,
      "UN Population Division via World Bank WDI"),
