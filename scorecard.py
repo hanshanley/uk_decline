@@ -21,6 +21,7 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
+from matplotlib.ticker import MaxNLocator
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DATA = ROOT / "data"
@@ -121,6 +122,14 @@ def median_age():
     return ys, [pts[y] for y in ys]
 
 
+def uk_listed_companies():
+    r = _rows(DATA / "stock_market_size_wide.csv")
+    pts = {int(x["year"]): float(x["listed_domestic_companies"]) for x in r
+           if x["region"] == "United Kingdom" and x.get("listed_domestic_companies")}
+    ys = sorted(pts)
+    return ys, [pts[y] for y in ys]
+
+
 # title, loader, value formatter, good_direction (+1 up-is-good, -1 down-is-good, 0 neutral), source
 PANELS = [
     ("GDP per capita vs the US", gdp_vs_us, lambda v: f"{v:.0f}%", +1,
@@ -135,8 +144,8 @@ PANELS = [
      "Eurydice / NCES / UK fee cap (constant 2022 US$)"),
     ("Trust in national government", trust_govt, lambda v: f"{v:.0f}%", +1,
      "OECD / Gallup World Poll via OWID"),
-    ("Net migration per year", net_migration, lambda v: f"{v/1e3:.0f}k", 0,
-     "ONS Long-Term International Migration"),
+    ("Companies listed on the UK market", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
+     "WFE via World Bank WDI"),
     ("Median age (years)", median_age, lambda v: f"{v:.0f}", -1,
      "UN Population Division via World Bank WDI"),
 ]
@@ -156,22 +165,31 @@ def _panel(ax, title, loader, fmt, good_dir, source):
     ax.plot([xs[-1]], [ys[-1]], "o", color=color, markersize=6,
             markeredgecolor="white", markeredgewidth=1.2, zorder=5)
 
-    # Title + big latest value + change annotation.
-    ax.set_title(title, fontsize=12.5, fontweight="bold", loc="left", pad=26, color=TEXT)
-    ax.annotate(fmt(ys[-1]), xy=(0, 1), xycoords="axes fraction", xytext=(0, 12),
-                textcoords="offset points", fontsize=17, fontweight="bold", color=color, va="bottom")
+    # Header: title (top-left), latest value (top-right), start->latest (just above plot).
+    ax.set_title(title, fontsize=12, fontweight="bold", loc="left", pad=26, color=TEXT)
+    ax.annotate(fmt(ys[-1]), xy=(1, 1), xycoords="axes fraction", xytext=(0, 18),
+                textcoords="offset points", fontsize=15, fontweight="bold", color=color,
+                ha="right", va="bottom")
     ax.annotate(f"{fmt(ys[0])} in {xs[0]}  to  {fmt(ys[-1])} in {xs[-1]}",
-                xy=(1, 1), xycoords="axes fraction", xytext=(0, 14), textcoords="offset points",
-                fontsize=8.5, color=MUTED, ha="right", va="bottom")
+                xy=(0, 1), xycoords="axes fraction", xytext=(0, 3), textcoords="offset points",
+                fontsize=8.5, color=MUTED, ha="left", va="bottom")
 
-    # Minimal axes: only endpoints on x, no y ticks.
+    # Y-axis: a light left spine with ~3 labelled ticks so values are readable.
+    ax.spines["left"].set_visible(True)
+    ax.spines["left"].set_color(GRID)
+    ax.spines["left"].set_linewidth(0.8)
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=3))
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: fmt(v)))
+    ax.tick_params(axis="y", labelsize=8, colors=MUTED, length=0, pad=2)
+    ax.grid(axis="y", linestyle="-", linewidth=0.6, color=GRID, alpha=0.7)
+    ax.set_axisbelow(True)
+
     ax.set_xticks([xs[0], xs[-1]])
     ax.set_xticklabels([str(xs[0]), str(xs[-1])], fontsize=9, color=MUTED)
-    ax.set_yticks([])
     pad = (max(ys) - min(ys)) * 0.15 or 1
     ax.set_ylim(min(ys) - pad, max(ys) + pad)
     ax.margins(x=0.04)
-    ax.text(0.0, -0.22, source, transform=ax.transAxes, fontsize=6.8, color=MUTED,
+    ax.text(0.0, -0.24, source, transform=ax.transAxes, fontsize=6.8, color=MUTED,
             style="italic", va="top")
 
 
