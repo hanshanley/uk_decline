@@ -124,16 +124,16 @@ def main() -> None:
     unit = "USD, PPP-adjusted" if args.ppp else "USD"
     suffix = "_ppp" if args.ppp else ""
 
-    os.makedirs(config.PROCESSED_DIR, exist_ok=True)
+    os.makedirs(config.OUTPUTS_DIR, exist_ok=True)
     rows = load_primary([value_key])
 
     plot_region_comparison(
         rows, value_key, unit,
-        os.path.join(config.PROCESSED_DIR, f"tuition_region_comparison{suffix}.png"),
+        os.path.join(config.OUTPUTS_DIR, f"tuition_region_comparison{suffix}.png"),
     )
     plot_by_country(
         rows, value_key, unit,
-        os.path.join(config.PROCESSED_DIR, f"tuition_by_country{suffix}.png"),
+        os.path.join(config.OUTPUTS_DIR, f"tuition_by_country{suffix}.png"),
     )
 
 

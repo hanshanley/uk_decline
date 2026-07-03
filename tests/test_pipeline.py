@@ -30,6 +30,21 @@ def test_country_mappings() -> None:
     # No duplicate ISO3 codes.
     iso3s = countries.iso3_codes()
     assert len(iso3s) == len(set(iso3s))
+    # United States is a GDP peer but NOT part of the European allow-list, so it must not
+    # leak into the Eurostat geos or the PIP/European country set.
+    assert countries.name_for_iso3("USA") == "United States"
+    assert "USA" in countries.gdp_iso3_codes(include_aggregates=False)
+    assert "USA" not in countries.iso3_codes()
+    assert "US" not in countries.eurostat_geos(include_aggregates=True)
+
+
+def test_maddison_metric_in_wide_order() -> None:
+    # The real (inflation-adjusted) Maddison GDP series must flow into the wide table.
+    from europe_data import combine, maddison
+    assert maddison.METRIC == "gdp_per_capita_real_maddison"
+    assert maddison.METRIC in combine.METRIC_ORDER
+    # It is a REAL series (constant-price / inflation-adjusted).
+    assert "2011" in maddison.UNIT and "real" in maddison.UNIT.lower()
 
 
 def test_eurostat_decoder() -> None:

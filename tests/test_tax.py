@@ -21,20 +21,23 @@ REV_RAW = [
 ]
 
 TW_RAW = [
-    # single, 100% AW -> kept
+    # single, 100% AW (spouse not applicable) -> kept
     {"REF_AREA": "GBR", "TIME_PERIOD": "2023", "OBS_VALUE": "31.15",
-     "HOUSEHOLD_TYPE": "S_C0", "INCOME_PRINCIPAL": "AW100"},
+     "HOUSEHOLD_TYPE": "S_C0", "INCOME_PRINCIPAL": "AW100", "INCOME_SPOUSE": "_Z"},
     {"REF_AREA": "FRA", "TIME_PERIOD": "2023", "OBS_VALUE": "46.87",
-     "HOUSEHOLD_TYPE": "S_C0", "INCOME_PRINCIPAL": "AW100"},
-    # couple 2 kids, 67% AW -> kept
+     "HOUSEHOLD_TYPE": "S_C0", "INCOME_PRINCIPAL": "AW100", "INCOME_SPOUSE": "_Z"},
+    # one-earner couple 2 kids, 67% AW, spouse not employed -> kept
     {"REF_AREA": "DEU", "TIME_PERIOD": "2023", "OBS_VALUE": "20.0",
-     "HOUSEHOLD_TYPE": "C_C2", "INCOME_PRINCIPAL": "AW67"},
+     "HOUSEHOLD_TYPE": "C_C2", "INCOME_PRINCIPAL": "AW67", "INCOME_SPOUSE": "NOEARN_UNEMP"},
+    # couple 2 kids but spouse EARNS (two-earner) -> dropped (wrong family type)
+    {"REF_AREA": "DEU", "TIME_PERIOD": "2023", "OBS_VALUE": "28.0",
+     "HOUSEHOLD_TYPE": "C_C2", "INCOME_PRINCIPAL": "AW67", "INCOME_SPOUSE": "AW67"},
     # unmodelled household -> dropped
     {"REF_AREA": "USA", "TIME_PERIOD": "2023", "OBS_VALUE": "12.3",
-     "HOUSEHOLD_TYPE": "S_C2", "INCOME_PRINCIPAL": "AW100"},
+     "HOUSEHOLD_TYPE": "S_C2", "INCOME_PRINCIPAL": "AW100", "INCOME_SPOUSE": "_Z"},
     # unknown country -> dropped
     {"REF_AREA": "XXX", "TIME_PERIOD": "2023", "OBS_VALUE": "5.0",
-     "HOUSEHOLD_TYPE": "S_C0", "INCOME_PRINCIPAL": "AW100"},
+     "HOUSEHOLD_TYPE": "S_C0", "INCOME_PRINCIPAL": "AW100", "INCOME_SPOUSE": "_Z"},
 ]
 
 
@@ -69,12 +72,22 @@ def test_taxing_wages_parse_filters_variants(monkeypatch):
     # Same fixture returned for each indicator call.
     monkeypatch.setattr(taxing_wages, "sdmx_csv", lambda *a, **k: TW_RAW)
     rows = taxing_wages.fetch(2023, 2023)
-    # S_C2 and XXX rows dropped; two indicators x 3 valid raw rows = 6.
+    # Dropped: S_C2 (unmodelled), XXX (unknown), and the two-earner couple (wrong
+    # spouse). Kept: 3 valid raw rows x 2 indicators = 6.
     assert len(rows) == 6
     variants = {(r["metric"], r["household"], r["earnings"]) for r in rows}
     assert ("tax_wedge_pct", "single_nokids", "100aw") in variants
-    assert ("net_personal_avg_tax_rate_pct", "couple2kids", "67aw") in variants
-    assert all(r["household"] in ("single_nokids", "couple2kids") for r in rows)
+    assert ("net_personal_avg_tax_rate_pct", "couple2kids_1earner", "67aw") in variants
+    assert all(r["household"] in ("single_nokids", "couple2kids_1earner") for r in rows)
+
+
+def test_taxing_wages_drops_two_earner_couple_rows(monkeypatch):
+    # Regression: only the one-earner (spouse NOEARN_UNEMP) couple survives, so no two
+    # rows ever share a variant key (previously distinct spouse configs were collapsed).
+    monkeypatch.setattr(taxing_wages, "sdmx_csv", lambda *a, **k: TW_RAW)
+    rows = taxing_wages.fetch(2023, 2023)
+    keys = [(r["iso3"], r["year"], r["metric"], r["household"], r["earnings"]) for r in rows]
+    assert len(keys) == len(set(keys))  # every variant is unique -> no silent collapse
 
 
 # --- stats ------------------------------------------------------------------

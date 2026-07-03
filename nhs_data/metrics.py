@@ -45,6 +45,17 @@ METRICS: dict[str, Metric] = {
             "waiting list (incomplete pathways / ongoing waits)."
         ),
     ),
+    "rtt_waiting_list_per_1000": Metric(
+        "rtt_waiting_list_per_1000",
+        "RTT waiting list per 1,000 people",
+        "per 1,000 people",
+        "rtt",
+        higher_is_better=False,
+        description=(
+            "Elective waiting list expressed per 1,000 residents, using real ONS "
+            "mid-year population estimates, so growth is not just population growth."
+        ),
+    ),
     "rtt_median_wait_weeks": Metric(
         "rtt_median_wait_weeks",
         "RTT median wait",
@@ -96,6 +107,12 @@ CAVEATS: dict[str, str] = {
         "waits' by stage of treatment; NI reports outpatient/inpatient/day-case "
         "waits separately. Absolute counts are not directly comparable across nations."
     ),
+    "rtt_waiting_list_per_1000": (
+        "Derived: RTT waiting list \u00f7 real ONS mid-year population estimate "
+        "\u00d7 1,000. Population comes from ONS/NRS/NISRA via Nomis; only years "
+        "with a published estimate are shown (no projection/extrapolation). "
+        "Inherits the per-nation RTT definitional differences below."
+    ),
     "rtt_median_wait_weeks": (
         "Median wait is computed on different population definitions per nation; "
         "compare trends, not exact levels."
@@ -109,7 +126,10 @@ CAVEATS: dict[str, str] = {
         "times per nation; watch for series breaks."
     ),
     "diagnostics_6week_breach_pct": (
-        "Diagnostic test lists (DM01 in England) cover different test sets per nation."
+        "Diagnostic test lists (DM01 in England) cover different test sets per "
+        "nation. England/Scotland/NI measure the 6-week standard; Wales's target "
+        "is 8 weeks, so the Welsh series counts 8+ week waits and understates the "
+        "6-week breach share \u2014 compare the Welsh trend, not its exact level."
     ),
 }
 

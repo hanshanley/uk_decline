@@ -72,7 +72,7 @@ def fetch(
 
     Returns tidy dict rows: iso3, country, year, metric, value, unit, source.
     """
-    iso3_list = list(iso3s) if iso3s is not None else countries.iso3_codes(include_aggregates=True)
+    iso3_list = list(iso3s) if iso3s is not None else countries.gdp_iso3_codes(include_aggregates=True)
     ind_list = list(indicators) if indicators is not None else list(INDICATORS)
     out: list[dict] = []
     for indicator in ind_list:

@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 from typing import Callable, Iterable
 
-from . import england, metrics, northern_ireland, scotland, wales
+from . import england, metrics, northern_ireland, population, scotland, wales
 from .paths import DEFAULT_CSV
 
 # nation code -> fetch callable
@@ -47,6 +47,48 @@ def fetch_all(
     return rows
 
 
+def add_per_capita(
+    rows: list[dict],
+    start_year: int | None = None,
+    end_year: int | None = None,
+) -> list[dict]:
+    """Append derived ``rtt_waiting_list_per_1000`` rows from real ONS populations.
+
+    For each ``rtt_waiting_list_total`` row we divide by that nation-year's real
+    ONS mid-year population estimate and multiply by 1,000. Rows whose year has no
+    published estimate are left without a per-capita value (never extrapolated).
+    A failure fetching population is logged and skipped, leaving raw rows intact.
+    """
+    try:
+        pops = population.fetch(start_year, end_year)
+    except Exception as exc:  # noqa: BLE001 - population is an optional enrichment
+        print(f"[nhs_data] WARNING: population source failed: {exc}", file=sys.stderr)
+        return rows
+
+    derived: list[dict] = []
+    for row in rows:
+        if row["metric"] != "rtt_waiting_list_total":
+            continue
+        year = int(str(row["date"])[:4])
+        pop = pops.get((row["nation_code"], year))
+        if not pop:
+            continue
+        derived.append(
+            metrics.make_row(
+                row["nation"],
+                row["nation_code"],
+                row["period"],
+                row["date"],
+                "rtt_waiting_list_per_1000",
+                row["value"] / pop * 1000.0,
+                f"{row['source']} / {population.SOURCE}",
+            )
+        )
+    if derived:
+        print(f"[nhs_data] per-capita: {len(derived)} rows", file=sys.stderr)
+    return rows + derived
+
+
 def to_frame(rows: list[dict]):
     """Return a sorted pandas DataFrame with the canonical column order."""
     import pandas as pd
@@ -74,4 +116,5 @@ def build(
 ):
     """Fetch all nations and write the combined CSV. Returns the DataFrame."""
     rows = fetch_all(start_year, end_year)
+    rows = add_per_capita(rows, start_year, end_year)
     return write_csv(rows, path)

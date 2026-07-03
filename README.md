@@ -87,10 +87,13 @@ muted palette) into `outputs/`:
 
 | File | Shows |
 |---|---|
-| `gdp_per_capita_ppp_over_time.png` | GDP/capita PPP levels, UK vs Germany/France/Italy/Spain + EU. |
-| `uk_gdp_relative_to_peers.png` | UK GDP/capita as a % of Germany and the EU (the decline). |
+| `gdp_per_capita_real_over_time.png` | Real GDP/capita (Maddison, 2011 PPP, 1970–2022), UK vs US/Germany/France/Italy. |
+| `uk_gdp_relative_to_peers.png` | UK real GDP/capita as a % of Germany and the US, 1970–2022 (the decline). |
 | `median_disposable_income_pps.png` | Eurostat median income (PPS); UK line ends ~2018. |
-| `median_income_pip.png` | World Bank PIP median income (2017 PPP $/day); UK to ~2021. |
+| `median_income_pip.png` | World Bank PIP real median income (2017 PPP $/day); UK to ~2021. |
+
+See [`europe_data/README.md`](europe_data/README.md) for the full sources table (incl. the
+Maddison Project Database) and the inflation-adjustment basis of each metric.
 
 ## Project layout
 
@@ -124,33 +127,56 @@ uk_decline/
 ## Stock-market size (UK vs US)
 
 A self-contained sibling pipeline, `markets_data/`, sizes the **UK stock market over time
-against the US** (with World / EU / Japan / China as reference lines), using three free,
-key-less **World Bank WDI** indicators.
+against the US** (with World / EU / Japan / China as reference lines), using free, key-less
+**World Bank** data. Every value traces directly to a World Bank API series — nothing is
+interpolated, spliced, or synthesised, and null observations are dropped rather than filled.
 
 | Metric (column) | Source | Indicator | Notes |
 |---|---|---|---|
-| `market_cap_usd` | World Bank WDI | `CM.MKT.LCAP.CD` | Market value of listed domestic companies, current US$. |
-| `market_cap_pct_gdp` | World Bank WDI | `CM.MKT.LCAP.GD.ZS` | Same, as a share of GDP (size relative to the economy). |
+| `market_cap_usd` | World Bank WDI | `CM.MKT.LCAP.CD` | Market value of listed domestic companies, **nominal** current US$. |
+| `market_cap_usd_real` | World Bank WDI ÷ World Bank US CPI | `CM.MKT.LCAP.CD` deflated by `FP.CPI.TOTL` | **Inflation-adjusted**: the nominal series in **constant US$** (see below). |
+| `market_cap_pct_gdp` | World Bank WDI | `CM.MKT.LCAP.GD.ZS` | Market cap as a share of GDP (size relative to the economy; a same-year ratio, so inflation-neutral). |
 | `listed_domestic_companies` | World Bank WDI | `CM.MKT.LDOM.NO` | Count of domestically listed companies (breadth). |
+
+**Inflation adjustment.** The headline market-cap series is nominal (current US$), which mixes
+real growth with inflation. `market_cap_usd_real` deflates it by the US Consumer Price Index
+(World Bank `FP.CPI.TOTL`, 1970–2024) and rebases every figure to **constant US$ of the latest
+CPI year** (currently 2024; recorded as `real_base_year` in the manifest). Only years present in
+both the market-cap and CPI series are computed — the newest market-cap year (2025) has no CPI
+yet and is left blank rather than extrapolated. For non-US markets this removes US-dollar
+inflation but not exchange-rate effects.
 
 ### Usage
 
 ```bash
 ./.venv/bin/python -m markets_data                    # fetch + CSVs + charts + summary
-./.venv/bin/python -m markets_data --start 1975 --end 2024
+./.venv/bin/python -m markets_data --start 1970 --end 2024
 ./.venv/bin/python -m markets_data --no-charts --no-summary
 ./.venv/bin/python -m markets_data --from-csv data/stock_market_size.csv
 ```
 
-### Outputs (written to `data/`, git-ignored)
+The default span starts in 1970. World Bank stock-market data begins in **1975** (the
+`CM.MKT.*` series derive from the S&P/IFC database), so the pipeline reaches back to the
+1970s — as far as this free source allows — with earlier empty years dropped.
 
-| File | Description |
-|---|---|
-| `stock_market_size.csv` | Tidy long: `region, region_code, year, metric, value, unit, source`. |
-| `stock_market_size_wide.csv` | One row per region-year, one column per metric. |
-| `stock_market_size_manifest.json` | Run metadata (regions, year span, metrics, timestamp). |
-| `stock_market_size_summary.md` | UK-vs-US trend summary (incl. UK/US ratios). |
-| `charts/stock_*.png` | Per-metric trends + UK-as-share-of-US ratio charts. |
+### Outputs
+
+Regenerable **data** is written to `data/` (git-ignored); the **showcase artifacts** (charts +
+summary), which cite their sources inline, go to `outputs/` so they can be committed.
+
+| File | Location | Description |
+|---|---|---|
+| `stock_market_size.csv` | `data/` | Tidy long: `region, region_code, year, metric, value, unit, source`. |
+| `stock_market_size_wide.csv` | `data/` | One row per region-year, one column per metric. |
+| `stock_market_size_manifest.json` | `data/` | Run metadata: regions, year span, metrics, per-indicator sources, `real_base_year`. |
+| `stock_market_size_summary.md` | `outputs/` | UK-vs-US trend summary; every metric cites its source + indicator. |
+| `charts/stock_*.png` | `outputs/` | Per-metric trends (incl. real) + UK-as-share-of-US ratio charts. Each figure footnotes its data source(s) + indicator. |
+
+Generated charts (all in `outputs/charts/`, source cited in each figure's footnote):
+`stock_market_cap_usd.png`, `stock_market_cap_usd_real.png`, `stock_market_cap_pct_gdp.png`,
+`stock_listed_domestic_companies.png`, and the three `stock_uk_us_ratio_*.png` charts. To
+regenerate them, run `python -m markets_data` (or `--from-csv data/stock_market_size.csv` to
+rebuild charts/summary from existing data). The chart code is in `markets_data/charts.py`.
 
 ### Example: the UK market's relative decline
 
@@ -171,23 +197,54 @@ A self-contained sibling pipeline, `uk_migration/`, builds a UK-only picture of
 **immigration over time** — both **legal** flows and **irregular ("illegal")** arrivals —
 from free, key-less public sources, and renders summary time-series charts.
 
-| Metric (column) | Source | Series / dataset | Legality | Notes |
+| Metric (column) | Source | Series / dataset | legality / flow_type | Notes |
 |---|---|---|---|---|
-| `immigration`, `emigration` | ONS Long-Term International Migration | Table 1, `YE Dec`, All Nationalities | legal | Annual inflow / outflow (year ending December). |
-| `net_migration` | ONS LTIM | Table 1, Net migration | net | Headline UK net migration. |
-| `visas_granted` | Home Office Immigration System Statistics | `entry-clearance-visa-outcomes` (issued) | legal | By category: `work`, `study`, `family`, `visitor`, `other`. From 2005. |
-| `asylum_applications` | Home Office | `asylum-claims` detailed dataset | legal | Main applicants only (headline). From 2001. |
-| `irregular_arrivals` | Home Office | `illegal-entry-routes` detailed dataset | irregular | By method: `small_boat`, `air`, `port`, `in_country`, plus `all`. From 2018. |
-| `migrant_stock`, `migrant_stock_pct`, `net_migration_wb` | World Bank WDI | `SM.POP.TOTL`, `SM.POP.TOTL.ZS`, `SM.POP.NETM` (GBR) | stock / net | Long historical backdrop (from 1960/1990). |
+| `immigration`, `emigration` | ONS Long-Term International Migration | Table 1, `YE Dec`, All Nationalities | legal / inflow, outflow | Annual inflow / outflow (year ending December). |
+| `net_migration` | ONS LTIM | Table 1, Net migration | total / net | Headline UK net migration. |
+| `visas_granted` | Home Office Immigration System Statistics | `entry-clearance-visa-outcomes` (issued) | legal / count | By category: `work`, `study`, `family`, `visitor`, `other`. From 2005. |
+| `asylum_applications` | Home Office | `asylum-claims` detailed dataset | legal / count | Main applicants only (headline). From 2001. |
+| `irregular_arrivals` | Home Office | `illegal-entry-routes` detailed dataset | irregular / count | By method: `small_boat`, `air`, `port`, `in_country`, plus `all`. From 2018. |
+| `migrant_stock`, `migrant_stock_pct`, `net_migration_wb`, `uk_population` | World Bank WDI | `SM.POP.TOTL`, `SM.POP.TOTL.ZS`, `SM.POP.NETM`, `SP.POP.TOTL` (GBR) | total / stock, net | Long historical backdrop + population denominator (from 1960/1990). |
+| `*_per_1000_pop` | **Derived** (not a new source) | flow ÷ `uk_population` × 1000 | inherits | Population-adjusted views of each flow (see below). |
+
+Each row carries two orthogonal facets: **`legality`** (`legal` / `irregular` / `total`) and
+**`flow_type`** (`inflow` / `outflow` / `net` / `stock` / `count`). Aggregate measures (net
+migration, migrant stock) use `legality = total`, so filtering `legality == 'legal'` never
+silently drops them.
 
 ### How the sources are resolved
 
 Home Office spreadsheets are re-published quarterly with dated filenames (e.g.
 `asylum-claims-datasets-mar-2026.xlsx`). The pipeline resolves the **current** file via the
-gov.uk content API by matching a stable filename **prefix**, so it keeps working after each
-release. ONS LTIM is resolved via the dataset page's `/data` JSON (newest edition first).
-Annual figures sum all four quarters; the partial most-recent year (fewer than four
-quarters published) is dropped so trends don't show a false dip.
+gov.uk content API by matching a stable filename **prefix** (newest date wins on ties), so it
+keeps working after each release. ONS LTIM is resolved via the dataset page's `/data` JSON
+(newest edition by embedded date). Annual figures sum all four quarters; any `(year, category)`
+lacking four quarters — including the partial most-recent year — is dropped so trends don't
+show a false dip.
+
+### Data integrity & "adjusting for inflation"
+
+**Nothing in this pipeline is hand-entered or synthesised** — no manual tables, no
+interpolation, no random or filled values. Every row is fetched live and can be re-derived
+by re-running `fetch_all()` (the committed CSVs are byte-identical to a fresh fetch). The
+only literals in the code are spreadsheet column indices and HTTP parameters.
+
+Immigration figures are **headcounts** (people, visas, claims, detections), not monetary
+amounts, so **CPI inflation adjustment does not apply**. The meaningful "real-terms"
+comparison across decades is to divide each flow by the UK population of the same year (the
+population grew from ~55.7M in 1970 to ~69M today). The `*_per_1000_pop` series do exactly
+that: `flow ÷ uk_population × 1000`, using World Bank `SP.POP.TOTL`. These derived rows carry
+a `Derived: … ÷ World Bank SP.POP.TOTL` source label and exist only for years with a real
+population value — they are transparent ratios of two real series, never new data.
+
+### Caveats (UK immigration)
+
+- ONS LTIM recent years are **provisional** (`P`) / revised (`R`) and change between releases.
+- `irregular_arrivals` counts **detected** arrivals only — not total irregular entry.
+- **Historical depth:** annual **net migration reaches 1960** (World Bank); gross ONS
+  inflow/outflow start 2012, visas 2005, asylum 2001, irregular arrivals 2018 — because the
+  underlying official series do not go back further.
+- Charts use the shared "Substack" serif theme to match `pre1870_reapportionment_package`.
 
 ### Usage
 
@@ -197,13 +254,22 @@ quarters published) is dropped so trends don't show a false dip.
 ./.venv/bin/python -m uk_migration.run --only visas asylum
 ```
 
-### Outputs (git-ignored)
+### Outputs
+
+Per-source raw and combined tidy CSVs (git-ignored, regenerable):
 
 | File | Description |
 |---|---|
-| `data/raw/<source>.csv` | Per-source tidy rows (`worldbank`, `ons_ltim`, `visas`, `asylum`, `small_boats`). |
-| `data/processed/uk_migration_long.csv` | All sources, tidy long: `iso3, country, period, metric, category, value, unit, legality, source`. |
-| `figures/*.png` | Net migration; immigration vs emigration; visas by category; asylum; irregular arrivals; legal-vs-irregular (log scale). |
+| `data/raw/<source>.csv` | Per-source tidy rows (`worldbank`, `ons_ltim`, `visas`, `asylum`, `irregular`). |
+| `data/processed/uk_migration_long.csv` | All sources, tidy long: `iso3, country, period, metric, category, value, unit, legality, flow_type, source`. |
+
+Committable showcase (written to `outputs/uk_migration/`, **not** git-ignored):
+
+| File | Description |
+|---|---|
+| `outputs/uk_migration/*.png` | Seven charts, each with a data-source caption: net migration; immigration vs emigration; visas by category; asylum; irregular arrivals; legal-vs-irregular (log); net migration per 1,000 population (population-adjusted, 1960+). |
+| `outputs/uk_migration/SOURCES.md` | Data-source reference for every figure (auto-generated by `charts.write_sources_doc`). |
+| `outputs/uk_migration/uk_migration_long.csv` | Self-contained copy of the combined data next to the charts. |
 
 ### Example: scale of legal vs irregular
 
@@ -220,16 +286,19 @@ uk_migration/
   _govuk.py          # resolve current gov.uk / ONS download URLs
   _spreadsheet.py    # xlsx / ods / csv row reader
   _aggregate.py      # stream-sum by (year, category); drop partial years
-  sources/           # worldbank, ons_ltim, visas, asylum, small_boats
+  sources/           # worldbank, ons_ltim, visas, asylum, irregular
+  normalize.py       # derived per-1,000-population views (÷ World Bank SP.POP.TOTL)
   combine.py         # per-source raw CSVs + combined long CSV
-  charts.py          # six matplotlib PNGs
+  charts.py          # seven matplotlib PNGs
   run.py             # CLI: python -m uk_migration.run
 ```
 
-## Caveats
+## Caveats (European GDP & income pipeline)
 
 - **Different price bases:** WDI/Eurostat use current-year PPP/PPS; PIP uses 2017 PPP.
   Compare *within* a metric across countries/years, not raw values *across* metrics.
 - **Micro-states** (Andorra, Monaco, San Marino, Liechtenstein) and Kosovo have sparse or no
   survey-based income data; rows will be blank where unavailable.
 - **Russia and Turkey** are excluded by default as transcontinental.
+
+(For the UK immigration pipeline's caveats, see its section above.)

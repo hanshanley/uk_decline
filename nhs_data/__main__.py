@@ -4,7 +4,7 @@ Usage:
     python -m nhs_data                      # fetch + write CSV + charts + summary
     python -m nhs_data --start 2015 --end 2025
     python -m nhs_data --no-charts --no-summary
-    python -m nhs_data --from-csv data/nhs_waiting_times.csv --charts --summary
+    python -m nhs_data --from-csv data/nhs_waiting_times.csv   # rebuild charts/summary only
 """
 
 from __future__ import annotations

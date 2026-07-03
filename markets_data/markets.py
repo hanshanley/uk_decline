@@ -30,21 +30,35 @@ class Metric(NamedTuple):
     id: str
     label: str
     unit: str
-    wb_indicator: str
+    wb_indicator: str | None  # None for metrics derived locally (not a WB series)
     description: str
 
 
 SOURCE = "World Bank WDI"
 
+# US CPI used to deflate the nominal (current-US$) market-cap series to real terms.
+CPI_INDICATOR = "FP.CPI.TOTL"  # Consumer price index, USA (World Bank, 2010 = 100)
+CPI_SOURCE = "World Bank (FP.CPI.TOTL, US CPI)"
+
 METRICS: dict[str, Metric] = {
     "market_cap_usd": Metric(
         "market_cap_usd",
-        "Stock-market capitalisation",
+        "Stock-market capitalisation (nominal)",
         "current US$",
         "CM.MKT.LCAP.CD",
         description=(
-            "Total market value of listed domestic companies, in current US dollars. "
-            "The headline measure of the absolute size of a national stock market."
+            "Total market value of listed domestic companies, in current (nominal) US "
+            "dollars. The headline measure of absolute size, but not inflation-adjusted."
+        ),
+    ),
+    "market_cap_usd_real": Metric(
+        "market_cap_usd_real",
+        "Stock-market capitalisation (real)",
+        "constant US$",
+        None,  # derived: market_cap_usd deflated by US CPI (see combine/deflator)
+        description=(
+            "The nominal market-cap series deflated by US CPI to constant US dollars, so "
+            "sizes are comparable across years after removing US-dollar inflation."
         ),
     ),
     "market_cap_pct_gdp": Metric(
@@ -54,7 +68,8 @@ METRICS: dict[str, Metric] = {
         "CM.MKT.LCAP.GD.ZS",
         description=(
             "Market capitalisation of listed domestic companies as a share of GDP -- "
-            "the size of the market relative to the wider economy."
+            "the size of the market relative to the wider economy. A same-year ratio, "
+            "so it is inflation-neutral by construction."
         ),
     ),
     "listed_domestic_companies": Metric(
@@ -69,16 +84,26 @@ METRICS: dict[str, Metric] = {
     ),
 }
 
-# indicator id -> metric id (reverse lookup for the fetcher).
-BY_INDICATOR: dict[str, str] = {m.wb_indicator: m.id for m in METRICS.values()}
+# indicator id -> metric id (reverse lookup for the fetcher; derived metrics excluded).
+BY_INDICATOR: dict[str, str] = {
+    m.wb_indicator: m.id for m in METRICS.values() if m.wb_indicator
+}
 
 # Short, per-metric caveats surfaced in the README and the trend summary.
 CAVEATS: dict[str, str] = {
     "market_cap_usd": (
         "Compiled by the World Bank from S&P Global / World Federation of Exchanges "
-        "data. Denominated in current US$, so it blends local-currency valuation and "
-        "USD exchange-rate moves. The WDI series has tail-year gaps -- the UK is "
-        "missing after 2022 -- so recent years may be blank; values are not spliced."
+        "data. Denominated in current (nominal) US$, so it blends local-currency "
+        "valuation, USD exchange-rate moves, and inflation. The WDI series has "
+        "tail-year gaps -- the UK is missing after 2022 -- so recent years may be "
+        "blank; values are not spliced. See the real series for the inflation-adjusted view."
+    ),
+    "market_cap_usd_real": (
+        "Derived: the nominal current-US$ series deflated by US CPI (World Bank "
+        "FP.CPI.TOTL) to constant US dollars of the base year noted in the manifest/"
+        "summary. This removes US-dollar inflation; for non-US markets it does not "
+        "remove exchange-rate effects. Only years with both market-cap and CPI data "
+        "are computed (US CPI ends 2024), so the newest year may be absent."
     ),
     "market_cap_pct_gdp": (
         "The more comparable 'size relative to the economy' measure, but sensitive to "
@@ -148,3 +173,41 @@ def uk_us_ratio(metric_rows):
         return None
     ratio = (piv["GBR"] / piv["USA"]).replace([np.inf, -np.inf], pd.NA).dropna()
     return ratio if not ratio.empty else None
+
+
+def deflate_to_real(
+    nominal_rows: list[dict], cpi: dict[int, float]
+) -> tuple[list[dict], int | None]:
+    """Deflate nominal ``market_cap_usd`` rows to real ``market_cap_usd_real`` rows.
+
+    Uses the US CPI mapping ``{year: index}`` (World Bank ``FP.CPI.TOTL``). All
+    figures are rebased to the **latest year present in both** ``cpi`` and the data,
+    so real values are expressed in that base year's US dollars. Rows whose year has
+    no CPI observation are skipped (never fabricated). Returns ``(real_rows, base_year)``;
+    ``base_year`` is ``None`` if nothing could be deflated.
+    """
+    src = [r for r in nominal_rows if r["metric"] == "market_cap_usd"]
+    if not src or not cpi:
+        return [], None
+    usable_years = {r["year"] for r in src} & set(cpi)
+    if not usable_years:
+        return [], None
+    base_year = max(usable_years)
+    base_cpi = cpi[base_year]
+    real_rows: list[dict] = []
+    for r in src:
+        year_cpi = cpi.get(r["year"])
+        if year_cpi is None or year_cpi == 0:
+            continue
+        real_value = r["value"] * (base_cpi / year_cpi)
+        real_rows.append(
+            make_row(
+                r["region"],
+                r["region_code"],
+                r["year"],
+                "market_cap_usd_real",
+                real_value,
+                source=f"{SOURCE} + {CPI_SOURCE}",
+            )
+        )
+    return real_rows, base_year

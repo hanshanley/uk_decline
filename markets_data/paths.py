@@ -1,12 +1,24 @@
-"""Shared filesystem paths for markets_data outputs."""
+"""Shared filesystem paths for markets_data outputs.
+
+Regenerable data (CSVs, manifest) lives under ``data/`` (git-ignored). The
+showcase artifacts that reference their sources -- charts and the markdown
+summary -- are written to ``outputs/`` so they can be committed, mirroring the
+sibling ``pre1870_reapportionment_package`` project.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = _ROOT / "data"
+OUTPUT_DIR = _ROOT / "outputs"
+
+# Regenerable data (git-ignored under data/).
 DEFAULT_CSV = DATA_DIR / "stock_market_size.csv"
 DEFAULT_WIDE_CSV = DATA_DIR / "stock_market_size_wide.csv"
 DEFAULT_MANIFEST = DATA_DIR / "stock_market_size_manifest.json"
-CHART_DIR = DATA_DIR / "charts"
-DEFAULT_SUMMARY = DATA_DIR / "stock_market_size_summary.md"
+
+# Committable showcase outputs (charts + summary) under outputs/.
+CHART_DIR = OUTPUT_DIR / "charts"
+DEFAULT_SUMMARY = OUTPUT_DIR / "stock_market_size_summary.md"

@@ -22,6 +22,7 @@ def _synthetic_rows() -> list[dict]:
     dates = pd.date_range("2016-03-31", "2024-12-31", freq="6ME")
     seeds = {
         "rtt_waiting_list_total": 3_000_000.0,
+        "rtt_waiting_list_per_1000": 55.0,
         "rtt_median_wait_weeks": 8.0,
         "ae_4hr_pct": 92.0,
         "cancer_62day_pct": 82.0,
@@ -117,6 +118,44 @@ def test_summary_content() -> None:
         assert "Caveat:" in text
         # A rising bad metric is flagged worse.
         assert "worse" in text
+
+
+def test_add_per_capita_uses_real_population(monkeypatch) -> None:
+    from nhs_data import population
+
+    # Stub the ONS fetch so the test stays offline; values mimic real estimates.
+    pops = {("ENG", 2020): 56_000_000.0, ("ENG", 2021): 56_500_000.0}
+    monkeypatch.setattr(population, "fetch", lambda *a, **k: pops)
+
+    rows = [
+        metrics.make_row("England", "ENG", "2020-03", "2020-03-31",
+                         "rtt_waiting_list_total", 4_200_000, "NHS England"),
+        # 2019 has no stub population -> must NOT get a per-capita row (no fabrication)
+        metrics.make_row("England", "ENG", "2019-03", "2019-03-31",
+                         "rtt_waiting_list_total", 4_000_000, "NHS England"),
+    ]
+    out = combine.add_per_capita(rows)
+    per_cap = [r for r in out if r["metric"] == "rtt_waiting_list_per_1000"]
+    assert len(per_cap) == 1  # only the year with a real population
+    r = per_cap[0]
+    assert r["period"] == "2020-03"
+    assert abs(r["value"] - 4_200_000 / 56_000_000 * 1000) < 1e-6
+    assert "mid-year population" in r["source"]
+
+
+def test_add_per_capita_resilient_to_population_failure(monkeypatch) -> None:
+    from nhs_data import population
+
+    def boom(*a, **k):
+        raise RuntimeError("nomis down")
+
+    monkeypatch.setattr(population, "fetch", boom)
+    rows = [
+        metrics.make_row("Wales", "WAL", "2020-03", "2020-03-31",
+                         "rtt_waiting_list_total", 500_000, "StatsWales"),
+    ]
+    out = combine.add_per_capita(rows)
+    assert out == rows  # raw rows preserved, no crash
 
 
 def _run() -> int:

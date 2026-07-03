@@ -60,9 +60,41 @@ def fetch(
     ind_list = (
         list(indicators)
         if indicators is not None
-        else [m.wb_indicator for m in markets.METRICS.values()]
+        else [m.wb_indicator for m in markets.METRICS.values() if m.wb_indicator]
     )
     out: list[dict] = []
     for indicator in ind_list:
         out.extend(_fetch_indicator(indicator, code_list, start, end))
     return out
+
+
+def fetch_us_cpi(start: int, end: int) -> dict[int, float]:
+    """Fetch US CPI (World Bank ``FP.CPI.TOTL``, 2010=100) as ``{year: index}``.
+
+    Used to deflate the nominal current-US$ market-cap series to real terms. Only
+    non-null observations are returned; the caller decides the rebasing year.
+    """
+    joined = "USA"
+    cpi: dict[int, float] = {}
+    page = 1
+    while True:
+        payload = get_json(
+            f"{BASE}/country/{joined}/indicator/{markets.CPI_INDICATOR}",
+            params={
+                "format": "json",
+                "per_page": 1000,
+                "date": f"{start}:{end}",
+                "page": page,
+            },
+        )
+        if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
+            return cpi
+        meta, rows = payload[0], payload[1]
+        for row in rows:
+            value = row.get("value")
+            if value is None:
+                continue
+            cpi[int(row["date"])] = float(value)
+        if page >= int(meta.get("pages", 1)):
+            return cpi
+        page += 1

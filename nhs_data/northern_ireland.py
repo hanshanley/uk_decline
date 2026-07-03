@@ -13,18 +13,16 @@ minus ``0 - 6 weeks``) for ``diagnostics_6week_breach_pct``.
 
 from __future__ import annotations
 
-import datetime as dt
 import html
 import io
 import re
-import sys
 import time
 from functools import lru_cache
 from urllib.parse import urljoin
 
 import pandas as pd
 
-from . import _http
+from . import _http, _util
 from .metrics import make_row
 
 NATION = "Northern Ireland"
@@ -70,7 +68,7 @@ _HEALTH_NI_DELAY_SECONDS = 10.0
 
 
 def _warn(metric: str, exc: Exception) -> None:
-    print(f"warning: Northern Ireland {metric} failed: {exc}", file=sys.stderr)
+    _util.warn(NATION_CODE, metric, exc)
 
 
 def _polite_pause(url: str) -> None:
@@ -83,20 +81,14 @@ def _polite_pause(url: str) -> None:
     _LAST_HEALTH_NI_REQUEST = time.monotonic()
 
 
-def _default_years(
-    start_year: int | None, end_year: int | None
-) -> tuple[int, int]:
-    end = end_year if end_year is not None else dt.date.today().year
-    start = start_year if start_year is not None else end - 9
-    return start, end
-
-
 @lru_cache(maxsize=None)
 def _html(url: str) -> str:
+    _http._ensure_allowed_host(url)
     last_resp = None
     for attempt in range(5):
         _polite_pause(url)
         resp = _http.session().get(url, timeout=60)
+        _http._ensure_allowed_host(resp.url)
         last_resp = resp
         if resp.status_code == 429:
             retry_after = resp.headers.get("Retry-After")
@@ -132,28 +124,6 @@ def _attachment_urls(page_url: str) -> list[str]:
         if url not in urls:
             urls.append(url)
     return urls
-
-
-def _find_attachment(
-    article_url: str,
-    slug_fragment: str,
-    include: tuple[str, ...],
-    exclude: tuple[str, ...] = (),
-    fallback_pages: tuple[str, ...] = (),
-) -> tuple[str, str]:
-    pages = _publication_pages(article_url, slug_fragment) + list(fallback_pages)
-    if not pages:
-        pages = [article_url, *fallback_pages]
-
-    for page in pages:
-        for url in _attachment_urls(page):
-            lower = url.lower()
-            if all(term in lower for term in include) and not any(
-                term in lower for term in exclude
-            ):
-                return url, page
-
-    raise RuntimeError(f"no matching attachment found for {slug_fragment}")
 
 
 def _find_attachment_on_pages(
@@ -384,18 +354,9 @@ def _fetch_diagnostics_6week_breach() -> list[dict]:
     ]
 
 
-def _filter_years(rows: list[dict], start_year: int, end_year: int) -> list[dict]:
-    out = []
-    for row in rows:
-        year = int(row["date"][:4])
-        if start_year <= year <= end_year:
-            out.append(row)
-    return out
-
-
 def fetch(start_year: int | None = None, end_year: int | None = None) -> list[dict]:
     """Fetch Northern Ireland waiting-time rows filtered by calendar year."""
-    start, end = _default_years(start_year, end_year)
+    start, end = _util.year_bounds(start_year, end_year)
     rows: list[dict] = []
     fetchers = (
         ("rtt_waiting_list_total", _fetch_outpatient_waiting_list),
@@ -410,6 +371,6 @@ def fetch(start_year: int | None = None, end_year: int | None = None) -> list[di
             _warn(metric, exc)
 
     return sorted(
-        _filter_years(rows, start, end),
+        _util.filter_rows_by_year(rows, start, end),
         key=lambda row: (row["date"], row["metric"]),
     )

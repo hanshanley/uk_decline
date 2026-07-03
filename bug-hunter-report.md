@@ -62,3 +62,19 @@ Dimensions run: Correctness, Logic consistency, Comments/Docs, Readability.
 `uk_migration/{__init__,schema,_http,_govuk,_spreadsheet,_aggregate,combine,charts,run}.py`,
 `sources/{worldbank,ons_ltim,visas,asylum,small_boats}.py`,
 `tests/{test_uk_migration,test_govuk,test_spreadsheet_combine}.py`.
+
+---
+
+## Resolution (all findings fixed)
+
+- **Fixed** all 5 MEDIUM + 7 LOW findings.
+- `_aggregate.py`: quarter-completeness now per `(year, category)`.
+- `schema.py`: added `flow_type` field; `legality` ∈ {legal, irregular, total}.
+- Renamed `sources/small_boats.py` → `sources/irregular.py` (SOURCES key `irregular`).
+- Extracted `sources/_common.py::fetch_home_office` (used by visas/asylum/irregular).
+- `ons_ltim.py`: removed EU-SILC claim; regex accepts 2- or 4-digit years.
+- `worldbank.py`: `end` defaults to current year.
+- `_govuk.py`: both resolvers pick newest by embedded date.
+- `__init__.py` + README wording/caveats corrected.
+- `charts.py`: `_thousands` → `_style_axes` (grid + integer year ticks decoupled).
+- **Verified:** 62 tests pass; pipeline emits 294 rows + 6 restyled charts.

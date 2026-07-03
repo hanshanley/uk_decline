@@ -76,7 +76,14 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         ax.set_ylim(0, 100)
     ax.grid(True, alpha=0.3)
     ax.legend(fontsize=9)
-    fig.tight_layout()
+
+    # Stamp the data source(s) straight from the data's own `source` column, so the caption
+    # is always traceable to the rows that were plotted (never hand-typed / fabricated).
+    sources = sorted(str(s) for s in sub["source"].dropna().unique())
+    year_lo, year_hi = int(sub["year"].min()), int(sub["year"].max())
+    caption = f"Source: {'; '.join(sources)}. Data: {year_lo}-{year_hi}."
+    fig.text(0.01, 0.01, caption, fontsize=7, color="#444444", ha="left", va="bottom")
+    fig.tight_layout(rect=(0, 0.035, 1, 1))
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

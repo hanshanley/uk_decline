@@ -11,11 +11,11 @@ from __future__ import annotations
 import calendar
 import json
 import re
-import sys
 from collections import defaultdict
 from datetime import date
 from typing import Iterable, Iterator
 
+from . import _util
 from ._http import get_json
 from .metrics import make_row
 
@@ -35,22 +35,6 @@ CANCER_62_RESOURCE = "23b3bbf7-7a37-4f86-974b-6360d6748e08"
 DIAGNOSTICS_CURRENT_RESOURCE = "df75544f-4ba1-488d-97c7-30ab6258270d"
 # Diagnostic Waiting Times / 2007 - 2019: Waiting Times At Scotland Level
 DIAGNOSTICS_ARCHIVE_RESOURCE = "d61e6e61-3fa6-4b14-8312-2c76d17094bb"
-
-def _warn(metric: str, exc: Exception) -> None:
-    print(f"[nhs_data] WARNING: SCO {metric} failed: {exc}", file=sys.stderr)
-
-
-def _year_bounds(start_year: int | None, end_year: int | None) -> tuple[int, int]:
-    end = end_year if end_year is not None else date.today().year
-    start = start_year if start_year is not None else end - 9
-    if start > end:
-        raise ValueError("start_year must be <= end_year")
-    return start, end
-
-
-def _in_year_range(day: date, start_year: int, end_year: int) -> bool:
-    return start_year <= day.year <= end_year
-
 
 def _month_end(value: int | str) -> date:
     text = str(value)
@@ -140,34 +124,16 @@ def _tidy_row(day: date, metric: str, value: float) -> dict:
     )
 
 
-def _fetch_rtt_total(start_year: int, end_year: int) -> list[dict]:
-    required = (
-        "MonthEnding",
-        "HBT",
-        "PatientType",
-        "Specialty",
-        "NumberWaiting",
-    )
-    totals: dict[date, float] = defaultdict(float)
-    for row in _datastore_records(
-        RTT_ONGOING_RESOURCE,
-        filters={"HBT": SCOTLAND, "Specialty": "Z9"},
-        required_fields=required,
-        sort="MonthEnding",
-    ):
-        day = _month_end(row["MonthEnding"])
-        if not _in_year_range(day, start_year, end_year):
-            continue
-        value = _num(row.get("NumberWaiting"))
-        if value is not None:
-            totals[day] += value
-    return [
-        _tidy_row(day, "rtt_waiting_list_total", totals[day])
-        for day in sorted(totals)
-    ]
+def _fetch_rtt() -> list[dict]:
+    """Total on the RTT list + weighted-median wait, from a single datastore pass.
 
-
-def _fetch_rtt_median(start_year: int, end_year: int) -> list[dict]:
+    Public Health Scotland's ongoing-waits resource splits the list into two
+    patient types ("New Outpatient" and "Inpatient/Day case"). Some months report
+    only one type (e.g. New Outpatient is null Apr 2017-Dec 2018), which would
+    understate the total. We therefore emit a month only when BOTH components are
+    actually reported, so every value is a complete, source-traceable PHS figure
+    rather than a partial (misleading) sum.
+    """
     required = (
         "MonthEnding",
         "HBT",
@@ -176,8 +142,11 @@ def _fetch_rtt_median(start_year: int, end_year: int) -> list[dict]:
         "NumberWaiting",
         "Median",
     )
+    required_types = {"New Outpatient", "Inpatient/Day case"}
+    totals: dict[date, float] = defaultdict(float)
     weighted_days: dict[date, float] = defaultdict(float)
     weights: dict[date, float] = defaultdict(float)
+    reported_types: dict[date, set[str]] = defaultdict(set)
     for row in _datastore_records(
         RTT_ONGOING_RESOURCE,
         filters={"HBT": SCOTLAND, "Specialty": "Z9"},
@@ -185,22 +154,33 @@ def _fetch_rtt_median(start_year: int, end_year: int) -> list[dict]:
         sort="MonthEnding",
     ):
         day = _month_end(row["MonthEnding"])
-        if not _in_year_range(day, start_year, end_year):
-            continue
         number_waiting = _num(row.get("NumberWaiting"))
-        median_days = _num(row.get("Median"))
-        if number_waiting is None or median_days is None or number_waiting <= 0:
+        if number_waiting is None:
             continue
-        weighted_days[day] += median_days * number_waiting
-        weights[day] += number_waiting
-    return [
+        reported_types[day].add(str(row.get("PatientType")))
+        totals[day] += number_waiting
+        median_days = _num(row.get("Median"))
+        if median_days is not None and number_waiting > 0:
+            weighted_days[day] += median_days * number_waiting
+            weights[day] += number_waiting
+
+    def _complete(day: date) -> bool:
+        return required_types <= reported_types[day]
+
+    rows = [
+        _tidy_row(day, "rtt_waiting_list_total", totals[day])
+        for day in sorted(totals)
+        if _complete(day)
+    ]
+    rows += [
         _tidy_row(day, "rtt_median_wait_weeks", weighted_days[day] / weights[day] / 7)
         for day in sorted(weighted_days)
-        if weights[day]
+        if weights[day] and _complete(day)
     ]
+    return rows
 
 
-def _fetch_ae_4hr(start_year: int, end_year: int) -> list[dict]:
+def _fetch_ae_4hr() -> list[dict]:
     required = (
         "Month",
         "Country",
@@ -217,8 +197,6 @@ def _fetch_ae_4hr(start_year: int, end_year: int) -> list[dict]:
         sort="Month",
     ):
         day = _month_end(row["Month"])
-        if not _in_year_range(day, start_year, end_year):
-            continue
         total = _num(row.get("NumberOfAttendancesAll"))
         met = _num(row.get("NumberWithin4HoursAll"))
         if total is None or met is None:
@@ -232,7 +210,7 @@ def _fetch_ae_4hr(start_year: int, end_year: int) -> list[dict]:
     ]
 
 
-def _fetch_cancer_62day(start_year: int, end_year: int) -> list[dict]:
+def _fetch_cancer_62day() -> list[dict]:
     required = (
         "Quarter",
         "HB",
@@ -250,15 +228,12 @@ def _fetch_cancer_62day(start_year: int, end_year: int) -> list[dict]:
         required_fields=required,
         sort="Quarter",
     ):
-        day = _quarter_end(row["Quarter"])
-        if not _in_year_range(day, start_year, end_year):
-            continue
         total = _num(row.get("NumberOfEligibleReferrals62DayStandard"))
         met = _num(row.get("NumberOfEligibleReferralsTreatedWithin62Days"))
         if total is None or met is None:
             continue
         period = _quarter_period(row["Quarter"])
-        dates[period] = day
+        dates[period] = _quarter_end(row["Quarter"])
         eligible[period] += total
         treated[period] += met
     return [
@@ -288,9 +263,7 @@ def _is_six_week_breach_band(waiting_time: str) -> bool:
     return bool(match and int(match.group(1)) >= 43)
 
 
-def _fetch_diagnostics_current(
-    start_year: int, end_year: int
-) -> dict[date, tuple[float, float]]:
+def _fetch_diagnostics_current() -> dict[date, tuple[float, float]]:
     required = (
         "DiagnosticTestDescription",
         "MonthEnding",
@@ -309,8 +282,6 @@ def _fetch_diagnostics_current(
         if not _is_all_diagnostic_type(row):
             continue
         day = _month_end(row["MonthEnding"])
-        if not _in_year_range(day, start_year, end_year):
-            continue
         value = _num(row.get("NumberOnList"))
         if value is None:
             continue
@@ -320,9 +291,7 @@ def _fetch_diagnostics_current(
     return {day: (totals[day], breaches[day]) for day in totals}
 
 
-def _fetch_diagnostics_archive(
-    start_year: int, end_year: int
-) -> dict[date, tuple[float, float]]:
+def _fetch_diagnostics_archive() -> dict[date, tuple[float, float]]:
     required = (
         "MonthEnding",
         "Country",
@@ -341,8 +310,6 @@ def _fetch_diagnostics_archive(
         if not _is_all_diagnostic_type(row):
             continue
         day = _month_end(row["MonthEnding"])
-        if not _in_year_range(day, start_year, end_year):
-            continue
         total = _num(row.get("NumberOnList"))
         breach = _num(row.get("NumberWaitingOverSixWeeks"))
         if total is None or breach is None:
@@ -352,9 +319,9 @@ def _fetch_diagnostics_archive(
     return {day: (totals[day], breaches[day]) for day in totals}
 
 
-def _fetch_diagnostics_6week(start_year: int, end_year: int) -> list[dict]:
-    by_day = _fetch_diagnostics_archive(start_year, end_year)
-    by_day.update(_fetch_diagnostics_current(start_year, end_year))
+def _fetch_diagnostics_6week() -> list[dict]:
+    by_day = _fetch_diagnostics_archive()
+    by_day.update(_fetch_diagnostics_current())
     return [
         _tidy_row(day, "diagnostics_6week_breach_pct", breach / total * 100)
         for day, (total, breach) in sorted(by_day.items())
@@ -364,17 +331,19 @@ def _fetch_diagnostics_6week(start_year: int, end_year: int) -> list[dict]:
 
 def fetch(start_year: int | None = None, end_year: int | None = None) -> list[dict]:
     """Fetch tidy Scotland waiting-time rows for the inclusive year range."""
-    start, end = _year_bounds(start_year, end_year)
+    start, end = _util.year_bounds(start_year, end_year)
     rows: list[dict] = []
     for metric, fetcher in (
-        ("rtt_waiting_list_total", _fetch_rtt_total),
-        ("rtt_median_wait_weeks", _fetch_rtt_median),
+        ("rtt", _fetch_rtt),
         ("ae_4hr_pct", _fetch_ae_4hr),
         ("cancer_62day_pct", _fetch_cancer_62day),
         ("diagnostics_6week_breach_pct", _fetch_diagnostics_6week),
     ):
         try:
-            rows.extend(fetcher(start, end))
+            rows.extend(fetcher())
         except Exception as exc:  # noqa: BLE001 - keep other metrics available
-            _warn(metric, exc)
-    return sorted(rows, key=lambda row: (row["metric"], row["date"]))
+            _util.warn(NATION_CODE, metric, exc)
+    return sorted(
+        _util.filter_rows_by_year(rows, start, end),
+        key=lambda row: (row["metric"], row["date"]),
+    )

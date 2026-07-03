@@ -37,3 +37,16 @@ def get_json(url: str, params: dict[str, Any] | None = None, timeout: int = 60) 
     resp = session().get(url, params=params, timeout=timeout)
     resp.raise_for_status()
     return resp.json()
+
+
+@retry(
+    retry=retry_if_exception_type((requests.RequestException,)),
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=1, max=30),
+    reraise=True,
+)
+def get_text(url: str, params: dict[str, Any] | None = None, timeout: int = 60) -> str:
+    """GET ``url`` and return the response body as text (e.g. a CSV download)."""
+    resp = session().get(url, params=params, timeout=timeout)
+    resp.raise_for_status()
+    return resp.text

@@ -9,6 +9,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import shutil
 
 from . import charts, combine
 
@@ -30,8 +31,13 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.no_charts:
         paths = charts.render_all()
-        print("Rendered charts:")
-        for path in paths:
+        # Copy the combined data next to the charts so the outputs/ showcase is
+        # self-contained and committable (data/processed/*.csv is git-ignored).
+        charts.FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+        data_copy = charts.FIGURES_DIR / combine.COMBINED_CSV.name
+        shutil.copyfile(combine.COMBINED_CSV, data_copy)
+        print("Wrote charts + sources + data to outputs:")
+        for path in [*paths, data_copy]:
             print(f"  {path}")
     return 0
 

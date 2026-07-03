@@ -10,12 +10,11 @@ from __future__ import annotations
 import calendar
 import json
 import re
-import sys
-from datetime import date, datetime
+from datetime import datetime
 from typing import Iterable, Iterator
 from urllib.parse import urljoin
 
-from . import metrics, nations
+from . import _util, metrics, nations
 from ._http import get_json
 
 BASE = "https://api.stats.gov.wales/v1"
@@ -100,6 +99,10 @@ def _view_rows(
 
 
 def _number(value: object) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, float) and value != value:  # NaN
+        return None
     text = str(value).strip().replace(",", "")
     if not text or text in {":", "..", "n/a", "N/A", "-"}:
         return None
@@ -124,23 +127,20 @@ def _row(period_label: object, metric: str, value: float) -> dict:
     return metrics.make_row(NATION, NATION_CODE, period, period_date, metric, value, SOURCE)
 
 
-def _fetch_rtt_waiting_list_total() -> Iterator[dict]:
+def _fetch_rtt() -> Iterator[dict]:
+    """Yield both RTT metrics from a single pass over the shared RTT view."""
+    median_desc = "Median waiting time (decimal weeks)"
     for row in _view_rows(DATASETS["rtt_performance"], RTT_FILTERS):
-        if row.get("Data description") != "Total pathways waiting":
+        desc = row.get("Data description")
+        if desc == "Total pathways waiting":
+            metric = "rtt_waiting_list_total"
+        elif desc == median_desc:
+            metric = "rtt_median_wait_weeks"
+        else:
             continue
         value = _number(row.get("Data values"))
         if value is not None:
-            yield _row(row["Date"], "rtt_waiting_list_total", value)
-
-
-def _fetch_rtt_median_wait_weeks() -> Iterator[dict]:
-    desc = "Median waiting time (decimal weeks)"
-    for row in _view_rows(DATASETS["rtt_performance"], RTT_FILTERS):
-        if row.get("Data description") != desc:
-            continue
-        value = _number(row.get("Data values"))
-        if value is not None:
-            yield _row(row["Date"], "rtt_median_wait_weeks", value)
+            yield _row(row["Date"], metric, value)
 
 
 def _fetch_ae_4hr_pct() -> Iterator[dict]:
@@ -265,32 +265,22 @@ def _fetch_diagnostics_6week_breach_pct() -> Iterator[dict]:
             yield row
 
 
-FETCHERS = {
-    "rtt_waiting_list_total": _fetch_rtt_waiting_list_total,
-    "rtt_median_wait_weeks": _fetch_rtt_median_wait_weeks,
-    "ae_4hr_pct": _fetch_ae_4hr_pct,
-    "cancer_62day_pct": _fetch_cancer_62day_pct,
-    "diagnostics_6week_breach_pct": _fetch_diagnostics_6week_breach_pct,
-}
-
-
-def _year_bounds(start_year: int | None, end_year: int | None) -> tuple[int, int]:
-    this_year = date.today().year
-    start = this_year - 9 if start_year is None else start_year
-    end = this_year if end_year is None else end_year
-    return start, end
+FETCHERS = (
+    ("rtt", _fetch_rtt),
+    ("ae_4hr_pct", _fetch_ae_4hr_pct),
+    ("cancer_62day_pct", _fetch_cancer_62day_pct),
+    ("diagnostics_6week_breach_pct", _fetch_diagnostics_6week_breach_pct),
+)
 
 
 def fetch(start_year: int | None = None, end_year: int | None = None) -> list[dict]:
     """Fetch tidy all-Wales waiting-time rows for an inclusive year range."""
-    start, end = _year_bounds(start_year, end_year)
+    start, end = _util.year_bounds(start_year, end_year)
     out: list[dict] = []
-    for metric, fetcher in FETCHERS.items():
+    for metric, fetcher in FETCHERS:
         try:
-            for row in fetcher():
-                year = int(row["date"][:4])
-                if start <= year <= end:
-                    out.append(row)
+            out.extend(fetcher())
         except Exception as exc:
-            print(f"warning: Wales {metric} unavailable: {exc}", file=sys.stderr)
+            _util.warn(NATION_CODE, metric, exc)
+    out = _util.filter_rows_by_year(out, start, end)
     return sorted(out, key=lambda row: (row["date"], row["metric"]))

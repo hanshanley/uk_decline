@@ -23,6 +23,8 @@ INDICATORS: dict[str, tuple[str, str, str, str, str]] = {
     "SM.POP.TOTL": ("migrant_stock", "all", "people", schema.TOTAL, schema.STOCK),
     "SM.POP.TOTL.ZS": ("migrant_stock_pct", "all", "% of population", schema.TOTAL, schema.STOCK),
     "SM.POP.NETM": ("net_migration_wb", "all", "people", schema.TOTAL, schema.NET),
+    # UK total population — real denominator for population-normalising the flow series.
+    "SP.POP.TOTL": ("uk_population", "all", "people", schema.TOTAL, schema.STOCK),
 }
 
 

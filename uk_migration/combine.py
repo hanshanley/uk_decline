@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-from . import schema
+from . import normalize, schema
 from .sources import asylum, irregular, ons_ltim, visas, worldbank
 
 # name -> fetch callable
@@ -43,10 +43,15 @@ def fetch_all(only: list[str] | None = None) -> dict[str, list[dict]]:
 
 
 def combine(results: dict[str, list[dict]]) -> list[dict]:
-    """Merge per-source rows into one long table and write ``uk_migration_long.csv``."""
+    """Merge per-source rows into one long table and write ``uk_migration_long.csv``.
+
+    Also appends derived per-1,000-population rows (headcounts are not monetary, so the
+    "real-terms" comparison across decades is population-normalisation, not CPI inflation).
+    """
     combined: list[dict] = []
     for rows in results.values():
         combined.extend(rows)
+    combined.extend(normalize.per_capita(combined))
     _write_csv(COMBINED_CSV, combined)
     return combined
 

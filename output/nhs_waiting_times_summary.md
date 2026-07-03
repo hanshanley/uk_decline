@@ -16,6 +16,19 @@ Total number of patients on the elective referral-to-treatment waiting list (inc
 
 > Caveat: England/Wales report RTT 'incomplete pathways'; Scotland reports 'ongoing waits' by stage of treatment; NI reports outpatient/inpatient/day-case waits separately. Absolute counts are not directly comparable across nations.
 
+## RTT waiting list per 1,000 people (per 1,000 people)
+
+Elective waiting list expressed per 1,000 residents, using real ONS mid-year population estimates, so growth is not just population growth.
+
+| Nation | First | Latest | Change |
+|---|---|---|---|
+| England | 60.7/1k (Oct 2015) | 127.8/1k (Dec 2024) | ↑ 67.1/1k (worse) |
+| Scotland | 57.3/1k (Jan 2015) | 130.5/1k (Dec 2024) | ↑ 73.2/1k (worse) |
+| Wales | 135.0/1k (Jan 2015) | 251.2/1k (Dec 2024) | ↑ 116.2/1k (worse) |
+| Northern Ireland | 103.4/1k (Mar 2015) | 229.2/1k (Dec 2024) | ↑ 125.8/1k (worse) |
+
+> Caveat: Derived: RTT waiting list ÷ real ONS mid-year population estimate × 1,000. Population comes from ONS/NRS/NISRA via Nomis; only years with a published estimate are shown (no projection/extrapolation). Inherits the per-nation RTT definitional differences below.
+
 ## RTT median wait (weeks)
 
 Median waiting time of patients still waiting to start treatment.
@@ -65,4 +78,4 @@ Share of patients on the diagnostic-test waiting list who have been waiting 6 we
 | Wales | 29.4% (Jan 2015) | 45.4% (Dec 2025) | ↑ 16.1% (worse) |
 | Northern Ireland | 43.5% (Mar 2015) | 73.0% (Dec 2025) | ↑ 29.5% (worse) |
 
-> Caveat: Diagnostic test lists (DM01 in England) cover different test sets per nation.
+> Caveat: Diagnostic test lists (DM01 in England) cover different test sets per nation. England/Scotland/NI measure the 6-week standard; Wales's target is 8 weeks, so the Welsh series counts 8+ week waits and understates the 6-week breach share — compare the Welsh trend, not its exact level.

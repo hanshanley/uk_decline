@@ -1,10 +1,16 @@
-"""Shared filesystem paths for nhs_data outputs."""
+"""Shared filesystem paths for nhs_data outputs.
+
+All generated artifacts (combined CSV, charts, summary) are written under the
+project-level ``output/`` folder so the deliverables live in one place.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-DEFAULT_CSV = DATA_DIR / "nhs_waiting_times.csv"
-CHART_DIR = DATA_DIR / "charts"
-DEFAULT_SUMMARY = DATA_DIR / "nhs_waiting_times_summary.md"
+PROJECT_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = PROJECT_DIR / "data"          # kept for any raw/intermediate data
+OUTPUT_DIR = PROJECT_DIR / "output"      # generated deliverables (CSV, charts, summary)
+DEFAULT_CSV = OUTPUT_DIR / "nhs_waiting_times.csv"
+CHART_DIR = OUTPUT_DIR / "charts"
+DEFAULT_SUMMARY = OUTPUT_DIR / "nhs_waiting_times_summary.md"

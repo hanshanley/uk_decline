@@ -94,9 +94,21 @@ TW_TAX_WEDGE = ("AV_TW", "PT_COS_LB")        # tax wedge, % of labour costs
 TW_NPATR = ("NPATR", "PT_WG_EARN_G")         # net personal average tax rate, % gross wage
 
 # Household types and earnings levels we collect (OECD codes -> short labels).
+#
+# The Taxing Wages dataset gives, per (country, year, indicator, principal earnings),
+# several rows for couples that differ only by the spouse's earnings (INCOME_SPOUSE).
+# To keep every value uniquely defined and traceable to one OECD family type we pin the
+# spouse-income code per household: singles have no spouse (``_Z``); the couple variant
+# is the standard *one-earner* married couple, i.e. spouse not employed
+# (``NOEARN_UNEMP``). Without this pin, distinct configurations would share a variant key.
 HOUSEHOLDS: dict[str, str] = {
     "S_C0": "single_nokids",
-    "C_C2": "couple2kids",
+    "C_C2": "couple2kids_1earner",
+}
+# Allowed INCOME_SPOUSE code per HOUSEHOLD_TYPE (defines the exact OECD family type).
+HOUSEHOLD_SPOUSE: dict[str, str] = {
+    "S_C0": "_Z",             # single: spouse not applicable
+    "C_C2": "NOEARN_UNEMP",   # one-earner couple: spouse has no earnings
 }
 EARNINGS: dict[str, str] = {
     "AW67": "67aw",

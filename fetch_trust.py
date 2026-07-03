@@ -32,7 +32,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         description="Fetch UK trust-in-government indicators over time (vs EU-27 + US).",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    p.add_argument("--start", type=int, default=2006, help="First year (inclusive).")
+    p.add_argument("--start", type=int, default=1974, help="First year (inclusive).")
     p.add_argument(
         "--end", type=int, default=dt.date.today().year, help="Last year (inclusive)."
     )
@@ -93,12 +93,19 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  {name:22s} {path}")
 
     if args.charts:
-        from trust_data import charts
+        from trust_data import charts, report
 
         paths = charts.make_charts(written["combined_long"])
         print(f"\nCharts ({len(paths)}):")
         for pth in paths:
             print(f"  {pth}")
+        readme = report.write_showcase(
+            args.out,
+            long_csv=written["combined_long"],
+            manifest_json=written["manifest"],
+            chart_files=[str(p) for p in paths],
+        )
+        print(f"\nShowcase README (references data sources): {readme}")
 
     if args.summary:
         from trust_data import summary

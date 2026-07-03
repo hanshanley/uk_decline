@@ -14,6 +14,7 @@ levels** (see caveats below).
 | Metric id | Meaning | Unit |
 |---|---|---|
 | `rtt_waiting_list_total` | Patients waiting to start elective treatment (the "waiting list") | patients |
+| `rtt_waiting_list_per_1000` | Waiting list per 1,000 residents (derived; real ONS population) | per 1,000 people |
 | `rtt_median_wait_weeks` | Median wait of those still waiting | weeks |
 | `ae_4hr_pct` | A&E attendances seen within 4 hours | percent |
 | `cancer_62day_pct` | Cancer treatments started within 62 days of urgent referral | percent |
@@ -21,12 +22,18 @@ levels** (see caveats below).
 
 ## Data sources
 
-| Nation | Source | Access |
+| Nation / series | Source | Access |
 |---|---|---|
 | England | NHS England statistical work areas | CSV/Excel bulk downloads (no API) |
 | Scotland | Public Health Scotland `opendata.nhs.scot` | CKAN JSON API |
 | Wales | StatsWales `statswales.gov.wales` | OData JSON API |
 | Northern Ireland | Department of Health (NI) | Excel/ODS downloads (no API) |
+| Population | ONS/NRS/NISRA mid-year estimates via **Nomis** (`NM_2002_1`) | JSON API |
+
+Every value is fetched from these official sources — nothing is synthesised or
+interpolated. The one derived series, `rtt_waiting_list_per_1000`, is computed as
+`waiting_list ÷ real ONS mid-year population × 1,000`, and is only produced for
+years that have a published ONS estimate (no projection/extrapolation).
 
 ## Tidy schema (long format)
 
@@ -55,8 +62,12 @@ period-end.
 
 Outputs:
 - `data/nhs_waiting_times.csv` — combined tidy table
-- `data/charts/<metric>.png` — one per-nation trend chart per metric
+- `data/charts/<metric>.png` — one per-nation trend chart per metric (each chart
+  embeds a source-attribution note; the per-1,000 chart also credits ONS)
 - `data/nhs_waiting_times_summary.md` — headline trend summary
+
+The chart-generation code is `nhs_data/charts.py` (matplotlib; run via the CLI
+above or `nhs_data.charts.make_charts(df)`).
 
 Programmatic use:
 
@@ -77,13 +88,15 @@ Metric definitions differ by nation. Key differences (full text in
   inpatient / day-case separately (we map the **outpatient** total). Absolute
   counts are **not** directly comparable across nations.
 - **A&E 4-hour:** scope differs (all A&E types vs major/Type-1 only) and cadence
-  varies (weekly/monthly). **Northern Ireland:** only machine-readable A&E data
-  (2015–2018, via OpenDataNI) is ingested; DoH NI's recent Emergency Care
-  releases are PDF-only, so the NIR A&E series ends in 2018. The other three
-  nations run to the latest month.
+  varies (weekly/monthly). **Northern Ireland:** only the machine-readable
+  OpenDataNI Emergency Care extract is ingested; DoH NI's most recent Emergency
+  Care releases are PDF-only, so the NIR A&E series may lag the other three
+  nations (which run to the latest published month).
 - **Cancer 62-day:** pathway definitions and standards were revised at different
   times per nation — watch for series breaks.
-- **Diagnostics:** each nation covers a different set of tests.
+- **Diagnostics:** each nation covers a different set of tests. England/Scotland/
+  NI measure the 6-week standard; **Wales's target is 8 weeks**, so the Welsh
+  series counts 8+ week waits and understates the 6-week breach share.
 
 ## Tests
 

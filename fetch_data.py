@@ -19,9 +19,9 @@ import sys
 
 from tqdm import tqdm
 
-from europe_data import combine, eurostat, pip, worldbank
+from europe_data import combine, eurostat, maddison, pip, worldbank
 
-SOURCES = ("worldbank", "eurostat", "pip")
+SOURCES = ("worldbank", "maddison", "eurostat", "pip")
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -29,7 +29,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         description="Fetch European per-capita GDP (PPP) and median income (PPP/PPS).",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    p.add_argument("--start", type=int, default=2000, help="First year (inclusive).")
+    p.add_argument("--start", type=int, default=1970, help="First year (inclusive).")
     p.add_argument(
         "--end",
         type=int,
@@ -56,6 +56,7 @@ def main(argv: list[str] | None = None) -> int:
     # (source_stem -> fetch callable)
     fetchers = {
         "worldbank": ("gdp_per_capita_ppp", worldbank.fetch),
+        "maddison": ("gdp_per_capita_real_maddison", maddison.fetch),
         "eurostat": ("eurostat_median_income_pps", eurostat.fetch),
         "pip": ("pip_median_income", pip.fetch),
     }

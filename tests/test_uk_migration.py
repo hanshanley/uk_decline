@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from uk_migration import schema
+from uk_migration import normalize, schema
 from uk_migration._aggregate import aggregate_by_year
 from uk_migration.sources import asylum, irregular, ons_ltim, visas
 
@@ -169,3 +169,29 @@ def test_irregular_parse_splits_methods_and_totals():
     assert by[("all", 2020)]["value"] == 480.0
     assert all(r["legality"] == schema.IRREGULAR for r in out)
     assert all(r["flow_type"] == schema.COUNT for r in out)
+
+
+def test_normalize_per_capita_is_exact_ratio_of_real_series():
+    rows = [
+        schema.row(1974, "uk_population", 56_229_974, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.STOCK, source="World Bank WDI"),
+        schema.row(1974, "net_migration_wb", -65_710, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.NET, source="World Bank WDI"),
+        # a metric NOT in the whitelist must not be normalised:
+        schema.row(1974, "migrant_stock", 3_000_000, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.STOCK, source="World Bank WDI"),
+        # a year with no population must be skipped:
+        schema.row(1975, "net_migration_wb", -40_241, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.NET, source="World Bank WDI"),
+    ]
+    out = normalize.per_capita(rows)
+    assert len(out) == 1
+    d = out[0]
+    assert d["metric"] == "net_migration_wb_per_1000_pop"
+    assert d["value"] == -65_710 / 56_229_974 * 1000.0  # exact ratio, nothing invented
+    assert d["unit"] == "per 1,000 population"
+    assert d["flow_type"] == schema.NET
+    assert d["source"].startswith("Derived:")
+    # stock (not whitelisted) and the population-less year are excluded
+    assert all("migrant_stock" not in r["metric"] for r in out)
+    assert all(r["period"] != 1975 for r in out)

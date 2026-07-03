@@ -71,6 +71,12 @@ COUNTRIES: list[Country] = [
     Country("United Kingdom", "GBR", "GB", "UK"),
 ]
 
+# Non-European peers used only for GDP-per-capita comparison (NOT part of the European
+# allow-list, so they never leak into Eurostat geos or the PIP country set).
+NON_EUROPEAN_PEERS: list[Country] = [
+    Country("United States", "USA", "US", "US"),
+]
+
 # Eurostat-only reference aggregates (no World Bank equivalent with identical membership).
 EUROSTAT_AGGREGATES: list[Country] = [
     Country("European Union (27, 2020)", "EU27_2020", "EU", "EU27_2020"),
@@ -86,7 +92,7 @@ WB_AGGREGATES: list[Country] = [
 # ---- Lookups ---------------------------------------------------------------
 
 BY_ISO3: dict[str, Country] = {
-    c.iso3: c for c in (*COUNTRIES, *WB_AGGREGATES)
+    c.iso3: c for c in (*COUNTRIES, *NON_EUROPEAN_PEERS, *WB_AGGREGATES)
 }
 BY_EUROSTAT: dict[str, Country] = {
     c.eurostat: c for c in (*COUNTRIES, *EUROSTAT_AGGREGATES)
@@ -100,6 +106,15 @@ def iso3_codes(include_aggregates: bool = False) -> list[str]:
     (valid for GDP indicators, but not for PIP, which has no aggregate rows).
     """
     codes = [c.iso3 for c in COUNTRIES]
+    if include_aggregates:
+        codes += [a.iso3 for a in WB_AGGREGATES]
+    return codes
+
+
+def gdp_iso3_codes(include_aggregates: bool = True) -> list[str]:
+    """Codes for GDP-per-capita comparison: European countries + non-European peers
+    (e.g. the US), optionally plus the World Bank EU/euro-area aggregates."""
+    codes = [c.iso3 for c in COUNTRIES] + [c.iso3 for c in NON_EUROPEAN_PEERS]
     if include_aggregates:
         codes += [a.iso3 for a in WB_AGGREGATES]
     return codes

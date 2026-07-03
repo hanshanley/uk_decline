@@ -11,15 +11,15 @@ import calendar
 import csv
 import io
 import re
-import sys
 import zipfile
-from datetime import date, datetime
+from datetime import date
 from html.parser import HTMLParser
 from urllib.parse import unquote, urljoin
 
 import pandas as pd
 
 from ._http import get_bytes, get_csv, get_excel
+from . import _util
 from .metrics import make_row
 
 NATION = "England"
@@ -108,7 +108,7 @@ class _LinkParser(HTMLParser):
 
 
 def _warn(metric: str, exc: Exception) -> None:
-    print(f"warning: NHS England {metric} failed: {exc}", file=sys.stderr)
+    _util.warn(NATION_CODE, metric, exc)
 
 
 def _links(page_url: str) -> list[tuple[str, str]]:
@@ -225,9 +225,14 @@ def _percent(value: float) -> float:
     return value * 100.0 if abs(value) <= 1.5 else value
 
 
-def _csv_text_from_zip(url: str) -> str:
+def _csv_text_from_zip(url: str, max_uncompressed: int = 512 * 1024 * 1024) -> str:
     archive = zipfile.ZipFile(io.BytesIO(get_bytes(url)))
     name = next(n for n in archive.namelist() if n.lower().endswith(".csv"))
+    info = archive.getinfo(name)
+    if info.file_size > max_uncompressed:
+        raise ValueError(
+            f"refusing to decompress {name!r} ({info.file_size} bytes) from {url!r}"
+        )
     raw = archive.read(name)
     try:
         return raw.decode("utf-8-sig")
@@ -369,9 +374,6 @@ def _fetch_ae(start_year: int, end_year: int) -> list[dict]:
                 if col in df:
                     total_mask |= df[col].astype(str).str.strip().str.upper().eq("TOTAL")
             subset = df.loc[total_mask] if total_mask.any() else df
-            numeric = subset.select_dtypes(include="number")
-            if numeric.empty:
-                numeric = subset.apply(_to_numeric)
             attendance_cols = [
                 c
                 for c in subset.columns
@@ -380,8 +382,16 @@ def _fetch_ae(start_year: int, end_year: int) -> list[dict]:
                 and "admission" not in c.lower()
             ]
             over_cols = [c for c in subset.columns if "over 4" in c.lower()]
-            attendances = float(numeric[attendance_cols].sum().sum())
-            over_four = float(numeric[over_cols].sum().sum())
+            attendances = (
+                float(subset[attendance_cols].apply(_to_numeric).sum().sum())
+                if attendance_cols
+                else 0.0
+            )
+            over_four = (
+                float(subset[over_cols].apply(_to_numeric).sum().sum())
+                if over_cols
+                else 0.0
+            )
             if attendances <= 0:
                 continue
             period, row_date = _period_and_date(year, month)
@@ -552,11 +562,7 @@ def fetch(start_year: int | None = None, end_year: int | None = None) -> list[di
     Rows are filtered by the inclusive calendar year of each month-end ``date``.
     When a bound is omitted, the default is approximately the latest 10 years.
     """
-    current_year = date.today().year
-    if end_year is None:
-        end_year = current_year
-    if start_year is None:
-        start_year = end_year - 9
+    start_year, end_year = _util.year_bounds(start_year, end_year)
 
     out: list[dict] = []
     for metric, loader in (
@@ -570,9 +576,5 @@ def fetch(start_year: int | None = None, end_year: int | None = None) -> list[di
         except Exception as exc:
             _warn(metric, exc)
 
-    out = [
-        row
-        for row in out
-        if start_year <= datetime.fromisoformat(row["date"]).date().year <= end_year
-    ]
+    out = _util.filter_rows_by_year(out, start_year, end_year)
     return sorted(out, key=lambda row: (row["date"], row["metric"]))

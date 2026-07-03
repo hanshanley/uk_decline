@@ -47,11 +47,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     p.add_argument("--out", default="data", help="Output directory for CSVs.")
     p.add_argument(
+        "--charts-dir",
+        default="outputs",
+        help="Directory for the rendered Substack-style charts (committable).",
+    )
+    p.add_argument(
         "--charts",
         dest="charts",
         action="store_true",
         default=True,
-        help="Render Substack-style comparison charts into <out>/charts.",
+        help="Render Substack-style comparison charts into --charts-dir.",
     )
     p.add_argument(
         "--no-charts", dest="charts", action="store_false", help="Skip chart rendering."
@@ -136,7 +141,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  {name:15s} {path}")
 
     if args.charts:
-        chart_paths = charts.render_all(all_rows, os.path.join(args.out, "charts"))
+        chart_paths = charts.render_all(all_rows, args.charts_dir)
         for path in chart_paths:
             print(f"  {'chart':15s} {path}")
 

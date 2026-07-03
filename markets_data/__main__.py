@@ -2,9 +2,12 @@
 
 Usage:
     python -m markets_data                      # fetch + write CSV + charts + summary
-    python -m markets_data --start 1975 --end 2024
+    python -m markets_data --start 1970 --end 2024
     python -m markets_data --no-charts --no-summary
     python -m markets_data --from-csv data/stock_market_size.csv
+
+The default year span starts at 1970 (World Bank stock-market data begins 1975, so
+this captures the full available history back to the 1970s).
 """
 
 from __future__ import annotations
@@ -17,7 +20,12 @@ from . import charts, combine, summary
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="markets_data", description=__doc__)
-    p.add_argument("--start", type=int, default=None, help="first calendar year (inclusive)")
+    p.add_argument(
+        "--start",
+        type=int,
+        default=None,
+        help="first calendar year (inclusive); default 1970 (data begins 1975)",
+    )
     p.add_argument("--end", type=int, default=None, help="last calendar year (inclusive)")
     p.add_argument("--csv", default=str(combine.DEFAULT_CSV), help="combined long CSV path")
     p.add_argument(

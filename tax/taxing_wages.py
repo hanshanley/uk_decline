@@ -34,9 +34,11 @@ def _fetch_indicator(
     end: int,
 ) -> list[dict]:
     # Key order: REF_AREA.MEASURE.UNIT_MEASURE.HOUSEHOLD_TYPE.INCOME_PRINCIPAL.
-    # INCOME_SPOUSE.FREQ. Pin the household types and earnings levels we want
-    # server-side (so the API doesn't ship every combination) and wildcard only the
-    # spouse-income position, which is coded differently across household types.
+    # INCOME_SPOUSE.FREQ. Pin household types and earnings levels server-side (so the
+    # API doesn't ship every combination). The spouse-income position stays wildcarded
+    # in the query (its valid codes differ by household) and is filtered per household
+    # below via config.HOUSEHOLD_SPOUSE, so each variant maps to exactly one OECD family
+    # type — no two rows can share a variant key.
     households = "+".join(config.HOUSEHOLDS)
     earnings = "+".join(config.EARNINGS)
     key = f"{'+'.join(areas)}.{measure}.{unit}.{households}.{earnings}..A"
@@ -47,10 +49,13 @@ def _fetch_indicator(
         iso3 = r.get("REF_AREA", "")
         household_code = r.get("HOUSEHOLD_TYPE", "")
         earnings_code = r.get("INCOME_PRINCIPAL", "")
+        spouse_code = r.get("INCOME_SPOUSE", "")
         value = r.get("OBS_VALUE", "")
         if iso3 not in config.BY_ISO3 or value in (None, ""):
             continue
         if household_code not in config.HOUSEHOLDS or earnings_code not in config.EARNINGS:
+            continue
+        if spouse_code != config.HOUSEHOLD_SPOUSE.get(household_code):
             continue
         out.append(
             make_row(

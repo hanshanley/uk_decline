@@ -27,7 +27,7 @@ def _load(source):
 def _fmt(value: float, unit: str) -> str:
     if value is None:
         return "n/a"
-    if unit == "current US$":
+    if "US$" in unit:
         return markets.format_usd(value)
     if unit == "% of GDP":
         return f"{value:.0f}%"
@@ -58,11 +58,21 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
 
     df = df.copy()
     ylo, yhi = int(df["year"].min()), int(df["year"].max())
+    all_sources = sorted(str(s) for s in df["source"].dropna().unique())
+    real = df[df["metric"] == "market_cap_usd_real"]
+    base_year = int(real["year"].max()) if not real.empty else None
     lines.append(
         f"Coverage: **{ylo}\u2013{yhi}** across {df['region_code'].nunique()} regions. "
-        "Source: World Bank WDI (no API key). The comparison is anchored on the UK vs "
-        "the US; World / EU / Japan / China are shown for context.\n"
+        f"Sources: {', '.join(all_sources)} (no API key). The comparison is anchored on "
+        "the UK vs the US; World / EU / Japan / China are shown for context."
     )
+    if base_year is not None:
+        lines.append(
+            f"Real (inflation-adjusted) figures are in **constant {base_year} US$**, the "
+            f"nominal series deflated by US CPI ({markets.CPI_INDICATOR}).\n"
+        )
+    else:
+        lines.append("")
 
     for metric_id, meta in markets.METRICS.items():
         sub = df[df["metric"] == metric_id]
@@ -92,6 +102,11 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
                 f"\n**UK / US:** {ratio.loc[last_year] * 100:.0f}% in {last_year} "
                 f"(peak {ratio.max() * 100:.0f}% in {peak_year})."
             )
+
+        # Cite the exact source(s) and indicator behind this metric.
+        srcs = sorted(str(s) for s in sub["source"].dropna().unique())
+        indicator = meta.wb_indicator or f"derived: nominal deflated by {markets.CPI_INDICATOR}"
+        lines.append(f"\n_Source: {'; '.join(srcs)} — indicator {indicator}._")
 
         caveat = markets.CAVEATS.get(metric_id)
         if caveat:

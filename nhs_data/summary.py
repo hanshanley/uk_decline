@@ -10,20 +10,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import metrics, nations
-from .paths import DATA_DIR, DEFAULT_CSV
-
-DEFAULT_SUMMARY = DATA_DIR / "nhs_waiting_times_summary.md"
+from . import _util, metrics, nations
+from .paths import DEFAULT_CSV, DEFAULT_SUMMARY
 
 
 def _load(source):
-    import pandas as pd
-
-    if source is None:
-        source = DEFAULT_CSV
-    if hasattr(source, "columns"):
-        return source
-    return pd.read_csv(source)
+    return _util.load_frame(source, DEFAULT_CSV)
 
 
 def _fmt(value: float, unit: str) -> str:
@@ -35,6 +27,8 @@ def _fmt(value: float, unit: str) -> str:
         return f"{value:.1f}%"
     if unit == "weeks":
         return f"{value:.1f} wks"
+    if unit == "per 1,000 people":
+        return f"{value:.1f}/1k"
     return f"{value:g}"
 
 
@@ -48,6 +42,7 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
     if df.empty:
         lines.append("_No data available._\n")
         path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("\n".join(lines))
         return path
 

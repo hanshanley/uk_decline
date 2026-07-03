@@ -14,10 +14,19 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.ticker import MaxNLocator
 
 from .combine import COMBINED_CSV
 
-FIGURES_DIR = Path("figures")
+# Showcase charts are written here (a committable, non-git-ignored folder matching the
+# sibling projects' `outputs/` convention). Each PNG carries a data-source caption.
+FIGURES_DIR = Path("outputs/uk_migration")
+
+# Canonical data-source citations (stable landing pages / indicator IDs, not volatile
+# per-quarter file URLs). Rendered as a caption on each chart and into SOURCES.md.
+SOURCE_ONS = "ONS Long-Term International Migration (ons.gov.uk)"
+SOURCE_HO = "Home Office Immigration System Statistics (gov.uk)"
+SOURCE_WB = "World Bank WDI (api.worldbank.org)"
 
 # ---- Substack theme (matches pre1870_reapportionment_package) --------------
 SUBSTACK_BG = "#F7F5F0"
@@ -66,19 +75,25 @@ def _series(df: pd.DataFrame, metric: str, category: str = "all") -> pd.DataFram
     return sel.sort_values("period")
 
 
-def _save(fig, name: str) -> Path:
+def _save(fig, name: str, source: str) -> Path:
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     path = FIGURES_DIR / name
+    fig.text(
+        0.005, 0.005, f"Source: {source}", ha="left", va="bottom",
+        fontsize=8, style="italic", color=SUBSTACK_MUTED,
+    )
     fig.savefig(path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     return path
 
 
-def _format_yaxis(ax, thousands: bool = True) -> None:
-    """Apply the house y-axis grid and (optionally) a thousands separator."""
-    if thousands:
+def _style_axes(ax, thousands: bool = True, logy: bool = False) -> None:
+    """Apply the house axes styling: integer year ticks, y grid, thousands separator."""
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    if thousands and not logy:
         ax.yaxis.set_major_formatter(lambda v, _pos: f"{v:,.0f}")
-    ax.grid(axis="y", linestyle="-", linewidth=0.5)
+    which = "both" if logy else "major"
+    ax.grid(which=which, axis="y", linestyle="-", linewidth=0.5)
 
 
 def _style_title(ax, title: str) -> None:
@@ -104,8 +119,8 @@ def chart_net_migration(df: pd.DataFrame) -> Path:
     ax.set_xlabel("Year")
     ax.set_ylabel("People (net)")
     ax.legend(loc="upper left", frameon=False)
-    _format_yaxis(ax)
-    return _save(fig, "net_migration.png")
+    _style_axes(ax)
+    return _save(fig, "net_migration.png", f"{SOURCE_ONS}; {SOURCE_WB}")
 
 
 def chart_inflow_outflow(df: pd.DataFrame) -> Path:
@@ -118,8 +133,8 @@ def chart_inflow_outflow(df: pd.DataFrame) -> Path:
     ax.set_xlabel("Year")
     ax.set_ylabel("People per year")
     ax.legend(loc="upper left", frameon=False)
-    _format_yaxis(ax)
-    return _save(fig, "immigration_vs_emigration.png")
+    _style_axes(ax)
+    return _save(fig, "immigration_vs_emigration.png", SOURCE_ONS)
 
 
 def chart_visas_by_category(df: pd.DataFrame) -> Path:
@@ -133,8 +148,8 @@ def chart_visas_by_category(df: pd.DataFrame) -> Path:
     ax.set_xlabel("Year")
     ax.set_ylabel("Visas issued per year")
     ax.legend(loc="upper left", frameon=False)
-    _format_yaxis(ax)
-    return _save(fig, "visas_by_category.png")
+    _style_axes(ax)
+    return _save(fig, "visas_by_category.png", SOURCE_HO)
 
 
 def chart_asylum(df: pd.DataFrame) -> Path:
@@ -144,8 +159,8 @@ def chart_asylum(df: pd.DataFrame) -> Path:
     _style_title(ax, "UK asylum applications (main applicants)")
     ax.set_xlabel("Year")
     ax.set_ylabel("Claims per year")
-    _format_yaxis(ax)
-    return _save(fig, "asylum_applications.png")
+    _style_axes(ax)
+    return _save(fig, "asylum_applications.png", SOURCE_HO)
 
 
 def chart_irregular(df: pd.DataFrame) -> Path:
@@ -158,8 +173,8 @@ def chart_irregular(df: pd.DataFrame) -> Path:
     ax.set_xlabel("Year")
     ax.set_ylabel("Detections per year")
     ax.legend(loc="upper left", frameon=False)
-    _format_yaxis(ax)
-    return _save(fig, "irregular_arrivals.png")
+    _style_axes(ax)
+    return _save(fig, "irregular_arrivals.png", SOURCE_HO)
 
 
 def chart_legal_vs_irregular(df: pd.DataFrame) -> Path:
@@ -173,8 +188,31 @@ def chart_legal_vs_irregular(df: pd.DataFrame) -> Path:
     ax.set_xlabel("Year")
     ax.set_ylabel("People per year (log)")
     ax.legend(loc="upper left", frameon=False)
-    ax.grid(True, which="both", axis="y", linestyle="-", linewidth=0.5)
-    return _save(fig, "legal_vs_irregular.png")
+    _style_axes(ax, thousands=False, logy=True)
+    return _save(fig, "legal_vs_irregular.png", f"{SOURCE_ONS}; {SOURCE_HO}")
+
+
+def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
+    ons = _series(df, "net_migration_per_1000_pop")
+    wb = _series(df, "net_migration_wb_per_1000_pop")
+    imm = _series(df, "immigration_per_1000_pop")
+    fig, ax = plt.subplots(figsize=(11, 6))
+    if not wb.empty:
+        ax.plot(
+            wb["period"], wb["value"], marker="s", markersize=4, linestyle="--",
+            color=SUBSTACK_MUTED, alpha=0.8, label="Net migration (World Bank, modelled)",
+        )
+    if not ons.empty:
+        ax.plot(ons["period"], ons["value"], marker="o", color=SUBSTACK_BLUE, label="Net migration (ONS)")
+    if not imm.empty:
+        ax.plot(imm["period"], imm["value"], marker="o", color=SUBSTACK_GREEN, label="Immigration inflow (ONS)")
+    ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
+    _style_title(ax, "UK migration per 1,000 population (population-adjusted)")
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Per 1,000 population")
+    ax.legend(loc="upper left", frameon=False)
+    _style_axes(ax, thousands=False)
+    return _save(fig, "net_migration_per_capita.png", f"{SOURCE_ONS}; {SOURCE_WB} (population)")
 
 
 CHARTS = (
@@ -184,10 +222,65 @@ CHARTS = (
     chart_asylum,
     chart_irregular,
     chart_legal_vs_irregular,
+    chart_net_migration_per_capita,
 )
+
+# chart file -> (what it shows, data sources)
+_CHART_DOCS: list[tuple[str, str, str]] = [
+    ("net_migration.png", "UK net long-term migration over time (1960+)",
+     f"{SOURCE_ONS}; {SOURCE_WB} (SM.POP.NETM)"),
+    ("immigration_vs_emigration.png", "Annual immigration vs emigration flows (2012+)", SOURCE_ONS),
+    ("visas_by_category.png", "Entry-clearance visas granted by category (2005+)",
+     f"{SOURCE_HO}, entry-clearance-visa-outcomes dataset"),
+    ("asylum_applications.png", "Asylum applications, main applicants (2001+)",
+     f"{SOURCE_HO}, asylum-claims dataset"),
+    ("irregular_arrivals.png", "Detected irregular arrivals incl. small boats (2018+)",
+     f"{SOURCE_HO}, illegal-entry-routes dataset"),
+    ("legal_vs_irregular.png", "Legal immigration vs irregular arrivals, log scale",
+     f"{SOURCE_ONS}; {SOURCE_HO}"),
+    ("net_migration_per_capita.png", "Migration per 1,000 population, population-adjusted (1960+)",
+     f"{SOURCE_ONS}; {SOURCE_WB} (SP.POP.TOTL population denominator)"),
+]
+
+
+def write_sources_doc() -> Path:
+    """Write ``SOURCES.md`` next to the charts, citing the data source for each figure."""
+    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    path = FIGURES_DIR / "SOURCES.md"
+    lines = [
+        "# UK immigration charts — data sources",
+        "",
+        "All figures are generated by `python -m uk_migration.run` from live public data.",
+        "No values are hand-entered, interpolated, or synthesised; each traces to a source below.",
+        "",
+        "## Primary sources",
+        "",
+        "- **ONS Long-Term International Migration** — immigration, emigration, net migration.",
+        "  <https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/internationalmigration/datasets/longterminternationalimmigrationemigrationandnetmigrationflowsprovisional>",
+        "- **Home Office Immigration System Statistics** — visas, asylum, irregular arrivals.",
+        "  <https://www.gov.uk/government/statistical-data-sets/immigration-system-statistics-data-tables>",
+        "- **World Bank WDI** (country `GBR`) — migrant stock, net migration, and total population",
+        "  (`SM.POP.TOTL`, `SM.POP.TOTL.ZS`, `SM.POP.NETM`, `SP.POP.TOTL`).",
+        "  <https://api.worldbank.org/v2/country/GBR/indicator/SM.POP.NETM?format=json>",
+        "",
+        "The `*_per_1000_pop` series are **derived** (flow ÷ World Bank population × 1000) — a",
+        "population adjustment, since headcounts are not monetary and CPI inflation does not apply.",
+        "",
+        "## Figures",
+        "",
+        "| File | Shows | Source |",
+        "|---|---|---|",
+    ]
+    for fname, desc, src in _CHART_DOCS:
+        lines.append(f"| `{fname}` | {desc} | {src} |")
+    lines.append("")
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return path
 
 
 def render_all(source: pd.DataFrame | str | Path | None = None) -> list[Path]:
-    """Render every chart from the combined table, returning the written PNG paths."""
+    """Render every chart from the combined table plus SOURCES.md; return written paths."""
     df = _load(source)
-    return [chart(df) for chart in CHARTS]
+    paths = [chart(df) for chart in CHARTS]
+    paths.append(write_sources_doc())
+    return paths

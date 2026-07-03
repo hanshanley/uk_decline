@@ -1,0 +1,27 @@
+# Secrets
+.env
+
+# Downloaded data (large / regenerable)
+data/*.csv
+data/*.json
+
+# Generated trust outputs (regenerable); keep the curated manual seed tracked.
+# Charts under data/trust/charts/ ARE tracked (kept in GitHub for showcasing).
+data/trust/*.csv
+data/trust/*.json
+data/trust/processed/
+!data/trust/raw/
+!data/trust/raw/manual_trust.csv
+data/raw/*.csv
+data/processed/*.csv
+
+# Generated charts (regenerable)
+figures/*.png
+data/charts/*.png
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store

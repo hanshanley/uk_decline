@@ -101,6 +101,7 @@ EURYDICE_HINT = (
 WORLD_BANK_BASE = "https://api.worldbank.org/v2"
 WB_FX_INDICATOR = "PA.NUS.FCRF"   # official exchange rate, LCU per US$ (period avg)
 WB_PPP_INDICATOR = "PA.NUS.PPP"   # PPP conversion factor, GDP, LCU per international $
+WB_CPI_INDICATOR = "FP.CPI.TOTL"  # consumer price index (for real-terms deflation)
 
 # --- Paths ------------------------------------------------------------------
 PKG_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -108,14 +109,21 @@ ROOT = os.path.dirname(PKG_DIR)
 DATA_DIR = os.path.join(ROOT, "data")
 RAW_DIR = os.path.join(DATA_DIR, "raw")
 PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
+OUTPUTS_DIR = os.path.join(ROOT, "outputs")  # generated figures
 
 MANUAL_CSV = os.path.join(RAW_DIR, "manual_tuition.csv")
+HISTORY_MANUAL_CSV = os.path.join(RAW_DIR, "tuition_history_manual.csv")
+NCES_CSV = os.path.join(RAW_DIR, "nces_tuition_public4yr.csv")
 OECD_CSV = os.path.join(RAW_DIR, "oecd_tuition.csv")
 EUROSTAT_CSV = os.path.join(RAW_DIR, "eurostat_tuition.csv")
 RATES_CSV = os.path.join(RAW_DIR, "wb_rates.csv")
 
 TUITION_BY_COUNTRY_CSV = os.path.join(PROCESSED_DIR, "tuition_by_country.csv")
 SUMMARY_CSV = os.path.join(PROCESSED_DIR, "summary.csv")
+HISTORY_OUT_CSV = os.path.join(PROCESSED_DIR, "tuition_history.csv")
+
+# Real-terms base year (matches the NCES constant-dollar column: constant 2022-23 $).
+REAL_BASE_YEAR = 2022
 
 # --- Fallback conversion rates (offline only) -------------------------------
 # LCU per US$ (nominal, ~2024 annual averages). Used only if World Bank fetch fails.

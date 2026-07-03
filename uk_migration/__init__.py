@@ -11,6 +11,6 @@ Every source client exposes ``fetch()`` returning tidy dict rows with a common s
 renders summary time-series PNGs.
 """
 
-__all__ = ["schema", "sources", "combine", "charts", "run"]
+__all__ = ["schema", "sources", "normalize", "combine", "charts", "run"]
 
 __version__ = "0.1.0"

@@ -23,17 +23,41 @@ def fetch_all(
     start: int | None = None,
     end: int | None = None,
     codes: Iterable[str] | None = None,
-) -> list[dict]:
-    """Fetch tidy rows from the World Bank. Failures are logged, not fatal."""
-    start = start if start is not None else 1975
+) -> tuple[list[dict], int | None]:
+    """Fetch tidy rows from the World Bank. Failures are logged, not fatal.
+
+    The default start (1970) reaches back as far as the World Bank's stock-market
+    series goes: all three ``CM.MKT.*`` indicators begin in 1975 (they derive from
+    the S&P/IFC database), and earlier years simply come back empty and are dropped.
+
+    Also derives the real (constant-US$) market-cap series by deflating the nominal
+    series with US CPI. Returns ``(rows, real_base_year)`` where ``real_base_year`` is
+    the year the real figures are expressed in (``None`` if deflation was not possible).
+    """
+    start = start if start is not None else 1970
     end = end if end is not None else _dt.date.today().year
     try:
         rows = worldbank.fetch(start, end, codes=codes)
     except Exception as exc:  # noqa: BLE001 - resilience: still emit what we have
         print(f"[markets_data] WARNING: World Bank fetch failed: {exc}", file=sys.stderr)
-        return []
+        return [], None
     print(f"[markets_data] World Bank: {len(rows)} rows", file=sys.stderr)
-    return rows
+
+    # Deflate the nominal current-US$ series to real (constant-US$) terms using US CPI.
+    base_year: int | None = None
+    try:
+        cpi = worldbank.fetch_us_cpi(start, end)
+        real_rows, base_year = markets.deflate_to_real(rows, cpi)
+        if real_rows:
+            rows = rows + real_rows
+            print(
+                f"[markets_data] US CPI: deflated {len(real_rows)} rows to "
+                f"constant {base_year} US$",
+                file=sys.stderr,
+            )
+    except Exception as exc:  # noqa: BLE001 - real series is optional, keep nominal
+        print(f"[markets_data] WARNING: US CPI deflation skipped: {exc}", file=sys.stderr)
+    return rows, base_year
 
 
 def to_frame(rows: list[dict]):
@@ -97,7 +121,7 @@ def build(
     manifest_path: Path | str = DEFAULT_MANIFEST,
 ):
     """Fetch, write long + wide CSVs and a manifest. Returns the long DataFrame."""
-    rows = fetch_all(start, end)
+    rows, base_year = fetch_all(start, end)
     df = to_frame(rows)
 
     path = Path(path)
@@ -112,7 +136,16 @@ def build(
     mpath = write_manifest(
         df,
         manifest_path,
-        extra={"requested_start": start, "requested_end": end},
+        extra={
+            "requested_start": start,
+            "requested_end": end,
+            "real_base_year": base_year,
+            "real_deflator": markets.CPI_SOURCE,
+            "indicator_sources": {
+                m.id: (m.wb_indicator or f"derived: deflated by {markets.CPI_INDICATOR}")
+                for m in markets.METRICS.values()
+            },
+        },
     )
     print(f"[markets_data] wrote manifest -> {mpath}", file=sys.stderr)
     return df

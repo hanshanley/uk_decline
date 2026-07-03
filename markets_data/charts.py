@@ -60,6 +60,19 @@ def _plt():
     return plt
 
 
+def _source_note(sub, metric_id: str) -> str:
+    """Build a figure footnote that cites the exact sources behind this metric.
+
+    Sources are read from the data rows themselves (the ``source`` column), so every
+    figure is traceable to the real series it was built from.
+    """
+    meta = markets.METRICS[metric_id]
+    srcs = sorted(str(s) for s in sub["source"].dropna().unique())
+    src = "; ".join(srcs) if srcs else markets.SOURCE
+    indicator = meta.wb_indicator or f"derived: nominal deflated by {markets.CPI_INDICATOR}"
+    return f"Source: {src}. Indicator: {indicator}. No API key."
+
+
 def _footnote(fig, note: str = SOURCE_NOTE) -> None:
     fig.text(0.01, 0.005, note, ha="left", fontsize=8, color=MUTED, style="italic")
 
@@ -111,13 +124,13 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ax.set_title(meta.label, fontweight="bold", pad=14)
     ax.set_xlabel("Year")
     ax.set_ylabel(meta.unit)
-    if meta.unit == "current US$":
+    if "US$" in meta.unit:
         ax.get_yaxis().set_major_formatter(
             mticker.FuncFormatter(lambda v, _p: markets.format_usd(v))
         )
     ax.grid(axis="y")
     ax.legend(title="Region", loc="upper left")
-    _footnote(fig)
+    _footnote(fig, _source_note(sub, metric_id))
     fig.tight_layout(rect=[0, 0.02, 1, 1])
 
     out = _save(fig, out_dir, f"stock_{metric_id}.png")
@@ -149,7 +162,7 @@ def chart_uk_us_ratio(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ax.get_yaxis().set_major_formatter(mticker.FuncFormatter(lambda v, _p: f"{v:.0f}%"))
     ax.grid(axis="y")
     ax.set_ylim(bottom=0)
-    _footnote(fig)
+    _footnote(fig, _source_note(sub, metric_id))
     fig.tight_layout(rect=[0, 0.02, 1, 1])
 
     out = _save(fig, out_dir, f"stock_uk_us_ratio_{metric_id}.png")
@@ -165,7 +178,7 @@ def make_charts(source=None, out_dir: Path | str = CHART_DIR) -> list[Path]:
         p = chart_metric(df, metric_id, out_dir)
         if p is not None:
             written.append(p)
-    for metric_id in ("market_cap_usd", "market_cap_pct_gdp"):
+    for metric_id in ("market_cap_usd", "market_cap_usd_real", "market_cap_pct_gdp"):
         p = chart_uk_us_ratio(df, metric_id, out_dir)
         if p is not None:
             written.append(p)

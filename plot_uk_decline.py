@@ -66,22 +66,27 @@ plt.rcParams.update({
 
 LABEL_STROKE = [pe.withStroke(linewidth=4, foreground="white")]
 
-# UK is always the warm accent; peers use the cooler/earthy palette. EU-27 is a
-# muted dashed reference line.
+# UK is always the warm accent; peers use the cooler/earthy palette. The US (a key
+# non-European peer) is near-black. Spain removed per request; US added.
 PEERS = [
     ("United Kingdom", SUBSTACK_ACCENT, "-", 2.8),
+    ("United States", SUBSTACK_TEXT, "-", 1.8),
     ("Germany", SUBSTACK_BLUE, "-", 1.8),
     ("France", SUBSTACK_GOLD, "-", 1.8),
     ("Italy", SUBSTACK_GREEN, "-", 1.8),
-    ("Spain", SUBSTACK_MUTED, "-", 1.6),
 ]
-EU_WB = ("European Union", SUBSTACK_MUTED, "--", 1.6)          # World Bank, for GDP
 EU_EUROSTAT = ("European Union (27, 2020)", SUBSTACK_MUTED, "--", 1.6)  # Eurostat, income
 
-SOURCE_WB = "Source: World Bank World Development Indicators (GDP per capita, PPP)."
+# GDP per capita is shown as REAL (inflation-adjusted) values from Maddison; the World
+# Bank PPP series is nominal-current and only starts in 1990, so it is not plotted.
+GDP_METRIC = "gdp_per_capita_real_maddison"
+
+SOURCE_MADDISON = ("Source: Maddison Project Database 2023 (Bolt & van Zanden), via Our "
+                   "World in Data. Real GDP per capita, PPP, constant 2011 international $ "
+                   "(inflation-adjusted).")
 SOURCE_EUROSTAT = ("Source: Eurostat ilc_di03 (median equivalised net income, PPS). "
                    "UK left EU-SILC after Brexit, so its series ends ~2018.")
-SOURCE_PIP = ("Source: World Bank Poverty & Inequality Platform (median income, "
+SOURCE_PIP = ("Source: World Bank Poverty & Inequality Platform (median income, real "
               "2017 PPP $ per day). Multiply by 365 for an annual figure.")
 
 
@@ -107,17 +112,19 @@ def _end_label(ax, xs, ys, text: str, color: str) -> None:
 
 def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
                 source: str, filename: str, out: pathlib.Path, *,
-                eu_agg: tuple, eu_label: str, scale: float = 1.0,
-                source_ha: str = "left") -> None:
+                eu_agg: tuple | None = None, eu_label: str | None = None,
+                scale: float = 1.0, source_ha: str = "left") -> None:
     """Draw a UK-vs-peers line chart for one metric and save it to ``out/filename``.
 
-    ``eu_agg``/``eu_label`` select the correct EU reference series per metric (World
-    Bank ``EU_WB`` for GDP, Eurostat ``EU_EUROSTAT`` for income); ``scale`` divides the
-    values (e.g. 1000 to show GDP in 000s).
+    ``eu_agg``/``eu_label`` optionally add an EU reference series (Eurostat
+    ``EU_EUROSTAT`` for income). It is omitted for the Maddison GDP charts because the
+    Maddison source provides no EU aggregate and we never synthesize one. ``scale``
+    divides the values (e.g. 1000 to show GDP in 000s).
     """
+    series = [*PEERS, eu_agg] if eu_agg is not None else list(PEERS)
     fig, ax = plt.subplots(figsize=(11, 6))
     plotted = False
-    for country, color, ls, lw in [*PEERS, eu_agg]:
+    for country, color, ls, lw in series:
         s = _series(df, country, metric)
         if s.empty:
             continue
@@ -146,13 +153,13 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
 
 
 def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
-    metric = "gdp_per_capita_ppp_current"
+    metric = GDP_METRIC  # real Maddison series (a country-vs-country ratio is inflation-invariant)
     uk = _series(df, "United Kingdom", metric).set_index("year")[metric]
     fig, ax = plt.subplots(figsize=(11, 6))
 
     refs = [
         ("Germany", SUBSTACK_BLUE, "vs Germany"),
-        ("European Union", SUBSTACK_GOLD, "vs EU"),
+        ("United States", SUBSTACK_TEXT, "vs United States"),
     ]
     for country, color, label in refs:
         ref = _series(df, country, metric).set_index("year")[metric]
@@ -169,12 +176,12 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
     ax.set_xlabel("Year", labelpad=2)
     ax.set_ylabel("UK GDP per capita as % of reference", labelpad=2)
     ax.yaxis.set_major_formatter(mtick.PercentFormatter())
-    ax.set_title("The relative decline: UK GDP per capita (PPP)\nas a share of Germany "
-                 "and the EU", fontweight="bold", pad=14)
+    ax.set_title("The relative decline: UK real GDP per capita\nas a share of Germany "
+                 "and the United States, 1970\u20132022", fontweight="bold", pad=14)
     ax.grid(axis="y", linestyle="-", linewidth=0.5)
     ax.tick_params(axis="both", pad=2)
     ax.margins(x=0.1)
-    _source_note(fig, SOURCE_WB)
+    _source_note(fig, SOURCE_MADDISON)
     plt.tight_layout(pad=0.5)
     plt.subplots_adjust(bottom=0.12)
     plt.savefig(out / "uk_gdp_relative_to_peers.png", dpi=200, bbox_inches="tight")
@@ -193,12 +200,12 @@ def main(argv: list[str] | None = None) -> int:
     df = pd.read_csv(args.data)
 
     _line_chart(
-        df, "gdp_per_capita_ppp_current",
-        "GDP per capita (PPP): the UK falls behind its peers, 2000\u20132024",
-        "GDP per capita, PPP (000s int'l $)",
-        lambda v, _: f"${v:.0f}k", SOURCE_WB,
-        "gdp_per_capita_ppp_over_time.png", out,
-        eu_agg=EU_WB, eu_label="EU (World Bank)", scale=1000.0, source_ha="left",
+        df, GDP_METRIC,
+        "Real GDP per capita: the UK falls behind its peers, 1970\u20132022",
+        "Real GDP per capita (000s int'l $, 2011 PPP)",
+        lambda v, _: f"${v:.0f}k", SOURCE_MADDISON,
+        "gdp_per_capita_real_over_time.png", out,
+        scale=1000.0, source_ha="left",
     )
     fig_uk_relative(df, out)
     _line_chart(

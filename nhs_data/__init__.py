@@ -11,6 +11,7 @@ Sources (health is devolved, so each nation publishes separately):
   * Wales             -> StatsWales OData API (statswales.gov.wales)
   * England           -> NHS England CSV/Excel statistical work areas
   * Northern Ireland  -> Department of Health NI quarterly spreadsheets
+  * Population         -> ONS/NRS/NISRA mid-year estimates via Nomis (per-capita view)
 
 Every source module returns tidy long-format rows with the schema described in
 :mod:`nhs_data.metrics` (``ROW_FIELDS``). Metric definitions differ by nation, so
@@ -21,6 +22,7 @@ strict apples-to-apples comparisons.
 __all__ = [
     "nations",
     "metrics",
+    "population",
     "scotland",
     "wales",
     "england",

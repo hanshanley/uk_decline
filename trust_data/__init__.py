@@ -25,6 +25,7 @@ __all__ = [
     "combine",
     "charts",
     "summary",
+    "report",
     "paths",
 ]
 

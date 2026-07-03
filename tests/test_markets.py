@@ -70,6 +70,43 @@ def test_worldbank_parse_paged(monkeypatch) -> None:
     assert by_code["USA"]["value"] == 40e12
 
 
+def test_deflate_to_real() -> None:
+    # Nominal market cap in two years; CPI 100 (2010) -> 200 (2020), base = 2020.
+    nominal = [
+        markets.make_row("United States", "USA", 2010, "market_cap_usd", 10e12),
+        markets.make_row("United States", "USA", 2020, "market_cap_usd", 40e12),
+        markets.make_row("United Kingdom", "GBR", 2010, "market_cap_usd", 2e12),
+        # a non-USD metric must be ignored by the deflator
+        markets.make_row("United States", "USA", 2020, "market_cap_pct_gdp", 200.0),
+    ]
+    cpi = {2010: 100.0, 2020: 200.0}
+    real, base_year = markets.deflate_to_real(nominal, cpi)
+    assert base_year == 2020
+    by_key = {(r["region_code"], r["year"]): r for r in real}
+    assert all(r["metric"] == "market_cap_usd_real" for r in real)
+    assert all("US CPI" in r["source"] for r in real)
+    # 2020 is the base year -> real == nominal.
+    assert by_key[("USA", 2020)]["value"] == 40e12
+    # 2010 dollars scaled up by 200/100 = 2x.
+    assert by_key[("USA", 2010)]["value"] == 20e12
+    assert by_key[("GBR", 2010)]["value"] == 4e12
+    # pct_gdp row was not deflated.
+    assert ("USA", 2020) in by_key and len(real) == 3
+
+
+def test_deflate_missing_cpi_year_skipped() -> None:
+    # A data year with no CPI observation must be dropped, not fabricated.
+    nominal = [
+        markets.make_row("United States", "USA", 2024, "market_cap_usd", 60e12),
+        markets.make_row("United States", "USA", 2025, "market_cap_usd", 68e12),
+    ]
+    cpi = {2024: 140.0}  # 2025 absent
+    real, base_year = markets.deflate_to_real(nominal, cpi)
+    assert base_year == 2024
+    years = {r["year"] for r in real}
+    assert years == {2024}  # 2025 skipped
+
+
 def test_to_wide_shape() -> None:
     rows = [
         markets.make_row("United Kingdom", "GBR", 2020, "market_cap_usd", 3.2e12),

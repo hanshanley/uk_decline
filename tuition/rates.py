@@ -34,16 +34,16 @@ def _fallback_record(country: config.Country) -> dict:
     }
 
 
-def _fetch_latest(indicator: str, iso3s: list[str], start: int, end: int) -> dict[str, tuple[int, float]]:
-    """Return ``{iso3: (year, value)}`` for the most recent non-null observation."""
+def _fetch_series(indicator: str, iso3s: list[str], start: int, end: int) -> dict[str, dict[int, float]]:
+    """Return ``{iso3: {year: value}}`` for every non-null observation in the range."""
     codes = ";".join(iso3s)
     payload = get_json(
         f"{config.WORLD_BANK_BASE}/country/{codes}/indicator/{indicator}",
         params={"format": "json", "per_page": 20000, "date": f"{start}:{end}"},
     )
-    latest: dict[str, tuple[int, float]] = {}
+    out: dict[str, dict[int, float]] = {}
     if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
-        return latest
+        return out
     for row in payload[1]:
         value = row.get("value")
         iso3 = row.get("countryiso3code")
@@ -54,10 +54,19 @@ def _fetch_latest(indicator: str, iso3s: list[str], start: int, end: int) -> dic
             val = float(value)
         except (KeyError, TypeError, ValueError):
             continue  # skip malformed upstream rows rather than crashing the run
-        prev = latest.get(iso3)
-        if prev is None or year > prev[0]:
-            latest[iso3] = (year, val)
-    return latest
+        out.setdefault(iso3, {})[year] = val
+    return out
+
+
+def fetch_series(indicator: str, iso3s: list[str], start: int, end: int) -> dict[str, dict[int, float]]:
+    """Public wrapper: fetch a full ``{iso3: {year: value}}`` World Bank series."""
+    return _fetch_series(indicator, iso3s, start, end)
+
+
+def _fetch_latest(indicator: str, iso3s: list[str], start: int, end: int) -> dict[str, tuple[int, float]]:
+    """Return ``{iso3: (year, value)}`` for the most recent non-null observation."""
+    series = _fetch_series(indicator, iso3s, start, end)
+    return {iso3: (max(years), years[max(years)]) for iso3, years in series.items() if years}
 
 
 def fetch_rates(
