@@ -22,6 +22,12 @@ BG = "#F7F5F0"
 TEXT = "#1A1A1A"
 MUTED = "#6B6B6B"
 GRID = "#D6D3CC"
+ACCENT = "#C85A3D"  # UK highlight (matches regions.COLOURS["GBR"])
+
+# World Bank "World" is a super-aggregate (the sum of every market), so it always
+# towers over the country lines and crushes the UK-vs-peers comparison. Exclude it
+# from the per-region level charts; the UK/US ratio charts tell the size story.
+_EXCLUDE_FROM_TRENDS = {"WLD"}
 
 _THEME = {
     "figure.facecolor": BG,
@@ -36,14 +42,32 @@ _THEME = {
     "grid.alpha": 0.6,
     "grid.linewidth": 0.5,
     "font.family": "serif", "font.size": 12,
-    "axes.titlesize": 16,
+    "axes.titlesize": 17,
+    "axes.titleweight": "bold",
     "axes.labelsize": 13,
     "figure.titlesize": 18,
     "legend.framealpha": 0.0,
     "legend.fontsize": 11,
     "axes.spines.top": False,
     "axes.spines.right": False,
+    "xtick.major.size": 0,
+    "ytick.major.size": 0,
+    "text.parse_math": False,
 }
+
+_STROKE = None  # lazy patheffects (needs matplotlib import)
+
+
+def _end_label(ax, xs, ys, text, color):
+    """Label a line at its final point (right side), with a white halo."""
+    import matplotlib.patheffects as pe
+
+    xs, ys = list(xs), list(ys)
+    if not xs:
+        return
+    ax.text(xs[-1] + (xs[-1] - xs[0]) * 0.01, ys[-1], text, fontsize=10.5,
+            fontweight="bold", color=color, va="center", ha="left",
+            path_effects=[pe.withStroke(linewidth=3.0, foreground="white")])
 
 SOURCE_NOTE = "Source: World Bank WDI (CM.MKT.* indicators). No API key."
 
@@ -100,6 +124,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
 
     meta = markets.METRICS[metric_id]
     sub = df[df["metric"] == metric_id].copy()
+    sub = sub[~sub["region_code"].isin(_EXCLUDE_FROM_TRENDS)]
     if sub.empty:
         return None
     sub = sub.dropna(subset=["value"]).sort_values("year")
@@ -107,27 +132,31 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     fig, ax = plt.subplots(figsize=(11, 6))
     for code, g in sub.groupby("region_code"):
         region = regions.BY_CODE.get(code)
-        is_core = bool(region and region.core)
+        is_uk = code == "GBR"
         ax.plot(
             g["year"],
             g["value"],
-            marker="o",
-            markersize=3,
-            linewidth=2.4 if is_core else 1.4,
+            marker="o" if is_uk else None,
+            markersize=4,
+            markeredgecolor="white",
+            markeredgewidth=1.0,
+            linewidth=2.8 if is_uk else 1.8,
             label=regions.name_for_code(code),
             color=regions.COLOURS.get(code),
-            alpha=1.0 if is_core else 0.75,
+            zorder=5 if is_uk else 3,
         )
 
     ax.set_title(meta.label, fontweight="bold", pad=14)
-    ax.set_xlabel("Year")
-    ax.set_ylabel(meta.unit)
+    ax.set_xlabel("Year", labelpad=2)
+    ax.set_ylabel(meta.unit, labelpad=2)
     if "US$" in meta.unit:
         ax.get_yaxis().set_major_formatter(
             mticker.FuncFormatter(lambda v, _p: markets.format_usd(v))
         )
     ax.grid(axis="y")
-    ax.legend(title="Region", loc="upper left")
+    ax.set_axisbelow(True)
+    ax.margins(x=0.02)
+    ax.legend(loc="upper left", frameon=False, labelcolor="linecolor", fontsize=10)
     _footnote(fig, _source_note(metric_id))
     fig.tight_layout(rect=[0, 0.02, 1, 1])
 
@@ -148,18 +177,40 @@ def chart_uk_us_ratio(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ratio = markets.uk_us_ratio(sub)
     if ratio is None:
         return None
+    pct = ratio * 100
+    peak_year = int(pct.idxmax())
+    peak_val = float(pct.max())
+    last_year = int(pct.index[-1])
+    last_val = float(pct.iloc[-1])
 
     fig, ax = plt.subplots(figsize=(11, 6))
-    ax.plot(ratio.index, ratio.values * 100, marker="o", markersize=3,
-            linewidth=2.4, color=regions.COLOURS["GBR"])
-    ax.axhline(100, color=MUTED, linewidth=0.8, linestyle="--", alpha=0.7)
+    ax.plot(pct.index, pct.values, marker="o", markersize=3.5,
+            linewidth=2.8, color=ACCENT, markeredgecolor="white", markeredgewidth=0.8)
+    _end_label(ax, pct.index, pct.values, f"{last_val:.0f}%", ACCENT)
+
+    top = max(peak_val, last_val)
+    # Only draw the US-parity line when the data actually comes near it, otherwise
+    # it just strands the whole series at the bottom of an empty axis.
+    if top >= 60:
+        ax.axhline(100, color=MUTED, linewidth=0.9, linestyle="--", alpha=0.7)
+        ax.text(pct.index[0], 101, "UK = US (parity)", fontsize=9, color=MUTED,
+                style="italic", va="bottom")
+        ax.set_ylim(0, max(top * 1.12, 105))
+    else:
+        ax.set_ylim(0, top * 1.18)
+
     ax.set_title(f"UK {meta.label.lower()} as a share of the US",
-                 fontweight="bold", pad=14)
-    ax.set_xlabel("Year")
-    ax.set_ylabel("UK / US (%)")
+                 fontweight="bold", pad=30)
+    ax.text(0.5, 1.015,
+            f"From {peak_val:.0f}% at its {peak_year} peak to {last_val:.0f}% by {last_year}",
+            transform=ax.transAxes, ha="center", va="bottom",
+            fontsize=12, color=MUTED)
+    ax.set_xlabel("Year", labelpad=2)
+    ax.set_ylabel("UK as % of US", labelpad=2)
     ax.get_yaxis().set_major_formatter(mticker.FuncFormatter(lambda v, _p: f"{v:.0f}%"))
     ax.grid(axis="y")
-    ax.set_ylim(bottom=0)
+    ax.set_axisbelow(True)
+    ax.margins(x=0.03)
     _footnote(fig, _source_note(metric_id))
     fig.tight_layout(rect=[0, 0.02, 1, 1])
 
