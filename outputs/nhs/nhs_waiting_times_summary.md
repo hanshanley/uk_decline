@@ -1,6 +1,6 @@
 # UK NHS waiting times & waiting lists — trend summary
 
-Coverage: **Jan 2015 – May 2026** across 4 nations. Source data is devolved and defined differently per nation — read each metric's caveat and compare *trends*, not exact levels.
+Coverage: **Aug 2007 – May 2026** across 4 nations. Source data is devolved and defined differently per nation — read each metric's caveat and compare *trends*, not exact levels.
 
 
 ## RTT waiting list (patients waiting to start treatment) (patients)
@@ -9,7 +9,7 @@ Total number of patients on the elective referral-to-treatment waiting list (inc
 
 | Nation | First | Latest | Change |
 |---|---|---|---|
-| England | 3.33M (Oct 2015) | 7.12M (Apr 2026) | ↑ 3.80M (worse) |
+| England | 4.19M (Aug 2007) | 7.12M (Apr 2026) | ↑ 2.94M (worse) |
 | Scotland | 306k (Jan 2015) | 642k (Mar 2026) | ↑ 335k (worse) |
 | Wales | 415k (Jan 2015) | 680k (Apr 2026) | ↑ 265k (worse) |
 | Northern Ireland | 192k (Mar 2015) | 511k (Mar 2026) | ↑ 319k (worse) |
@@ -22,7 +22,7 @@ Elective waiting list expressed per 1,000 residents, using real ONS mid-year pop
 
 | Nation | First | Latest | Change |
 |---|---|---|---|
-| England | 60.7/1k (Oct 2015) | 127.8/1k (Dec 2024) | ↑ 67.1/1k (worse) |
+| England | 81.5/1k (Aug 2007) | 127.8/1k (Dec 2024) | ↑ 46.4/1k (worse) |
 | Scotland | 57.3/1k (Jan 2015) | 130.5/1k (Dec 2024) | ↑ 73.2/1k (worse) |
 | Wales | 135.0/1k (Jan 2015) | 251.2/1k (Dec 2024) | ↑ 116.2/1k (worse) |
 | Northern Ireland | 103.4/1k (Mar 2015) | 239.9/1k (Mar 2024) | ↑ 136.5/1k (worse) |

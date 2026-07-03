@@ -224,10 +224,17 @@ def tax_wedge_by_earnings(rows: list[dict], out_path: str, year: Optional[int] =
     fig, ax = plt.subplots(figsize=(11, 6.5))
     for i, key in enumerate(("uk", "europe_median", "us")):
         offsets = [xi + (i - 1) * width for xi in x]
-        ax.bar(
+        bars = ax.bar(
             offsets, series[key], width, color=SERIES_COLORS[key], label=SERIES_LABELS[key],
             edgecolor=BG, linewidth=0.8,
         )
+        for rect in bars:
+            h = rect.get_height()
+            ax.annotate(
+                f"{h:.1f}%", xy=(rect.get_x() + rect.get_width() / 2, h),
+                xytext=(0, 3), textcoords="offset points", ha="center", va="bottom",
+                fontsize=9, fontweight="bold", color=TEXT, path_effects=_LABEL_STROKE,
+            )
     ax.set_xticks(list(x))
     ax.set_xticklabels(labels)
     ax.yaxis.set_major_formatter(mtick.PercentFormatter())

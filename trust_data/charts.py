@@ -84,7 +84,11 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ax.set_xlabel("Year")
     ax.set_ylabel(f"{meta.unit} (higher = more trust)")
     if meta.unit == "percent":
-        ax.set_ylim(0, 100)
+        # Fit the axis to the data (incl. the EU band) with a small margin, rather than
+        # a fixed 0-100 that strands every line in the middle of empty space.
+        lo, hi = float(sub["value"].min()), float(sub["value"].max())
+        pad = max((hi - lo) * 0.12, 1.0)
+        ax.set_ylim(max(0.0, lo - pad), min(100.0, hi + pad))
     from matplotlib.ticker import MaxNLocator
     ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=8))
     ax.grid(True, axis="y", alpha=1.0)

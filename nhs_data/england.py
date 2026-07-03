@@ -324,6 +324,49 @@ def _rtt_rows_from_zip(url: str, year: int, month: int) -> list[dict]:
     return rows
 
 
+# NHS England only publishes monthly RTT "full extract" zips back to ~2011; the
+# consolidated "RTT Overview" time series covers the earlier collection (from Aug
+# 2007, when the incomplete-pathways series began), so it is used to extend the
+# waiting-list total back to the start of the data. It carries totals only (no
+# per-treatment-function breakdown), so no median wait can be derived from it.
+RTT_HISTORY_URL = (
+    "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2013/04/"
+    "RTT-Overview-Timeseries-to-Dec-2014-with-estimates-for-missing-data-v2.xls"
+)
+RTT_HISTORY_SOURCE = "NHS England (RTT Overview time series)"
+
+
+def _rtt_history_rows(start_year: int, end_year: int) -> list[dict]:
+    """Total incomplete-pathways waiting list (England), ~Aug 2007 to Dec 2014.
+
+    Parsed from the published "RTT Overview" time series. In that sheet column 1 is
+    the (merged) year, column 2 the month date, and column 7 the incomplete-pathways
+    "Total waiting (mil)"; data begins at row 10. Returns ``rtt_waiting_list_total``
+    rows only, one per month within ``[start_year, end_year]``.
+    """
+    df = get_excel(RTT_HISTORY_URL, sheet_name="Full Time Series", header=None)
+    body = df.iloc[10:, [1, 2, 7]].copy()
+    body[1] = body[1].ffill()
+    rows: list[dict] = []
+    for _, r in body.iterrows():
+        month_cell, value_cell = r.iloc[1], r.iloc[2]
+        if pd.isna(month_cell):
+            continue
+        try:
+            value = float(value_cell)
+        except (TypeError, ValueError):
+            continue  # "-" placeholder for months before collection began
+        d = pd.to_datetime(month_cell)
+        if d.year < start_year or d.year > end_year:
+            continue
+        period, row_date = _period_and_date(d.year, d.month)
+        rows.append(
+            make_row(NATION, NATION_CODE, period, row_date,
+                     "rtt_waiting_list_total", value * 1e6, RTT_HISTORY_SOURCE)
+        )
+    return rows
+
+
 def _fetch_rtt(start_year: int, end_year: int) -> list[dict]:
     pages = _discover_pages(
         LANDING_URLS["rtt"],
@@ -344,6 +387,16 @@ def _fetch_rtt(start_year: int, end_year: int) -> list[dict]:
             rows.extend(_rtt_rows_from_zip(url, year, month))
         except Exception as exc:
             _warn("RTT monthly extract", exc)
+    # Extend the waiting-list total back to the 2007 start of the collection using the
+    # overview series, for any month the monthly zips don't already cover.
+    if start_year <= 2014:
+        have = {r["period"] for r in rows if r["metric"] == "rtt_waiting_list_total"}
+        try:
+            for r in _rtt_history_rows(start_year, end_year):
+                if r["period"] not in have:
+                    rows.append(r)
+        except Exception as exc:
+            _warn("RTT overview history", exc)
     if not rows:
         raise ValueError("no RTT rows parsed")
     return rows

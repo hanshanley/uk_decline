@@ -55,9 +55,7 @@ def gdp_vs_us():
     M = "gdp_per_capita_real_usd"
     uk = {int(x["year"]): float(x[M]) for x in r if x["country"] == "United Kingdom" and x.get(M)}
     us = {int(x["year"]): float(x[M]) for x in r if x["country"] == "United States" and x.get(M)}
-    # Start at 1990: the 1970s/80s market-FX values are anomalously low and would make the
-    # UK look like it "improved". 1990 onward captures the 2007 peak and the fall since.
-    ys = [y for y in sorted(set(uk) & set(us)) if y >= 1990]
+    ys = sorted(set(uk) & set(us))
     return ys, [100 * uk[y] / us[y] for y in ys]
 
 
@@ -129,32 +127,40 @@ def uk_listed_companies():
     return ys, [pts[y] for y in ys]
 
 
-# title, loader, value formatter, good_direction (+1 up-is-good, -1 down-is-good, 0 neutral), source
+# title, loader, value formatter, good_direction (+1 up-is-good, -1 down-is-good, 0 neutral),
+# source, start_override. Every panel is tracked from the same COMMON_START year so the
+# scorecard reads as one holistic "UK since 2007" story; tuition is the one exception
+# (sparse data — its nearest anchor point is 2006, the pre-£9k-cap baseline).
+COMMON_START = 2007
+
 PANELS = [
     ("GDP per capita vs the US", gdp_vs_us, lambda v: f"{v:.0f}%", +1,
-     "World Bank WDI (CPI-deflated real US$)"),
+     "World Bank WDI (CPI-deflated real US$)", None),
     ("Stock market size vs the US", stock_vs_us, lambda v: f"{v:.0f}%", +1,
-     "WFE/IMF via World Bank WDI (real US$)"),
+     "WFE/IMF via World Bank WDI (real US$)", None),
     ("NHS waiting list, England", nhs_england, lambda v: f"{v/1e6:.1f}M", -1,
-     "NHS England"),
+     "NHS England", None),
     ("Tax burden (% of GDP)", tax_burden, lambda v: f"{v:.0f}%", -1,
-     "OECD Revenue Statistics"),
+     "OECD Revenue Statistics", None),
     ("University tuition (real)", tuition_real, lambda v: f"${v/1e3:.1f}k", -1,
-     "Eurydice / NCES / UK fee cap (constant 2022 US$)"),
+     "Eurydice / NCES / UK fee cap (constant 2022 US$)", 2006),
     ("Trust in national government", trust_govt, lambda v: f"{v:.0f}%", +1,
-     "OECD / Gallup World Poll via OWID"),
+     "OECD / Gallup World Poll via OWID", None),
     ("UK-listed companies", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
-     "WFE via World Bank WDI"),
+     "WFE via World Bank WDI", None),
     ("Median age (years)", median_age, lambda v: f"{v:.0f}", -1,
-     "UN Population Division via World Bank WDI"),
+     "UN Population Division via World Bank WDI", None),
 ]
 
 
-def _panel(ax, title, loader, fmt, good_dir, source):
+def _panel(ax, title, loader, fmt, good_dir, source, start_override):
     xs, ys = loader()
-    if not xs:
+    start = start_override or COMMON_START
+    pts = [(x, y) for x, y in zip(xs, ys) if x >= start]
+    if not pts:
         ax.set_axis_off()
         return
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
     change = ys[-1] - ys[0]
     worse = (good_dir == +1 and change < 0) or (good_dir == -1 and change > 0)
     color = NEUTRAL if good_dir == 0 else (WORSE if worse else BETTER)
@@ -200,8 +206,8 @@ def main() -> int:
     fig.suptitle("The UK in relative decline \u2014 a scorecard",
                  fontsize=23, fontweight="bold", y=0.99)
     fig.text(0.5, 0.935,
-             "Eight measures of Britain's slide. Red = the trend has moved against the UK; "
-             "each panel spans its full available data.",
+             "Eight measures of Britain's slide, each tracked from 2007 \u2014 the eve of the "
+             "financial crisis. Red = the trend has moved against the UK.",
              ha="center", fontsize=11.5, color=MUTED)
     fig.text(0.5, 0.015,
              "All series from official public sources (World Bank, OECD, Eurostat, ONS, NHS, "
