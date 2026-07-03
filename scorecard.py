@@ -28,12 +28,11 @@ DATA = ROOT / "data"
 OUT = ROOT / "outputs"
 
 # ── House style ──────────────────────────────────────────────────────────────
-BG, TEXT, MUTED, GRID = "#FFFFFF", "#111827", "#6B7280", "#E5E7EB"
-WORSE, BETTER, NEUTRAL = "#C0392B", "#2A9D8F", "#6B7280"
+BG, TEXT, MUTED, GRID = "#F7F5F0", "#1A1A1A", "#6B6B6B", "#D6D3CC"
+WORSE, BETTER, NEUTRAL = "#C85A3D", "#4A7C59", "#6B6B6B"
 plt.rcParams.update({
     "figure.facecolor": BG, "axes.facecolor": BG, "savefig.facecolor": BG,
-    "text.color": TEXT, "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
+    "text.color": TEXT, "font.family": "serif",
     "axes.spines.top": False, "axes.spines.right": False, "axes.spines.left": False,
     "xtick.major.size": 0, "ytick.major.size": 0, "text.parse_math": False,
 })

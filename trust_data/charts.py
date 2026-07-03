@@ -15,9 +15,9 @@ from .paths import CHART_DIR, DEFAULT_LONG_CSV
 
 # Group styling: the UK stands out; comparators are muted.
 GROUP_STYLE = {
-    countries.UK: {"color": "#C0392B", "lw": 2.8, "alpha": 1.0, "zorder": 5},
-    countries.EU: {"color": "#1F5C99", "lw": 1.4, "alpha": 0.55, "zorder": 2},
-    countries.US: {"color": "#2A9D8F", "lw": 1.8, "alpha": 0.9, "zorder": 4},
+    countries.UK: {"color": "#C85A3D", "lw": 2.8, "alpha": 1.0, "zorder": 5},
+    countries.EU: {"color": "#3D6F8C", "lw": 1.4, "alpha": 0.55, "zorder": 2},
+    countries.US: {"color": "#4A7C59", "lw": 1.8, "alpha": 0.9, "zorder": 4},
 }
 
 
@@ -39,13 +39,12 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     import matplotlib.pyplot as plt
 
     plt.rcParams.update({
-        "figure.facecolor": "#FFFFFF", "axes.facecolor": "#FFFFFF",
-        "savefig.facecolor": "#FFFFFF", "text.color": "#111827",
-        "axes.labelcolor": "#374151", "xtick.color": "#6B7280", "ytick.color": "#6B7280",
-        "axes.edgecolor": "#D1D5DB", "axes.linewidth": 0.8,
-        "grid.color": "#E5E7EB", "grid.alpha": 1.0, "grid.linewidth": 0.9,
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
+        "figure.facecolor": "#F7F5F0", "axes.facecolor": "#F7F5F0",
+        "savefig.facecolor": "#F7F5F0", "text.color": "#1A1A1A",
+        "axes.labelcolor": "#1A1A1A", "xtick.color": "#6B6B6B", "ytick.color": "#6B6B6B",
+        "axes.edgecolor": "#D6D3CC", "axes.linewidth": 0.8,
+        "grid.color": "#D6D3CC", "grid.alpha": 0.6, "grid.linewidth": 0.5,
+        "font.family": "serif",
         "font.size": 12, "axes.titlesize": 16, "axes.titleweight": "bold",
         "legend.framealpha": 0.0, "axes.spines.top": False, "axes.spines.right": False,
         "xtick.major.size": 0, "ytick.major.size": 0,
@@ -58,28 +57,28 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     sub = sub.sort_values("year")
 
     fig, ax = plt.subplots(figsize=(10, 5.5))
-    uk_labelled = eu_labelled = us_labelled = False
-    for iso3, g in sub.groupby("iso3"):
-        group = countries.group_for_iso3(iso3)
-        style = GROUP_STYLE.get(group, GROUP_STYLE[countries.EU])
-        label = None
-        if group == countries.UK and not uk_labelled:
-            label, uk_labelled = "United Kingdom", True
-        elif group == countries.US and not us_labelled:
-            label, us_labelled = "United States", True
-        elif group == countries.EU and not eu_labelled:
-            label, eu_labelled = "EU-27 members", True
-        ax.plot(
-            g["year"],
-            g["value"],
-            marker="o" if group == countries.UK else None,
-            markersize=3,
-            linewidth=style["lw"],
-            alpha=style["alpha"],
-            color=style["color"],
-            zorder=style["zorder"],
-            label=label,
-        )
+    sub = sub.copy()
+    sub["group"] = sub["iso3"].map(countries.group_for_iso3)
+
+    # EU-27: show a median line + interquartile band, not a spaghetti of 27 members.
+    eu = sub[sub["group"] == countries.EU]
+    if not eu.empty:
+        g = eu.groupby("year")["value"]
+        med, q1, q3 = g.median(), g.quantile(0.25), g.quantile(0.75)
+        eu_color = GROUP_STYLE[countries.EU]["color"]
+        ax.fill_between(med.index, q1.values, q3.values, color=eu_color, alpha=0.15,
+                        zorder=2, label="EU-27 (middle 50%)")
+        ax.plot(med.index, med.values, color=eu_color, linewidth=2.0, linestyle="--",
+                zorder=3, label="EU-27 median")
+
+    for grp, lab in ((countries.US, "United States"), (countries.UK, "United Kingdom")):
+        gg = sub[sub["group"] == grp].sort_values("year")
+        if gg.empty:
+            continue
+        st = GROUP_STYLE[grp]
+        ax.plot(gg["year"], gg["value"], marker="o" if grp == countries.UK else None,
+                markersize=3, linewidth=st["lw"], color=st["color"],
+                zorder=st["zorder"], label=lab)
 
     ax.set_title(meta.label)
     ax.set_xlabel("Year")
@@ -99,7 +98,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     cites = "; ".join(citations.short_citation(s) for s in sources)
     year_lo, year_hi = int(sub["year"].min()), int(sub["year"].max())
     caption = f"Source: {cites}. Data: {year_lo}\u2013{year_hi}."
-    fig.text(0.01, 0.01, caption, fontsize=7, color="#6B7280", ha="left", va="bottom")
+    fig.text(0.01, 0.01, caption, fontsize=7, color="#6B6B6B", ha="left", va="bottom")
     fig.tight_layout(rect=(0, 0.035, 1, 1))
 
     out_dir = Path(out_dir)

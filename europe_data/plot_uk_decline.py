@@ -31,33 +31,32 @@ import matplotlib.ticker as mtick
 import pandas as pd
 
 # ── Professional house style (clean, modern, editorial) ──────────────────────
-SUBSTACK_BG = "#FFFFFF"      # crisp white background
-SUBSTACK_CARD = "#F3F4F6"
-SUBSTACK_TEXT = "#111827"    # near-black slate (also the US line)
-SUBSTACK_MUTED = "#6B7280"   # muted gray for ticks / secondary text
-SUBSTACK_ACCENT = "#C0392B"  # UK highlight — strong editorial red
-SUBSTACK_BLUE = "#1F5C99"    # Germany
-SUBSTACK_GOLD = "#D19000"    # France — amber
-SUBSTACK_GREEN = "#2A9D8F"   # Italy — teal
-SUBSTACK_GRID = "#E5E7EB"    # light gridlines
+SUBSTACK_BG = "#F7F5F0"      # warm Substack tan
+SUBSTACK_CARD = "#EFEDE8"
+SUBSTACK_TEXT = "#1A1A1A"    # near-black slate (also the US line)
+SUBSTACK_MUTED = "#6B6B6B"   # muted gray for ticks / secondary text
+SUBSTACK_ACCENT = "#C85A3D"  # UK highlight — strong editorial red
+SUBSTACK_BLUE = "#3D6F8C"    # Germany
+SUBSTACK_GOLD = "#C2993E"    # France — amber
+SUBSTACK_GREEN = "#4A7C59"   # Italy — teal
+SUBSTACK_GRID = "#D6D3CC"    # light gridlines
 
 plt.rcParams.update({
     "figure.facecolor": SUBSTACK_BG,
     "axes.facecolor": SUBSTACK_BG,
     "savefig.facecolor": SUBSTACK_BG,
     "text.color": SUBSTACK_TEXT,
-    "axes.labelcolor": "#374151",
+    "axes.labelcolor": "#1A1A1A",
     "xtick.color": SUBSTACK_MUTED,
     "ytick.color": SUBSTACK_MUTED,
     "xtick.labelcolor": SUBSTACK_MUTED,
     "ytick.labelcolor": SUBSTACK_MUTED,
-    "axes.edgecolor": "#D1D5DB",
+    "axes.edgecolor": "#D6D3CC",
     "axes.linewidth": 0.8,
     "grid.color": SUBSTACK_GRID,
-    "grid.alpha": 1.0,
-    "grid.linewidth": 0.9,
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
+    "grid.alpha": 0.6,
+    "grid.linewidth": 0.5,
+    "font.family": "serif",
     "font.size": 12,
     "axes.titlesize": 17,
     "axes.titleweight": "bold",

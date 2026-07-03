@@ -20,14 +20,14 @@ from . import _util, metrics  # noqa: E402
 from .paths import CHART_DIR, DEFAULT_CSV  # noqa: E402
 
 # ── Substack-style theme (matches personal_projects/pre1870_reapportionment_package) ──
-BG = "#FFFFFF"
-TEXT = "#111827"
-MUTED = "#6B7280"
-GRID = "#E5E7EB"
-ACCENT = "#C0392B"
-BLUE = "#1F5C99"
-GOLD = "#D19000"
-GREEN = "#2A9D8F"
+BG = "#F7F5F0"
+TEXT = "#1A1A1A"
+MUTED = "#6B6B6B"
+GRID = "#D6D3CC"
+ACCENT = "#C85A3D"
+BLUE = "#3D6F8C"
+GOLD = "#C2993E"
+GREEN = "#4A7C59"
 
 plt.rcParams.update(
     {
@@ -40,10 +40,9 @@ plt.rcParams.update(
         "ytick.color": MUTED,
         "axes.edgecolor": GRID,
         "grid.color": GRID,
-        "grid.alpha": 1.0,
-        "grid.linewidth": 0.9,
-        "font.family": "sans-serif", "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
-        "font.size": 12,
+        "grid.alpha": 0.6,
+        "grid.linewidth": 0.5,
+        "font.family": "serif", "font.size": 12,
         "axes.titlesize": 16,
         "axes.labelsize": 13,
         "figure.titlesize": 18,

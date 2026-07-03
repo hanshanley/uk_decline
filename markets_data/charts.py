@@ -18,10 +18,10 @@ from . import markets, regions
 from .paths import CHART_DIR, DEFAULT_CSV
 
 # --- Substack-style theme (matches pre1870_reapportionment_package) ---
-BG = "#FFFFFF"
-TEXT = "#111827"
-MUTED = "#6B7280"
-GRID = "#E5E7EB"
+BG = "#F7F5F0"
+TEXT = "#1A1A1A"
+MUTED = "#6B6B6B"
+GRID = "#D6D3CC"
 
 _THEME = {
     "figure.facecolor": BG,
@@ -33,10 +33,9 @@ _THEME = {
     "ytick.color": MUTED,
     "axes.edgecolor": GRID,
     "grid.color": GRID,
-    "grid.alpha": 1.0,
-    "grid.linewidth": 0.9,
-    "font.family": "sans-serif", "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
-    "font.size": 12,
+    "grid.alpha": 0.6,
+    "grid.linewidth": 0.5,
+    "font.family": "serif", "font.size": 12,
     "axes.titlesize": 16,
     "axes.labelsize": 13,
     "figure.titlesize": 18,
