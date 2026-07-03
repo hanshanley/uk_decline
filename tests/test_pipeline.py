@@ -47,16 +47,22 @@ def test_maddison_metric_in_wide_order() -> None:
     assert "2011" in maddison.UNIT and "real" in maddison.UNIT.lower()
 
 
-def test_headline_gdp_is_constant_usd_not_ppp() -> None:
-    # Headline GDP metric must be real constant-US$ (NON-PPP), per the chosen methodology.
+def test_headline_gdp_is_real_usd_cpi_deflated() -> None:
+    # Headline GDP metric must be the real, CPI-deflated constant-US$ series (NON-PPP),
+    # i.e. current US$ (NY.GDP.PCAP.CD) deflated by US CPI (FP.CPI.TOTL) to constant 2015 US$.
     from europe_data import plot_uk_decline
     from europe_data import combine, worldbank
-    assert plot_uk_decline.GDP_METRIC == "gdp_per_capita_constant_usd"
+    assert plot_uk_decline.GDP_METRIC == "gdp_per_capita_real_usd"
     assert "PPP" not in plot_uk_decline.GDP_METRIC.upper()
-    # It comes from World Bank NY.GDP.PCAP.KD and flows into the wide table.
-    assert worldbank.INDICATORS["NY.GDP.PCAP.KD"][0] == "gdp_per_capita_constant_usd"
-    assert "2015 US$" in worldbank.INDICATORS["NY.GDP.PCAP.KD"][1]
-    assert "gdp_per_capita_constant_usd" in combine.METRIC_ORDER
+    assert "gdp_per_capita_real_usd" in combine.METRIC_ORDER
+    # The deflation helper produces a real, constant-2015-US$ series from nominal + US CPI.
+    nominal = [{"iso3": "GBR", "country": "United Kingdom", "year": 2000,
+                "metric": "gdp_per_capita_nominal_usd", "value": 100.0,
+                "unit": "nominal, current US$", "source": "x"}]
+    real = worldbank.deflate_to_real_usd(nominal, {2000: 80.0, 2015: 100.0}, base_year=2015)
+    assert real and real[0]["metric"] == "gdp_per_capita_real_usd"
+    assert abs(real[0]["value"] - 125.0) < 1e-9  # 100 * (100/80)
+    assert "2015 US$" in real[0]["unit"]
 
 
 def test_eurostat_decoder() -> None:

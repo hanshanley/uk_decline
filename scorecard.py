@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+"""Build the unified "UK decline scorecard" — an 8-panel small-multiples image that
+pulls one signature series from each analysis (GDP, markets, NHS, tax, tuition, trust,
+migration, ageing), UK-highlighted, each annotated with its start->latest change.
+
+All series are read from the committed data/outputs CSVs (no re-fetch). Writes
+outputs/uk_decline_scorecard.png.
+
+Usage:  python scorecard.py
+"""
+
+from __future__ import annotations
+
+import csv
+import pathlib
+import re
+
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
+
+ROOT = pathlib.Path(__file__).resolve().parent
+DATA = ROOT / "data"
+OUT = ROOT / "outputs"
+
+# ── House style ──────────────────────────────────────────────────────────────
+BG, TEXT, MUTED, GRID = "#FFFFFF", "#111827", "#6B7280", "#E5E7EB"
+WORSE, BETTER, NEUTRAL = "#C0392B", "#2A9D8F", "#6B7280"
+plt.rcParams.update({
+    "figure.facecolor": BG, "axes.facecolor": BG, "savefig.facecolor": BG,
+    "text.color": TEXT, "font.family": "sans-serif",
+    "font.sans-serif": ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"],
+    "axes.spines.top": False, "axes.spines.right": False, "axes.spines.left": False,
+    "xtick.major.size": 0, "ytick.major.size": 0, "text.parse_math": False,
+})
+STROKE = [pe.withStroke(linewidth=3, foreground="white")]
+
+
+def _rows(path):
+    with open(path) as f:
+        return list(csv.DictReader(f))
+
+
+def _year(s):
+    m = re.search(r"(\d{4})", str(s))
+    return int(m.group(1)) if m else None
+
+
+# ── One loader per panel -> (xs, ys) sorted by x ─────────────────────────────
+def gdp_vs_us():
+    r = _rows(DATA / "europe_combined_wide.csv")
+    M = "gdp_per_capita_real_usd"
+    uk = {int(x["year"]): float(x[M]) for x in r if x["country"] == "United Kingdom" and x.get(M)}
+    us = {int(x["year"]): float(x[M]) for x in r if x["country"] == "United States" and x.get(M)}
+    ys = sorted(set(uk) & set(us))
+    return ys, [100 * uk[y] / us[y] for y in ys]
+
+
+def stock_vs_us():
+    r = _rows(DATA / "stock_market_size_wide.csv")
+    uk = {int(x["year"]): float(x["market_cap_usd_real"]) for x in r if x["region"] == "United Kingdom" and x.get("market_cap_usd_real")}
+    us = {int(x["year"]): float(x["market_cap_usd_real"]) for x in r if x["region"] == "United States" and x.get("market_cap_usd_real")}
+    ys = sorted(set(uk) & set(us))
+    return ys, [100 * uk[y] / us[y] for y in ys]
+
+
+def nhs_england():
+    r = _rows(OUT / "nhs" / "nhs_waiting_times.csv")
+    pts = {}
+    for x in r:
+        if x["nation_code"] == "ENG" and x["metric"] == "rtt_waiting_list_total" and x.get("value"):
+            y = _year(x["date"])
+            if y:
+                pts[y] = float(x["value"])  # keep last (latest month) per year
+    ys = sorted(pts)
+    return ys, [pts[y] for y in ys]
+
+
+def tax_burden():
+    r = _rows(DATA / "tax_revenue_to_gdp.csv")
+    pts = {int(x["year"]): float(x["value"]) for x in r if x["iso3"] == "GBR" and x["metric"] == "tax_to_gdp_pct" and x.get("value")}
+    ys = sorted(pts)
+    return ys, [pts[y] for y in ys]
+
+
+def tuition_real():
+    r = _rows(DATA / "processed" / "tuition_history.csv")
+    pts = {int(x["year"]): float(x["real_2022_usd"]) for x in r if x["country"] == "United Kingdom" and x.get("real_2022_usd")}
+    ys = sorted(pts)
+    return ys, [pts[y] for y in ys]
+
+
+def trust_govt():
+    r = _rows(DATA / "trust" / "trust_combined_long.csv")
+    pts = {int(x["year"]): float(x["value"]) for x in r if x["iso3"] == "GBR" and x["metric"] == "trust_national_govt_pct" and x.get("value")}
+    ys = sorted(pts)
+    return ys, [pts[y] for y in ys]
+
+
+def net_migration():
+    r = _rows(DATA / "processed" / "uk_migration_long.csv")
+    pts = {}
+    for x in r:
+        if x["metric"] == "net_migration" and x.get("category") == "all" and x["source"].startswith("ONS") and x.get("value"):
+            y = _year(x["period"])
+            if y:
+                pts[y] = float(x["value"])
+    ys = sorted(pts)
+    return ys, [pts[y] for y in ys]
+
+
+def median_age():
+    r = _rows(DATA / "age_combined_wide.csv")
+    pts = {int(x["year"]): float(x["median_age_years"]) for x in r if x["iso3"] == "GBR" and x.get("median_age_years")}
+    ys = sorted(pts)
+    return ys, [pts[y] for y in ys]
+
+
+# title, loader, value formatter, good_direction (+1 up-is-good, -1 down-is-good, 0 neutral), source
+PANELS = [
+    ("GDP per capita vs the US", gdp_vs_us, lambda v: f"{v:.0f}%", +1,
+     "World Bank WDI (CPI-deflated real US$)"),
+    ("Stock market size vs the US", stock_vs_us, lambda v: f"{v:.0f}%", +1,
+     "WFE/IMF via World Bank WDI (real US$)"),
+    ("NHS waiting list, England", nhs_england, lambda v: f"{v/1e6:.1f}M", -1,
+     "NHS England"),
+    ("Tax burden (% of GDP)", tax_burden, lambda v: f"{v:.0f}%", -1,
+     "OECD Revenue Statistics"),
+    ("University tuition (real)", tuition_real, lambda v: f"${v/1e3:.1f}k", -1,
+     "Eurydice / NCES / UK fee cap (constant 2022 US$)"),
+    ("Trust in national government", trust_govt, lambda v: f"{v:.0f}%", +1,
+     "OECD / Gallup World Poll via OWID"),
+    ("Net migration per year", net_migration, lambda v: f"{v/1e3:.0f}k", 0,
+     "ONS Long-Term International Migration"),
+    ("Median age (years)", median_age, lambda v: f"{v:.0f}", -1,
+     "UN Population Division via World Bank WDI"),
+]
+
+
+def _panel(ax, title, loader, fmt, good_dir, source):
+    xs, ys = loader()
+    if not xs:
+        ax.set_axis_off()
+        return
+    change = ys[-1] - ys[0]
+    worse = (good_dir == +1 and change < 0) or (good_dir == -1 and change > 0)
+    color = NEUTRAL if good_dir == 0 else (WORSE if worse else BETTER)
+
+    ax.plot(xs, ys, color=color, linewidth=2.6, solid_capstyle="round")
+    ax.fill_between(xs, ys, min(ys), color=color, alpha=0.10)
+    ax.plot([xs[-1]], [ys[-1]], "o", color=color, markersize=6,
+            markeredgecolor="white", markeredgewidth=1.2, zorder=5)
+
+    # Title + big latest value + change annotation.
+    ax.set_title(title, fontsize=12.5, fontweight="bold", loc="left", pad=26, color=TEXT)
+    ax.annotate(fmt(ys[-1]), xy=(0, 1), xycoords="axes fraction", xytext=(0, 12),
+                textcoords="offset points", fontsize=17, fontweight="bold", color=color, va="bottom")
+    ax.annotate(f"{fmt(ys[0])} in {xs[0]}  to  {fmt(ys[-1])} in {xs[-1]}",
+                xy=(1, 1), xycoords="axes fraction", xytext=(0, 14), textcoords="offset points",
+                fontsize=8.5, color=MUTED, ha="right", va="bottom")
+
+    # Minimal axes: only endpoints on x, no y ticks.
+    ax.set_xticks([xs[0], xs[-1]])
+    ax.set_xticklabels([str(xs[0]), str(xs[-1])], fontsize=9, color=MUTED)
+    ax.set_yticks([])
+    pad = (max(ys) - min(ys)) * 0.15 or 1
+    ax.set_ylim(min(ys) - pad, max(ys) + pad)
+    ax.margins(x=0.04)
+    ax.text(0.0, -0.22, source, transform=ax.transAxes, fontsize=6.8, color=MUTED,
+            style="italic", va="top")
+
+
+def main() -> int:
+    fig, axes = plt.subplots(2, 4, figsize=(17, 9))
+    for ax, panel in zip(axes.flat, PANELS):
+        _panel(ax, *panel)
+
+    fig.suptitle("The UK in relative decline \u2014 a scorecard",
+                 fontsize=23, fontweight="bold", y=0.99)
+    fig.text(0.5, 0.935,
+             "Eight measures of Britain's slide. Red = the trend has moved against the UK; "
+             "each panel spans its full available data.",
+             ha="center", fontsize=11.5, color=MUTED)
+    fig.text(0.5, 0.015,
+             "All series from official public sources (World Bank, OECD, Eurostat, ONS, NHS, "
+             "UN, Gallup). Real/monetary figures are inflation-adjusted. See per-analysis READMEs.",
+             ha="center", fontsize=8.5, color=MUTED, style="italic")
+
+    fig.tight_layout(rect=[0.01, 0.03, 0.99, 0.92])
+    fig.subplots_adjust(hspace=0.55, wspace=0.28)
+    OUT.mkdir(parents=True, exist_ok=True)
+    path = OUT / "uk_decline_scorecard.png"
+    fig.savefig(path, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    print(f"wrote {path}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
