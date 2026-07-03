@@ -194,20 +194,19 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
 
     us = ((_series(df, "United States", metric).set_index("year")[metric] / uk).dropna() * 100)
     pl = ((_series(df, "Poland", metric).set_index("year")[metric] / uk).dropna() * 100)
-    ax.annotate(f"US pulled ahead to {us.iloc[-1]:.0f}% of the UK",
-                xy=(us.index[-1], us.iloc[-1]), xytext=(1996, 175),
-                fontsize=10.5, color=SUBSTACK_TEXT, fontweight="bold", va="center",
-                path_effects=LABEL_STROKE)
-    ax.annotate(f"Poland has climbed from {pl.iloc[0]:.0f}% to {pl.iloc[-1]:.0f}% of the UK",
-                xy=(pl.index[-1], pl.iloc[-1]), xytext=(1998, 30),
-                fontsize=10.5, color=SUBSTACK_GREEN, fontweight="bold", va="center",
-                path_effects=LABEL_STROKE)
 
     ax.set_xlabel("Year", labelpad=2)
     ax.set_ylabel("GDP per capita as % of the UK (UK = 100)", labelpad=2)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}%"))
+    # Centered title + centered subtitle (the subtitle carries the two turning-point facts,
+    # so it stays aligned under the headline instead of drifting to a corner).
     ax.set_title("GDP per capita relative to the UK, 1990\u20132024",
-                 fontweight="bold", pad=14)
+                 fontweight="bold", pad=30)
+    ax.text(0.5, 1.015,
+            f"The US pulled ahead to {us.iloc[-1]:.0f}% of the UK, while Poland climbed "
+            f"from {pl.iloc[0]:.0f}% to {pl.iloc[-1]:.0f}%",
+            transform=ax.transAxes, ha="center", va="bottom",
+            fontsize=12, color=SUBSTACK_MUTED)
     ax.grid(axis="y", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)
     ax.tick_params(axis="both", pad=2)
