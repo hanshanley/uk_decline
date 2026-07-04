@@ -191,8 +191,17 @@ def _panel(ax, title, loader, fmt, good_dir, source, start_override):
 
     ax.set_xticks([xs[0], xs[-1]])
     ax.set_xticklabels([str(xs[0]), str(xs[-1])], fontsize=9, color=MUTED)
-    pad = (max(ys) - min(ys)) * 0.15 or 1
-    ax.set_ylim(min(ys) - pad, max(ys) + pad)
+    # Give each panel at least a minimum span relative to its own magnitude, so a
+    # genuinely small move (e.g. tax burden 33->34%, median age 39->41) is not
+    # magnified to fill the panel and overstate the change.
+    dr = max(ys) - min(ys)
+    span = max(dr * 1.30, 0.22 * max(abs(min(ys)), abs(max(ys))), 1.0)
+    extra = (span - dr) / 2.0
+    lo, hi = min(ys) - extra, max(ys) + extra
+    if min(ys) >= 0 and lo < 0:  # keep naturally non-negative series off a negative axis
+        hi -= lo
+        lo = 0.0
+    ax.set_ylim(lo, hi)
     ax.margins(x=0.04)
     ax.text(0.0, -0.24, source, transform=ax.transAxes, fontsize=6.8, color=MUTED,
             style="italic", va="top")
@@ -203,11 +212,11 @@ def main() -> int:
     for ax, panel in zip(axes.flat, PANELS):
         _panel(ax, *panel)
 
-    fig.suptitle("The UK in relative decline \u2014 a scorecard",
+    fig.suptitle("The UK in relative decline",
                  fontsize=23, fontweight="bold", y=0.99)
     fig.text(0.5, 0.935,
              "Eight measures of Britain's slide, each tracked from 2007 \u2014 the eve of the "
-             "financial crisis. Red = the trend has moved against the UK.",
+             "financial crisis.",
              ha="center", fontsize=11.5, color=MUTED)
     fig.text(0.5, 0.015,
              "All series from official public sources (World Bank, OECD, Eurostat, ONS, NHS, "

@@ -26,9 +26,9 @@ All output images live in one place: **[`outputs/`](outputs)**, one subfolder pe
 
 ## Key results
 
-**The whole thesis in one image — a scorecard of eight measures:**
+**The whole thesis in one image — eight measures at a glance:**
 
-![The UK in relative decline — a scorecard](outputs/uk_decline_scorecard.png)
+![The UK in relative decline](outputs/uk_decline_scorecard.png)
 
 Every panel is tracked from **2007** — the eve of the financial crisis and the UK's high-water
 mark on most of these measures — so the eight trends read as one holistic decline. Each measure below in detail.
