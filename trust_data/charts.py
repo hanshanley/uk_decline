@@ -61,6 +61,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     sub["group"] = sub["iso3"].map(countries.group_for_iso3)
 
     # EU-27: show a median line + interquartile band, not a spaghetti of 27 members.
+    plotted_vals: list[float] = []
     eu = sub[sub["group"] == countries.EU]
     if not eu.empty:
         g = eu.groupby("year")["value"]
@@ -70,6 +71,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
                         zorder=2, label="EU-27 (middle 50%)")
         ax.plot(med.index, med.values, color=eu_color, linewidth=2.0, linestyle="--",
                 zorder=3, label="EU-27 median")
+        plotted_vals += list(q1.values) + list(q3.values)
 
     for grp, lab in ((countries.US, "United States"), (countries.UK, "United Kingdom")):
         gg = sub[sub["group"] == grp].sort_values("year")
@@ -79,14 +81,15 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         ax.plot(gg["year"], gg["value"], marker="o" if grp == countries.UK else None,
                 markersize=3, linewidth=st["lw"], color=st["color"],
                 zorder=st["zorder"], label=lab)
+        plotted_vals += list(gg["value"].astype(float))
 
     ax.set_title(meta.label)
     ax.set_xlabel("Year")
     ax.set_ylabel(f"{meta.unit} (higher = more trust)")
-    if meta.unit == "percent":
-        # Fit the axis to the data (incl. the EU band) with a small margin, rather than
-        # a fixed 0-100 that strands every line in the middle of empty space.
-        lo, hi = float(sub["value"].min()), float(sub["value"].max())
+    if meta.unit == "percent" and plotted_vals:
+        # Fit the axis to what is actually drawn (the EU middle-50% band + the US/UK
+        # lines), rather than a fixed 0-100 that strands every line in empty space.
+        lo, hi = min(plotted_vals), max(plotted_vals)
         pad = max((hi - lo) * 0.12, 1.0)
         ax.set_ylim(max(0.0, lo - pad), min(100.0, hi + pad))
     from matplotlib.ticker import MaxNLocator

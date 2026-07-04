@@ -23,7 +23,7 @@ tax wedge** as the standard proxy for the typical/median worker. The individual 
 reported at **67% / 100% / 167% of the average wage** (a single person, no children) plus a
 **one-earner married couple with 2 children** at 100% AW.
 
-## Results (latest live run, 2015–2024)
+## Results (latest live run — 2024 snapshot; tax-to-GDP time series 1965–2024)
 
 Headline comparison, latest year with data per metric:
 
@@ -106,7 +106,7 @@ OECD's own harmonised definitions; where a level isn't strictly apples-to-apples
 
 ```bash
 # runtime deps in requirements.txt (requests, tenacity, tqdm, matplotlib); tests need pytest
-.venv/bin/python -m tax.fetch_tax --start 2015 --end 2024     # live OECD fetch + CSVs + charts
+.venv/bin/python -m tax.fetch_tax --start 1965 --end 2024     # live OECD fetch + CSVs + charts
 .venv/bin/python -m tax.fetch_tax --no-charts                 # data only
 .venv/bin/python -m pytest tests/test_tax.py -q
 ```
@@ -122,7 +122,7 @@ titles, italic source note, `dpi=200`). Every figure carries a **source note cit
 Revenue Statistics & Taxing Wages**. Written to `../outputs/tax/`:
 
 - `tax_burden_headline_bars.png` — UK / Europe median / US across the three headline metrics.
-- `tax_to_gdp_over_time.png` — total tax revenue (% of GDP), UK vs Europe median vs US, 2015–2024.
+- `tax_to_gdp_over_time.png` — total tax revenue (% of GDP), UK vs Europe median vs US, 1965–2024.
 - `tax_wedge_by_earnings.png` — single-worker tax wedge at 67 / 100 / 167% of the average wage.
 
 ## Layout (tax sub-analysis files)

@@ -30,7 +30,8 @@ All output images live in one place: **[`outputs/`](outputs)**, one subfolder pe
 
 ![The UK in relative decline — a scorecard](outputs/uk_decline_scorecard.png)
 
-Each measure below in detail.
+Every panel is tracked from **2007** — the eve of the financial crisis and the UK's high-water
+mark on most of these measures — so the eight trends read as one holistic decline. Each measure below in detail.
 
 ### GDP per capita — the US pulls away, and even Poland is catching up
 ![Real GDP per capita relative to the UK (UK = 100)](outputs/gdp_income/uk_gdp_relative_to_peers.png)

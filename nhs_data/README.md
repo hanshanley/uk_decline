@@ -43,7 +43,10 @@ truth: `nhs_data/sources.py`, rendered into the generated summary):
 - **NHS England** — *Consultant-led Referral to Treatment (RTT) Waiting Times;
   A&E Attendances and Emergency Admissions; Cancer Waiting Times; and Monthly
   Diagnostic Waiting Times and Activity (DM01).* NHS England statistical work
-  areas, https://www.england.nhs.uk/statistics/statistical-work-areas/.
+  areas, https://www.england.nhs.uk/statistics/statistical-work-areas/. The RTT
+  waiting-list total is extended back to the **start of the collection (Aug 2007)**
+  using the published *RTT Overview* time series, so England spans 2007–present
+  (median wait is monthly-file only, so it starts 2015).
 - **Public Health Scotland** — *NHS Scotland waiting times: Stage of Treatment
   (ongoing waits); Accident & Emergency activity and waiting times; Cancer
   waiting times; and Diagnostic waiting times.* Scottish Health and Social Care

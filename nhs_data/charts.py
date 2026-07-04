@@ -85,18 +85,31 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
     sub["date"] = pd.to_datetime(sub["date"], errors="coerce")
     sub = sub.dropna(subset=["date"]).sort_values("date")
 
+    # For the indexed view, rebase every nation to a COMMON baseline period (the latest
+    # first-observation across nations, i.e. the first period in which all nations have
+    # data) so the growth multipliers are comparable. Nations with earlier data (England
+    # runs from 2007) are still drawn before that baseline, indexed to the same reference.
+    base_date = None
+    base_year = None
+    if indexed:
+        firsts = [g.sort_values("date")["date"].iloc[0] for _, g in sub.groupby("nation_code")]
+        if firsts:
+            base_date = max(firsts)
+            base_year = pd.Timestamp(base_date).year
+
     fig, ax = plt.subplots(figsize=(11, 6))
     for code, g in sub.groupby("nation_code"):
         g = g.sort_values("date")
         yvals = g["value"]
         if indexed:
-            base = yvals.iloc[0]
-            if not base:
+            on_after = g[g["date"] >= base_date]
+            if on_after.empty or not on_after["value"].iloc[0]:
                 continue
+            base = on_after["value"].iloc[0]
             yvals = yvals / base * 100.0
         label = g["nation"].iloc[0]
         if indexed:
-            label = f"{label} (\u00d7{g['value'].iloc[-1] / g['value'].iloc[0]:.2f})"
+            label = f"{label} (\u00d7{g['value'].iloc[-1] / base:.2f})"
         ax.plot(
             g["date"],
             yvals,
@@ -112,15 +125,19 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
     direction = "higher = better" if meta.higher_is_better else "lower = better"
     if indexed:
         ax.axhline(100, color=MUTED, linewidth=1.0, linestyle=":")
-        ax.set_title(f"{meta.label}\ngrowth indexed to each nation's first period (= 100)",
+        ax.set_title(f"{meta.label}\ngrowth indexed to {base_year} (= 100)",
                      fontweight="bold", pad=14)
-        ax.set_ylabel(f"Index, first period = 100 ({direction})", labelpad=2)
+        ax.set_ylabel(f"Index, {base_year} = 100 ({direction})", labelpad=2)
     else:
         ax.set_title(meta.label, fontweight="bold", pad=14)
         ax.set_ylabel(f"{meta.unit} ({direction})", labelpad=2)
     ax.set_xlabel("Period", labelpad=2)
     if not indexed and meta.unit == "percent":
-        ax.set_ylim(0, 100)
+        # Fit to the plotted data (with a margin) instead of a fixed 0-100 that strands
+        # the lines in the top third; keep the axis within the valid 0-100% range.
+        lo, hi = float(sub["value"].min()), float(sub["value"].max())
+        pad = max((hi - lo) * 0.10, 2.0)
+        ax.set_ylim(max(0.0, lo - pad), min(100.0, hi + pad))
         ax.yaxis.set_major_formatter(mticker.PercentFormatter())
     if not indexed and meta.unit == "patients":
         ax.yaxis.set_major_formatter(
