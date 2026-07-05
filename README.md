@@ -68,9 +68,6 @@ UK annual tuition (~$11.4k) now matches the US, while most of the EU remains fre
 ![UK median age over time](outputs/age/median_age_over_time.png)
 *Source: UN Population Division via World Bank WDI.*
 
-*(The repo also includes a standalone [UK migration](uk_migration/README.md) analysis, presented
-descriptively — migration is **not** framed here as a measure of "decline".)*
-
 ## Repository layout
 
 ```
