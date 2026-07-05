@@ -212,7 +212,7 @@ def main() -> int:
     for ax, panel in zip(axes.flat, PANELS):
         _panel(ax, *panel)
 
-    fig.suptitle("The UK in relative decline",
+    fig.suptitle("The UK since 2007",
                  fontsize=23, fontweight="bold", y=0.99)
     fig.text(0.5, 0.935,
              "Eight measures of Britain's slide, each tracked from 2007 \u2014 the eve of the "
