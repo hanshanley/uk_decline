@@ -18,42 +18,12 @@ from . import markets, regions
 from .paths import CHART_DIR, DEFAULT_CSV
 
 # --- Substack-style theme (matches pre1870_reapportionment_package) ---
-BG = "#F7F5F0"
-TEXT = "#1A1A1A"
-MUTED = "#6B6B6B"
-GRID = "#D6D3CC"
-ACCENT = "#C85A3D"  # UK highlight (matches regions.COLOURS["GBR"])
+from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, RC_PARAMS as _THEME, house_style
 
 # World Bank "World" is a super-aggregate (the sum of every market), so it always
 # towers over the country lines and crushes the UK-vs-peers comparison. Exclude it
 # from the per-region level charts; the UK/US ratio charts tell the size story.
 _EXCLUDE_FROM_TRENDS = {"WLD"}
-
-_THEME = {
-    "figure.facecolor": BG,
-    "axes.facecolor": BG,
-    "savefig.facecolor": BG,
-    "text.color": TEXT,
-    "axes.labelcolor": TEXT,
-    "xtick.color": MUTED,
-    "ytick.color": MUTED,
-    "axes.edgecolor": GRID,
-    "grid.color": GRID,
-    "grid.alpha": 0.6,
-    "grid.linewidth": 0.5,
-    "font.family": "serif", "font.size": 12,
-    "axes.titlesize": 17,
-    "axes.titleweight": "bold",
-    "axes.labelsize": 13,
-    "figure.titlesize": 18,
-    "legend.framealpha": 0.0,
-    "legend.fontsize": 11,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-    "xtick.major.size": 0,
-    "ytick.major.size": 0,
-    "text.parse_math": False,
-}
 
 _STROKE = None  # lazy patheffects (needs matplotlib import)
 

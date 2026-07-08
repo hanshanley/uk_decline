@@ -30,46 +30,15 @@ import matplotlib.patheffects as pe
 import matplotlib.ticker as mtick
 import pandas as pd
 
-# ── Professional house style (clean, modern, editorial) ──────────────────────
-SUBSTACK_BG = "#F7F5F0"      # warm Substack tan
-SUBSTACK_CARD = "#EFEDE8"
-SUBSTACK_TEXT = "#1A1A1A"    # near-black slate (also the US line)
-SUBSTACK_MUTED = "#6B6B6B"   # muted gray for ticks / secondary text
-SUBSTACK_ACCENT = "#C85A3D"  # UK highlight — strong editorial red
-SUBSTACK_BLUE = "#3D6F8C"    # Germany
-SUBSTACK_GOLD = "#C2993E"    # France — amber
-SUBSTACK_GREEN = "#4A7C59"   # Italy — teal
-SUBSTACK_GRID = "#D6D3CC"    # light gridlines
+# ── Professional house style (shared vizstyle house style) ───────────────────
+from vizstyle import (  # noqa: E402
+    BG as SUBSTACK_BG, CARD as SUBSTACK_CARD, TEXT as SUBSTACK_TEXT,
+    MUTED as SUBSTACK_MUTED, ACCENT as SUBSTACK_ACCENT, BLUE as SUBSTACK_BLUE,
+    GOLD as SUBSTACK_GOLD, GREEN as SUBSTACK_GREEN, GRID as SUBSTACK_GRID,
+    house_style,
+)
 
-plt.rcParams.update({
-    "figure.facecolor": SUBSTACK_BG,
-    "axes.facecolor": SUBSTACK_BG,
-    "savefig.facecolor": SUBSTACK_BG,
-    "text.color": SUBSTACK_TEXT,
-    "axes.labelcolor": "#1A1A1A",
-    "xtick.color": SUBSTACK_MUTED,
-    "ytick.color": SUBSTACK_MUTED,
-    "xtick.labelcolor": SUBSTACK_MUTED,
-    "ytick.labelcolor": SUBSTACK_MUTED,
-    "axes.edgecolor": "#D6D3CC",
-    "axes.linewidth": 0.8,
-    "grid.color": SUBSTACK_GRID,
-    "grid.alpha": 0.6,
-    "grid.linewidth": 0.5,
-    "font.family": "serif",
-    "font.size": 12,
-    "axes.titlesize": 17,
-    "axes.titleweight": "bold",
-    "axes.labelsize": 12,
-    "figure.titlesize": 18,
-    "legend.framealpha": 0.0,
-    "legend.fontsize": 11,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-    "xtick.major.size": 0,
-    "ytick.major.size": 0,
-    "text.parse_math": False,
-})
+house_style()
 
 LABEL_STROKE = [pe.withStroke(linewidth=3.5, foreground="white")]
 

@@ -90,6 +90,7 @@ uk_decline/
   europe_data/   markets_data/   nhs_data/   tax/
   tuition/       trust_data/     uk_migration/   age_data/   rail_data/   london_data/
       └─ each: analysis code + README.md (+ CITATIONS where relevant)
+  vizstyle/      # shared "Substack" plotting house style (palette + rcParams + helpers)
   outputs/       # ALL figures, one subfolder per analysis (tracked; render on GitHub)
     gdp_income/  stock_markets/  nhs/  tax/  tuition/  trust/  migration/  age/  rail/  london/
   data/          # raw / intermediate inputs (git-ignored, regenerable)

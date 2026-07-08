@@ -64,18 +64,20 @@ def _ensure_ons_host(url: str) -> None:
 def resolve_xlsx_url(page_url: str = DATASET_PAGE, timeout: int = 60) -> str:
     """Return the newest ``.xlsx`` edition linked on the ONS dataset page.
 
-    Falls back to :data:`PINNED_XLSX` if the page can't be scraped. Editions are named
-    ``.../1998toYYYY/...`` so we pick the highest end year.
+    Falls back to :data:`PINNED_XLSX` if the page can't be scraped or has no dated edition.
+    Editions are named ``.../1998toYYYY/...`` so we pick the highest end year; hrefs that
+    don't carry an edition year are ignored (they can't win over the pinned fallback).
     """
     _ensure_ons_host(page_url)
     try:
-        resp = requests.get(page_url, timeout=timeout, headers={"User-Agent": _USER_AGENT})
-        resp.raise_for_status()
+        resp = _get(page_url, timeout=timeout)
         hrefs = re.findall(r'href="(/file\?uri=[^"]+\.xlsx)"', resp.text, flags=re.I)
-        best, best_year = None, -1
+        best, best_year = None, 0
         for href in hrefs:
             m = re.search(r"/1998to(\d{4})/", href)
-            year = int(m.group(1)) if m else 0
+            if m is None:
+                continue  # not a dated regional-GDP edition; skip
+            year = int(m.group(1))
             if year > best_year:
                 best, best_year = href, year
         if best:
@@ -85,23 +87,56 @@ def resolve_xlsx_url(page_url: str = DATASET_PAGE, timeout: int = 60) -> str:
     return PINNED_XLSX
 
 
+def _get(url: str, timeout: int) -> requests.Response:
+    """GET with redirects disabled, validating the ONS host at every hop (anti-SSRF).
+
+    Following redirects automatically would fetch the redirect target *before* the host
+    could be re-checked, so we resolve hops manually and reject any non-ONS ``Location``.
+    """
+    for _ in range(5):
+        _ensure_ons_host(url)
+        resp = requests.get(url, timeout=timeout, allow_redirects=False,
+                            headers={"User-Agent": _USER_AGENT})
+        if resp.is_redirect or resp.is_permanent_redirect:
+            url = requests.compat.urljoin(url, resp.headers["Location"])
+            continue
+        resp.raise_for_status()
+        return resp
+    raise RuntimeError(f"too many redirects fetching {url!r}")
+
+
 def download_workbook(url: str | None = None, timeout: int = 120) -> dict:
-    """Download the ONS regional-GDP workbook -> ``{sheet_name: DataFrame}``."""
+    """Download the ONS regional-GDP workbook -> ``{sheet_name: DataFrame}``.
+
+    Only the two sheets we use (GDP and GDP-per-head) are parsed.
+    """
     url = url or resolve_xlsx_url()
-    _ensure_ons_host(url)
-    resp = requests.get(url, timeout=timeout, headers={"User-Agent": _USER_AGENT})
-    _ensure_ons_host(resp.url)
-    resp.raise_for_status()
-    return pd.read_excel(io.BytesIO(resp.content), sheet_name=None, header=None)
+    resp = _get(url, timeout=timeout)
+    return pd.read_excel(io.BytesIO(resp.content), header=None,
+                         sheet_name=[_SHEET_GDP, _SHEET_GDP_PER_HEAD])
+
+
+def _to_float(value) -> float | None:
+    """Parse an ONS cell to float, tolerating footnote/suppression markers ([r], :, -)."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _row_by_code(sheet: pd.DataFrame, code: str) -> tuple[list[int], list[float]]:
-    """Return (years, values) for the region whose ITL code == ``code``."""
-    years = [int(float(v)) for v in sheet.iloc[_HEADER_ROW, _FIRST_YEAR_COL:].tolist()
-             if str(v) != "nan"]
+    """Return (years, values) for the region whose ITL code == ``code``.
+
+    Years and their values are anchored to the *same* column indices (the columns whose
+    header cell is a numeric year), so a blank/merged header cell can't misalign them.
+    """
+    header = sheet.iloc[_HEADER_ROW]
+    year_cols = [j for j in range(_FIRST_YEAR_COL, sheet.shape[1])
+                 if _to_float(header.iloc[j]) is not None]
+    years = [int(_to_float(header.iloc[j])) for j in year_cols]
     for i in range(_HEADER_ROW + 1, sheet.shape[0]):
         if str(sheet.iloc[i, _CODE_COL]).strip() == code:
-            vals = [float(v) for v in sheet.iloc[i, _FIRST_YEAR_COL:_FIRST_YEAR_COL + len(years)]]
+            vals = [_to_float(sheet.iloc[i, j]) for j in year_cols]
             return years, vals
     raise KeyError(f"ITL code {code!r} not found in sheet")
 
@@ -122,22 +157,28 @@ def build_rows(workbook: dict | None = None) -> list[dict]:
 
     uk = dict(zip(yrs_uk, uk_gdp))
     ldn = dict(zip(yrs_ldn, ldn_gdp))
-    uk_h = dict(zip(yrs_uk_ph, uk_ph))
-    ldn_h = dict(zip(yrs_ldn_ph, ldn_ph))
+    uk_per_head = dict(zip(yrs_uk_ph, uk_ph))
+    ldn_per_head = dict(zip(yrs_ldn_ph, ldn_ph))
 
     rows: list[dict] = []
 
     def add(region, year, metric, value, unit):
+        if value is None:
+            return  # skip a year where an ONS cell was blank/suppressed
         rows.append({"region": region, "year": year, "metric": metric,
                      "value": round(value, 4), "unit": unit, "source": SOURCE})
+
+    def ratio(num, den):
+        return 100.0 * num / den if (num is not None and den) else None
 
     for y in yrs_uk:
         add("United Kingdom", y, "gdp_current_gbp_m", uk[y], "GBP million")
         add("London", y, "gdp_current_gbp_m", ldn[y], "GBP million")
-        add("London", y, "share_of_uk_gdp_pct", 100.0 * ldn[y] / uk[y], "percent")
-        add("United Kingdom", y, "gdp_per_head_gbp", uk_h[y], "GBP per head")
-        add("London", y, "gdp_per_head_gbp", ldn_h[y], "GBP per head")
-        add("London", y, "gdp_per_head_index_uk100", 100.0 * ldn_h[y] / uk_h[y], "index, UK=100")
+        add("London", y, "share_of_uk_gdp_pct", ratio(ldn[y], uk[y]), "percent")
+        add("United Kingdom", y, "gdp_per_head_gbp", uk_per_head[y], "GBP per head")
+        add("London", y, "gdp_per_head_gbp", ldn_per_head[y], "GBP per head")
+        add("London", y, "gdp_per_head_index_uk100",
+            ratio(ldn_per_head[y], uk_per_head[y]), "index, UK=100")
 
     rows.sort(key=lambda r: (r["metric"], r["region"], r["year"]))
     return rows

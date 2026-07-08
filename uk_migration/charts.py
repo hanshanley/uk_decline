@@ -30,39 +30,18 @@ SOURCE_ONS_IPS = "ONS IPS Long-Term International Migration, 1964\u20132015, ad 
 SOURCE_HO = "Home Office Immigration System Statistics (gov.uk)"
 SOURCE_WB = "World Bank WDI (api.worldbank.org)"
 
-# ---- Substack theme (matches pre1870_reapportionment_package) --------------
-SUBSTACK_BG = "#F7F5F0"
-SUBSTACK_TEXT = "#1A1A1A"
-SUBSTACK_MUTED = "#6B6B6B"
-SUBSTACK_ACCENT = "#C85A3D"
-SUBSTACK_BLUE = "#3D6F8C"
-SUBSTACK_GOLD = "#C2993E"
-SUBSTACK_GREEN = "#4A7C59"
-SUBSTACK_GRID = "#D6D3CC"
+# ---- Substack theme (shared vizstyle house style) --------------------------
+from vizstyle import (  # noqa: E402
+    BG as SUBSTACK_BG, TEXT as SUBSTACK_TEXT, MUTED as SUBSTACK_MUTED,
+    ACCENT as SUBSTACK_ACCENT, BLUE as SUBSTACK_BLUE, GOLD as SUBSTACK_GOLD,
+    GREEN as SUBSTACK_GREEN, GRID as SUBSTACK_GRID, house_style,
+)
 
-_THEME = {
-    "figure.facecolor": SUBSTACK_BG,
-    "axes.facecolor": SUBSTACK_BG,
-    "savefig.facecolor": SUBSTACK_BG,
-    "text.color": SUBSTACK_TEXT,
-    "axes.labelcolor": SUBSTACK_TEXT,
-    "xtick.color": SUBSTACK_MUTED,
-    "ytick.color": SUBSTACK_MUTED,
-    "axes.edgecolor": SUBSTACK_GRID,
-    "grid.color": SUBSTACK_GRID,
-    "grid.alpha": 0.6,
-    "grid.linewidth": 0.5,
-    "font.family": "serif", "font.size": 12,
-    "axes.titlesize": 16,
-    "axes.labelsize": 13,
-    "figure.titlesize": 18,
-    "legend.framealpha": 0.0,
-    "legend.fontsize": 11,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-}
-
-plt.rcParams.update(_THEME)
+house_style()
+# This analysis draws a log-scale axis whose tick labels use mathtext (10^6); the shared
+# house style disables mathtext (to protect literal "$" labels elsewhere), so re-enable it
+# here — uk_migration has no "$" labels, matching its original default behaviour.
+plt.rcParams["text.parse_math"] = True
 
 
 def _load(source: pd.DataFrame | str | Path | None) -> pd.DataFrame:

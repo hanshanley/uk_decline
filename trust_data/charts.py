@@ -12,12 +12,13 @@ from pathlib import Path
 
 from . import countries, metrics
 from .paths import CHART_DIR, DEFAULT_LONG_CSV
+from vizstyle import ACCENT, BLUE, GREEN, house_style
 
 # Group styling: the UK stands out; comparators are muted.
 GROUP_STYLE = {
-    countries.UK: {"color": "#C85A3D", "lw": 2.8, "alpha": 1.0, "zorder": 5},
-    countries.EU: {"color": "#3D6F8C", "lw": 1.4, "alpha": 0.55, "zorder": 2},
-    countries.US: {"color": "#4A7C59", "lw": 1.8, "alpha": 0.9, "zorder": 4},
+    countries.UK: {"color": ACCENT, "lw": 2.8, "alpha": 1.0, "zorder": 5},
+    countries.EU: {"color": BLUE, "lw": 1.4, "alpha": 0.55, "zorder": 2},
+    countries.US: {"color": GREEN, "lw": 1.8, "alpha": 0.9, "zorder": 4},
 }
 
 
@@ -33,22 +34,9 @@ def _load(source):
 
 def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     """Render a single metric's trend chart. Returns the output path or None if no data."""
-    import matplotlib
-
-    matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    plt.rcParams.update({
-        "figure.facecolor": "#F7F5F0", "axes.facecolor": "#F7F5F0",
-        "savefig.facecolor": "#F7F5F0", "text.color": "#1A1A1A",
-        "axes.labelcolor": "#1A1A1A", "xtick.color": "#6B6B6B", "ytick.color": "#6B6B6B",
-        "axes.edgecolor": "#D6D3CC", "axes.linewidth": 0.8,
-        "grid.color": "#D6D3CC", "grid.alpha": 0.6, "grid.linewidth": 0.5,
-        "font.family": "serif",
-        "font.size": 12, "axes.titlesize": 16, "axes.titleweight": "bold",
-        "legend.framealpha": 0.0, "axes.spines.top": False, "axes.spines.right": False,
-        "xtick.major.size": 0, "ytick.major.size": 0,
-    })
+    house_style()
     meta = metrics.METRICS[metric_id]
     sub = df[df["metric"] == metric_id].copy()
     if sub.empty:

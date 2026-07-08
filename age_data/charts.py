@@ -22,38 +22,9 @@ import matplotlib.ticker as mtick  # noqa: E402
 from . import config  # noqa: E402
 
 # ── Substack-style theme (matches tax/charts.py + pre1870_reapportionment_package) ──
-BG = "#F7F5F0"
-TEXT = "#1A1A1A"
-MUTED = "#6B6B6B"
-GRID = "#D6D3CC"
-ACCENT = "#C85A3D"   # UK / 65+
-BLUE = "#3D6F8C"     # Europe (median) / 15-64
-GOLD = "#C2993E"     # US / 0-14
-GREEN = "#4A7C59"
+from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, house_style
 
-plt.rcParams.update(
-    {
-        "figure.facecolor": BG,
-        "axes.facecolor": BG,
-        "savefig.facecolor": BG,
-        "text.color": TEXT,
-        "axes.labelcolor": TEXT,
-        "xtick.color": MUTED,
-        "ytick.color": MUTED,
-        "axes.edgecolor": GRID,
-        "grid.color": GRID,
-        "grid.alpha": 0.6,
-        "grid.linewidth": 0.5,
-        "font.family": "serif", "font.size": 12,
-        "axes.titlesize": 16,
-        "axes.labelsize": 13,
-        "figure.titlesize": 18,
-        "legend.framealpha": 0.0,
-        "legend.fontsize": 11,
-        "axes.spines.top": False,
-        "axes.spines.right": False,
-    }
-)
+house_style()
 
 SERIES_COLORS = {"uk": ACCENT, "europe_median": BLUE, "us": GOLD}
 SERIES_LABELS = {"uk": "United Kingdom", "europe_median": "Europe (median)", "us": "United States"}

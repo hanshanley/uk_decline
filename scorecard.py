@@ -28,8 +28,11 @@ DATA = ROOT / "data"
 OUT = ROOT / "outputs"
 
 # ── House style ──────────────────────────────────────────────────────────────
-BG, TEXT, MUTED, GRID = "#F7F5F0", "#1A1A1A", "#6B6B6B", "#D6D3CC"
-WORSE, BETTER, NEUTRAL = "#C85A3D", "#4A7C59", "#6B6B6B"
+# Palette from the shared vizstyle house style; scorecard keeps its own minimal
+# rcParams (it hides the left spine for the small-multiples look).
+from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, GREEN  # noqa: E402
+
+WORSE, BETTER, NEUTRAL = ACCENT, GREEN, MUTED
 plt.rcParams.update({
     "figure.facecolor": BG, "axes.facecolor": BG, "savefig.facecolor": BG,
     "text.color": TEXT, "font.family": "serif",

@@ -16,34 +16,13 @@ from __future__ import annotations
 
 import pathlib
 
-import matplotlib
-
-matplotlib.use("Agg")
-
-import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 
-BG = "#F7F5F0"
-TEXT = "#1A1A1A"
-MUTED = "#6B6B6B"
-GRID = "#D6D3CC"
-ACCENT = "#C85A3D"   # London (focus)
-BLUE = "#3D6F8C"     # Great Britain (context)
+from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, RC_PARAMS as _THEME, house_style, white_stroke
 
-_THEME = {
-    "figure.facecolor": BG, "axes.facecolor": BG, "savefig.facecolor": BG,
-    "text.color": TEXT, "axes.labelcolor": TEXT,
-    "xtick.color": MUTED, "ytick.color": MUTED,
-    "axes.edgecolor": GRID, "axes.linewidth": 0.8,
-    "grid.color": GRID, "grid.alpha": 0.6, "grid.linewidth": 0.5,
-    "font.family": "serif", "font.size": 12,
-    "axes.titlesize": 17, "axes.titleweight": "bold", "axes.labelsize": 12,
-    "legend.framealpha": 0.0, "axes.spines.top": False, "axes.spines.right": False,
-    "xtick.major.size": 0, "ytick.major.size": 0, "text.parse_math": False,
-}
-_STROKE = [pe.withStroke(linewidth=3.0, foreground="white")]
+_STROKE = white_stroke()
 
 LONDON = "London and South East"
 GB = "Great Britain"

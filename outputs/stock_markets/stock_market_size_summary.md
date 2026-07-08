@@ -19,7 +19,7 @@ Total market value of listed domestic companies, in current (nominal) US dollars
 
 **UK / US:** 8% in 2022 (peak 27% in 1990).
 
-_Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LCAP.CD; accessed 2026-07-03)._
+_Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LCAP.CD; accessed 2026-07-08)._
 
 > Caveat: Compiled by the World Bank from S&P Global / World Federation of Exchanges data. Denominated in current (nominal) US$, so it blends local-currency valuation, USD exchange-rate moves, and inflation. The WDI series has tail-year gaps -- the UK is missing after 2022 -- so recent years may be blank; values are not spliced. See the real series for the inflation-adjusted view.
 
@@ -38,7 +38,7 @@ The nominal market-cap series deflated by US CPI to constant US dollars, so size
 
 **UK / US:** 8% in 2022 (peak 27% in 1990).
 
-_Data: World Federation of Exchanges (WFE) & International Monetary Fund (IMF), via World Bank World Development Indicators (CM.MKT.LCAP.CD, FP.CPI.TOTL; accessed 2026-07-03)._
+_Data: World Federation of Exchanges (WFE) & International Monetary Fund (IMF), via World Bank World Development Indicators (CM.MKT.LCAP.CD, FP.CPI.TOTL; accessed 2026-07-08)._
 
 > Caveat: Derived: the nominal current-US$ series deflated by US CPI (World Bank FP.CPI.TOTL) to constant US dollars of the base year noted in the manifest/summary. This uses market exchange rates, i.e. constant dollars -- NOT PPP, which would distort market values by adjusting for domestic price levels. It removes US-dollar inflation; for non-US markets it does not remove exchange-rate effects. Only years with both market-cap and CPI data are computed (US CPI ends 2024), so the newest year may be absent.
 
@@ -57,7 +57,7 @@ Market capitalisation of listed domestic companies as a share of GDP -- the size
 
 **UK / US:** 63% in 2022 (peak 175% in 1987).
 
-_Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LCAP.GD.ZS; accessed 2026-07-03)._
+_Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LCAP.GD.ZS; accessed 2026-07-08)._
 
 > Caveat: The more comparable 'size relative to the economy' measure, but sensitive to the denominator: countries with many large foreign-listed firms (e.g. the UK) can look large relative to domestic GDP.
 
@@ -76,13 +76,13 @@ Number of domestically incorporated companies listed on the country's stock exch
 
 **UK / US:** 35% in 2022 (peak 113% in 1979).
 
-_Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LDOM.NO; accessed 2026-07-03)._
+_Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LDOM.NO; accessed 2026-07-08)._
 
 > Caveat: Counts domestic listings only; delistings, M&A, and take-private activity reduce the count even as market value rises. Compare trends, not raw counts, across exchanges with different listing rules.
 
 ## Data citations
 
-- World Federation of Exchanges (WFE), WFE database. Market capitalization of listed domestic companies (current US$) (CM.MKT.LCAP.CD). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/CM.MKT.LCAP.CD (accessed 2026-07-03).
-- World Federation of Exchanges (WFE), WFE database. Market capitalization of listed domestic companies (% of GDP) (CM.MKT.LCAP.GD.ZS). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/CM.MKT.LCAP.GD.ZS (accessed 2026-07-03).
-- World Federation of Exchanges (WFE), WFE database. Listed domestic companies, total (CM.MKT.LDOM.NO). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/CM.MKT.LDOM.NO (accessed 2026-07-03).
-- International Monetary Fund (IMF), International Financial Statistics. Consumer price index, United States (2010 = 100) (FP.CPI.TOTL). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/FP.CPI.TOTL (accessed 2026-07-03).
+- World Federation of Exchanges (WFE), WFE database. Market capitalization of listed domestic companies (current US$) (CM.MKT.LCAP.CD). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/CM.MKT.LCAP.CD (accessed 2026-07-08).
+- World Federation of Exchanges (WFE), WFE database. Market capitalization of listed domestic companies (% of GDP) (CM.MKT.LCAP.GD.ZS). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/CM.MKT.LCAP.GD.ZS (accessed 2026-07-08).
+- World Federation of Exchanges (WFE), WFE database. Listed domestic companies, total (CM.MKT.LDOM.NO). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/CM.MKT.LDOM.NO (accessed 2026-07-08).
+- International Monetary Fund (IMF), International Financial Statistics. Consumer price index, United States (2010 = 100) (FP.CPI.TOTL). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/FP.CPI.TOTL (accessed 2026-07-08).
