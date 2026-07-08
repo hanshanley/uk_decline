@@ -21,6 +21,7 @@ and monetary series are inflation-adjusted (real) unless explicitly labelled nom
 | Institutional trust | [`trust_data/`](trust_data/README.md) | Trust in government & governance indicators |
 | Migration | [`uk_migration/`](uk_migration/README.md) | UK immigration over time (legal + irregular) |
 | Ageing | [`age_data/`](age_data/README.md) | Age structure & median age: UK vs US/Europe |
+| London & GDP | [`london_data/`](london_data/README.md) | London's share of UK GDP & GDP-per-head concentration |
 
 All output images live in one place: **[`outputs/`](outputs)**, one subfolder per analysis.
 
@@ -51,6 +52,13 @@ Adjusted for population, the referral-to-treatment waiting list has roughly doub
 four nations — and **Wales (251) and Northern Ireland (240 per 1,000) now exceed England (128)**.
 *Source: NHS England / Public Health Scotland / StatsWales / DoH Northern Ireland.*
 
+### Rail — London train disruption has climbed back to early-2000s levels
+![Trains cancelled or significantly late — London & South East](outputs/rail/rail_london_casl.png)
+The share of London & South East trains **cancelled or significantly late has roughly doubled** —
+from ~2.4% (2007) to ~5% (2024) — even though the lenient headline "on time" measure (PPM) has
+stayed broadly flat. *Source: Office of Rail and Road (ORR) Data Portal, Table 3103; London & South
+East reconstructed as a trains-weighted sector aggregate (validated against ORR's official sector figure).*
+
 ### Tax burden — rising tax-to-GDP
 ![Tax-to-GDP over time](outputs/tax/tax_to_gdp_over_time.png)
 *Source: OECD Revenue Statistics & Taxing Wages.*
@@ -68,15 +76,22 @@ UK annual tuition (~$11.4k) now matches the US, while most of the EU remains fre
 ![UK median age over time](outputs/age/median_age_over_time.png)
 *Source: UN Population Division via World Bank WDI.*
 
+### London — a growing share of UK output
+![London's share of UK GDP](outputs/london/london_share_of_uk_gdp.png)
+London now produces **~22.7% of all UK GDP** (up from 19.6% in 1998) on ~13% of the
+population, and its **GDP per head has widened to ~1.73× the UK average**. Economic activity
+has become *more* concentrated in the capital over the past quarter-century.
+*Source: ONS, Regional economic activity by GDP (current prices, all ITL regions).*
+
 ## Repository layout
 
 ```
 uk_decline/
   europe_data/   markets_data/   nhs_data/   tax/
-  tuition/       trust_data/     uk_migration/   age_data/
+  tuition/       trust_data/     uk_migration/   age_data/   rail_data/   london_data/
       └─ each: analysis code + README.md (+ CITATIONS where relevant)
   outputs/       # ALL figures, one subfolder per analysis (tracked; render on GitHub)
-    gdp_income/  stock_markets/  nhs/  tax/  tuition/  trust/  migration/  age/
+    gdp_income/  stock_markets/  nhs/  tax/  tuition/  trust/  migration/  age/  rail/  london/
   data/          # raw / intermediate inputs (git-ignored, regenerable)
   tests/         # test suites
   requirements.txt
@@ -96,6 +111,8 @@ Each analysis runs as a module from the repo root, e.g.:
 ./.venv/bin/python -m europe_data.plot_uk_decline # figures -> outputs/gdp_income/
 ./.venv/bin/python -m markets_data                # UK vs US markets -> outputs/stock_markets/
 ./.venv/bin/python -m nhs_data                    # NHS -> outputs/nhs/
+./.venv/bin/python -m rail_data                   # London rail delays -> outputs/rail/
+./.venv/bin/python -m london_data                 # London's share of UK GDP -> outputs/london/
 ```
 
 See each analysis's README for its exact commands and full source citations.
