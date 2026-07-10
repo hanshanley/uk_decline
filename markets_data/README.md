@@ -33,6 +33,19 @@ exchange rates, not PPP). Series have tail-year gaps (the UK is missing after 20
 are never spliced or interpolated. Full per-metric citations are in
 [`../outputs/stock_markets/stock_market_size_summary.md`](../outputs/stock_markets/stock_market_size_summary.md).
 
+> **UK listed-company counts past 2022 (LSE factsheets).** The World Bank/WFE
+> `CM.MKT.LDOM.NO` series ends at 2022 for the UK, but the LSE publishes the underlying
+> counts monthly as machine-readable factsheets on its documents host (e.g.
+> `docs.londonstockexchange.com/.../Main%20Market%20factsheet%20December%202024.xlsx` and the
+> `AIM factsheet`). `lse_factsheets.py` reads the December factsheets and sums Main Market +
+> AIM to a **UK-domiciled** count, which matches the WB/WFE "listed domestic companies" figure
+> to within **<1%** at the 2022 overlap (WB 1,606 vs LSE 1,619) — so it continues that series
+> almost seamlessly. Regenerate with `python -m markets_data.lse_factsheets` (writes the cited
+> `data/uk_listed_companies_lse.csv`). The scorecard's "UK-listed companies" panel uses the WB
+> series through 2022 and the LSE UK-domiciled count for 2023+ (**1,538 / 1,413 / 1,306** for
+> 2023–2025), with the source switch noted. Every value is read straight from the LSE
+> factsheet; none are estimated or interpolated.
+
 ## Usage
 
 ```bash

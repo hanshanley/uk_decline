@@ -131,6 +131,17 @@ def uk_listed_companies():
     r = _rows(DATA / "stock_market_size_wide.csv")
     pts = {int(x["year"]): float(x["listed_domestic_companies"]) for x in r
            if x["region"] == "United Kingdom" and x.get("listed_domestic_companies")}
+    # The World Bank/WFE "listed domestic companies" series ends at 2022; extend it with the
+    # UK-domiciled count (Main Market + AIM) read straight from the LSE factsheets, which joins
+    # the WB series to within <1% at the 2022 overlap (WB 1,606 vs LSE 1,619).
+    lse_path = DATA / "uk_listed_companies_lse.csv"
+    if lse_path.exists() and pts:
+        wb_last = max(pts)
+        for x in _rows(lse_path):
+            if x["metric"] == "lse_companies_uk" and x.get("value"):
+                y = int(x["year"])
+                if y > wb_last:
+                    pts[y] = float(x["value"])
     ys = sorted(pts)
     return ys, [pts[y] for y in ys]
 
@@ -155,7 +166,7 @@ PANELS = [
     ("Trust in national government", trust_govt, lambda v: f"{v:.0f}%", +1,
      "OECD / Gallup World Poll via OWID", None),
     ("UK-listed companies", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
-     "WFE via World Bank WDI", None),
+     "WFE via World Bank WDI (to 2022); LSE factsheets (2023+)", None),
     ("London's share of UK GDP", london_gdp_share, lambda v: f"{v:.1f}%", -1,
      "ONS, Regional GDP (current prices)", None),
 ]
