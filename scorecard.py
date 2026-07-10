@@ -62,14 +62,6 @@ def gdp_vs_us():
     return ys, [100 * uk[y] / us[y] for y in ys]
 
 
-def stock_vs_us():
-    r = _rows(DATA / "stock_market_size_wide.csv")
-    uk = {int(x["year"]): float(x["market_cap_usd_real"]) for x in r if x["region"] == "United Kingdom" and x.get("market_cap_usd_real")}
-    us = {int(x["year"]): float(x["market_cap_usd_real"]) for x in r if x["region"] == "United States" and x.get("market_cap_usd_real")}
-    ys = sorted(set(uk) & set(us))
-    return ys, [100 * uk[y] / us[y] for y in ys]
-
-
 def nhs_england():
     r = _rows(OUT / "nhs" / "nhs_waiting_times.csv")
     pts = {}
@@ -115,9 +107,22 @@ def net_migration():
     return ys, [pts[y] for y in ys]
 
 
-def median_age():
-    r = _rows(DATA / "age_combined_wide.csv")
-    pts = {int(x["year"]): float(x["median_age_years"]) for x in r if x["iso3"] == "GBR" and x.get("median_age_years")}
+def rail_delays():
+    """Annual mean of London & South East CaSL (% of trains cancelled or significantly late)."""
+    r = _rows(DATA / "rail_performance.csv")
+    buckets: dict[int, list[float]] = {}
+    for x in r:
+        if (x["region"] == "London and South East" and x["metric"] == "casl_pct"
+                and x.get("value")):
+            buckets.setdefault(int(x["year"]), []).append(float(x["value"]))
+    ys = sorted(buckets)
+    return ys, [sum(buckets[y]) / len(buckets[y]) for y in ys]
+
+
+def london_gdp_share():
+    r = _rows(DATA / "london_gdp.csv")
+    pts = {int(x["year"]): float(x["value"]) for x in r
+           if x["region"] == "London" and x["metric"] == "share_of_uk_gdp_pct" and x.get("value")}
     ys = sorted(pts)
     return ys, [pts[y] for y in ys]
 
@@ -139,8 +144,8 @@ COMMON_START = 2007
 PANELS = [
     ("GDP per capita vs the US", gdp_vs_us, lambda v: f"{v:.0f}%", +1,
      "World Bank WDI (CPI-deflated real US$)", None),
-    ("Stock market size vs the US", stock_vs_us, lambda v: f"{v:.0f}%", +1,
-     "WFE/IMF via World Bank WDI (real US$)", None),
+    ("Rail delays, London & SE", rail_delays, lambda v: f"{v:.1f}%", -1,
+     "Office of Rail and Road (ORR), Table 3103 (CaSL)", None),
     ("NHS waiting list, England", nhs_england, lambda v: f"{v/1e6:.1f}M", -1,
      "NHS England", None),
     ("Tax burden (% of GDP)", tax_burden, lambda v: f"{v:.0f}%", -1,
@@ -151,8 +156,8 @@ PANELS = [
      "OECD / Gallup World Poll via OWID", None),
     ("UK-listed companies", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
      "WFE via World Bank WDI", None),
-    ("Median age (years)", median_age, lambda v: f"{v:.0f}", -1,
-     "UN Population Division via World Bank WDI", None),
+    ("London's share of UK GDP", london_gdp_share, lambda v: f"{v:.1f}%", -1,
+     "ONS, Regional GDP (current prices)", None),
 ]
 
 
@@ -222,8 +227,8 @@ def main() -> int:
              "financial crisis.",
              ha="center", fontsize=11.5, color=MUTED)
     fig.text(0.5, 0.015,
-             "All series from official public sources (World Bank, OECD, Eurostat, ONS, NHS, "
-             "UN, Gallup). Real/monetary figures are inflation-adjusted. See per-analysis READMEs.",
+             "All series from official public sources (World Bank, OECD, ONS, NHS, ORR, "
+             "Eurydice/NCES, Gallup). Real/monetary figures are inflation-adjusted. See per-analysis READMEs.",
              ha="center", fontsize=8.5, color=MUTED, style="italic")
 
     fig.tight_layout(rect=[0.01, 0.03, 0.99, 0.92])
