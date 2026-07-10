@@ -35,11 +35,17 @@ transparency.)
   back to a pinned URL), so re-running picks up future ONS revisions.
 - Full citation: [`CITATIONS.md`](CITATIONS.md).
 
-**Data vintage:** the ONS annual ITL series currently ends at **2023**. Regional *annual*
-GDP lags ~18 months, so no 2024 edition exists yet; the timelier quarterly regional product
-can't extend these metrics because it excludes Scotland & Northern Ireland (so it cannot form
-a UK-wide share) and is an index/growth measure, not £ levels. 1998–2023 is therefore the
-maximum defensible range — no later values are fabricated.
+**Data vintage:** the ONS annual ITL series currently ends at **2023** (edition released
+2025-04-17). Regional *annual* GDP requires the full annual UK supply-use balancing, so it
+lags ~1.5 years: per the ONS release calendar, the **1998→2024** edition is scheduled for
+**23 September 2026** (the prior editions landed 1998→2022 in Apr 2024 and 1998→2023 in Apr
+2025). No 2024 outturn exists anywhere before then — verified across the annual regional GDP
+dataset, the regional GVA(balanced) dataset (also ends 2023), the ONS CMD data API
+(`regional-gdp-by-year`, stale at 2021), and direct-guessed `1998to2024` URLs (404). The
+quarterly regional product can't substitute (ONS discontinued it — an "update on reinstating
+quarterly regional GDP estimates" is due 2026-07-31 — and it excludes Scotland & NI and is an
+index, not £ levels, so no UK-wide share can be formed). 1998–2023 is therefore the maximum
+defensible range; no later values are estimated, nowcast, or fabricated.
 
 ## Run
 
