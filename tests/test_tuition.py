@@ -136,10 +136,13 @@ from tuition import build_history
 
 
 def test_real_base_usd_deflation():
-    # nominal 1000 GBP, CPI 80 at year vs 100 base -> real 1250 GBP; /0.8 FX -> 1562.50 USD
-    assert build_history.real_base_usd(1000, cpi_at_year=80, cpi_base=100, fx_base_lcu_per_usd=0.8) == 1562.5
-    # base year itself (cpi_year == cpi_base, USD fx=1) is the identity
-    assert build_history.real_base_usd(9750, cpi_at_year=100, cpi_base=100, fx_base_lcu_per_usd=1.0) == 9750
+    # nominal 1000 GBP at FX 0.8 LCU/USD -> $1250 nominal; US CPI 80 at year vs 100 base
+    # -> inflate to base: 1250 * (100/80) = $1562.50
+    assert build_history.real_base_usd(1000, fx_year_lcu_per_usd=0.8,
+                                       us_cpi_year=80, us_cpi_base=100) == 1562.5
+    # base year itself (US CPI year == base, USD fx=1) is the identity
+    assert build_history.real_base_usd(9750, fx_year_lcu_per_usd=1.0,
+                                       us_cpi_year=100, us_cpi_base=100) == 9750
 
 
 def test_nearest_year_lookup():

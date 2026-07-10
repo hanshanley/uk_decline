@@ -25,8 +25,9 @@ SERIES = {
 }
 SOURCE_NOTE = (
     "Real 2022 USD (inflation-adjusted). Sources: US — NCES Digest 2023 Table 330.10 "
-    "(constant 2022-23 $, BLS CPI); UK — England statutory fee caps (legislation.gov.uk), "
-    "deflated via World Bank CPI + 2022 FX; Germany — Eurydice / HE fee history."
+    "(constant 2022-23 $, BLS CPI); UK — England statutory fee caps (legislation.gov.uk / "
+    "GOV.UK), converted at market exchange rates and deflated by US CPI (World Bank); "
+    "Germany — Eurydice / HE fee history."
 )
 
 
@@ -61,8 +62,10 @@ def plot(out_path: str) -> None:
     ax.set_ylabel("Annual domestic tuition (constant 2022 USD)")
     ax.set_xlabel("Year")
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
+    all_years = [y for pts in data.values() for y, _ in pts]
+    span = f"{min(all_years)}\u2013{max(all_years)}" if all_years else ""
     ax.set_title(
-        "The rise of UK tuition, 1971\u20132022 (real 2022 dollars)\n"
+        f"The rise of UK tuition, {span} (real 2022 dollars)\n"
         "From free to more expensive than US public college",
         fontweight="bold", pad=14,
     )

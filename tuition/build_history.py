@@ -5,8 +5,9 @@ Every figure is traceable to a real primary source:
            taken directly in the table's own **constant 2022-23 dollars** (CPI-adjusted
            by the U.S. Bureau of Labor Statistics). Fetched by ``fetch_nces.py``.
   * UK   — England statutory fee caps (Acts / SIs on legislation.gov.uk), nominal GBP,
-           deflated to constant-2022 GBP using **World Bank CPI (FP.CPI.TOTL)** and
-           converted to USD using the **World Bank 2022 exchange rate (PA.NUS.FCRF)**.
+           converted to USD at the **year's market exchange rate** (World Bank PA.NUS.FCRF)
+           and deflated to constant-2022 USD by **US CPI (FP.CPI.TOTL)** — the same basis as
+           the NCES US series, so UK and US are directly comparable.
   * DE   — Germany (representative EU): no general tuition (0), from Eurydice / HE history.
 
 Output: ``data/processed/tuition_history.csv`` with nominal and real-2022-USD columns and
@@ -32,13 +33,19 @@ def _nearest(series: dict[int, float], year: int) -> tuple[int, float] | None:
     return best, series[best]
 
 
-def real_base_usd(nominal_local: float, cpi_at_year: float, cpi_base: float, fx_base_lcu_per_usd: float) -> float:
-    """Deflate nominal local currency to constant base-year USD.
+def real_base_usd(nominal_local: float, fx_year_lcu_per_usd: float,
+                  us_cpi_year: float, us_cpi_base: float) -> float:
+    """Convert nominal local-currency tuition to constant base-year (2022) USD.
 
-    real_base_local = nominal * (CPI_base / CPI_year);  USD = real_base_local / FX_base.
+    Consistent with the US NCES series (real US$ deflated by US CPI) and the project's
+    house methodology: convert at that **year's market exchange rate**, then deflate by
+    **US CPI** to the base year.
+
+        nominal_usd = nominal_local / FX_year(LCU per US$)
+        real_base_usd = nominal_usd * (US_CPI_base / US_CPI_year)
     """
-    real_local = nominal_local * (cpi_base / cpi_at_year)
-    return real_local / fx_base_lcu_per_usd
+    nominal_usd = nominal_local / fx_year_lcu_per_usd
+    return nominal_usd * (us_cpi_base / us_cpi_year)
 
 
 def load_nces() -> list[dict]:
@@ -63,10 +70,23 @@ def load_manual() -> list[dict]:
 
 
 def deflate_manual(rows: list[dict]) -> list[dict]:
-    """Deflate nominal local tuition to constant-2022 USD via World Bank CPI + FX."""
+    """Convert nominal local tuition to constant-2022 USD, on the SAME basis as the US NCES
+    series: convert at the year's market exchange rate, then deflate by **US** CPI.
+
+    (Earlier versions deflated by each country's own CPI and used a frozen base-year exchange
+    rate; that made the UK/EU rows non-comparable with the US-CPI-based NCES figures and
+    ignored subsequent moves in the exchange rate. We now match the US basis.)
+    """
     iso3s = sorted({r["iso3"] for r in rows})
-    cpi = fetch_series(config.WB_CPI_INDICATOR, iso3s, 1970, config.REAL_BASE_YEAR)
-    fx = fetch_series(config.WB_FX_INDICATOR, iso3s, config.REAL_BASE_YEAR - 3, config.REAL_BASE_YEAR)
+    max_year = max(int(r["year"]) for r in rows)
+    top = max(config.REAL_BASE_YEAR, max_year)
+    # US CPI is the single deflator (base = 2022); market FX per country per year.
+    us_cpi = fetch_series(config.WB_CPI_INDICATOR, ["USA"], 1970, top).get("USA", {})
+    fx = fetch_series(config.WB_FX_INDICATOR, iso3s, 1970, top)
+
+    us_base = _nearest(us_cpi, config.REAL_BASE_YEAR)
+    if not us_base:
+        raise RuntimeError("missing World Bank US CPI; cannot deflate to real 2022 USD")
 
     out = []
     for r in rows:
@@ -74,13 +94,11 @@ def deflate_manual(rows: list[dict]) -> list[dict]:
         nominal = float(r["annual_tuition_local"])
         real_usd = 0.0
         if nominal != 0:
-            cpi_series = cpi.get(iso3, {})
-            base = _nearest(cpi_series, config.REAL_BASE_YEAR)
-            at_year = _nearest(cpi_series, int(r["year"]))
-            fx_base = _nearest(fx.get(iso3, {}), config.REAL_BASE_YEAR)
-            if not (base and at_year and fx_base and fx_base[1]):
-                raise RuntimeError(f"missing World Bank CPI/FX for {iso3}; cannot deflate {r['country']} {r['year']}")
-            real_usd = real_base_usd(nominal, at_year[1], base[1], fx_base[1])
+            us_at = _nearest(us_cpi, int(r["year"]))
+            fx_at = _nearest(fx.get(iso3, {}), int(r["year"]))
+            if not (us_at and fx_at and fx_at[1]):
+                raise RuntimeError(f"missing World Bank US CPI/FX for {iso3}; cannot deflate {r['country']} {r['year']}")
+            real_usd = real_base_usd(nominal, fx_at[1], us_at[1], us_base[1])
         out.append({
             "country": r["country"], "iso3": iso3, "region": r["region"],
             "year": int(r["year"]),
