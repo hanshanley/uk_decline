@@ -22,6 +22,7 @@ and monetary series are inflation-adjusted (real) unless explicitly labelled nom
 | Migration | [`uk_migration/`](uk_migration/README.md) | UK immigration over time (legal + irregular) |
 | Ageing | [`age_data/`](age_data/README.md) | Age structure & median age: UK vs US/Europe |
 | London & GDP | [`london_data/`](london_data/README.md) | London's share of UK GDP & GDP-per-head concentration |
+| Crime | [`crime_data/`](crime_data/README.md) | Long-run crime trend (CSEW) & homicide vs peers |
 
 All output images live in one place: **[`outputs/`](outputs)**, one subfolder per analysis.
 
@@ -83,16 +84,27 @@ population, and its **GDP per head has widened to ~1.73× the UK average**. Econ
 has become *more* concentrated in the capital over the past quarter-century.
 *Source: ONS, Regional economic activity by GDP (current prices, all ITL regions).*
 
+### Crime — the fall is real, but crime has shifted online
+![Total CSEW crime, England & Wales](outputs/crime/crime_csew_total.png)
+Traditional victim-based crime has **fallen dramatically** — from a **19.8M** peak (1995) to
+**~4.4M** incidents (2025) on the Crime Survey for England & Wales. But once **fraud and
+computer misuse** are counted (measured from 2017), total crime is **~9.6M — roughly double**
+the headline, i.e. crime has largely **moved online** rather than disappeared. On homicide,
+the most comparable international measure, the UK (~1.1 per 100k) sits **far below the US
+(~5.8)** and around its European peers. *Source: ONS Crime Survey for England & Wales;
+UN Office on Drugs and Crime (UNODC) via World Bank WDI.*
+
 ## Repository layout
 
 ```
 uk_decline/
   europe_data/   markets_data/   nhs_data/   tax/
   tuition/       trust_data/     uk_migration/   age_data/   rail_data/   london_data/
+  crime_data/
       └─ each: analysis code + README.md (+ CITATIONS where relevant)
   vizstyle/      # shared "Substack" plotting house style (palette + rcParams + helpers)
   outputs/       # ALL figures, one subfolder per analysis (tracked; render on GitHub)
-    gdp_income/  stock_markets/  nhs/  tax/  tuition/  trust/  migration/  age/  rail/  london/
+    gdp_income/  stock_markets/  nhs/  tax/  tuition/  trust/  migration/  age/  rail/  london/  crime/
   data/          # raw / intermediate inputs (git-ignored, regenerable)
   tests/         # test suites
   requirements.txt
@@ -114,6 +126,7 @@ Each analysis runs as a module from the repo root, e.g.:
 ./.venv/bin/python -m nhs_data                    # NHS -> outputs/nhs/
 ./.venv/bin/python -m rail_data                   # London rail delays -> outputs/rail/
 ./.venv/bin/python -m london_data                 # London's share of UK GDP -> outputs/london/
+./.venv/bin/python -m crime_data                  # crime trend & homicide -> outputs/crime/
 ```
 
 See each analysis's README for its exact commands and full source citations.
