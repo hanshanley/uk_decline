@@ -44,6 +44,7 @@ PINNED_XLSX = (
 )
 SOURCE = ("Office for National Statistics (ONS), Regional economic activity by gross "
           "domestic product, UK: Regional GDP, all ITL regions (current market prices)")
+RELEASE_SEARCH_URL = "https://api.beta.ons.gov.uk/v1/search"
 
 LONDON_CODE = "TLI"   # London ITL1 (ONS geography code)
 UK_CODE = "UK"
@@ -61,6 +62,64 @@ def _ensure_ons_host(url: str) -> None:
         raise ValueError(f"refusing to fetch untrusted host: {url!r}")
 
 
+def _edition_links(html: str) -> list[tuple[int, str]]:
+    """Return ``[(end_year, href), ...]`` for dated regional-GDP workbook links."""
+    links: list[tuple[int, str]] = []
+    hrefs = re.findall(r'href="(/file\?uri=[^"]+\.xlsx)"', html, flags=re.I)
+    for href in hrefs:
+        m = re.search(r"/1998to(\d{4})/", href)
+        if m is not None:
+            links.append((int(m.group(1)), href))
+    return links
+
+
+def latest_published_year(page_url: str = DATASET_PAGE, timeout: int = 60) -> int:
+    """Return the latest end-year currently published on the ONS dataset page."""
+    _ensure_ons_host(page_url)
+    resp = _get(page_url, timeout=timeout)
+    links = _edition_links(resp.text)
+    if not links:
+        raise RuntimeError("ONS regional-GDP page contains no dated workbook editions")
+    return max(year for year, _href in links)
+
+
+def next_release(target_year: int, timeout: int = 60) -> dict | None:
+    """Return the ONS release-calendar entry for ``1998 to target_year``, if scheduled.
+
+    This queries the official ONS search API rather than hard-coding a date. Returned keys
+    are ``title``, ``release_date`` and ``uri``.
+    """
+    params = {
+        "q": f"Regional economic activity by gross domestic product UK 1998 to {target_year}",
+        "content_type": "release",
+        "limit": 20,
+    }
+    resp = requests.get(RELEASE_SEARCH_URL, params=params, timeout=timeout,
+                        headers={"User-Agent": _USER_AGENT})
+    resp.raise_for_status()
+    needle = f"1998 to {target_year}"
+    for item in resp.json().get("items", []):
+        title = str(item.get("title", ""))
+        if needle in title:
+            return {
+                "title": title,
+                "release_date": item.get("release_date"),
+                "uri": item.get("uri"),
+            }
+    return None
+
+
+def availability_status(target_year: int = 2024, timeout: int = 60) -> dict:
+    """Return official publication status for a requested regional-GDP end-year."""
+    latest = latest_published_year(timeout=timeout)
+    return {
+        "latest_published_year": latest,
+        "target_year": target_year,
+        "available": latest >= target_year,
+        "next_release": None if latest >= target_year else next_release(target_year, timeout),
+    }
+
+
 def resolve_xlsx_url(page_url: str = DATASET_PAGE, timeout: int = 60) -> str:
     """Return the newest ``.xlsx`` edition linked on the ONS dataset page.
 
@@ -71,16 +130,9 @@ def resolve_xlsx_url(page_url: str = DATASET_PAGE, timeout: int = 60) -> str:
     _ensure_ons_host(page_url)
     try:
         resp = _get(page_url, timeout=timeout)
-        hrefs = re.findall(r'href="(/file\?uri=[^"]+\.xlsx)"', resp.text, flags=re.I)
-        best, best_year = None, 0
-        for href in hrefs:
-            m = re.search(r"/1998to(\d{4})/", href)
-            if m is None:
-                continue  # not a dated regional-GDP edition; skip
-            year = int(m.group(1))
-            if year > best_year:
-                best, best_year = href, year
-        if best:
+        links = _edition_links(resp.text)
+        if links:
+            _year, best = max(links)
             return f"https://{ONS_HOST}{best}"
     except Exception as exc:  # pragma: no cover - network/parse failure path
         print(f"[london_data] could not resolve latest xlsx ({exc}); using pinned URL.")

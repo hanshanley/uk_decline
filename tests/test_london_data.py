@@ -124,3 +124,37 @@ def test_resolve_xlsx_url_prefers_pinned_when_no_dated_edition(monkeypatch):
     # No /1998toYYYY/ edition link -> must fall back to the pinned URL, not the stray xlsx.
     assert ons.resolve_xlsx_url() == ons.PINNED_XLSX
 
+
+def test_edition_links_and_latest_year(monkeypatch):
+    html = """
+    <a href="/file?uri=/x/1998to2023/a.xlsx">2023</a>
+    <a href="/file?uri=/x/current/a.xlsx">current</a>
+    <a href="/file?uri=/x/1998to2024/b.xlsx">2024</a>
+    """
+    assert ons._edition_links(html) == [
+        (2023, "/file?uri=/x/1998to2023/a.xlsx"),
+        (2024, "/file?uri=/x/1998to2024/b.xlsx"),
+    ]
+
+    class _Resp:
+        text = html
+
+    monkeypatch.setattr(ons, "_get", lambda url, timeout=60: _Resp())
+    assert ons.latest_published_year() == 2024
+
+
+def test_availability_status_uses_release_calendar(monkeypatch):
+    monkeypatch.setattr(ons, "latest_published_year", lambda timeout=60: 2023)
+    monkeypatch.setattr(
+        ons,
+        "next_release",
+        lambda year, timeout=60: {
+            "title": "Regional economic activity by gross domestic product, UK: 1998 to 2024",
+            "release_date": "2026-09-23T08:30:00.000Z",
+            "uri": "/releases/example",
+        },
+    )
+    status = ons.availability_status(2024)
+    assert status["available"] is False
+    assert status["latest_published_year"] == 2023
+    assert status["next_release"]["release_date"].startswith("2026-09-23")

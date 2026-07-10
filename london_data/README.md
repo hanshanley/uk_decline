@@ -55,7 +55,17 @@ defensible range; no later values are estimated, nowcast, or fabricated.
 
 # rebuild charts from an existing CSV (no fetch):
 ./.venv/bin/python -m london_data --from-csv data/london_gdp.csv
+
+# report the latest official edition and the next scheduled release
+./.venv/bin/python -m london_data --status
+
+# after publication, refresh and refuse to accept an older edition silently
+./.venv/bin/python -m london_data --require-year 2024
 ```
+
+The resolver selects the highest `1998toYYYY` edition linked by ONS, so no code change is
+needed when the September 2026 release appears. `--require-year` turns stale data into an
+explicit failure rather than silently rebuilding a chart that still ends in 2023.
 
 ## Outputs
 

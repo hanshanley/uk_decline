@@ -16,16 +16,17 @@ from __future__ import annotations
 
 import pathlib
 
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 
-from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, RC_PARAMS as _THEME, house_style, white_stroke
-
-_STROKE = white_stroke()
+from vizstyle import ACCENT, BLUE, MUTED, TEXT, house_style, source_note
 
 LONDON = "London and South East"
 GB = "Great Britain"
+
+house_style()
 
 
 def _load(source) -> pd.DataFrame:
@@ -43,55 +44,56 @@ def _maa(df: pd.DataFrame, region: str, metric: str) -> pd.DataFrame:
     return sub.dropna(subset=["maa"])
 
 
-def _end_label(ax, xs, ys, text, color):
-    ax.text(xs.iloc[-1], ys.iloc[-1], f"  {text}", fontsize=10.5, fontweight="bold",
-            color=color, va="center", ha="left", path_effects=_STROKE)
-
-
-def _chart(df, metric, title, subtitle, ylabel, filename, out_dir, *, annotate_2007=None):
-    plt.rcParams.update(_THEME)
+def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
     lon = _maa(df, LONDON, metric)
     gb = _maa(df, GB, metric)
-    if lon.empty:
+    if lon.empty or gb.empty:
         return None
 
     fig, ax = plt.subplots(figsize=(11, 6))
-    ax.plot(gb["date"], gb["maa"], color=BLUE, linewidth=1.8, label="Great Britain")
-    ax.plot(lon["date"], lon["maa"], color=ACCENT, linewidth=2.8, label="London & South East")
-    _end_label(ax, gb["date"], gb["maa"], "Great Britain", BLUE)
-    _end_label(ax, lon["date"], lon["maa"], "London & SE", ACCENT)
+    line_style = {
+        "marker": "o",
+        "markevery": 4,
+        "markersize": 4.2,
+        "markeredgecolor": "white",
+        "markeredgewidth": 0.8,
+        "linewidth": 2.4,
+    }
+    ax.plot(gb["date"], gb["maa"], color=BLUE, label="Great Britain", **line_style)
+    ax.plot(lon["date"], lon["maa"], color=ACCENT, label="London & South East", **line_style)
 
-    if annotate_2007 is not None:
-        row07 = lon[lon["date"].dt.year == 2007]
-        if not row07.empty:
-            y07 = row07["maa"].iloc[-1]
-            ylast = lon["maa"].iloc[-1]
-            ax.annotate(annotate_2007.format(y07=y07, ylast=ylast),
-                        xy=(row07["date"].iloc[-1], y07), xytext=(0.42, 0.80),
-                        textcoords="axes fraction", fontsize=11, color=MUTED,
-                        ha="center",
-                        arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8, alpha=0.6))
-
-    ax.set_title(title, fontweight="bold", pad=30)
-    ax.text(0.5, 1.015, subtitle, transform=ax.transAxes, ha="center", va="bottom",
-            fontsize=12, color=MUTED)
-    ax.set_xlabel("Year", labelpad=2)
-    ax.set_ylabel(ylabel, labelpad=2)
+    ax.set_title(title, fontweight="bold", pad=18)
+    ax.text(0.5, 1.01, subtitle, transform=ax.transAxes, ha="center", va="bottom",
+            fontsize=10.5, color=MUTED)
+    ax.set_xlabel("Period", labelpad=4)
+    ax.set_ylabel(ylabel, labelpad=4)
     ax.yaxis.set_major_locator(mtick.MaxNLocator(integer=True))
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _p: f"{v:.0f}%"))
+    ax.xaxis.set_major_locator(mdates.YearLocator(4))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
     ax.grid(axis="y")
     ax.set_axisbelow(True)
-    ax.margins(x=0.05)
-    fig.text(0.01, 0.01,
-             "Data: Office of Rail and Road (ORR) Data Portal, Table 3103 (PPM & CaSL by "
-             "operator). London & South East = trains-weighted sector aggregate.",
-             ha="left", fontsize=8, color=MUTED, style="italic")
-    plt.tight_layout(pad=0.5)
-    plt.subplots_adjust(bottom=0.12)
+    ax.margins(x=0.035)
+    ax.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, 0.98),
+        ncol=2,
+        frameon=False,
+        labelcolor=TEXT,
+        columnspacing=1.8,
+        handlelength=2.0,
+    )
+    fig.autofmt_xdate(rotation=30, ha="right")
+    source_note(
+        fig,
+        "Source: Office of Rail and Road (ORR), Data Portal Table 3103. "
+        "London & South East is a trains-weighted sector aggregate.",
+    )
+    fig.tight_layout(rect=[0, 0.055, 1, 1], pad=0.7)
     out_dir = pathlib.Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / filename
-    plt.savefig(out_path, dpi=200, bbox_inches="tight")
+    fig.savefig(out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     return out_path
 
@@ -101,19 +103,18 @@ def make_charts(source, out_dir="outputs/rail") -> list[pathlib.Path]:
     written = []
     p = _chart(
         df, "casl_pct",
-        "Trains cancelled or significantly late \u2014 London & South East",
-        "Serious disruption has roughly doubled since the late 2000s",
-        "% of trains cancelled or significantly late (higher = worse)",
+        "Rail disruption \u2014 London & South East",
+        "Cancelled or significantly late trains, 4-quarter moving average",
+        "Share of trains (%)\n(higher = worse)",
         "rail_london_casl.png", out_dir,
-        annotate_2007="{y07:.1f}% in 2007, now {ylast:.1f}%",
     )
     if p:
         written.append(p)
     p = _chart(
         df, "ppm_pct",
-        "Trains 'on time' (PPM) \u2014 London & South East",
-        "The lenient headline punctuality measure has stayed broadly flat",
-        "% of trains on time (PPM)",
+        "Rail punctuality \u2014 London & South East",
+        "Public Performance Measure (PPM), 4-quarter moving average",
+        "Trains meeting PPM (%)",
         "rail_london_ppm.png", out_dir,
     )
     if p:
