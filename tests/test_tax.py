@@ -187,6 +187,23 @@ def test_source_modules_declare_owned_metrics():
     assert not set(revenue.METRICS) & set(taxing_wages.METRICS)
 
 
+def test_live_validation_checks_each_variant_comparators():
+    from tax import fetch_tax
+
+    complete = [
+        combine.make_row(
+            iso3, 2024, "tax_wedge_pct", value, "live",
+            "single_nokids", "100aw",
+        )
+        for iso3, value in (("GBR", 30.0), ("USA", 29.0), ("FRA", 40.0))
+    ]
+    fetch_tax._validate_live_rows("taxing_wages", complete, ("tax_wedge_pct",))
+
+    incomplete = [r for r in complete if r["iso3"] != "USA"]
+    with pytest.raises(RuntimeError):
+        fetch_tax._validate_live_rows("taxing_wages", incomplete, ("tax_wedge_pct",))
+
+
 def test_fetch_tax_scopes_fallback_per_source(tmp_path, monkeypatch):
     """Offline run must not leak one source's metrics into another's per-source CSV."""
     import csv as _csv

@@ -195,7 +195,7 @@ def tax_wedge_by_earnings(rows: list[dict], out_path: str, year: Optional[int] =
         labels.append(label)
         used_year = used_year or target
         for k in series:
-            series[k].append(vals[k] if vals[k] is not None else 0.0)
+            series[k].append(vals[k])
     if not labels:
         return None
 
@@ -204,11 +204,21 @@ def tax_wedge_by_earnings(rows: list[dict], out_path: str, year: Optional[int] =
     fig, ax = plt.subplots(figsize=(11, 6.5))
     for i, key in enumerate(("uk", "europe_median", "us")):
         offsets = [xi + (i - 1) * width for xi in x]
+        missing = [v is None for v in series[key]]
+        heights = [0.0 if is_missing else v for v, is_missing in zip(series[key], missing)]
         bars = ax.bar(
-            offsets, series[key], width, color=SERIES_COLORS[key], label=SERIES_LABELS[key],
+            offsets, heights, width, color=SERIES_COLORS[key], label=SERIES_LABELS[key],
             edgecolor=BG, linewidth=0.8,
         )
-        for rect in bars:
+        for rect, is_missing in zip(bars, missing):
+            if is_missing:
+                rect.set_alpha(0.0)
+                ax.annotate(
+                    "N/A", xy=(rect.get_x() + rect.get_width() / 2, 0),
+                    xytext=(0, 3), textcoords="offset points",
+                    ha="center", va="bottom", color=MUTED, fontsize=8,
+                )
+                continue
             h = rect.get_height()
             ax.annotate(
                 f"{h:.1f}%", xy=(rect.get_x() + rect.get_width() / 2, h),

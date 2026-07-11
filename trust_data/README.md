@@ -54,9 +54,9 @@ citations reproduced here.
   (column `trust_in_government`, a percentage).
 - **Coverage:** UK 2007–2024 (survey waves); 27 of our 29 countries.
 - **Live retrieval:** `trust_data/owid.py` downloads and parses the machine-readable CSV on
-  every production run. `trust_data/oecd.py` also retrieves the direct OECD SDMX dataflow
-  (`OECD.GOV.GIP,DSD_GOV_INT@DF_GOV_TDG_2025`, measure `TRUST_NG`, scale `HMH`); direct OECD
-  rows take precedence for matching country-years.
+  every production run. `trust_data/oecd.py` can validate the separate OECD Drivers of Trust
+  SDMX dataflow (`TRUST_NG`, scale `HMH`), but those observations are not spliced into this
+  trend because they come from a different survey instrument.
 - **`source` column value:**
   `OECD Trust in Government via Our World in Data (grapher: oecd-average-trust-in-governments)`.
 
@@ -90,7 +90,7 @@ Outputs (written to `data/trust/`):
 | File | Contents |
 |---|---|
 | `worldbank_wgi.csv` | Live WGI rows (tidy long) |
-| `oecd_trust_national_govt.csv` | Live OECD SDMX plus live OWID/OECD historical survey rows |
+| `oecd_trust_national_govt.csv` | Live OWID/OECD historical survey rows |
 | `trust_combined_long.csv` / `trust_combined_wide.csv` | Combined tidy tables |
 | `manifest.json` | Run metadata: row counts, year span, **the exact `sources` list** |
 | `processed/trust_summary.csv` | UK trend summary (first/latest/change/direction, vs EU-27 & US) |

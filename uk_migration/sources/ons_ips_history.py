@@ -46,8 +46,8 @@ _GROUP_COL: dict[str, int] = {
 
 # offset within a group -> (metric, legality, flow_type)
 _MEASURES: list[tuple[int, str, str, str]] = [
-    (0, "immigration_by_origin", schema.LEGAL, schema.INFLOW),
-    (1, "emigration_by_origin", schema.LEGAL, schema.OUTFLOW),
+    (0, "immigration_by_origin", schema.TOTAL, schema.INFLOW),
+    (1, "emigration_by_origin", schema.TOTAL, schema.OUTFLOW),
     (2, "net_migration_by_origin", schema.TOTAL, schema.NET),
 ]
 

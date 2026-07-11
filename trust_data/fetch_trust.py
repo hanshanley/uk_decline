@@ -22,7 +22,7 @@ import sys
 
 from tqdm import tqdm
 
-from trust_data import combine, oecd, owid, worldbank
+from trust_data import combine, countries, metrics, owid, worldbank
 
 SOURCES = ("oecd", "worldbank")
 
@@ -50,14 +50,27 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def _fetch_oecd(start: int, end: int) -> list[dict]:
-    """OECD SDMX rows, completed from the live OWID/OECD historical CSV."""
-    live = oecd.fetch(start, end)
-    historical = owid.fetch(start, end)
-    have = {(r["iso3"], r["year"], r["metric"]) for r in live}
-    filled = [r for r in historical if (r["iso3"], r["year"], r["metric"]) not in have]
-    if filled:
-        tqdm.write(f"  oecd: completed {len(filled)} rows from live OWID/OECD data")
-    return live + filled
+    """Consistent historical trust series fetched live from OWID/OECD."""
+    return owid.fetch(start, end)
+
+
+def _validate_source_rows(name: str, rows: list[dict], owned: tuple[str, ...]) -> None:
+    """Require every metric to contain the UK, US, and at least one EU comparator."""
+    if not rows:
+        raise RuntimeError(f"{name}: online source returned no rows")
+    incomplete = []
+    for metric in owned:
+        metric_countries = {r["iso3"] for r in rows if r["metric"] == metric}
+        has_europe = any(
+            countries.group_for_iso3(iso3) == countries.EU
+            for iso3 in metric_countries
+        )
+        if not {"GBR", "USA"} <= metric_countries or not has_europe:
+            incomplete.append(metric)
+    if incomplete:
+        raise RuntimeError(
+            f"{name}: incomplete online response for metrics {incomplete}"
+        )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -67,14 +80,23 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     fetchers = {
-        "oecd": ("oecd_trust_national_govt", lambda: _fetch_oecd(args.start, args.end)),
-        "worldbank": ("worldbank_wgi", lambda: worldbank.fetch(args.start, args.end)),
+        "oecd": (
+            "oecd_trust_national_govt",
+            lambda: _fetch_oecd(args.start, args.end),
+            tuple(metrics.SURVEY_METRICS),
+        ),
+        "worldbank": (
+            "worldbank_wgi",
+            lambda: worldbank.fetch(args.start, args.end),
+            tuple(metrics.GOVERNANCE_METRICS),
+        ),
     }
 
     grouped: list[tuple[str, list[dict]]] = []
     for name in tqdm(args.sources, desc="sources", unit="src"):
-        stem, fn = fetchers[name]
+        stem, fn, owned = fetchers[name]
         rows = fn()
+        _validate_source_rows(name, rows, owned)
         tqdm.write(f"  {name}: {len(rows)} rows")
         grouped.append((stem, rows))
 

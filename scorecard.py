@@ -36,6 +36,7 @@ REQUIRED_INPUTS = {
     DATA / "trust" / "trust_combined_long.csv": ".venv/bin/python -m trust_data.fetch_trust",
     DATA / "rail_performance.csv": ".venv/bin/python -m rail_data",
     DATA / "stock_market_size_wide.csv": ".venv/bin/python -m markets_data",
+    DATA / "uk_listed_companies_lse.csv": ".venv/bin/python -m markets_data.lse_factsheets",
     DATA / "london_gdp.csv": ".venv/bin/python -m london_data",
 }
 

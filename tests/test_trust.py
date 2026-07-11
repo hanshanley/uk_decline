@@ -205,11 +205,16 @@ def _run() -> int:
 
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0
+    skipped = 0
     for t in tests:
         mp = _MP()
         try:
-            if "monkeypatch" in t.__code__.co_varnames[: t.__code__.co_argcount]:
+            fixtures = t.__code__.co_varnames[: t.__code__.co_argcount]
+            if "monkeypatch" in fixtures:
                 t(mp)
+            elif fixtures:
+                skipped += 1
+                continue
             else:
                 t()
             print(f"ok   {t.__name__}")
@@ -218,7 +223,7 @@ def _run() -> int:
             print(f"FAIL {t.__name__}: {e}")
         finally:
             mp.undo()
-    print(f"\n{len(tests) - failed}/{len(tests)} passed")
+    print(f"\n{len(tests) - failed - skipped}/{len(tests)} passed; {skipped} skipped")
     return 1 if failed else 0
 
 

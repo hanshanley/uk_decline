@@ -43,7 +43,7 @@ def _fetch_indicator(indicator: str, start: int, end: int) -> list[dict]:
             },
         )
         if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
-            return out
+            raise RuntimeError(f"malformed World Bank response for {indicator}, page {page}")
         meta, data = payload[0], payload[1]
         for record in data:
             value = record.get("value")
@@ -72,5 +72,8 @@ def fetch(start: int = 1960, end: int | None = None) -> list[dict]:
         end = datetime.now().year
     out: list[dict] = []
     for indicator in INDICATORS:
-        out.extend(_fetch_indicator(indicator, start, end))
+        rows = _fetch_indicator(indicator, start, end)
+        if not rows:
+            raise RuntimeError(f"World Bank returned no observations for {indicator}")
+        out.extend(rows)
     return out

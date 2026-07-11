@@ -34,6 +34,29 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SOURCES = ("structure", "pyramids")  # median age is derived from pyramids, not fetched
 
 
+def _validate_live_rows(
+    name: str,
+    rows: list[dict],
+    owned: tuple[str, ...],
+    start: int,
+    end: int,
+) -> None:
+    """Reject partial API responses rather than publishing incomplete datasets."""
+    observed = {(r["iso3"], r["year"], r["metric"]) for r in rows}
+    expected = {
+        (iso3, year, metric)
+        for iso3 in config.iso3_codes()
+        for year in range(start, end + 1)
+        for metric in owned
+    }
+    missing = sorted(expected - observed)
+    if missing:
+        raise RuntimeError(
+            f"{name}: incomplete online response; missing {len(missing)} "
+            f"country-year-metric observations (first: {missing[:5]})"
+        )
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Fetch UK vs US vs Europe age-distribution data (World Bank WDI, no key).",
@@ -117,6 +140,7 @@ def main(argv: list[str] | None = None) -> int:
 
     def with_fallback(name: str, rows: list[dict], owned: tuple[str, ...]) -> list[dict]:
         if rows:
+            _validate_live_rows(name, rows, owned, args.start, args.end)
             return rows
         if not args.allow_snapshot_fallback:
             raise RuntimeError(f"{name}: online source returned no rows")

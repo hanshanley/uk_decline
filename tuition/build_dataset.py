@@ -138,6 +138,13 @@ def main() -> None:
         rates = fetch_rates_for_years(requested)
         save_rates(rates)
         deflator = _us_cpi_deflator()
+        missing_cpi = sorted(
+            {int(row["year"]) for row in rows} - set(deflator)
+        )
+        if missing_cpi:
+            raise RuntimeError(
+                f"World Bank returned no US CPI deflator for years {missing_cpi}"
+            )
         fetched = sum(1 for rec in rates.values() if rec["fx_lcu_per_usd"] is not None)
         print(f"[build] fetched {fetched} source-year World Bank FX observations + US CPI deflator")
 

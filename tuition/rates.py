@@ -105,18 +105,15 @@ def fetch_rates_for_years(
     if not requested:
         return {}
     all_years = {year for years in requested.values() for year in years}
-    series: dict[str, dict[int, float]] = {}
-    try:
-        series = _fetch_series(
-            config.WB_FX_INDICATOR,
-            list(requested),
-            min(all_years) - 3,
-            max(all_years) + 3,
-        )
-    except Exception as exc:  # pragma: no cover - network failure path
-        print(f"[rates] source-year World Bank FX fetch failed ({exc}).")
+    series = _fetch_series(
+        config.WB_FX_INDICATOR,
+        list(requested),
+        min(all_years) - 3,
+        max(all_years) + 3,
+    )
 
     out: dict[tuple[str, int], dict] = {}
+    missing: list[tuple[str, int]] = []
     for iso3, years in requested.items():
         country = config.BY_ISO3[iso3]
         available = series.get(iso3, {})
@@ -130,11 +127,19 @@ def fetch_rates_for_years(
                 rec.update({"fx_lcu_per_usd": 1.0, "fx_year": year})
             elif available:
                 fx_year = min(available, key=lambda y: (abs(y - year), -y))
-                rec.update({
-                    "fx_lcu_per_usd": available[fx_year],
-                    "fx_year": fx_year,
-                })
+                if abs(fx_year - year) <= 3:
+                    rec.update({
+                        "fx_lcu_per_usd": available[fx_year],
+                        "fx_year": fx_year,
+                    })
+                else:
+                    missing.append((iso3, year))
+            else:
+                missing.append((iso3, year))
             out[(iso3, year)] = rec
+    if missing:
+        details = ", ".join(f"{iso3}:{year}" for iso3, year in missing)
+        raise RuntimeError(f"World Bank returned no FX observations for {details}")
     return out
 
 

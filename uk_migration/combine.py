@@ -26,7 +26,7 @@ COMBINED_CSV = PROCESSED_DIR / "uk_migration_long.csv"
 def _write_csv(path: Path, rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=list(schema.FIELDS))
+        writer = csv.DictWriter(fh, fieldnames=list(schema.FIELDS), lineterminator="\n")
         writer.writeheader()
         for row in sorted(rows, key=lambda r: (r["metric"], r["category"], r["period"])):
             writer.writerow(row)

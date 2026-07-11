@@ -24,11 +24,34 @@ import sys
 
 from tqdm import tqdm
 
-from tax import charts, combine, fallback, revenue, stats, taxing_wages
+from tax import charts, combine, config, fallback, revenue, stats, taxing_wages
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SOURCES = ("revenue", "taxing_wages")
+
+
+def _validate_live_rows(name: str, rows: list[dict], owned: tuple[str, ...]) -> None:
+    """Reject partial OECD responses that omit an owned metric or headline comparator."""
+    missing_metrics = set(owned) - {r["metric"] for r in rows}
+    incomplete_variants = []
+    variants = {
+        (r["metric"], r["household"], r["earnings"])
+        for r in rows
+    }
+    for variant in sorted(variants):
+        countries = {
+            r["iso3"] for r in rows
+            if (r["metric"], r["household"], r["earnings"]) == variant
+        }
+        has_europe = any(config.region_for_iso3(iso3) == config.EUR for iso3 in countries)
+        if not {"GBR", "USA"} <= countries or not has_europe:
+            incomplete_variants.append(variant)
+    if missing_metrics or incomplete_variants:
+        raise RuntimeError(
+            f"{name}: incomplete online response; missing metrics "
+            f"{sorted(missing_metrics)}, incomplete variants {incomplete_variants}"
+        )
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -121,8 +144,11 @@ def main(argv: list[str] | None = None) -> int:
         try:
             rows = fn(args.start, args.end)
         except Exception as exc:  # pragma: no cover - network failure path
-            tqdm.write(f"  {name}: fetch failed ({exc}); trying fallback")
+            action = "trying explicit snapshot fallback" if args.allow_snapshot_fallback else "aborting"
+            tqdm.write(f"  {name}: fetch failed ({exc}); {action}")
             rows = []
+        if rows:
+            _validate_live_rows(name, rows, owned)
         if not rows:
             if not args.allow_snapshot_fallback:
                 raise RuntimeError(f"{name}: online source returned no rows")

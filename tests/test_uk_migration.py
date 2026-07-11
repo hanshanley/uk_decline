@@ -228,6 +228,6 @@ def test_ons_ips_history_parse_by_origin_in_thousands():
     assert by[("net_migration_by_origin", "all")]["value"] == -60_000.0
     assert by[("net_migration_by_origin", "all")]["flow_type"] == schema.NET
     assert by[("immigration_by_origin", "british")]["value"] == 71_000.0
-    assert by[("immigration_by_origin", "british")]["legality"] == schema.LEGAL
+    assert by[("immigration_by_origin", "british")]["legality"] == schema.TOTAL
     # '-' cells are skipped, not turned into 0
     assert ("immigration_by_origin", "eu") not in by
