@@ -49,62 +49,62 @@ GBR,United Kingdom,2022,asylum_applications_per_1000_pop,main_applicant,1.137678
 GBR,United Kingdom,2023,asylum_applications_per_1000_pop,main_applicant,0.9990660479234159,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2024,asylum_applications_per_1000_pop,main_applicant,1.188897388894502,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2025,asylum_applications_per_1000_pop,main_applicant,1.1820916142587823,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2012,emigration,all,448000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2013,emigration,all,469000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2014,emigration,all,494000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2015,emigration,all,494000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2016,emigration,all,523000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2017,emigration,all,544000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2018,emigration,all,549000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2019,emigration,all,605000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2020,emigration,all,569000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2021,emigration,all,480000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2022,emigration,all,508000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2023,emigration,all,593000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2024,emigration,all,680000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2025,emigration,all,642000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2012,emigration,british,151000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2013,emigration,british,157000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2014,emigration,british,161000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2015,emigration,british,151000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2016,emigration,british,163000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2017,emigration,british,164000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2018,emigration,british,147000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2019,emigration,british,153000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2020,emigration,british,130000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2021,emigration,british,233000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2022,emigration,british,247000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2023,emigration,british,255000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2024,emigration,british,257000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2025,emigration,british,246000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2012,emigration,eu,128000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2013,emigration,eu,141000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2014,emigration,eu,180000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2015,emigration,eu,193000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2016,emigration,eu,213000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2017,emigration,eu,235000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2018,emigration,eu,250000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2019,emigration,eu,269000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2020,emigration,eu,247000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2021,emigration,eu,159000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2022,emigration,eu,151000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2023,emigration,eu,156000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2024,emigration,eu,155000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2025,emigration,eu,118000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2012,emigration,non_eu,169000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2013,emigration,non_eu,171000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2014,emigration,non_eu,154000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2015,emigration,non_eu,150000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2016,emigration,non_eu,147000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2017,emigration,non_eu,144000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2018,emigration,non_eu,152000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2019,emigration,non_eu,182000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2020,emigration,non_eu,192000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2021,emigration,non_eu,88000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2022,emigration,non_eu,110000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2023,emigration,non_eu,182000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2024,emigration,non_eu,269000.0,people,legal,outflow,ONS Long-Term International Migration
-GBR,United Kingdom,2025,emigration,non_eu,278000.0,people,legal,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2012,emigration,all,448000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2013,emigration,all,469000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2014,emigration,all,494000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2015,emigration,all,494000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2016,emigration,all,523000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2017,emigration,all,544000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2018,emigration,all,549000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2019,emigration,all,605000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2020,emigration,all,569000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2021,emigration,all,480000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2022,emigration,all,508000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2023,emigration,all,593000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2024,emigration,all,680000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2025,emigration,all,642000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2012,emigration,british,151000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2013,emigration,british,157000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2014,emigration,british,161000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2015,emigration,british,151000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2016,emigration,british,163000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2017,emigration,british,164000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2018,emigration,british,147000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2019,emigration,british,153000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2020,emigration,british,130000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2021,emigration,british,233000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2022,emigration,british,247000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2023,emigration,british,255000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2024,emigration,british,257000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2025,emigration,british,246000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2012,emigration,eu,128000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2013,emigration,eu,141000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2014,emigration,eu,180000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2015,emigration,eu,193000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2016,emigration,eu,213000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2017,emigration,eu,235000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2018,emigration,eu,250000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2019,emigration,eu,269000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2020,emigration,eu,247000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2021,emigration,eu,159000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2022,emigration,eu,151000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2023,emigration,eu,156000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2024,emigration,eu,155000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2025,emigration,eu,118000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2012,emigration,non_eu,169000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2013,emigration,non_eu,171000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2014,emigration,non_eu,154000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2015,emigration,non_eu,150000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2016,emigration,non_eu,147000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2017,emigration,non_eu,144000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2018,emigration,non_eu,152000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2019,emigration,non_eu,182000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2020,emigration,non_eu,192000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2021,emigration,non_eu,88000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2022,emigration,non_eu,110000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2023,emigration,non_eu,182000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2024,emigration,non_eu,269000.0,people,total,outflow,ONS Long-Term International Migration
+GBR,United Kingdom,2025,emigration,non_eu,278000.0,people,total,outflow,ONS Long-Term International Migration
 GBR,United Kingdom,1964,emigration_by_origin,all,271000.0,people,legal,outflow,"ONS Long-Term International Migration (IPS), 1964-2015 [ad hoc 006408]"
 GBR,United Kingdom,1965,emigration_by_origin,all,284000.0,people,legal,outflow,"ONS Long-Term International Migration (IPS), 1964-2015 [ad hoc 006408]"
 GBR,United Kingdom,1966,emigration_by_origin,all,302000.0,people,legal,outflow,"ONS Long-Term International Migration (IPS), 1964-2015 [ad hoc 006408]"
@@ -446,76 +446,76 @@ GBR,United Kingdom,2012,emigration_by_origin_per_1000_pop,all,5.038376418514856,
 GBR,United Kingdom,2013,emigration_by_origin_per_1000_pop,all,4.94246780379806,"per 1,000 population",legal,outflow,"Derived: ONS Long-Term International Migration (IPS), 1964-2015 [ad hoc 006408] ÷ World Bank SP.POP.TOTL"
 GBR,United Kingdom,2014,emigration_by_origin_per_1000_pop,all,4.936628545783748,"per 1,000 population",legal,outflow,"Derived: ONS Long-Term International Migration (IPS), 1964-2015 [ad hoc 006408] ÷ World Bank SP.POP.TOTL"
 GBR,United Kingdom,2015,emigration_by_origin_per_1000_pop,all,4.593851306712554,"per 1,000 population",legal,outflow,"Derived: ONS Long-Term International Migration (IPS), 1964-2015 [ad hoc 006408] ÷ World Bank SP.POP.TOTL"
-GBR,United Kingdom,2012,emigration_per_1000_pop,all,7.031752758550329,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2013,emigration_per_1000_pop,all,7.312357728647603,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2014,emigration_per_1000_pop,all,7.644810349897089,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2015,emigration_per_1000_pop,all,7.589841289351176,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2016,emigration_per_1000_pop,all,7.971831844648355,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2017,emigration_per_1000_pop,all,8.246922563822691,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2018,emigration_per_1000_pop,all,8.282166940727443,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2019,emigration_per_1000_pop,all,9.080266554601668,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2020,emigration_per_1000_pop,all,8.525621816002397,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2021,emigration_per_1000_pop,all,7.166532294186151,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2022,emigration_per_1000_pop,all,7.5107930687799405,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2023,emigration_per_1000_pop,all,8.653649709599277,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2024,emigration_per_1000_pop,all,9.815100821292996,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2025,emigration_per_1000_pop,all,9.239138256076677,"per 1,000 population",legal,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2012,immigration,all,643000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2013,immigration,all,713000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2014,immigration,all,778000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2015,immigration,all,797000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2016,immigration,all,772000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2017,immigration,all,752000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2018,immigration,all,825000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2019,immigration,all,788000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2020,immigration,all,662000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2021,immigration,all,947000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2022,immigration,all,1398000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2023,immigration,all,1441000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2024,immigration,all,1012000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2025,immigration,all,813000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2012,immigration,british,79000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2013,immigration,british,76000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2014,immigration,british,81000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2015,immigration,british,78000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2016,immigration,british,70000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2017,immigration,british,84000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2018,immigration,british,74000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2019,immigration,british,71000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2020,immigration,british,52000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2021,immigration,british,164000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2022,immigration,british,166000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2023,immigration,british,150000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2024,immigration,british,140000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2025,immigration,british,110000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2012,immigration,eu,334000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2013,immigration,eu,402000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2014,immigration,eu,457000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2015,immigration,eu,481000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2016,immigration,eu,465000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2017,immigration,eu,411000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2018,immigration,eu,421000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2019,immigration,eu,349000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2020,immigration,eu,316000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2021,immigration,eu,173000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2022,immigration,eu,141000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2023,immigration,eu,103000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2024,immigration,eu,91000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2025,immigration,eu,76000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2012,immigration,non_eu,230000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2013,immigration,non_eu,234000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2014,immigration,non_eu,241000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2015,immigration,non_eu,238000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2016,immigration,non_eu,237000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2017,immigration,non_eu,257000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2018,immigration,non_eu,330000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2019,immigration,non_eu,368000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2020,immigration,non_eu,294000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2021,immigration,non_eu,610000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2022,immigration,non_eu,1091000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2023,immigration,non_eu,1188000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2024,immigration,non_eu,780000.0,people,legal,inflow,ONS Long-Term International Migration
-GBR,United Kingdom,2025,immigration,non_eu,627000.0,people,legal,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2012,emigration_per_1000_pop,all,7.031752758550329,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2013,emigration_per_1000_pop,all,7.312357728647603,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2014,emigration_per_1000_pop,all,7.644810349897089,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2015,emigration_per_1000_pop,all,7.589841289351176,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2016,emigration_per_1000_pop,all,7.971831844648355,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2017,emigration_per_1000_pop,all,8.246922563822691,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2018,emigration_per_1000_pop,all,8.282166940727443,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2019,emigration_per_1000_pop,all,9.080266554601668,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2020,emigration_per_1000_pop,all,8.525621816002397,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2021,emigration_per_1000_pop,all,7.166532294186151,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2022,emigration_per_1000_pop,all,7.5107930687799405,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2023,emigration_per_1000_pop,all,8.653649709599277,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2024,emigration_per_1000_pop,all,9.815100821292996,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2025,emigration_per_1000_pop,all,9.239138256076677,"per 1,000 population",total,outflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2012,immigration,all,643000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2013,immigration,all,713000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2014,immigration,all,778000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2015,immigration,all,797000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2016,immigration,all,772000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2017,immigration,all,752000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2018,immigration,all,825000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2019,immigration,all,788000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2020,immigration,all,662000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2021,immigration,all,947000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2022,immigration,all,1398000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2023,immigration,all,1441000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2024,immigration,all,1012000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2025,immigration,all,813000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2012,immigration,british,79000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2013,immigration,british,76000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2014,immigration,british,81000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2015,immigration,british,78000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2016,immigration,british,70000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2017,immigration,british,84000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2018,immigration,british,74000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2019,immigration,british,71000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2020,immigration,british,52000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2021,immigration,british,164000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2022,immigration,british,166000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2023,immigration,british,150000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2024,immigration,british,140000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2025,immigration,british,110000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2012,immigration,eu,334000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2013,immigration,eu,402000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2014,immigration,eu,457000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2015,immigration,eu,481000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2016,immigration,eu,465000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2017,immigration,eu,411000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2018,immigration,eu,421000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2019,immigration,eu,349000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2020,immigration,eu,316000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2021,immigration,eu,173000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2022,immigration,eu,141000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2023,immigration,eu,103000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2024,immigration,eu,91000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2025,immigration,eu,76000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2012,immigration,non_eu,230000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2013,immigration,non_eu,234000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2014,immigration,non_eu,241000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2015,immigration,non_eu,238000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2016,immigration,non_eu,237000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2017,immigration,non_eu,257000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2018,immigration,non_eu,330000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2019,immigration,non_eu,368000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2020,immigration,non_eu,294000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2021,immigration,non_eu,610000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2022,immigration,non_eu,1091000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2023,immigration,non_eu,1188000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2024,immigration,non_eu,780000.0,people,total,inflow,ONS Long-Term International Migration
+GBR,United Kingdom,2025,immigration,non_eu,627000.0,people,total,inflow,ONS Long-Term International Migration
 GBR,United Kingdom,1964,immigration_by_origin,all,211000.0,people,legal,inflow,"ONS Long-Term International Migration (IPS), 1964-2015 [ad hoc 006408]"
 GBR,United Kingdom,1965,immigration_by_origin,all,206000.0,people,legal,inflow,"ONS Long-Term International Migration (IPS), 1964-2015 [ad hoc 006408]"
 GBR,United Kingdom,1966,immigration_by_origin,all,219000.0,people,legal,inflow,"ONS Long-Term International Migration (IPS), 1964-2015 [ad hoc 006408]"
@@ -857,20 +857,20 @@ GBR,United Kingdom,2012,immigration_by_origin_per_1000_pop,all,7.816546593209964
 GBR,United Kingdom,2013,immigration_by_origin_per_1000_pop,all,8.20106645046618,"per 1,000 population",legal,inflow,"Derived: ONS Long-Term International Migration (IPS), 1964-2015 [ad hoc 006408] ÷ World Bank SP.POP.TOTL"
 GBR,United Kingdom,2014,immigration_by_origin_per_1000_pop,all,9.780405143997896,"per 1,000 population",legal,inflow,"Derived: ONS Long-Term International Migration (IPS), 1964-2015 [ad hoc 006408] ÷ World Bank SP.POP.TOTL"
 GBR,United Kingdom,2015,immigration_by_origin_per_1000_pop,all,9.69471630279472,"per 1,000 population",legal,inflow,"Derived: ONS Long-Term International Migration (IPS), 1964-2015 [ad hoc 006408] ÷ World Bank SP.POP.TOTL"
-GBR,United Kingdom,2012,immigration_per_1000_pop,all,10.092448713722906,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2013,immigration_per_1000_pop,all,11.116654713274501,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2014,immigration_per_1000_pop,all,12.039802534858168,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2015,immigration_per_1000_pop,all,12.245148800835805,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2016,immigration_per_1000_pop,all,11.767216413132944,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2017,immigration_per_1000_pop,all,11.400157661754896,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2018,immigration_per_1000_pop,all,12.445879282513916,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2019,immigration_per_1000_pop,all,11.826859578555561,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2020,immigration_per_1000_pop,all,9.919089002097692,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2021,immigration_per_1000_pop,all,14.13897100540476,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2022,immigration_per_1000_pop,all,20.669465964870778,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2023,immigration_per_1000_pop,all,21.02851472433821,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2024,immigration_per_1000_pop,all,14.60717945757134,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2025,immigration_per_1000_pop,all,11.700030221480278,"per 1,000 population",legal,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2012,immigration_per_1000_pop,all,10.092448713722906,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2013,immigration_per_1000_pop,all,11.116654713274501,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2014,immigration_per_1000_pop,all,12.039802534858168,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2015,immigration_per_1000_pop,all,12.245148800835805,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2016,immigration_per_1000_pop,all,11.767216413132944,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2017,immigration_per_1000_pop,all,11.400157661754896,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2018,immigration_per_1000_pop,all,12.445879282513916,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2019,immigration_per_1000_pop,all,11.826859578555561,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2020,immigration_per_1000_pop,all,9.919089002097692,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2021,immigration_per_1000_pop,all,14.13897100540476,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2022,immigration_per_1000_pop,all,20.669465964870778,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2023,immigration_per_1000_pop,all,21.02851472433821,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2024,immigration_per_1000_pop,all,14.60717945757134,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2025,immigration_per_1000_pop,all,11.700030221480278,"per 1,000 population",total,inflow,Derived: ONS Long-Term International Migration ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2018,irregular_arrivals,air,4769.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2019,irregular_arrivals,air,5237.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2020,irregular_arrivals,air,2328.0,detections,irregular,count,Home Office Immigration System Statistics

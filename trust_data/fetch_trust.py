@@ -22,7 +22,7 @@ import sys
 
 from tqdm import tqdm
 
-from trust_data import combine, manual, oecd, worldbank
+from trust_data import combine, oecd, owid, worldbank
 
 SOURCES = ("oecd", "worldbank")
 
@@ -50,13 +50,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def _fetch_oecd(start: int, end: int) -> list[dict]:
-    """OECD live rows, backfilled with the manual seed for any missing country-years."""
+    """OECD SDMX rows, completed from the live OWID/OECD historical CSV."""
     live = oecd.fetch(start, end)
-    seed = [r for r in manual.load() if start <= r["year"] <= end]
+    historical = owid.fetch(start, end)
     have = {(r["iso3"], r["year"], r["metric"]) for r in live}
-    filled = [r for r in seed if (r["iso3"], r["year"], r["metric"]) not in have]
+    filled = [r for r in historical if (r["iso3"], r["year"], r["metric"]) not in have]
     if filled:
-        tqdm.write(f"  oecd: backfilled {len(filled)} rows from manual seed")
+        tqdm.write(f"  oecd: completed {len(filled)} rows from live OWID/OECD data")
     return live + filled
 
 

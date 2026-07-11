@@ -209,7 +209,10 @@ def test_fetch_tax_scopes_fallback_per_source(tmp_path, monkeypatch):
         ),
         combine.make_row("GBR", 2024, "tax_to_gdp_pct", 36.0, "snapshot"),
     ])
-    rc = fetch_tax.main(["--out", str(tmp_path), "--no-charts", "--start", "2022", "--end", "2023"])
+    rc = fetch_tax.main([
+        "--out", str(tmp_path), "--no-charts", "--start", "2022", "--end", "2023",
+        "--allow-snapshot-fallback",
+    ])
     assert rc == 0
 
     def metrics_in(path):

@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from trust_data import combine, countries, manual, metrics, oecd, report, worldbank  # noqa: E402
+from trust_data import combine, countries, manual, metrics, oecd, owid, report, worldbank  # noqa: E402
 
 
 def test_country_mappings() -> None:
@@ -92,6 +92,20 @@ def test_oecd_fetch_requests_sdmx_v2(monkeypatch) -> None:
     monkeypatch.setattr(oecd, "get_json", fake_get_json)
     assert oecd._fetch_dataflow(oecd.DATAFLOWS[0], ["GBR"], 2023) == []
     assert captured["headers"] == oecd._ACCEPT
+
+
+def test_owid_parser_keeps_real_country_year_rows() -> None:
+    text = (
+        "Entity,Code,Year,trust_in_government\n"
+        "United Kingdom,GBR,2023,26.7\n"
+        "United Kingdom,GBR,2024,34.5\n"
+        "Unknown,XXX,2024,99\n"
+    )
+    rows = owid.parse(text, 2024, 2024)
+    assert [(r["iso3"], r["year"], r["value"]) for r in rows] == [
+        ("GBR", 2024, 34.5)
+    ]
+    assert rows[0]["source"] == owid.SOURCE
 
 
 def test_showcase_uses_actual_relative_chart_path(tmp_path) -> None:

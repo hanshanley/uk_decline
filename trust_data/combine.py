@@ -2,8 +2,8 @@
 
 Adapted from ``europe_data/combine.py``. Rows follow
 :data:`trust_data.metrics.ROW_FIELDS`. When two sources report the same
-``(iso3, year, metric)`` the first row wins - callers pass live OECD rows before the manual
-seed so live data takes precedence (see :func:`dedupe`).
+``(iso3, year, metric)`` the first row wins - callers pass direct OECD SDMX rows before the
+live OWID/OECD historical series (see :func:`dedupe`).
 """
 
 from __future__ import annotations

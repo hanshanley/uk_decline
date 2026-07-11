@@ -64,6 +64,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--no-charts", dest="charts", action="store_false", help="Skip chart rendering."
     )
     p.add_argument(
+        "--allow-snapshot-fallback",
+        action="store_true",
+        help="Explicitly allow the locally audited source snapshot if an online fetch is empty.",
+    )
+    p.add_argument(
         "--summary-year",
         type=int,
         default=None,
@@ -119,6 +124,8 @@ def main(argv: list[str] | None = None) -> int:
             tqdm.write(f"  {name}: fetch failed ({exc}); trying fallback")
             rows = []
         if not rows:
+            if not args.allow_snapshot_fallback:
+                raise RuntimeError(f"{name}: online source returned no rows")
             if manual is None:
                 manual = fallback.load()
             rows = [

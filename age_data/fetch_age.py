@@ -60,6 +60,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--no-charts", dest="charts", action="store_false",
                    help="Skip chart rendering.")
     p.add_argument(
+        "--allow-snapshot-fallback",
+        action="store_true",
+        help="Explicitly allow the locally audited source snapshot if an online fetch is empty.",
+    )
+    p.add_argument(
         "--summary-year", type=int, default=None,
         help="Year for the printed UK/Europe/US summary (default: latest with data).",
     )
@@ -113,6 +118,8 @@ def main(argv: list[str] | None = None) -> int:
     def with_fallback(name: str, rows: list[dict], owned: tuple[str, ...]) -> list[dict]:
         if rows:
             return rows
+        if not args.allow_snapshot_fallback:
+            raise RuntimeError(f"{name}: online source returned no rows")
         scoped = fallback_rows(owned)
         if scoped:
             tqdm.write(f"  {name}: using manual fallback ({len(scoped)} rows)")
@@ -142,10 +149,12 @@ def main(argv: list[str] | None = None) -> int:
             # Median age is DERIVED from the pyramid band shares (no extra network calls).
             mrows = median_age.derive(prows)
             existing = {(r["iso3"], r["year"]) for r in mrows}
-            supplements = [
-                r for r in fallback_rows(median_age.METRICS)
-                if (r["iso3"], r["year"]) not in existing
-            ]
+            supplements = []
+            if args.allow_snapshot_fallback:
+                supplements = [
+                    r for r in fallback_rows(median_age.METRICS)
+                    if (r["iso3"], r["year"]) not in existing
+                ]
             if supplements:
                 tqdm.write(
                     f"  median_age: supplementing {len(supplements)} missing "

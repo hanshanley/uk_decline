@@ -30,5 +30,5 @@ population adjustment, since headcounts are not monetary and CPI inflation does 
 | `visas_by_category.png` | Entry-clearance visas granted by category (2005+) | Home Office Immigration System Statistics (gov.uk), entry-clearance-visa-outcomes dataset |
 | `asylum_applications.png` | Asylum applications, main applicants (2001+) | Home Office Immigration System Statistics (gov.uk), asylum-claims dataset |
 | `irregular_arrivals.png` | Detected irregular arrivals incl. small boats (2018+) | Home Office Immigration System Statistics (gov.uk), illegal-entry-routes dataset |
-| `legal_vs_irregular.png` | Legal immigration vs irregular arrivals, log scale | ONS Long-Term International Migration (ons.gov.uk); Home Office Immigration System Statistics (gov.uk) |
+| `legal_vs_irregular.png` | Total immigration vs detected irregular arrivals, log scale | ONS Long-Term International Migration (ons.gov.uk); Home Office Immigration System Statistics (gov.uk) |
 | `net_migration_per_capita.png` | Migration per 1,000 population, population-adjusted (1960+) | ONS Long-Term International Migration (ons.gov.uk); World Bank WDI (api.worldbank.org) (SP.POP.TOTL population denominator) |
