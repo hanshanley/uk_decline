@@ -106,6 +106,14 @@ def test_charts_written_per_metric() -> None:
             assert f"{metric_id}.png" in names
 
 
+def test_indexed_charts_use_exact_shared_baseline_date() -> None:
+    df = pd.DataFrame({
+        "nation_code": ["ENG", "ENG", "SCO", "SCO"],
+        "date": pd.to_datetime(["2020-01-31", "2020-03-31", "2020-02-29", "2020-03-31"]),
+    })
+    assert charts._shared_baseline_date(df) == pd.Timestamp("2020-03-31")
+
+
 def test_summary_content() -> None:
     df = combine.to_frame(_synthetic_rows())
     with tempfile.TemporaryDirectory() as d:

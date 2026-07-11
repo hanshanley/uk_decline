@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tuition import build_dataset
 from tuition import plot_tuition
-from tuition import config, dataset
+from tuition import config, dataset, rates
 from tuition.stats import aggregate_by_region, average, median
 
 
@@ -87,6 +87,37 @@ def test_convert_usd_base_currency_and_no_deflator():
     out = build_dataset.convert(rows, rates)[0]  # no deflator -> factor 1.0
     assert out["annual_tuition_usd"] == 11610.0
     assert out["annual_tuition_usd_real2022"] == 11610.0
+
+
+def test_convert_prefers_source_year_rate_key():
+    rows = [{
+        "country": "United Kingdom", "iso3": "GBR", "region": "UK",
+        "annual_tuition_local": "9000", "currency": "GBP", "year": "2023",
+        "include_primary": "1", "source": "s", "notes": "",
+    }]
+    source_rate = {"currency": "GBP", "fx_lcu_per_usd": 0.75, "fx_year": 2023}
+    latest_rate = {"currency": "GBP", "fx_lcu_per_usd": 0.90, "fx_year": 2025}
+    out = build_dataset.convert(
+        rows,
+        {("GBR", 2023): source_rate, "GBR": latest_rate},
+        {2023: 1.0},
+    )[0]
+    assert out["annual_tuition_usd"] == 12000.0
+    assert out["fx_year"] == 2023
+
+
+def test_fetch_rates_for_years_uses_nearest_real_observation(monkeypatch):
+    monkeypatch.setattr(
+        rates,
+        "_fetch_series",
+        lambda *a, **k: {"GBR": {2022: 0.81, 2024: 0.79}},
+    )
+    got = rates.fetch_rates_for_years({"GBR": {2023}, "USA": {2023}})
+    # A tie selects the newer real observation and records its actual year.
+    assert got[("GBR", 2023)]["fx_lcu_per_usd"] == 0.79
+    assert got[("GBR", 2023)]["fx_year"] == 2024
+    assert got[("USA", 2023)]["fx_lcu_per_usd"] == 1.0
+    assert got[("USA", 2023)]["fx_year"] == 2023
 
 
 # --- primary-row inclusion (shared by analyze + plots) ----------------------

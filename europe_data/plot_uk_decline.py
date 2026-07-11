@@ -171,11 +171,15 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
     # so it stays aligned under the headline instead of drifting to a corner).
     ax.set_title("GDP per capita relative to the UK, 1990\u20132024",
                  fontweight="bold", pad=30)
-    ax.text(0.5, 1.015,
-            f"The US pulled ahead to {us.iloc[-1]:.0f}% of the UK, while Poland climbed "
-            f"from {pl.iloc[0]:.0f}% to {pl.iloc[-1]:.0f}%",
-            transform=ax.transAxes, ha="center", va="bottom",
-            fontsize=12, color=SUBSTACK_MUTED)
+    facts = []
+    if not us.empty:
+        facts.append(f"The US reached {us.iloc[-1]:.0f}% of the UK")
+    if not pl.empty:
+        facts.append(f"Poland climbed from {pl.iloc[0]:.0f}% to {pl.iloc[-1]:.0f}%")
+    if facts:
+        ax.text(0.5, 1.015, ", while ".join(facts),
+                transform=ax.transAxes, ha="center", va="bottom",
+                fontsize=12, color=SUBSTACK_MUTED)
     ax.grid(axis="y", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)
     ax.tick_params(axis="both", pad=2)

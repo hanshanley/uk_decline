@@ -3,7 +3,7 @@
 pulls one signature series from each analysis (GDP, markets, NHS, tax, tuition, trust,
 migration, ageing), UK-highlighted, each annotated with its start->latest change.
 
-All series are read from the committed data/outputs CSVs (no re-fetch). Writes
+All series are read from generated data/output CSVs (no re-fetch). Writes
 outputs/uk_decline_scorecard.png.
 
 Usage:  python scorecard.py
@@ -14,6 +14,7 @@ from __future__ import annotations
 import csv
 import pathlib
 import re
+import sys
 
 import matplotlib
 
@@ -26,6 +27,17 @@ from matplotlib.ticker import MaxNLocator
 ROOT = pathlib.Path(__file__).resolve().parent
 DATA = ROOT / "data"
 OUT = ROOT / "outputs"
+
+REQUIRED_INPUTS = {
+    DATA / "europe_combined_wide.csv": ".venv/bin/python -m europe_data.fetch_data",
+    OUT / "nhs" / "nhs_waiting_times.csv": ".venv/bin/python -m nhs_data",
+    DATA / "tax_revenue_to_gdp.csv": ".venv/bin/python -m tax.fetch_tax",
+    DATA / "processed" / "tuition_history.csv": ".venv/bin/python -m tuition.build_history",
+    DATA / "trust" / "trust_combined_long.csv": ".venv/bin/python -m trust_data.fetch_trust",
+    DATA / "rail_performance.csv": ".venv/bin/python -m rail_data",
+    DATA / "stock_market_size_wide.csv": ".venv/bin/python -m markets_data",
+    DATA / "london_gdp.csv": ".venv/bin/python -m london_data",
+}
 
 # ── House style ──────────────────────────────────────────────────────────────
 # Palette from the shared vizstyle house style; scorecard keeps its own minimal
@@ -110,13 +122,14 @@ def net_migration():
 def rail_delays():
     """Annual mean of London & South East CaSL (% of trains cancelled or significantly late)."""
     r = _rows(DATA / "rail_performance.csv")
-    buckets: dict[int, list[float]] = {}
+    buckets: dict[int, dict[str, float]] = {}
     for x in r:
         if (x["region"] == "London and South East" and x["metric"] == "casl_pct"
                 and x.get("value")):
-            buckets.setdefault(int(x["year"]), []).append(float(x["value"]))
-    ys = sorted(buckets)
-    return ys, [sum(buckets[y]) / len(buckets[y]) for y in ys]
+            buckets.setdefault(int(x["year"]), {})[x["quarter"]] = float(x["value"])
+    complete = {year: values for year, values in buckets.items() if len(values) == 4}
+    ys = sorted(complete)
+    return ys, [sum(complete[y].values()) / 4 for y in ys]
 
 
 def london_gdp_share():
@@ -227,6 +240,17 @@ def _panel(ax, title, loader, fmt, good_dir, source, start_override):
 
 
 def main() -> int:
+    missing = [(path, command) for path, command in REQUIRED_INPUTS.items() if not path.exists()]
+    if missing:
+        print("scorecard inputs are missing; generate them before plotting:", file=sys.stderr)
+        for path, command in missing:
+            try:
+                display_path = path.relative_to(ROOT)
+            except ValueError:
+                display_path = path
+            print(f"  {display_path}\n    {command}", file=sys.stderr)
+        return 2
+
     fig, axes = plt.subplots(2, 4, figsize=(17, 9))
     for ax, panel in zip(axes.flat, PANELS):
         _panel(ax, *panel)

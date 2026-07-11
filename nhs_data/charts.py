@@ -40,6 +40,15 @@ def _load(source):
     return _util.load_frame(source, DEFAULT_CSV)
 
 
+def _shared_baseline_date(sub):
+    """Earliest exact observation date shared by every nation in ``sub``."""
+    date_sets = [set(g["date"]) for _, g in sub.groupby("nation_code")]
+    if not date_sets:
+        return None
+    common = set.intersection(*date_sets)
+    return min(common) if common else None
+
+
 def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: bool = False):
     """Render a single metric's per-nation trend chart. Returns the output path or None.
 
@@ -56,27 +65,25 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
     sub["date"] = pd.to_datetime(sub["date"], errors="coerce")
     sub = sub.dropna(subset=["date"]).sort_values("date")
 
-    # For the indexed view, rebase every nation to a COMMON baseline period (the latest
-    # first-observation across nations, i.e. the first period in which all nations have
-    # data) so the growth multipliers are comparable. Nations with earlier data (England
-    # runs from 2007) are still drawn before that baseline, indexed to the same reference.
+    # Rebase every nation to the earliest exact date that all nations publish. This avoids
+    # silently comparing monthly and quarterly series against different baseline dates.
     base_date = None
     base_year = None
     if indexed:
-        firsts = [g.sort_values("date")["date"].iloc[0] for _, g in sub.groupby("nation_code")]
-        if firsts:
-            base_date = max(firsts)
-            base_year = pd.Timestamp(base_date).year
+        base_date = _shared_baseline_date(sub)
+        if base_date is None:
+            return None
+        base_year = pd.Timestamp(base_date).year
 
     fig, ax = plt.subplots(figsize=(11, 6))
     for code, g in sub.groupby("nation_code"):
         g = g.sort_values("date")
         yvals = g["value"]
         if indexed:
-            on_after = g[g["date"] >= base_date]
-            if on_after.empty or not on_after["value"].iloc[0]:
+            at_base = g[g["date"] == base_date]
+            if at_base.empty or not at_base["value"].iloc[0]:
                 continue
-            base = on_after["value"].iloc[0]
+            base = at_base["value"].iloc[0]
             yvals = yvals / base * 100.0
         label = g["nation"].iloc[0]
         if indexed:

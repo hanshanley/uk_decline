@@ -16,7 +16,12 @@ import csv
 import os
 
 from tuition import config
-from tuition.rates import fetch_rates, save_rates, fetch_series, _fallback_record
+from tuition.rates import (
+    _fallback_record,
+    fetch_rates_for_years,
+    fetch_series,
+    save_rates,
+)
 
 OUTPUT_FIELDS = [
     "country", "iso3", "region", "annual_tuition_local", "currency", "year",
@@ -66,7 +71,8 @@ def convert(rows: list[dict], rates: dict[str, dict], us_deflator: dict[int, flo
     out: list[dict] = []
     for row in rows:
         iso3 = row["iso3"]
-        rate = rates.get(iso3)
+        source_year = int(row["year"])
+        rate = rates.get((iso3, source_year)) or rates.get(iso3)
         local = float(row["annual_tuition_local"])
         cur = row["currency"]
         cfg = config.BY_ISO3.get(iso3)
@@ -79,7 +85,7 @@ def convert(rows: list[dict], rates: dict[str, dict], us_deflator: dict[int, flo
             fx, fx_year = rate["fx_lcu_per_usd"], rate["fx_year"]
             if fx:
                 usd = round(local / fx, 2)
-                deflator = us_deflator.get(int(row["year"]), 1.0)
+                deflator = us_deflator.get(source_year, 1.0)
                 usd_real = round(usd * deflator, 2)
 
         out.append({
@@ -126,10 +132,14 @@ def main() -> None:
         deflator: dict[int, float] = {}
         print("[build] using offline fallback rates (no CPI deflation)")
     else:
-        rates = fetch_rates()
+        requested: dict[str, set[int]] = {}
+        for row in rows:
+            requested.setdefault(row["iso3"], set()).add(int(row["year"]))
+        rates = fetch_rates_for_years(requested)
         save_rates(rates)
         deflator = _us_cpi_deflator()
-        print(f"[build] fetched World Bank FX for {len(rates)} countries + US CPI deflator")
+        fetched = sum(1 for rec in rates.values() if rec["fx_lcu_per_usd"] is not None)
+        print(f"[build] fetched {fetched} source-year World Bank FX observations + US CPI deflator")
 
     converted = convert(rows, rates, deflator)
     with open(config.TUITION_BY_COUNTRY_CSV, "w", newline="") as fh:

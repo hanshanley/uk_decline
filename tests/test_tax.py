@@ -196,6 +196,19 @@ def test_fetch_tax_scopes_fallback_per_source(tmp_path, monkeypatch):
     # Force both live fetchers to yield nothing so both fall back.
     monkeypatch.setattr(fetch_tax.revenue, "fetch", lambda *a, **k: [])
     monkeypatch.setattr(fetch_tax.taxing_wages, "fetch", lambda *a, **k: [])
+    monkeypatch.setattr(fetch_tax.fallback, "load", lambda: [
+        combine.make_row("GBR", 2021, "tax_to_gdp_pct", 34.0, "snapshot"),
+        combine.make_row("GBR", 2022, "tax_to_gdp_pct", 35.0, "snapshot"),
+        combine.make_row(
+            "GBR", 2023, "tax_wedge_pct", 31.0, "snapshot",
+            "single_nokids", "100aw",
+        ),
+        combine.make_row(
+            "GBR", 2023, "net_personal_avg_tax_rate_pct", 24.0, "snapshot",
+            "single_nokids", "100aw",
+        ),
+        combine.make_row("GBR", 2024, "tax_to_gdp_pct", 36.0, "snapshot"),
+    ])
     rc = fetch_tax.main(["--out", str(tmp_path), "--no-charts", "--start", "2022", "--end", "2023"])
     assert rc == 0
 
@@ -210,11 +223,13 @@ def test_fetch_tax_scopes_fallback_per_source(tmp_path, monkeypatch):
     }
     # Combined long must not double-count: one row per country-year-variant.
     with open(tmp_path / "tax_combined_long.csv") as fh:
+        fallback_rows = list(_csv.DictReader(fh))
         keys = [
             (r["iso3"], r["year"], r["metric"], r["household"], r["earnings"])
-            for r in _csv.DictReader(fh)
+            for r in fallback_rows
         ]
     assert len(keys) == len(set(keys))
+    assert all(2022 <= int(r["year"]) <= 2023 for r in fallback_rows)
 
 
 def test_combine_dedupes_overlapping_rows(tmp_path):

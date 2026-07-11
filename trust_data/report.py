@@ -72,16 +72,22 @@ def write_showcase(
 
     # One section per metric, embedding the chart and its coverage/source.
     lines.append("## Figures\n")
-    charts_present = {os.path.splitext(os.path.basename(p))[0] for p in (chart_files or [])}
+    chart_paths = {
+        os.path.splitext(os.path.basename(path))[0]: os.path.relpath(
+            os.path.abspath(path), os.path.abspath(out_dir)
+        )
+        for path in (chart_files or [])
+    }
     for metric_id, meta in metrics.METRICS.items():
         sub = [r for r in rows if r["metric"] == metric_id]
         if not sub:
             continue
         srcs = sorted({r["source"] for r in sub})
         lo, hi = min(r["year"] for r in sub), max(r["year"] for r in sub)
-        chart_rel = f"charts/{metric_id}.png"
-        chart_exists = metric_id in charts_present or os.path.exists(
-            os.path.join(out_dir, chart_rel)
+        default_chart_rel = f"charts/{metric_id}.png"
+        chart_rel = chart_paths.get(metric_id, default_chart_rel)
+        chart_exists = metric_id in chart_paths or os.path.exists(
+            os.path.join(out_dir, default_chart_rel)
         )
         lines.append(f"### {meta.label}\n")
         lines.append(f"*{meta.description}*\n")

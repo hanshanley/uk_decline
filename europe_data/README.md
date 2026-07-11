@@ -47,7 +47,8 @@ World Bank Poverty & Inequality Platform (real median income, 2017 PPP $/day; UK
 
 | Metric (column) | Source & citation | Endpoint | Inflation basis |
 |---|---|---|---|
-| `gdp_per_capita_constant_usd` | **World Bank WDI** `NY.GDP.PCAP.KD` (**headline / plotted**) | `api.worldbank.org/v2/country/{iso3}/indicator/{id}` | **Real** — constant 2015 US$ (inflation-adjusted, market exchange rates) |
+| `gdp_per_capita_real_usd` | **World Bank WDI** `NY.GDP.PCAP.CD` deflated by US CPI `FP.CPI.TOTL` (**headline / plotted**) | `api.worldbank.org/v2/country/{iso3}/indicator/{id}` | **Real** — constant 2015 US$ using each year's market exchange rate |
+| `gdp_per_capita_constant_usd` | **World Bank WDI** `NY.GDP.PCAP.KD` (reference) | `api.worldbank.org/v2/country/{iso3}/indicator/{id}` | **Real** — constant 2015 US$ using the World Bank's fixed-base conversion |
 | `gdp_per_capita_nominal_usd` | **World Bank WDI** `NY.GDP.PCAP.CD` | (same) | Nominal — current US$ (reference: shows the exchange-rate driven 2007–08 UK≈US) |
 | `gdp_per_capita_real_maddison` | **Maddison Project Database 2023** (Bolt & van Zanden), via Our World in Data | `ourworldindata.org/grapher/gdp-per-capita-maddison.csv?csvType=full` | Real — constant 2011 international $ (**PPP**); reference only |
 | `gdp_per_capita_ppp_current` | **World Bank WDI** `NY.GDP.PCAP.PP.CD` | (same) | Nominal — current international $ (PPP); reference only |
@@ -56,8 +57,9 @@ World Bank Poverty & Inequality Platform (real median income, 2017 PPP $/day; UK
 | `median_income_pip` | **World Bank PIP** (Poverty & Inequality Platform) | `api.worldbank.org/pip/v1/pip` | **Real** — constant 2017 PPP $ per day |
 
 
-**Why constant US$ (not PPP)?** The headline series is World Bank `NY.GDP.PCAP.KD` — real GDP
-per capita in **constant 2015 US$**, which is inflation-adjusted, uses market exchange rates
+**Why constant US$ (not PPP)?** The headline series is World Bank `NY.GDP.PCAP.CD` deflated
+with US CPI — real GDP per capita in **constant 2015 US$**, which is inflation-adjusted and
+preserves each year's market exchange rate
 (not PPP), and covers **1960+**, so it reaches the 1970s directly. PPP series (Maddison; World
 Bank PP.*) remain in the dataset for reference but can distort cross-country levels.
 

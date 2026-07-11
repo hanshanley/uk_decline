@@ -101,7 +101,7 @@ def test_ons_ltim_parse_by_group_and_ye_dec():
     assert by[("immigration", "british", 2022)]["value"] == 74000.0
     assert by[("immigration", "eu", 2022)]["value"] == 550000.0
     assert by[("immigration", "non_eu", 2022)]["value"] == 774000.0
-    assert by[("immigration", "all", 2022)]["legality"] == schema.LEGAL
+    assert by[("immigration", "all", 2022)]["legality"] == schema.TOTAL
     assert by[("emigration", "all", 2022)]["flow_type"] == schema.OUTFLOW
     assert by[("net_migration", "all", 2024)]["legality"] == schema.TOTAL
     assert by[("net_migration", "non_eu", 2025)]["value"] == 106000.0

@@ -121,7 +121,10 @@ def main(argv: list[str] | None = None) -> int:
         if not rows:
             if manual is None:
                 manual = fallback.load()
-            rows = [r for r in manual if r["metric"] in owned]
+            rows = [
+                r for r in manual
+                if r["metric"] in owned and args.start <= r["year"] <= args.end
+            ]
             if rows:
                 tqdm.write(f"  {name}: using manual fallback ({len(rows)} rows)")
         tqdm.write(f"  {name}: {len(rows)} rows")

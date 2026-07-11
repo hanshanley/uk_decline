@@ -72,9 +72,24 @@ def counts_by_band(
 
 def rows_from_counts(counts: dict[tuple[str, int, str, str], float]) -> list[dict]:
     """Convert raw band counts to tidy ``pop_band_share_pct`` rows (share of total pop)."""
-    totals = _totals(counts)
+    expected = {
+        (band_label, sex_label)
+        for _band_code, band_label, _mid in config.AGE_BANDS
+        for sex_label in config.SEXES.values()
+    }
+    observed: dict[tuple[str, int], set[tuple[str, str]]] = {}
+    for iso3, year, band, sex in counts:
+        observed.setdefault((iso3, year), set()).add((band, sex))
+    complete = {key for key, profile in observed.items() if profile == expected}
+    totals: dict[tuple[str, int], float] = {}
+    for (iso3, year, _band, _sex), n in counts.items():
+        key = (iso3, year)
+        if key in complete:
+            totals[key] = totals.get(key, 0.0) + n
     out: list[dict] = []
     for (iso3, year, band, sex), n in counts.items():
+        if (iso3, year) not in complete:
+            continue
         total = totals.get((iso3, year), 0.0)
         if total <= 0:
             continue

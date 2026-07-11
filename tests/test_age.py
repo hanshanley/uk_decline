@@ -99,14 +99,21 @@ def test_median_age_sums_over_sex():
 
 def test_pyramid_rows_from_counts_sum_to_100():
     counts = {
-        ("GBR", 2024, "0-4", "male"): 100.0,
-        ("GBR", 2024, "0-4", "female"): 100.0,
-        ("GBR", 2024, "80+", "male"): 150.0,
-        ("GBR", 2024, "80+", "female"): 150.0,
+        ("GBR", 2024, band, sex): 100.0
+        for _code, band, _mid in config.AGE_BANDS
+        for sex in config.SEXES.values()
     }
     rows = pyramids.rows_from_counts(counts)
     assert sum(r["value"] for r in rows) == pytest.approx(100.0)
     assert all(r["metric"] == "pop_band_share_pct" for r in rows)
+
+
+def test_pyramid_rows_drop_incomplete_profiles():
+    counts = {
+        ("GBR", 2024, "0-4", "male"): 100.0,
+        ("GBR", 2024, "0-4", "female"): 100.0,
+    }
+    assert pyramids.rows_from_counts(counts) == []
 
 
 # --- stats ------------------------------------------------------------------

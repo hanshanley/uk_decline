@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from trust_data import combine, countries, manual, metrics, oecd, worldbank  # noqa: E402
+from trust_data import combine, countries, manual, metrics, oecd, report, worldbank  # noqa: E402
 
 
 def test_country_mappings() -> None:
@@ -44,7 +44,7 @@ def test_metric_schema() -> None:
 
 
 def test_oecd_decoder() -> None:
-    # Minimal SDMX-JSON v2: REF_AREA x MEASURE x TIME, observations keyed by index tuple.
+    # Minimal SDMX-JSON v2: REF_AREA x MEASURE x SCALE x TIME.
     payload = {
         "data": {
             "structures": [
@@ -53,6 +53,9 @@ def test_oecd_decoder() -> None:
                         "observation": [
                             {"id": "REF_AREA", "values": [{"id": "GBR"}, {"id": "XXX"}]},
                             {"id": "MEASURE", "values": [{"id": "TRUST_NG"}, {"id": "OTHER"}]},
+                            {"id": "SCALE", "values": [
+                                {"id": "HMH"}, {"id": "L"}, {"id": "NEU"}, {"id": "DK"}
+                            ]},
                             {"id": "TIME_PERIOD", "values": [{"id": "2018"}, {"id": "2020"}]},
                         ]
                     }
@@ -61,10 +64,13 @@ def test_oecd_decoder() -> None:
             "dataSets": [
                 {
                     "observations": {
-                        "0:0:0": [34.0],       # GBR, TRUST_NG, 2018
-                        "0:0:1": [41.0],       # GBR, TRUST_NG, 2020
-                        "1:0:1": [50.0],       # XXX (not in set) -> dropped
-                        "0:1:0": [99.0],       # OTHER measure -> dropped
+                        "0:0:0:0": [34.0],     # GBR, TRUST_NG, HMH, 2018
+                        "0:0:0:1": [41.0],     # GBR, TRUST_NG, HMH, 2020
+                        "0:0:1:1": [42.0],     # low trust -> dropped
+                        "0:0:2:1": [15.0],     # neutral -> dropped
+                        "0:0:3:1": [2.0],      # don't know -> dropped
+                        "1:0:0:1": [50.0],     # XXX (not in set) -> dropped
+                        "0:1:0:0": [99.0],     # OTHER measure -> dropped
                     }
                 }
             ],
@@ -74,6 +80,38 @@ def test_oecd_decoder() -> None:
     by_year = {r["year"]: r["value"] for r in rows}
     assert by_year == {2018: 34.0, 2020: 41.0}
     assert all(r["iso3"] == "GBR" and r["metric"] == "trust_national_govt_pct" for r in rows)
+
+
+def test_oecd_fetch_requests_sdmx_v2(monkeypatch) -> None:
+    captured = {}
+
+    def fake_get_json(url, params=None, headers=None, timeout=60):
+        captured["headers"] = headers
+        return {}
+
+    monkeypatch.setattr(oecd, "get_json", fake_get_json)
+    assert oecd._fetch_dataflow(oecd.DATAFLOWS[0], ["GBR"], 2023) == []
+    assert captured["headers"] == oecd._ACCEPT
+
+
+def test_showcase_uses_actual_relative_chart_path(tmp_path) -> None:
+    data_dir = tmp_path / "data" / "trust"
+    chart_dir = tmp_path / "outputs" / "trust"
+    data_dir.mkdir(parents=True)
+    chart_dir.mkdir(parents=True)
+    long_csv = data_dir / "trust_combined_long.csv"
+    long_csv.write_text(
+        "iso3,country,year,metric,value,unit,source\n"
+        "GBR,United Kingdom,2023,trust_national_govt_pct,26.7,percent,"
+        "OECD (Trust in national government)\n"
+    )
+    chart = chart_dir / "trust_national_govt_pct.png"
+    chart.write_bytes(b"png")
+    output = report.write_showcase(
+        str(data_dir), long_csv=str(long_csv), chart_files=[str(chart)]
+    )
+    text = Path(output).read_text()
+    assert "../../outputs/trust/trust_national_govt_pct.png" in text
 
 
 def test_worldbank_parser(monkeypatch) -> None:  # type: ignore[no-untyped-def]

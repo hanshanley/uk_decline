@@ -36,6 +36,7 @@ MEASURES: dict[str, str] = {
 }
 
 SOURCE = "OECD (Trust in national government)"
+TRUST_SCALE = "HMH"  # high or moderately high trust
 
 _ACCEPT = {"Accept": "application/vnd.sdmx.data+json;version=2"}
 
@@ -61,6 +62,7 @@ def _decode(payload: dict) -> list[dict]:
     observations = datasets[0].get("observations") or {}
 
     out: list[dict] = []
+    seen: set[tuple[str, int, str]] = set()
     for key, obs in observations.items():
         parts = key.split(":")
         measure_code = values["MEASURE"][int(parts[idx["MEASURE"]])]["id"]
@@ -70,15 +72,23 @@ def _decode(payload: dict) -> list[dict]:
         iso3 = values["REF_AREA"][int(parts[idx["REF_AREA"]])]["id"]
         if iso3 not in countries.BY_ISO3:
             continue
+        if "SCALE" in idx:
+            scale = values["SCALE"][int(parts[idx["SCALE"]])]["id"]
+            if scale != TRUST_SCALE:
+                continue
         year = values["TIME_PERIOD"][int(parts[idx["TIME_PERIOD"]])]["id"]
         value = obs[0]
         if value is None:
             continue
+        row_key = (iso3, int(str(year)[:4]), metric)
+        if row_key in seen:
+            raise ValueError(f"duplicate OECD trust observation for {row_key}")
+        seen.add(row_key)
         out.append(
             metrics.make_row(
                 iso3=iso3,
                 country=countries.name_for_iso3(iso3),
-                year=int(str(year)[:4]),
+                year=row_key[1],
                 metric=metric,
                 value=float(value),
                 source=SOURCE,
@@ -97,6 +107,7 @@ def _fetch_dataflow(dataflow: str, iso3s: list[str], start: int) -> list[dict]:
     payload = get_json(
         url,
         params={"startPeriod": start, "dimensionAtObservation": "AllDimensions"},
+        headers=_ACCEPT,
     )
     return _decode(payload)
 

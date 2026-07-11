@@ -98,6 +98,8 @@ def test_to_float_tolerates_ons_markers():
     assert ons._to_float("-") is None
     assert ons._to_float("1234.5") == 1234.5
     assert ons._to_float(1000) == 1000.0
+    assert ons._to_float(float("nan")) is None
+    assert ons._to_float(float("inf")) is None
 
 
 def test_build_rows_skips_suppressed_denominator():

@@ -73,10 +73,10 @@ def uk_age_structure_over_time(rows: list[dict], out_path: str) -> Optional[str]
         ("pop_share_65plus_pct", "65+", ACCENT),
     ]
     uk = {m: {r["year"]: r["value"] for r in _rows(rows, m) if r["iso3"] == "GBR"} for m, _, _ in bands}
-    years = sorted(set().union(*[set(d) for d in uk.values()]))
+    years = sorted(set.intersection(*[set(d) for d in uk.values()]))
     if len(years) < 2:
         return None
-    stacks = [[uk[m].get(y, 0.0) for y in years] for m, _, _ in bands]
+    stacks = [[uk[m][y] for y in years] for m, _, _ in bands]
     colors = [c for _, _, c in bands]
     labels = [lbl for _, lbl, _ in bands]
 

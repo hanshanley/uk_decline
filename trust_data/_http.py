@@ -36,9 +36,14 @@ def session() -> requests.Session:
     wait=wait_exponential(multiplier=1, min=1, max=30),
     reraise=True,
 )
-def get_json(url: str, params: dict[str, Any] | None = None, timeout: int = 60) -> Any:
+def get_json(
+    url: str,
+    params: dict[str, Any] | None = None,
+    headers: dict[str, str] | None = None,
+    timeout: int = 60,
+) -> Any:
     """GET ``url`` and return parsed JSON, retrying transient network/HTTP errors."""
-    resp = session().get(url, params=params, timeout=timeout)
+    resp = session().get(url, params=params, headers=headers, timeout=timeout)
     resp.raise_for_status()
     return resp.json()
 

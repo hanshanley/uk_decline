@@ -158,13 +158,14 @@ def chart_irregular(df: pd.DataFrame) -> Path:
 
 
 def chart_legal_vs_irregular(df: pd.DataFrame) -> Path:
-    legal = _series(df, "immigration")
+    total = _series(df, "immigration")
     irregular = _series(df, "irregular_arrivals", "all")
     fig, ax = plt.subplots(figsize=(11, 6))
-    ax.plot(legal["period"], legal["value"], marker="o", color=SUBSTACK_BLUE, label="Legal immigration (ONS inflow)")
+    ax.plot(total["period"], total["value"], marker="o", color=SUBSTACK_BLUE,
+            label="Total long-term immigration (ONS)")
     ax.plot(irregular["period"], irregular["value"], marker="o", color=SUBSTACK_ACCENT, label="Irregular arrivals (Home Office)")
     ax.set_yscale("log")
-    _style_title(ax, "UK legal immigration vs irregular arrivals (log scale)")
+    _style_title(ax, "UK total immigration vs detected irregular arrivals (log scale)")
     ax.set_xlabel("Year")
     ax.set_ylabel("People per year (log)")
     ax.legend(loc="upper left", frameon=False)
@@ -274,7 +275,7 @@ _CHART_DOCS: list[tuple[str, str, str]] = [
      f"{SOURCE_HO}, asylum-claims dataset"),
     ("irregular_arrivals.png", "Detected irregular arrivals incl. small boats (2018+)",
      f"{SOURCE_HO}, illegal-entry-routes dataset"),
-    ("legal_vs_irregular.png", "Legal immigration vs irregular arrivals, log scale",
+    ("legal_vs_irregular.png", "Total immigration vs detected irregular arrivals, log scale",
      f"{SOURCE_ONS}; {SOURCE_HO}"),
     ("net_migration_per_capita.png", "Migration per 1,000 population, population-adjusted (1960+)",
      f"{SOURCE_ONS}; {SOURCE_WB} (SP.POP.TOTL population denominator)"),

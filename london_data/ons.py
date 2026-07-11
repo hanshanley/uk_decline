@@ -24,6 +24,7 @@ Scotland/NI and is index-only, so it cannot extend these UK-wide, £-level metri
 from __future__ import annotations
 
 import io
+import math
 import re
 from urllib.parse import urlsplit
 
@@ -171,9 +172,10 @@ def download_workbook(url: str | None = None, timeout: int = 120) -> dict:
 def _to_float(value) -> float | None:
     """Parse an ONS cell to float, tolerating footnote/suppression markers ([r], :, -)."""
     try:
-        return float(value)
+        parsed = float(value)
     except (TypeError, ValueError):
         return None
+    return parsed if math.isfinite(parsed) else None
 
 
 def _row_by_code(sheet: pd.DataFrame, code: str) -> tuple[list[int], list[float]]:

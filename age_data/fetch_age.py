@@ -101,13 +101,19 @@ def main(argv: list[str] | None = None) -> int:
     grouped: list[tuple[str, list[dict]]] = []
     all_rows: list[dict] = []
 
-    def with_fallback(name: str, rows: list[dict], owned: tuple[str, ...]) -> list[dict]:
+    def fallback_rows(owned: tuple[str, ...]) -> list[dict]:
         nonlocal manual
-        if rows:
-            return rows
         if manual is None:
             manual = fallback.load()
-        scoped = [r for r in manual if r["metric"] in owned]
+        return [
+            r for r in manual
+            if r["metric"] in owned and args.start <= r["year"] <= args.end
+        ]
+
+    def with_fallback(name: str, rows: list[dict], owned: tuple[str, ...]) -> list[dict]:
+        if rows:
+            return rows
+        scoped = fallback_rows(owned)
         if scoped:
             tqdm.write(f"  {name}: using manual fallback ({len(scoped)} rows)")
         return scoped
@@ -135,8 +141,17 @@ def main(argv: list[str] | None = None) -> int:
             all_rows.extend(prows)
             # Median age is DERIVED from the pyramid band shares (no extra network calls).
             mrows = median_age.derive(prows)
-            if not mrows:
-                mrows = with_fallback("median_age", [], median_age.METRICS)
+            existing = {(r["iso3"], r["year"]) for r in mrows}
+            supplements = [
+                r for r in fallback_rows(median_age.METRICS)
+                if (r["iso3"], r["year"]) not in existing
+            ]
+            if supplements:
+                tqdm.write(
+                    f"  median_age: supplementing {len(supplements)} missing "
+                    "country-years from the sourced snapshot"
+                )
+                mrows.extend(supplements)
             tqdm.write(f"  median_age (derived): {len(mrows)} rows")
             grouped.append(("age_median", mrows))
             all_rows.extend(mrows)

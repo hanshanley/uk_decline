@@ -28,8 +28,8 @@ SHEET = "1"
 
 # ONS "Flow" label -> (metric, legality, flow_type)
 _FLOWS: dict[str, tuple[str, str, str]] = {
-    "Immigration": ("immigration", schema.LEGAL, schema.INFLOW),
-    "Emigration": ("emigration", schema.LEGAL, schema.OUTFLOW),
+    "Immigration": ("immigration", schema.TOTAL, schema.INFLOW),
+    "Emigration": ("emigration", schema.TOTAL, schema.OUTFLOW),
     "Net migration": ("net_migration", schema.TOTAL, schema.NET),
 }
 

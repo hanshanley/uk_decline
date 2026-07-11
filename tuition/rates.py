@@ -88,13 +88,67 @@ def fetch_rates(
     return out
 
 
-def save_rates(rates: dict[str, dict], path: Optional[str] = None) -> str:
+def fetch_rates_for_years(
+    requested: dict[str, set[int]],
+) -> dict[tuple[str, int], dict]:
+    """Fetch source-year FX for ``{iso3: {years}}`` using real World Bank observations.
+
+    Exact years are preferred. If an exact observation is unavailable, the nearest
+    published observation in a three-year search window is used and its actual year is
+    retained in ``fx_year``. No configured fallback value is used on this live path.
+    """
+    requested = {
+        iso3: {int(year) for year in years}
+        for iso3, years in requested.items()
+        if iso3 in config.BY_ISO3 and years
+    }
+    if not requested:
+        return {}
+    all_years = {year for years in requested.values() for year in years}
+    series: dict[str, dict[int, float]] = {}
+    try:
+        series = _fetch_series(
+            config.WB_FX_INDICATOR,
+            list(requested),
+            min(all_years) - 3,
+            max(all_years) + 3,
+        )
+    except Exception as exc:  # pragma: no cover - network failure path
+        print(f"[rates] source-year World Bank FX fetch failed ({exc}).")
+
+    out: dict[tuple[str, int], dict] = {}
+    for iso3, years in requested.items():
+        country = config.BY_ISO3[iso3]
+        available = series.get(iso3, {})
+        for year in years:
+            rec = {
+                "currency": country.currency,
+                "fx_lcu_per_usd": None,
+                "fx_year": None,
+            }
+            if country.currency == "USD":
+                rec.update({"fx_lcu_per_usd": 1.0, "fx_year": year})
+            elif available:
+                fx_year = min(available, key=lambda y: (abs(y - year), -y))
+                rec.update({
+                    "fx_lcu_per_usd": available[fx_year],
+                    "fx_year": fx_year,
+                })
+            out[(iso3, year)] = rec
+    return out
+
+
+def save_rates(
+    rates: dict[str | tuple[str, int], dict],
+    path: Optional[str] = None,
+) -> str:
     path = path or config.RATES_CSV
     fields = ["iso3", "currency", "fx_lcu_per_usd", "fx_year"]
     with open(path, "w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=fields)
         writer.writeheader()
-        for iso3, rec in sorted(rates.items()):
+        for key, rec in sorted(rates.items()):
+            iso3 = key[0] if isinstance(key, tuple) else key
             writer.writerow({"iso3": iso3, **{k: rec.get(k) for k in fields[1:]}})
     return path
 
