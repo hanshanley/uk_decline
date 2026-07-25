@@ -138,16 +138,38 @@ METRICS: dict[str, Metric] = {
         "price_level_index",
         "Price level index (US = 1.00)",
         "ratio, US = 1.00",
-        None,  # derived: ppp_conversion_factor / market_exchange_rate
+        None,  # derived: gdp_per_capita_nominal_usd / gdp_per_capita_ppp_current
         over_time=True,
         cross_section=True,
         vintage=ICP_VINTAGE,
         description=(
-            "PPP conversion factor divided by the market exchange rate. Above 1.00 the "
-            "country is expensive relative to the United States (its currency buys less at "
-            "home than the market rate implies); below 1.00 it is cheap. This single ratio "
-            "is the entire difference between the market-FX and PPP views, and it is a "
+            "How expensive a country is relative to the United States. Above 1.00 its "
+            "currency buys less at home than the market exchange rate implies; below 1.00, "
+            "more. This single ratio is the entire difference between the market-FX and PPP "
+            "views of GDP. Derived as GDP per capita in current US$ divided by GDP per "
+            "capita in current international $ — algebraically the PPP conversion factor "
+            "over the market exchange rate, but computed this way the local-currency units "
+            "cancel, so it is immune to redenominations and currency changeovers. It is a "
             "unit-free ratio, so it is safe to plot over time."
+        ),
+    ),
+    "price_level_index_direct": Metric(
+        "price_level_index_direct",
+        "Price level index, computed directly from the conversion factors",
+        "ratio, US = 1.00",
+        None,  # derived: ppp_conversion_factor / market_exchange_rate
+        over_time=False,
+        cross_section=False,
+        vintage=ICP_VINTAGE,
+        description=(
+            "The same quantity taken straight from PA.NUS.PPP / PA.NUS.FCRF. Kept purely as "
+            "an independent cross-check on `price_level_index`, which is built from two "
+            "entirely different World Bank series. It is NOT plotted, because the two "
+            "indicators do not always share a currency basis: for euro-area countries "
+            "before 1999 the World Bank restates the PPP conversion factor in euro while "
+            "leaving the exchange rate in the legacy national currency, which makes the "
+            "direct ratio wrong by the legacy conversion rate. See "
+            "`validate.CURRENCY_BASIS_BREAKS`."
         ),
     ),
     "gdp_per_capita_real_maddison": Metric(
@@ -213,9 +235,16 @@ CAVEATS: dict[str, str] = {
         "2022) is therefore smoothed across two calendar years."
     ),
     "price_level_index": (
-        "Derived as PA.NUS.PPP / PA.NUS.FCRF. It inherits the ICP vintage of the PPP factor "
-        "and the period-average timing of the exchange rate. The US is the numeraire, so "
-        "the US index is 1.00 in every year by construction."
+        "Derived as GDP per capita in current US$ over GDP per capita in current "
+        "international $. The local-currency GDP cancels, so the index is unaffected by "
+        "redenominations or the euro changeover. It inherits the ICP vintage of the "
+        "underlying parities. The US is the numeraire, so the US index is 1.00 in every "
+        "year by construction."
+    ),
+    "price_level_index_direct": (
+        "Validation-only. PA.NUS.PPP / PA.NUS.FCRF disagrees with the headline index for "
+        "euro-area countries before 1999, because those two indicators are quoted in "
+        "different currencies for those years. Never plotted."
     ),
     "gdp_per_capita_real_maddison": (
         "2011 international dollars — a different benchmark from the World Bank series. "

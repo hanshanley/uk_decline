@@ -46,7 +46,8 @@ PPP_FIRST_YEAR = 1990
 
 SOURCE = "World Bank WDI"
 REAL_USD_SOURCE = "World Bank WDI (NY.GDP.PCAP.CD deflated by US CPI, FP.CPI.TOTL)"
-DERIVED_PLI_SOURCE = "Derived: World Bank WDI PA.NUS.PPP / PA.NUS.FCRF"
+DERIVED_PLI_SOURCE = "Derived: World Bank WDI NY.GDP.PCAP.CD / NY.GDP.PCAP.PP.CD"
+DERIVED_PLI_DIRECT_SOURCE = "Derived: World Bank WDI PA.NUS.PPP / PA.NUS.FCRF"
 
 
 def _fetch_indicator(indicator: str, iso3s: list[str], start: int, end: int) -> Iterator[dict]:
@@ -77,32 +78,67 @@ def _fetch_indicator(indicator: str, iso3s: list[str], start: int, end: int) -> 
 
 
 def derive_price_level_index(rows: Iterable[dict]) -> list[dict]:
-    """Derive the price level index from the PPP conversion factor and the exchange rate.
+    """Derive the price level index, currency-unit-free, from the two GDP-per-capita series.
 
-    ``PLI = PA.NUS.PPP / PA.NUS.FCRF`` — how expensive a country is relative to the United
-    States, which is the numeraire and therefore 1.00 in every year. Only country-years
-    with **both** inputs present produce an index; nothing is filled in.
+    ``PLI = GDPpc(current US$) / GDPpc(current international $)``. Algebraically this is the
+    PPP conversion factor over the market exchange rate, but computed this way the country's
+    local-currency GDP cancels out, so the result survives redenominations and the euro
+    changeover — unlike the direct ratio of the two conversion-factor indicators, which the
+    World Bank does not always quote in the same currency. See
+    :func:`derive_price_level_index_direct` and ``validate.CURRENCY_BASIS_BREAKS``.
+
+    Only country-years with **both** inputs present produce an index; nothing is filled in.
     """
-    ppp: dict[tuple[str, int], float] = {}
-    fx: dict[tuple[str, int], float] = {}
+    return _derive_ratio(
+        rows,
+        numerator="gdp_per_capita_nominal_usd",
+        denominator="gdp_per_capita_ppp_current",
+        metric_id="price_level_index",
+        source=DERIVED_PLI_SOURCE,
+    )
+
+
+def derive_price_level_index_direct(rows: Iterable[dict]) -> list[dict]:
+    """Derive the same index straight from the conversion factors, as a cross-check.
+
+    ``PA.NUS.PPP / PA.NUS.FCRF``. This is the textbook definition, and it agrees with
+    :func:`derive_price_level_index` wherever the two indicators share a currency basis —
+    which is everywhere except euro-area countries before 1999. It is never plotted; it
+    exists so that :mod:`ppp_data.validate` can confirm the headline index from two
+    completely independent pairs of World Bank series.
+    """
+    return _derive_ratio(
+        rows,
+        numerator="ppp_conversion_factor",
+        denominator="market_exchange_rate",
+        metric_id="price_level_index_direct",
+        source=DERIVED_PLI_DIRECT_SOURCE,
+    )
+
+
+def _derive_ratio(rows: Iterable[dict], *, numerator: str, denominator: str,
+                  metric_id: str, source: str) -> list[dict]:
+    """Build a derived metric as the per-country-year ratio of two fetched metrics."""
+    num: dict[tuple[str, int], float] = {}
+    den: dict[tuple[str, int], float] = {}
     names: dict[str, str] = {}
     for row in rows:
         key = (row["iso3"], row["year"])
         names[row["iso3"]] = row["country"]
-        if row["metric"] == "ppp_conversion_factor":
-            ppp[key] = row["value"]
-        elif row["metric"] == "market_exchange_rate":
-            fx[key] = row["value"]
+        if row["metric"] == numerator:
+            num[key] = row["value"]
+        elif row["metric"] == denominator:
+            den[key] = row["value"]
 
     out: list[dict] = []
-    for key in sorted(ppp.keys() & fx.keys()):
+    for key in sorted(num.keys() & den.keys()):
         iso3, year = key
-        rate = fx[key]
-        if not rate:  # a zero exchange rate would be a corrupt upstream row, not a datum
+        divisor = den[key]
+        if not divisor:  # a zero here is a corrupt upstream row, not a datum
             continue
         out.append(
-            metrics.make_row(iso3, names[iso3], year, "price_level_index",
-                             ppp[key] / rate, source=DERIVED_PLI_SOURCE)
+            metrics.make_row(iso3, names[iso3], year, metric_id,
+                             num[key] / divisor, source=source)
         )
     return out
 
@@ -124,14 +160,13 @@ def derive_real_usd(rows: Iterable[dict], start: int, end: int) -> list[dict]:
 
 
 def fetch(start: int = PPP_FIRST_YEAR, end: int = 2024) -> list[dict]:
-    """Fetch every World Bank series the PPP analysis needs, plus the two derived ones."""
+    """Fetch every World Bank series the PPP analysis needs, plus the derived ones."""
     rows: list[dict] = []
     for indicator in GDP_INDICATORS:
         rows.extend(_fetch_indicator(indicator, peers.ALL_ISO3, start, end))
-    conversion: list[dict] = []
     for indicator in CONVERSION_INDICATORS:
-        conversion.extend(_fetch_indicator(indicator, peers.COUNTRY_ISO3, start, end))
-    rows.extend(conversion)
-    rows.extend(derive_price_level_index(conversion))
+        rows.extend(_fetch_indicator(indicator, peers.COUNTRY_ISO3, start, end))
+    rows.extend(derive_price_level_index(rows))
+    rows.extend(derive_price_level_index_direct(rows))
     rows.extend(derive_real_usd(rows, start, end))
     return rows
