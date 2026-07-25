@@ -22,6 +22,7 @@ quietly producing a plausible-looking but wrong picture.
 
 from __future__ import annotations
 
+import textwrap
 from pathlib import Path
 
 import matplotlib.ticker as mtick
@@ -37,6 +38,11 @@ from .paths import CHART_DIR
 # World Bank PPP coverage begins in 1990; the market-FX comparator is trimmed to match so
 # the two bases are always compared over identical years.
 START_YEAR = 1990
+
+# Characters per line in the source note. Figures are saved tight-cropped, so an unwrapped
+# note would set the figure width; this keeps every PPP figure about as wide as the
+# existing charts in outputs/.
+NOTE_WRAP = 165
 
 _WB = "Data: World Bank Group, World Development Indicators"
 _FRAMING = (
@@ -54,7 +60,13 @@ def _plt():
 
 
 def _note(*parts: str) -> str:
-    return "  ".join(p for p in parts if p)
+    """Join and wrap the source-note sentences.
+
+    Wrapping matters more than it looks: figures are saved with ``bbox_inches="tight"``, so
+    an unwrapped one-line note stretches the whole canvas to the width of the text — these
+    notes are long enough to have doubled the figure width.
+    """
+    return textwrap.fill(" ".join(p for p in parts if p), width=NOTE_WRAP)
 
 
 def _subtitle(ax, text: str) -> None:
@@ -72,6 +84,34 @@ def _tidy(ax, *, xlabel: str = "Year", ylabel: str = "") -> None:
     ax.margins(x=0.04)
 
 
+def _span(*year_lists: list[int]) -> str:
+    """An en-dashed year range covering every list given, e.g. ``1990-2025``.
+
+    Derived from the data rather than written into the title, so the figures stay honest
+    when the World Bank publishes another year.
+    """
+    years = [y for years in year_lists for y in years]
+    return f"{min(years)}\u2013{max(years)}" if years else ""
+
+
+def _labelled_ends(ax, items: list[tuple[float, str, str]], *, min_gap: float,
+                   x: float, fontsize: float = 10.5) -> None:
+    """Draw right-hand end labels, nudged apart so near-identical values stay readable.
+
+    ``items`` is ``(y_value, text, colour)``. Labels are placed at their true y where
+    possible; where two series end within ``min_gap`` of each other the lower one is pushed
+    down just far enough to clear the one above.
+    """
+    placed: list[float] = []
+    for value, text, colour in sorted(items, key=lambda it: -it[0]):
+        y = value
+        if placed and placed[-1] - y < min_gap:
+            y = placed[-1] - min_gap
+        placed.append(y)
+        ax.text(x, y, f"  {text}", fontsize=fontsize, fontweight="bold", color=colour,
+                va="center", ha="left", path_effects=white_stroke())
+
+
 # ── 1. Levels at PPP ─────────────────────────────────────────────────────────
 def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path:
     """UK vs peers, real GDP per capita at PPP, constant 2021 international $."""
@@ -81,10 +121,12 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path:
     fig, ax = plt.subplots(figsize=(11, 6))
 
     uk_latest = None
+    spans: list[list[int]] = []
     for peer in peers.PEERS:
         xs, ys = series.xy(series.series(rows, metric, peer.iso3), START_YEAR)
         if not xs:
             continue
+        spans.append(xs)
         ys = [y / 1000.0 for y in ys]
         ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle,
                 linewidth=peer.linewidth, label=peer.label,
@@ -94,7 +136,7 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path:
         if peer.iso3 == peers.UK:
             uk_latest = (xs[-1], ys[-1])
 
-    ax.set_title("Real GDP per capita at purchasing power parity, 1990\u20132024",
+    ax.set_title(f"Real GDP per capita at purchasing power parity, {_span(*spans)}",
                  fontweight="bold", pad=30)
     if uk_latest:
         _subtitle(ax, f"The UK reached ${uk_latest[1]:,.0f}k per head in {uk_latest[0]}, "
@@ -118,15 +160,20 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path:
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
     facts: list[str] = []
+    spans: list[list[int]] = []
+    labels: list[tuple[float, str, str]] = []
+    last_x = None
     for peer in peers.RELATIVE_PEERS:
         ratios = series.ratio(rows, metric, peer.iso3, peers.UK)
         xs, ys = series.xy(ratios, START_YEAR)
         if not xs:
             continue
+        spans.append(xs)
         ys = [y * 100.0 for y in ys]
         ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle,
                 linewidth=peer.linewidth)
-        end_label(ax, xs[-1], ys[-1], peer.label, peer.colour)
+        labels.append((ys[-1], peer.label, peer.colour))
+        last_x = xs[-1] if last_x is None else max(last_x, xs[-1])
         if peer.iso3 == "POL":
             facts.append(f"Poland climbed from {ys[0]:.0f}% of the UK to {ys[-1]:.0f}%")
         elif peer.iso3 == "USA":
@@ -134,9 +181,13 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path:
 
     ax.axhline(100, color=ACCENT, linewidth=1.4)
     ax.text(ax.get_xlim()[0], 101.5, "United Kingdom = 100", fontsize=9.5, color=ACCENT,
-            style="italic", fontweight="bold", va="bottom")
+            style="italic", fontweight="bold", va="bottom", path_effects=white_stroke())
+    if last_x is not None:
+        # France and the EU average both finish within a point or two of the UK baseline,
+        # so their labels are spread apart rather than drawn on top of one another.
+        _labelled_ends(ax, labels, min_gap=4.0, x=last_x)
 
-    ax.set_title("GDP per capita relative to the UK at PPP, 1990\u20132024",
+    ax.set_title(f"GDP per capita relative to the UK at PPP, {_span(*spans)}",
                  fontweight="bold", pad=30)
     if facts:
         _subtitle(ax, "At domestic price levels, " + ", while ".join(facts))
@@ -173,14 +224,17 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path:
     end_label(ax, years[-1], ppp_pct[-1], "at PPP", BLUE, fontsize=9.5)
 
     peak_year = max(years, key=lambda y: fx[y])
-    ax.plot([peak_year], [fx[peak_year] * 100], "o", color=ACCENT, markersize=7,
+    peak_pct = fx[peak_year] * 100
+    ax.plot([peak_year], [peak_pct], "o", color=ACCENT, markersize=7,
             markeredgecolor="white", markeredgewidth=1.4, zorder=6)
+    # Anchored below-left of the peak: above it would run into the title block.
     ax.annotate(
-        f"{peak_year}: sterling peak\n{fx[peak_year]*100:.0f}% of the US at market rates,\n"
+        f"{peak_year}: the sterling peak\n{peak_pct:.0f}% of the US at market rates,\n"
         f"but only {ppp[peak_year]*100:.0f}% at PPP",
-        xy=(peak_year, fx[peak_year] * 100), xytext=(peak_year - 13, fx[peak_year] * 100 + 4),
-        fontsize=9.5, color=TEXT, path_effects=white_stroke(),
-        arrowprops={"arrowstyle": "-", "color": MUTED, "linewidth": 0.9})
+        xy=(peak_year, peak_pct), xytext=(years[0] + 1, peak_pct - 12),
+        fontsize=9.5, color=TEXT, va="top", ha="left", path_effects=white_stroke(),
+        arrowprops={"arrowstyle": "-", "color": MUTED, "linewidth": 0.9,
+                    "connectionstyle": "arc3,rad=0.15"})
 
     mid = (fx_pct[-1] + ppp_pct[-1]) / 2
     ax.annotate("the gap is the\nexchange rate", xy=(years[-1] - 2, mid), fontsize=9.5,
@@ -189,7 +243,7 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path:
 
     ax.set_title("How much of the UK's fall against the US is real?",
                  fontweight="bold", pad=30)
-    _subtitle(ax, f"At market rates the UK fell from {fx[peak_year]*100:.0f}% of the US in "
+    _subtitle(ax, f"At market rates the UK fell from {peak_pct:.0f}% of the US in "
                   f"{peak_year} to {fx_pct[-1]:.0f}% in {years[-1]}; at PPP it went from "
                   f"{ppp[peak_year]*100:.0f}% to {ppp_pct[-1]:.0f}%")
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}%"))
@@ -211,6 +265,8 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path:
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
     uk = series.series(rows, metric, peers.UK)
+    labels: list[tuple[float, str, str]] = []
+    last_x = None
     for peer in peers.PRICE_LEVEL_PEERS:
         xs, ys = series.xy(series.series(rows, metric, peer.iso3), START_YEAR)
         if not xs:
@@ -218,11 +274,14 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path:
         ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle,
                 linewidth=peer.linewidth,
                 zorder=5 if peer.iso3 == peers.UK else 3)
-        end_label(ax, xs[-1], ys[-1], peer.label, peer.colour, fontsize=9.5)
+        labels.append((ys[-1], peer.label, peer.colour))
+        last_x = xs[-1] if last_x is None else max(last_x, xs[-1])
+    if last_x is not None:
+        _labelled_ends(ax, labels, min_gap=0.035, x=last_x, fontsize=9.5)
 
     ax.axhline(1.0, color=TEXT, linewidth=1.2, linestyle="--", alpha=0.7)
     ax.text(ax.get_xlim()[0], 1.012, "United States = 1.00", fontsize=9.5, color=TEXT,
-            style="italic", va="bottom")
+            style="italic", va="bottom", path_effects=white_stroke())
 
     uk_years = series.years_between(uk, START_YEAR)
     peak_year = max(uk_years, key=lambda y: uk[y])
