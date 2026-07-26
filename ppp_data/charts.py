@@ -41,14 +41,15 @@ START_YEAR = 1990
 DECOMPOSITION_START_YEAR = 2007
 
 _WB = "Data: World Bank Group, World Development Indicators"
-_FRAMING = (
-    "Market exchange rates measure what UK output buys on world markets; PPP measures what "
-    "it buys at home. Neither is the truer number \u2014 they answer different questions."
-)
+# Kept deliberately short: it appears on the figures that show both bases, where a long
+# paragraph would crowd the plot. The full argument is in ppp_data/README.md.
+_FRAMING = ("Market rates measure what UK output buys abroad; PPP, what it buys at home.")
+_SHADED = "Shaded years are extrapolated from a later benchmark, not surveyed."
 
 
 # ── 1. Levels at PPP ─────────────────────────────────────────────────────────
-def _mark_extrapolated_era(ax, years: list[int], *, label_at: str = "bottom") -> None:
+def _mark_extrapolated_era(ax, years: list[int], *,
+                           label_at: str | float = "bottom") -> None:
     """Shade the pre-survey years, where the PPPs are projected rather than measured.
 
     PPPs come from price surveys. For these OECD countries the Eurostat-OECD rolling survey
@@ -57,15 +58,18 @@ def _mark_extrapolated_era(ax, years: list[int], *, label_at: str = "bottom") ->
     data is still worth showing — it is the only way to reach 1990 — but it must not read as
     though it were measured.
 
-    ``label_at`` picks the corner of the shaded band the caption sits in, so it can be kept
-    clear of whichever series runs closest to it on a given chart.
+    ``label_at`` is ``"bottom"``, ``"top"``, or a y position in axis fraction, so the caption
+    can be dropped into whatever part of the band is empty on a given chart.
     """
     if not years or min(years) >= metrics.SURVEY_FIRST_YEAR:
         return
     ax.axvspan(min(years), metrics.SURVEY_FIRST_YEAR, color=MUTED, alpha=0.07, zorder=0)
     ax.axvline(metrics.SURVEY_FIRST_YEAR, color=MUTED, linewidth=0.8, linestyle=":",
                alpha=0.8, zorder=1)
-    y, va = (0.985, "top") if label_at == "top" else (0.015, "bottom")
+    if isinstance(label_at, (int, float)):
+        y, va = float(label_at), "center"
+    else:
+        y, va = (0.985, "top") if label_at == "top" else (0.015, "bottom")
     ax.text(metrics.SURVEY_FIRST_YEAR - 0.4, y,
             "PPPs extrapolated,\nnot surveyed", transform=ax.get_xaxis_transform(),
             fontsize=8, color=MUTED, style="italic", ha="right", va=va,
@@ -85,6 +89,8 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
 
     uk_latest = None
     spans: list[list[int]] = []
+    labels: list[tuple[float, str, str]] = []
+    last_x = None
     for peer in peers.PEERS:
         xs, ys = plotted[peer.iso3]
         if not xs:
@@ -92,10 +98,12 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
         spans.append(xs)
         ys = [y / 1000.0 for y in ys]
         ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle,
-                linewidth=peer.linewidth, label=peer.label,
+                linewidth=peer.linewidth,
                 marker="o" if peer.iso3 == peers.UK else None, markersize=4.5,
                 markeredgecolor="white", markeredgewidth=1.0,
                 zorder=5 if peer.iso3 == peers.UK else 3)
+        labels.append((ys[-1], peer.label, peer.colour))
+        last_x = xs[-1] if last_x is None else max(last_x, xs[-1])
         if peer.iso3 == peers.UK:
             uk_latest = (xs[-1], ys[-1])
 
@@ -105,15 +113,15 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
     if uk_latest:
         _subtitle(ax, f"The UK reached ${uk_latest[1]:,.0f}k per head in {uk_latest[0]}, "
                       "measured at domestic price levels")
+    labelled_ends(ax, labels, min_gap=max(v for v, _, _ in labels) * 0.045, x=last_x,
+                  fontsize=10)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"${v:,.0f}k"))
-    _tidy(ax, ylabel=f"GDP per capita (000s, {meta.unit})")
-    # Lower right is the only empty quadrant here: the upper left holds the
-    # extrapolated-era caption, and every series rises left-to-right.
-    ax.legend(loc="lower right", frameon=False, labelcolor="linecolor", fontsize=10)
+    _tidy(ax, ylabel="GDP per capita, PPP (000s)")
+    ax.margins(x=0.12)  # room on the right for the end labels
 
     source_note(fig, _note(
         f"{_WB} \u2014 GDP per capita, PPP ({meta.wb_indicator}), {meta.unit} "
-        f"[{meta.vintage} benchmark].", _FRAMING))
+        f"[{meta.vintage} benchmark]. {_SHADED}"))
     return save_fig(fig, out_dir / "ppp_gdp_per_capita_over_time.png")
 
 
@@ -161,7 +169,7 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
         # so their labels are spread apart rather than drawn on top of one another.
         labelled_ends(ax, labels, min_gap=4.0, x=last_x)
 
-    _mark_extrapolated_era(ax, [y for xs in spans for y in xs])
+    _mark_extrapolated_era(ax, [y for xs in spans for y in xs], label_at=0.30)
     ax.set_title(f"GDP per capita relative to the UK at PPP, {_span(*spans)}",
                  fontweight="bold", pad=30)
     if facts:
@@ -172,10 +180,8 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
     source_note(fig, _note(
         f"{_WB} \u2014 GDP per capita, PPP ({meta.wb_indicator}), {meta.unit} "
         f"[{meta.vintage} benchmark].",
-        "Current-price international dollars are used because this is a same-year "
-        "cross-country ratio.",
-        f"PPPs are survey-based from {metrics.SURVEY_FIRST_YEAR} (Eurostat-OECD rolling "
-        "survey); the shaded years are extrapolated from a later benchmark."))
+        "Current-price dollars are used because this is a same-year cross-country ratio. "
+        f"{_SHADED}"))
     return save_fig(fig, out_dir / "ppp_gdp_relative_to_peers.png")
 
 
@@ -264,8 +270,10 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path | None:
         labelled_ends(ax, labels, min_gap=0.035, x=last_x, fontsize=9.5)
 
     ax.axhline(1.0, color=TEXT, linewidth=1.2, linestyle="--", alpha=0.7)
-    ax.text(ax.get_xlim()[0], 1.012, "United States = 1.00", fontsize=9.5, color=TEXT,
-            style="italic", va="bottom", path_effects=white_stroke())
+    # Right-aligned at the end of the parity line: every series has fallen below 1.00 by the
+    # mid-2010s, so that is the one stretch of the line with clear air above it.
+    ax.text(max(uk_years), 1.015, "United States = 1.00", fontsize=9.5, color=TEXT,
+            style="italic", va="bottom", ha="right", path_effects=white_stroke())
 
     peak_year = max(uk_years, key=lambda y: uk[y])
     ax.plot([peak_year], [uk[peak_year]], "o", color=ACCENT, markersize=7,
@@ -391,37 +399,50 @@ def chart_long_run(rows: list[dict], out_dir: Path) -> Path | None:
     """Maddison's long-run PPP series, which reaches back before the World Bank's 1990."""
     metric = "gdp_per_capita_real_maddison"
     meta = metrics.require_over_time(metric)
-    if not any(r["metric"] == metric for r in rows):
+    plotted = {p.iso3: series.xy(series.series(rows, metric, p.iso3)) for p in peers.PEERS}
+    if not any(xs for xs, _ in plotted.values()):
         return None
     plt = _plt()
-    fig, ax = plt.subplots(figsize=(11, 6))
+    fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
-    uk_latest = None
+    labels: list[tuple[float, str, str]] = []
+    last_x = None
+    span_years: list[int] = []
     for peer in peers.PEERS:
-        xs, ys = series.xy(series.series(rows, metric, peer.iso3))
+        xs, ys = plotted[peer.iso3]
         if not xs:
             continue
+        span_years += xs
         ys = [y / 1000.0 for y in ys]
         ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle,
-                linewidth=peer.linewidth, label=peer.label,
-                zorder=5 if peer.iso3 == peers.UK else 3)
-        if peer.iso3 == peers.UK:
-            uk_latest = (xs[0], xs[-1])
+                linewidth=peer.linewidth, zorder=5 if peer.iso3 == peers.UK else 3)
+        labels.append((ys[-1], peer.label, peer.colour))
+        last_x = xs[-1] if last_x is None else max(last_x, xs[-1])
+    labelled_ends(ax, labels, min_gap=max(v for v, _, _ in labels) * 0.05, x=last_x,
+                  fontsize=10)
 
-    span = f"{uk_latest[0]}\u2013{uk_latest[1]}" if uk_latest else "the long run"
-    ax.set_title(f"Real GDP per capita at PPP over the long run, {span}",
+    # The story this chart exists to tell: over half a century the UK converged with its
+    # European peers while the US pulled steadily away from all of them.
+    uk = dict(zip(*plotted[peers.UK])) if plotted[peers.UK][0] else {}
+    us = dict(zip(*plotted[peers.US])) if plotted[peers.US][0] else {}
+    subtitle_text = f"Benchmarked on Maddison's 2011 prices \u2014 a different vintage from the World Bank series, so the two are never spliced"
+    if uk and us:
+        first, last = min(uk.keys() & us.keys()), max(uk.keys() & us.keys())
+        a, b = uk[first] / us[first] * 100, uk[last] / us[last] * 100
+        subtitle_text = (f"The US pulled away steadily: the UK slipped from {a:.0f}% of US "
+                         f"output per head in {first} to {b:.0f}% by {last}")
+
+    ax.set_title(f"Real GDP per capita at PPP over the long run, {_span(span_years)}",
                  fontweight="bold", pad=30)
-    _subtitle(ax, "Maddison's 2011 benchmark \u2014 a different vintage from the World Bank "
-                  "series above, so the two are never spliced")
+    _subtitle(ax, subtitle_text)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"${v:,.0f}k"))
-    _tidy(ax, ylabel=f"GDP per capita (000s, {meta.unit})")
-    ax.legend(loc="upper left", frameon=False, labelcolor="linecolor", fontsize=10)
+    _tidy(ax, ylabel="GDP per capita, PPP (000s)")
+    ax.margins(x=0.12)
 
     source_note(fig, _note(
-        f"Data: Maddison Project Database 2023 (Bolt & van Zanden), via Our World in Data "
-        f"\u2014 {meta.unit}.",
-        "Benchmarked on ICP 2011, so its levels are not comparable with the World Bank's "
-        "ICP 2021 series."))
+        "Data: Maddison Project Database 2023 (Bolt & van Zanden), via Our World in Data "
+        f"\u2014 {meta.unit}. On the ICP 2011 benchmark, so its levels are not comparable "
+        "with the World Bank's ICP 2021 series shown elsewhere in this analysis."))
     return save_fig(fig, out_dir / "ppp_gdp_long_run_maddison.png")
 
 

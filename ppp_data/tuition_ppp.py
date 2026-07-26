@@ -198,7 +198,14 @@ def _share_subtitle(uk_years: list[int], uk: list[float],
 
 
 def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
-    """UK and US tuition in constant base-year international dollars, PPP vs market FX."""
+    """UK tuition on both conversion bases, with the US for scale.
+
+    The two UK lines are deliberately given different weights and colours rather than two
+    dashes of the same colour: the whole point of the figure is the gap between them, and
+    the shaded band makes it readable at a glance. The band flips sign around 2016 — when
+    sterling was strong a UK degree looked dearer in dollars than it felt at home, and since
+    then the reverse.
+    """
     plt = themed_plt()
 
     uk_years, uk_ppp = _by_country(points, "United Kingdom", "real_base_intl")
@@ -208,37 +215,38 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
         return None
 
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
-    ax.step(uk_years, uk_ppp, where="post", color=ACCENT, linewidth=2.8)
-    ax.plot(uk_years, uk_ppp, "o", color=ACCENT, markersize=5,
-            markeredgecolor="white", markeredgewidth=1.0)
-    ax.step(uk_years, uk_fx, where="post", color=ACCENT, linewidth=1.8, linestyle=":")
+    ax.fill_between(uk_years, uk_ppp, uk_fx, step="post", color=MUTED, alpha=0.16, zorder=1)
+    ax.step(uk_years, uk_fx, where="post", color=MUTED, linewidth=1.8, linestyle="--",
+            zorder=3)
+    ax.step(uk_years, uk_ppp, where="post", color=ACCENT, linewidth=3.0, zorder=4)
+    ax.plot(uk_years, uk_ppp, "o", color=ACCENT, markersize=5.5,
+            markeredgecolor="white", markeredgewidth=1.2, zorder=5)
     if us_years:
-        ax.plot(us_years, us_ppp, color=GOLD, linewidth=2.0)
+        ax.plot(us_years, us_ppp, color=GOLD, linewidth=2.0, zorder=2)
 
-    labels = [(uk_ppp[-1], "UK, at PPP", ACCENT), (uk_fx[-1], "UK, at market rates", MUTED)]
+    labels = [(uk_ppp[-1], "UK, at PPP", ACCENT),
+              (uk_fx[-1], "UK, at market rates", MUTED)]
     if us_years:
-        labels.append((us_ppp[-1], "United States\n(the numeraire, so unchanged)", GOLD))
-    labelled_ends(ax, labels, min_gap=max(uk_ppp) * 0.10,
+        labels.append((us_ppp[-1], "United States", GOLD))
+    labelled_ends(ax, labels, min_gap=max(uk_ppp) * 0.085,
                   x=max(uk_years[-1], us_years[-1] if us_years else uk_years[-1]),
-                  fontsize=9.5)
+                  fontsize=10)
 
-    latest = uk_ppp[-1]
     ax.set_title("A UK degree costs even more measured against British prices",
                  fontweight="bold", pad=30)
-    subtitle(ax, f"Converted at PPP the England fee cap is worth ${latest:,.0f} a year in "
-                 f"constant {BASE_YEAR} international dollars, against ${uk_fx[-1]:,.0f} "
-                 "at market exchange rates")
+    subtitle(ax, f"Converted at PPP the England fee cap is worth ${uk_ppp[-1]:,.0f} a year, "
+                 f"against ${uk_fx[-1]:,.0f} at market exchange rates")
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"${v:,.0f}"))
-    tidy(ax, ylabel=f"Annual tuition (constant {BASE_YEAR} international $)")
+    tidy(ax, ylabel=f"Annual tuition (constant {BASE_YEAR} $)")
     ax.set_ylim(bottom=0)
-    ax.margins(x=0.10)
+    ax.margins(x=0.13)
 
     source_note(fig, note(
         "Sources: UK \u2014 England statutory fee caps (legislation.gov.uk / GOV.UK); US "
-        "\u2014 NCES Digest 2023 Table 330.10. Converted at the World Bank PPP conversion "
-        f"factor (PA.NUS.PPP, {ICP_VINTAGE} benchmark) for the fee year, then deflated by "
-        f"US CPI to constant {BASE_YEAR} international dollars. PPP factors start in 1990, "
-        "so earlier fee years are omitted rather than extrapolated."))
+        "\u2014 NCES Digest 2023 Table 330.10. UK fees converted at the World Bank PPP "
+        f"factor (PA.NUS.PPP, {ICP_VINTAGE}) and at the market rate, both deflated by US CPI "
+        f"to constant {BASE_YEAR} dollars. The US is the PPP numeraire, so its line is the "
+        "same on either basis. PPP factors start in 1990; earlier fee years are omitted."))
     return save_fig(fig, out_dir / "ppp_tuition_history.png", bottom=0.18)
 
 
@@ -281,10 +289,11 @@ def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | Non
     ax.margins(x=0.10)
 
     source_note(fig, note(
-        "Sources: fees as above; GDP per capita from the World Bank (NY.GDP.PCAP.CD and "
-        "NY.GDP.PCAP.PP.CD). Fees and income are taken in the same currency, so the units "
-        f"cancel and the figure is the same at market rates as at PPP. PPP parities are on "
-        f"the {ICP_VINTAGE} benchmark."))
+        "Sources: UK \u2014 England statutory fee caps (legislation.gov.uk / GOV.UK); US "
+        "\u2014 NCES Digest 2023 Table 330.10; GDP per capita from the World Bank "
+        "(NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.CD). Fees and income are taken in the same "
+        "currency, so the units cancel and the figure reads the same at market rates as at "
+        f"PPP ({ICP_VINTAGE} parities)."))
     return save_fig(fig, out_dir / "tuition_share_of_gdp_per_capita.png")
 
 
