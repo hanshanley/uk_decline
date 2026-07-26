@@ -36,6 +36,7 @@ class Metric(NamedTuple):
     cross_section: bool       # valid for a same-year cross-country ratio?
     vintage: str              # price/PPP benchmark this series is expressed on
     description: str
+    validation_only: bool = False  # fetched to cross-check another metric, never plotted
 
 
 SOURCE = "World Bank WDI"
@@ -161,6 +162,7 @@ METRICS: dict[str, Metric] = {
         over_time=False,
         cross_section=False,
         vintage=ICP_VINTAGE,
+        validation_only=True,
         description=(
             "The same quantity taken straight from PA.NUS.PPP / PA.NUS.FCRF. Kept purely as "
             "an independent cross-check on `price_level_index`, which is built from two "
@@ -197,7 +199,10 @@ BY_INDICATOR: dict[str, str] = {
     m.wb_indicator: m.id for m in METRICS.values() if m.wb_indicator
 }
 
-# Metrics that may be plotted as a level across years.
+# Metrics fetched purely to cross-check another metric; never plotted.
+VALIDATION_ONLY: frozenset[str] = frozenset(
+    m.id for m in METRICS.values() if m.validation_only
+)
 TIME_SERIES_SAFE: frozenset[str] = frozenset(
     m.id for m in METRICS.values() if m.over_time
 )

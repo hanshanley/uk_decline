@@ -18,7 +18,7 @@ import argparse
 import datetime as _dt
 import sys
 
-from . import charts, combine, maddison, paths, validate, worldbank
+from . import charts, combine, maddison, paths, tuition_ppp, validate, worldbank
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -79,9 +79,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.charts:
         figures = charts.make_charts(rows)
+        figures += tuition_ppp.make_charts(rows)
         print(f"[ppp_data] wrote {len(figures)} figures to {paths.CHART_DIR}/:")
         for path in figures:
             print(f"    {path.name}")
+        if not any(p.name.startswith("ppp_tuition") for p in figures):
+            print(f"[ppp_data] note: {paths.TUITION_HISTORY_CSV} is absent, so the tuition "
+                  "figures were skipped; build it with "
+                  "`python -m tuition.build_history`.", file=sys.stderr)
     return 0
 
 

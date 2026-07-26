@@ -22,94 +22,25 @@ quietly producing a plausible-looking but wrong picture.
 
 from __future__ import annotations
 
-import textwrap
 from pathlib import Path
 
 import matplotlib.ticker as mtick
 
-from vizstyle import (
-    ACCENT, BLUE, GRID, MUTED, TEXT, end_label, house_style, save_fig, source_note,
-    white_stroke,
-)
+from vizstyle import ACCENT, BLUE, GRID, MUTED, TEXT, save_fig, source_note, white_stroke
 
 from . import decompose, metrics, peers, series
+from .figure import labelled_ends, note as _note, span as _span, subtitle as _subtitle, themed_plt as _plt, tidy as _tidy
 from .paths import CHART_DIR
 
 # World Bank PPP coverage begins in 1990; the market-FX comparator is trimmed to match so
 # the two bases are always compared over identical years.
 START_YEAR = 1990
 
-# Characters per line in the source note. Figures are saved tight-cropped, so an unwrapped
-# note would set the figure width; this keeps every PPP figure about as wide as the
-# existing charts in outputs/.
-NOTE_WRAP = 165
-
 _WB = "Data: World Bank Group, World Development Indicators"
 _FRAMING = (
     "Market exchange rates measure what UK output buys on world markets; PPP measures what "
     "it buys at home. Neither is the truer number \u2014 they answer different questions."
 )
-
-
-def _plt():
-    """Return the themed pyplot, with the house rcParams applied once."""
-    import matplotlib.pyplot as plt
-
-    house_style()
-    return plt
-
-
-def _note(*parts: str) -> str:
-    """Join and wrap the source-note sentences.
-
-    Wrapping matters more than it looks: figures are saved with ``bbox_inches="tight"``, so
-    an unwrapped one-line note stretches the whole canvas to the width of the text — these
-    notes are long enough to have doubled the figure width.
-    """
-    return textwrap.fill(" ".join(p for p in parts if p), width=NOTE_WRAP)
-
-
-def _subtitle(ax, text: str) -> None:
-    """The centred, muted one-liner that carries each figure's key fact."""
-    ax.text(0.5, 1.015, text, transform=ax.transAxes, ha="center", va="bottom",
-            fontsize=11.5, color=MUTED)
-
-
-def _tidy(ax, *, xlabel: str = "Year", ylabel: str = "") -> None:
-    ax.set_xlabel(xlabel, labelpad=2)
-    ax.set_ylabel(ylabel, labelpad=2)
-    ax.grid(axis="y", linestyle="-", linewidth=0.5)
-    ax.set_axisbelow(True)
-    ax.tick_params(axis="both", pad=2)
-    ax.margins(x=0.04)
-
-
-def _span(*year_lists: list[int]) -> str:
-    """An en-dashed year range covering every list given, e.g. ``1990-2025``.
-
-    Derived from the data rather than written into the title, so the figures stay honest
-    when the World Bank publishes another year.
-    """
-    years = [y for years in year_lists for y in years]
-    return f"{min(years)}\u2013{max(years)}" if years else ""
-
-
-def _labelled_ends(ax, items: list[tuple[float, str, str]], *, min_gap: float,
-                   x: float, fontsize: float = 10.5) -> None:
-    """Draw right-hand end labels, nudged apart so near-identical values stay readable.
-
-    ``items`` is ``(y_value, text, colour)``. Labels are placed at their true y where
-    possible; where two series end within ``min_gap`` of each other the lower one is pushed
-    down just far enough to clear the one above.
-    """
-    placed: list[float] = []
-    for value, text, colour in sorted(items, key=lambda it: -it[0]):
-        y = value
-        if placed and placed[-1] - y < min_gap:
-            y = placed[-1] - min_gap
-        placed.append(y)
-        ax.text(x, y, f"  {text}", fontsize=fontsize, fontweight="bold", color=colour,
-                va="center", ha="left", path_effects=white_stroke())
 
 
 # ── 1. Levels at PPP ─────────────────────────────────────────────────────────
@@ -185,7 +116,7 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path:
     if last_x is not None:
         # France and the EU average both finish within a point or two of the UK baseline,
         # so their labels are spread apart rather than drawn on top of one another.
-        _labelled_ends(ax, labels, min_gap=4.0, x=last_x)
+        labelled_ends(ax, labels, min_gap=4.0, x=last_x)
 
     ax.set_title(f"GDP per capita relative to the UK at PPP, {_span(*spans)}",
                  fontweight="bold", pad=30)
@@ -220,8 +151,9 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path:
     ax.fill_between(years, fx_pct, ppp_pct, color=MUTED, alpha=0.14, zorder=1)
     ax.plot(years, fx_pct, color=ACCENT, linewidth=2.8, zorder=4)
     ax.plot(years, ppp_pct, color=BLUE, linewidth=2.8, zorder=4)
-    end_label(ax, years[-1], fx_pct[-1], "at market\nexchange rates", ACCENT, fontsize=9.5)
-    end_label(ax, years[-1], ppp_pct[-1], "at PPP", BLUE, fontsize=9.5)
+    labelled_ends(ax, [(fx_pct[-1], "at market\nexchange rates", ACCENT),
+                       (ppp_pct[-1], "at PPP", BLUE)],
+                  min_gap=3.0, x=years[-1], fontsize=9.5)
 
     peak_year = max(years, key=lambda y: fx[y])
     peak_pct = fx[peak_year] * 100
@@ -277,7 +209,7 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path:
         labels.append((ys[-1], peer.label, peer.colour))
         last_x = xs[-1] if last_x is None else max(last_x, xs[-1])
     if last_x is not None:
-        _labelled_ends(ax, labels, min_gap=0.035, x=last_x, fontsize=9.5)
+        labelled_ends(ax, labels, min_gap=0.035, x=last_x, fontsize=9.5)
 
     ax.axhline(1.0, color=TEXT, linewidth=1.2, linestyle="--", alpha=0.7)
     ax.text(ax.get_xlim()[0], 1.012, "United States = 1.00", fontsize=9.5, color=TEXT,

@@ -21,4 +21,7 @@ Run it::
 See ``ppp_data/README.md`` for the methodology and the full list of caveats.
 """
 
-__all__ = ["charts", "combine", "decompose", "metrics", "paths", "peers", "validate", "worldbank"]
+__all__ = [
+    "charts", "combine", "decompose", "figure", "maddison", "metrics", "paths", "peers",
+    "series", "tuition_ppp", "validate", "worldbank",
+]
