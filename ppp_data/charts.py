@@ -36,6 +36,10 @@ from .paths import CHART_DIR
 # the two bases are always compared over identical years.
 START_YEAR = 1990
 
+# The baseline year for the real-vs-currency decomposition: the UK's high-water mark against
+# the US, and the year the rest of the repository measures decline from.
+DECOMPOSITION_START_YEAR = 2007
+
 _WB = "Data: World Bank Group, World Development Indicators"
 _FRAMING = (
     "Market exchange rates measure what UK output buys on world markets; PPP measures what "
@@ -44,17 +48,21 @@ _FRAMING = (
 
 
 # ── 1. Levels at PPP ─────────────────────────────────────────────────────────
-def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path:
+def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
     """UK vs peers, real GDP per capita at PPP, constant 2021 international $."""
     metric = "gdp_per_capita_ppp_constant"
     meta = metrics.require_over_time(metric)
+    plotted = {p.iso3: series.xy(series.series(rows, metric, p.iso3), START_YEAR)
+               for p in peers.PEERS}
+    if not any(xs for xs, _ in plotted.values()):
+        return None  # a partial fetch: skip rather than publish an empty figure
     plt = _plt()
     fig, ax = plt.subplots(figsize=(11, 6))
 
     uk_latest = None
     spans: list[list[int]] = []
     for peer in peers.PEERS:
-        xs, ys = series.xy(series.series(rows, metric, peer.iso3), START_YEAR)
+        xs, ys = plotted[peer.iso3]
         if not xs:
             continue
         spans.append(xs)
@@ -83,10 +91,14 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path:
 
 
 # ── 2. Peers relative to the UK, at PPP ──────────────────────────────────────
-def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path:
+def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
     """Each peer's GDP per capita as a percentage of the UK's, at PPP (UK = 100)."""
     metric = "gdp_per_capita_ppp_current"
     meta = metrics.require_cross_section(metric)
+    plotted = {p.iso3: series.xy(series.ratio(rows, metric, p.iso3, peers.UK), START_YEAR)
+               for p in peers.RELATIVE_PEERS}
+    if not any(xs for xs, _ in plotted.values()):
+        return None  # no peer has a UK ratio: skip rather than publish an empty figure
     plt = _plt()
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
@@ -95,8 +107,7 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path:
     labels: list[tuple[float, str, str]] = []
     last_x = None
     for peer in peers.RELATIVE_PEERS:
-        ratios = series.ratio(rows, metric, peer.iso3, peers.UK)
-        xs, ys = series.xy(ratios, START_YEAR)
+        xs, ys = plotted[peer.iso3]
         if not xs:
             continue
         spans.append(xs)
@@ -134,19 +145,21 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path:
 
 
 # ── 3. The two bases side by side ────────────────────────────────────────────
-def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path:
+def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
     """The UK as a share of the US, at market exchange rates and at PPP."""
     fx_metric, ppp_metric = "gdp_per_capita_nominal_usd", "gdp_per_capita_ppp_current"
     metrics.require_cross_section(fx_metric)
     metrics.require_cross_section(ppp_metric)
-    plt = _plt()
 
     fx = series.ratio(rows, fx_metric, peers.UK, peers.US)
     ppp = series.ratio(rows, ppp_metric, peers.UK, peers.US)
     years = [y for y in sorted(fx.keys() & ppp.keys()) if y >= START_YEAR]
+    if not years:
+        return None  # both bases are needed to draw the comparison at all
     fx_pct = [fx[y] * 100 for y in years]
     ppp_pct = [ppp[y] * 100 for y in years]
 
+    plt = _plt()
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
     ax.fill_between(years, fx_pct, ppp_pct, color=MUTED, alpha=0.14, zorder=1)
     ax.plot(years, fx_pct, color=ACCENT, linewidth=2.8, zorder=4)
@@ -189,14 +202,17 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path:
 
 
 # ── 4. The price level index ─────────────────────────────────────────────────
-def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path:
+def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path | None:
     """Each country's price level relative to the United States (US = 1.00)."""
     metric = "price_level_index"
     meta = metrics.require_over_time(metric)
+    uk = series.series(rows, metric, peers.UK)
+    uk_years = series.years_between(uk, START_YEAR)
+    if not uk_years:
+        return None  # the UK is the subject of this figure; without it there is nothing to say
     plt = _plt()
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
-    uk = series.series(rows, metric, peers.UK)
     labels: list[tuple[float, str, str]] = []
     last_x = None
     for peer in peers.PRICE_LEVEL_PEERS:
@@ -215,7 +231,6 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path:
     ax.text(ax.get_xlim()[0], 1.012, "United States = 1.00", fontsize=9.5, color=TEXT,
             style="italic", va="bottom", path_effects=white_stroke())
 
-    uk_years = series.years_between(uk, START_YEAR)
     peak_year = max(uk_years, key=lambda y: uk[y])
     ax.plot([peak_year], [uk[peak_year]], "o", color=ACCENT, markersize=7,
             markeredgecolor="white", markeredgewidth=1.4, zorder=6)
@@ -261,50 +276,69 @@ def uk_us_decomposition(rows: list[dict], start_year: int,
 
 
 def chart_decomposition(rows: list[dict], out_dir: Path,
-                        start_year: int = 2007) -> Path:
-    """A waterfall splitting the UK's fall against the US into real and currency parts."""
-    d = uk_us_decomposition(rows, start_year)
+                        start_year: int = DECOMPOSITION_START_YEAR) -> Path | None:
+    """Why the UK fell against the US: the two contributions, in percentage points.
+
+    Deliberately **not** a waterfall. A waterfall would put the endpoint levels (105% and
+    64% of the US) and the two changes (-2.9 and -38.5 points) on one axis, so bars drawn
+    from zero and bars floating in mid-air would look like the same kind of quantity when
+    they are not. This chart plots one quantity only — the contribution to the change, in
+    percentage points — and leaves the levels to the subtitle and the endpoint annotation.
+
+    ``start_year`` defaults to 2007, the UK's high-water mark and the baseline the rest of
+    the repository measures from. If the fetched range does not reach that far back — the
+    ``--start`` flag can move it — the figure is skipped rather than aborting a run whose
+    CSVs and manifest have already been written.
+    """
+    try:
+        d = uk_us_decomposition(rows, start_year)
+    except ValueError:
+        return None
     plt = _plt()
-    fig, ax = plt.subplots(figsize=(11, 6))
+    fig, ax = plt.subplots(figsize=(11, 5.6))
 
-    def colour(value: float) -> str:
-        return ACCENT if value < 0 else BLUE
+    # Top to bottom: the big driver, the small one, then the total they sum to.
+    bars = [
+        ("Price level and\nexchange rate", d.price_effect, ACCENT),
+        ("Real output\nper head", d.real_effect, BLUE),
+        (f"Total change\n{d.start_year}\u2013{d.end_year}", d.total_change, TEXT),
+    ]
+    ys = [2.0, 1.0, -0.15]  # the total is set slightly apart, below a divider
 
-    labels = [f"{d.start_year}", "Real output\nper head", "Price level /\nexchange rate",
-              f"{d.end_year}"]
-    # Endpoint bars sit on the axis; the two effect bars float between them, each starting
-    # where the previous step left off.
-    steps = [d.start_ratio, d.start_ratio + d.real_effect, d.end_ratio]
-    bars = [(0.0, d.start_ratio, TEXT)]
-    for effect, level in zip((d.real_effect, d.price_effect), steps):
-        bars.append((level + min(effect, 0.0), abs(effect), colour(effect)))
-    bars.append((0.0, d.end_ratio, TEXT))
+    for y, (_, value, colour) in zip(ys, bars):
+        ax.barh(y, value, height=0.55, color=colour, zorder=3)
+        ax.text(value - 0.7, y, f"{value:+.1f} pp", va="center", ha="right",
+                fontsize=12.5, fontweight="bold", color=colour,
+                path_effects=white_stroke())
 
-    for i, (bottom, height, col) in enumerate(bars):
-        ax.bar(i, height, bottom=bottom, color=col, width=0.6, zorder=3)
+    ax.axhline(0.45, color=GRID, linewidth=1.0, zorder=2)
+    ax.axvline(0, color=TEXT, linewidth=1.2, zorder=4)
 
-    for i, value in enumerate((d.start_ratio, d.real_effect, d.price_effect, d.end_ratio)):
-        bottom, height, _ = bars[i]
-        text = f"{value:+.1f} pp" if i in (1, 2) else f"{value:.1f}%"
-        ax.text(i, bottom + height + 1.2, text, ha="center", va="bottom",
-                fontsize=11.5, fontweight="bold", color=TEXT, path_effects=white_stroke())
+    share = abs(d.price_effect) / abs(d.total_change) * 100 if d.total_change else 0.0
+    ax.text(d.price_effect + 0.7, ys[0] - 0.42,
+            f"{share:.0f}% of the total fall", fontsize=10, color=MUTED, style="italic",
+            va="top", ha="left", path_effects=white_stroke())
 
-    # Dashed connectors carrying each step's closing level across to the next bar.
-    for i, level in enumerate(steps):
-        ax.plot([i + 0.3, i + 1.3], [level, level], color=GRID, linewidth=1.0,
-                linestyle="--", zorder=2)
+    ax.set_yticks(ys)
+    ax.set_yticklabels([label for label, _, _ in bars], fontsize=11, color=TEXT)
+    ax.set_ylim(-0.75, 2.6)
+    # Leave room to the left of the longest bar for its outside value label, which would
+    # otherwise run into the y tick labels.
+    widest = min(value for _, value, _ in bars)
+    ax.set_xlim(widest * 1.28, abs(widest) * 0.03)
 
-    ax.set_xticks(range(4))
-    ax.set_xticklabels(labels, fontsize=10.5, color=TEXT)
     ax.set_title(f"Almost none of the UK's fall against the US since {d.start_year} "
                  "is lost output", fontweight="bold", pad=30)
-    _subtitle(ax, f"Of the {abs(d.total_change):.0f}-point fall from {d.start_ratio:.0f}% to "
-                  f"{d.end_ratio:.0f}% of US GDP per head, {abs(d.price_effect):.0f} points "
-                  f"come from the exchange rate and price levels, and {abs(d.real_effect):.0f} "
-                  "from real output")
-    ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}%"))
-    _tidy(ax, xlabel="", ylabel="UK GDP per capita as % of the US")
-    ax.set_ylim(0, max(d.start_ratio, d.end_ratio) * 1.22)
+    _subtitle(ax, f"UK GDP per head went from {d.start_ratio:.0f}% of the US in "
+                  f"{d.start_year} to {d.end_ratio:.0f}% in {d.end_year}. Splitting that "
+                  f"{abs(d.total_change):.0f}-point fall into its two causes:")
+    ax.xaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}"))
+    ax.set_xlabel("Contribution to the change in UK GDP per capita vs the US "
+                  "(percentage points)", labelpad=6)
+    ax.grid(axis="x", linestyle="-", linewidth=0.5)
+    ax.set_axisbelow(True)
+    ax.tick_params(axis="both", pad=2)
+    ax.margins(y=0)
 
     source_note(fig, _note(
         f"{_WB} \u2014 NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.CD [{metrics.ICP_VINTAGE} benchmark]. "
@@ -312,7 +346,7 @@ def chart_decomposition(rows: list[dict], out_dir: Path,
         "level); the two contributions sum exactly to the total.",
         "A weaker pound does make imports dearer, so this is not a clean bill of health "
         "\u2014 it relocates the story from lost output to lost purchasing power abroad."))
-    return save_fig(fig, out_dir / "ppp_gap_decomposition_uk_us.png")
+    return save_fig(fig, out_dir / "ppp_gap_decomposition_uk_us.png", bottom=0.20)
 
 
 # ── 6. The long run, on the Maddison benchmark ───────────────────────────────

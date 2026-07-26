@@ -2,10 +2,16 @@
 
 Pulls the five World Bank series the PPP view needs — GDP per capita at PPP (constant and
 current international $), GDP per capita at market exchange rates (current US$), the PPP
-conversion factor, and the market exchange rate — and derives two more locally:
+conversion factor, and the market exchange rate — and derives three more locally:
 
-* ``price_level_index``    = PPP conversion factor / market exchange rate
-* ``gdp_per_capita_real_usd`` = current US$ GDP per capita deflated by US CPI
+* ``price_level_index``        = ``NY.GDP.PCAP.CD / NY.GDP.PCAP.PP.CD``. Algebraically this
+  is the PPP conversion factor over the market exchange rate, but computed this way the
+  country's local-currency GDP cancels, so it survives redenominations. See
+  :func:`derive_price_level_index`.
+* ``price_level_index_direct`` = ``PA.NUS.PPP / PA.NUS.FCRF``, the textbook formula, kept
+  **only** as a cross-check and never plotted — the two indicators do not share a currency
+  basis for euro-area countries before 1999.
+* ``gdp_per_capita_real_usd``  = current US$ GDP per capita deflated by US CPI.
 
 The deflation is delegated to :func:`europe_data.worldbank.deflate_to_real_usd`, the exact
 function behind the repository's headline chart, so the market-FX comparator plotted here
@@ -44,6 +50,10 @@ CONVERSION_INDICATORS: tuple[str, ...] = (
 # the Maddison Project Database, which sits on a different benchmark and gets its own chart.
 PPP_FIRST_YEAR = 1990
 
+# A hard ceiling on the paging loop. At 1,000 rows a page the real requests need one or two
+# pages; this only bounds a degenerate response that keeps advertising more.
+MAX_PAGES = 50
+
 SOURCE = "World Bank WDI"
 REAL_USD_SOURCE = "World Bank WDI (NY.GDP.PCAP.CD deflated by US CPI, FP.CPI.TOTL)"
 DERIVED_PLI_SOURCE = "Derived: World Bank WDI NY.GDP.PCAP.CD / NY.GDP.PCAP.PP.CD"
@@ -51,11 +61,16 @@ DERIVED_PLI_DIRECT_SOURCE = "Derived: World Bank WDI PA.NUS.PPP / PA.NUS.FCRF"
 
 
 def _fetch_indicator(indicator: str, iso3s: list[str], start: int, end: int) -> Iterator[dict]:
-    """Yield tidy rows for one indicator, following the API's paging."""
+    """Yield tidy rows for one indicator, following the API's paging.
+
+    The page count comes from the remote payload, so it is treated as untrusted: the loop
+    stops on a malformed header, on a page that yields no rows, and at a hard ceiling, so a
+    degenerate upstream response cannot drive unbounded requests.
+    """
     metric_id = metrics.BY_INDICATOR[indicator]
     codes = ";".join(iso3s)
     page = 1
-    while True:
+    while page <= MAX_PAGES:
         payload = get_json(
             f"{BASE}/country/{codes}/indicator/{indicator}",
             params={"format": "json", "per_page": 1000,
@@ -64,6 +79,8 @@ def _fetch_indicator(indicator: str, iso3s: list[str], start: int, end: int) -> 
         if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
             return
         meta, rows = payload[0], payload[1]
+        if not rows:
+            return
         for row in rows:
             value = row.get("value")
             iso3 = row.get("countryiso3code") or ""
@@ -72,7 +89,11 @@ def _fetch_indicator(indicator: str, iso3s: list[str], start: int, end: int) -> 
             yield metrics.make_row(
                 iso3, peers.name_for(iso3), int(row["date"]), metric_id, float(value)
             )
-        if page >= int(meta.get("pages", 1)):
+        try:
+            pages = int(meta.get("pages", 1)) if isinstance(meta, dict) else 1
+        except (TypeError, ValueError):
+            return  # a malformed page count: stop rather than loop on a bad response
+        if page >= pages:
             return
         page += 1
 

@@ -36,8 +36,8 @@ from tuition import config as tuition_config
 from vizstyle import ACCENT, BLUE, GOLD, MUTED, save_fig, source_note, white_stroke
 
 from . import series
-from .metrics import ICP_VINTAGE
 from .figure import labelled_ends, note, subtitle, themed_plt, tidy
+from .metrics import ICP_VINTAGE
 from .paths import CHART_DIR, TUITION_HISTORY_CSV
 
 # The base year the tuition package deflates to, and the name of the column it publishes in
@@ -236,9 +236,9 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
     source_note(fig, note(
         "Sources: UK \u2014 England statutory fee caps (legislation.gov.uk / GOV.UK); US "
         "\u2014 NCES Digest 2023 Table 330.10. Converted at the World Bank PPP conversion "
-        f"factor (PA.NUS.PPP) for the fee year, then deflated by US CPI to constant "
-        f"{BASE_YEAR} international dollars. PPP factors start in 1990, so earlier fee "
-        "years are omitted rather than extrapolated."))
+        f"factor (PA.NUS.PPP, {ICP_VINTAGE} benchmark) for the fee year, then deflated by "
+        f"US CPI to constant {BASE_YEAR} international dollars. PPP factors start in 1990, "
+        "so earlier fee years are omitted rather than extrapolated."))
     return save_fig(fig, out_dir / "ppp_tuition_history.png", bottom=0.18)
 
 
