@@ -289,8 +289,9 @@ not an accounting illusion:
 - The UK's terms of trade deteriorated; PPP is designed to remove exactly that effect.
 
 And the other 30% is straightforwardly lost output. On the volume series the UK's growth
-slowdown after 2007 is the **worst of the four countries** compared here — 2.38% a year
-before, 0.42% after, a 1.96-point deceleration against 0.65 for the US and 0.79 for Germany.
+slowdown after 2007 is the **worst of the five countries** compared here — 2.38% a year
+before, 0.42% after, a 1.96-point deceleration against 0.65 for the US, 0.79 for Germany,
+1.02 for France and 1.17 for Italy.
 That is the UK productivity puzzle, and this analysis does not explain it away.
 
 So the honest reading is that the PPP view **rebalances** the story rather than refuting it:
@@ -328,6 +329,7 @@ All free, no API key, fetched live. Data accessed via the World Bank API; see
 
 ```
 ppp_data/
+  __init__.py      package docstring: what this parallel analysis is, and is not
   paths.py         filesystem paths: regenerable CSVs to data/, figures to outputs/ppp/
   metrics.py       metric registry: units, ICP vintage, per-metric validity + caveats
   peers.py         which countries are plotted, and in what colour
@@ -335,7 +337,7 @@ ppp_data/
   maddison.py      long-run PPP series (re-labelled from europe_data.maddison)
   series.py        slicing tidy rows into per-country series and ratios
   decompose.py     the symmetric real-vs-price-level decomposition
-  validate.py      the eleven sanity checks
+  validate.py      the fourteen sanity checks
   combine.py       long/wide CSVs + manifest
   figure.py        shared chart helpers (wrapped notes, non-colliding end labels)
   charts.py        the six GDP and price-level figures
@@ -343,4 +345,4 @@ ppp_data/
   __main__.py      fetch -> validate -> combine -> chart
 ```
 
-Tests: `tests/test_ppp.py` (51 tests, fully offline).
+Tests: `tests/test_ppp.py` (53 tests, fully offline).
