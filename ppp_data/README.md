@@ -290,13 +290,6 @@ And the other 30% is straightforwardly lost output. On the volume series the UK'
 slowdown after 2007 is the **worst of the five countries** compared here — 2.38% a year
 before, 0.42% after, a 1.96-point deceleration against 0.65 for the US, 0.79 for Germany,
 1.02 for France and 1.17 for Italy.
-That is the UK productivity puzzle, and this analysis does not explain it away.
-
-So the honest reading is that the PPP view **rebalances** the story rather than refuting it:
-from *"Britain stopped producing"* to *"Britain's output grew slowly **and** lost value
-against the rest of the world."* Meanwhile the measures where the currency cancels entirely —
-tuition as a share of income, and Poland's convergence — still point the same way as the
-headline analyses.
 
 ## Sources
 
