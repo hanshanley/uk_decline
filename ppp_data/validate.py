@@ -54,6 +54,10 @@ CURRENCY_BASIS_BREAKS: dict[str, tuple[int, str]] = {
 BENCHMARK_YEAR = 2021
 BENCHMARK_TOLERANCE = 0.02  # 2%
 
+# The year the decomposition is anchored on; kept here so the survey-coverage check can
+# confirm the headline claim rests on measured rather than projected PPPs.
+DECOMPOSITION_BASELINE_YEAR = 2007
+
 # Plausibility envelopes. Deliberately wide: they catch order-of-magnitude and
 # wrong-series errors, not small revisions.
 GDP_PPP_RANGE = (500.0, 250_000.0)      # international $ per capita
@@ -226,6 +230,61 @@ def check_ppp_beats_market_fx_for_poland(rows: list[dict]) -> Check:
     )
 
 
+def check_survey_backed_headline_years(rows: list[dict]) -> Check:
+    """The years the headline claims are anchored on must carry real survey data.
+
+    PPPs are surveyed, not observed continuously. Before
+    :data:`ppp_data.metrics.SURVEY_FIRST_YEAR` the World Bank's annual PPPs for these
+    countries are pure extrapolation from a later benchmark, so a comparison anchored there
+    is a projection rather than a measurement. This check fails if the decomposition's
+    baseline — the number the whole analysis turns on — drifts into the extrapolated era.
+    """
+    from . import metrics as _metrics
+
+    anchors = {"decomposition baseline": DECOMPOSITION_BASELINE_YEAR}
+    ppp = series.series(rows, "gdp_per_capita_ppp_current", peers.UK)
+    if ppp:
+        anchors["latest plotted year"] = max(ppp)
+    extrapolated = {name: year for name, year in anchors.items()
+                    if year < _metrics.SURVEY_FIRST_YEAR}
+    detail = (
+        f"headline anchors {sorted(anchors.values())} are at or after "
+        f"{_metrics.SURVEY_FIRST_YEAR}, the first year these countries' PPPs carry "
+        "Eurostat-OECD survey data"
+    )
+    if extrapolated:
+        detail = ("anchored on extrapolated PPPs: "
+                  + "; ".join(f"{n} = {y}" for n, y in extrapolated.items())
+                  + f" (before {_metrics.SURVEY_FIRST_YEAR} the PPPs are projected from a "
+                    "later benchmark, not surveyed)")
+    return Check("survey_backed_headline_years", not extrapolated, ERROR, detail)
+
+
+def check_extrapolated_era_is_flagged(rows: list[dict]) -> Check:
+    """Pre-survey years may be plotted, but the package must know they are extrapolated.
+
+    A WARN, not an ERROR: showing the extrapolated era is legitimate — it is the only way to
+    reach back to 1990 — provided the figures and prose say so rather than presenting a
+    projection as an observation.
+    """
+    from . import metrics as _metrics
+
+    years = [r["year"] for r in rows if r["metric"] == "gdp_per_capita_ppp_current"]
+    if not years:
+        return Check("extrapolated_era_is_flagged", False, WARN,
+                     "no PPP GDP rows to classify")
+    early = sorted({y for y in years if y < _metrics.SURVEY_FIRST_YEAR})
+    if not early:
+        return Check("extrapolated_era_is_flagged", True, WARN,
+                     "every plotted year is survey-backed")
+    return Check(
+        "extrapolated_era_is_flagged", True, WARN,
+        f"{len(early)} plotted year(s) ({early[0]}-{early[-1]}) predate "
+        f"{_metrics.SURVEY_FIRST_YEAR} and are extrapolated, not surveyed; charts covering "
+        "them must mark the boundary",
+    )
+
+
 def check_no_duplicates(rows: list[dict]) -> Check:
     """One observation per metric, country, and year — no double-counting on re-fetch."""
     counts = Counter((r["metric"], r["iso3"], r["year"]) for r in rows)
@@ -310,6 +369,8 @@ def check_sources_present(rows: list[dict]) -> Check:
 CHECKS: tuple[Callable[[list[dict]], Check], ...] = (
     check_no_duplicates,
     check_coverage,
+    check_survey_backed_headline_years,
+    check_extrapolated_era_is_flagged,
     check_sources_present,
     check_us_is_numeraire,
     check_price_level_agreement,

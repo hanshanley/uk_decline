@@ -66,8 +66,51 @@ PPP **narrows** the UK's gap to the US and **widens** the convergence story with
 | France | 85% | **99%** |
 
 Poland is far closer to British living standards than dollar figures suggest, because Polish
-prices are roughly half US levels. The catch-up is real on either measure — but on PPP it is
-close to complete.
+prices are roughly half US levels. The catch-up is real on either measure — Poland went from
+**38% of the UK in 1996** (the first survey-backed year) to **84%** — but on PPP it is close
+to complete.
+
+### Where the PPP numbers actually come from — and which years are measured
+
+PPPs are **surveyed, not observed continuously**, and this is the single most important
+caveat in this package. Two programmes feed the World Bank series:
+
+- The **International Comparison Program** runs global benchmark price surveys in particular
+  years — most recently **2011, 2017 and 2021**.
+- For OECD and EU countries — which is *every* country plotted here — the World Bank
+  additionally incorporates **annual** PPPs from the **Eurostat-OECD PPP Programme**, which
+  operates a rolling price survey. Where those are unavailable it extrapolates from the
+  nearest benchmark using the country's GDP deflator relative to the US.
+  ([World Bank Data Help Desk](https://datahelpdesk.worldbank.org/knowledgebase/articles/665452-how-do-you-extrapolate-the-ppp-conversion-factors))
+
+So "is this year measured?" has a different answer in different years, and we established the
+boundary **empirically rather than assuming it**. For every country-year we tested whether the
+year-on-year move in `PA.NUS.PPP` is exactly reproduced by the extrapolation formula
+(relative GDP deflators). If the formula reproduces it, the year carries no new price
+information:
+
+| Country | Years the formula reproduces (extrapolated) | Years it does not (survey data) |
+|---|---|---|
+| United Kingdom | 1991–1995, 2011 | 29 of 35 |
+| Germany | 1991–1995, 1998, 2010 | 28 of 35 |
+| France | 1991–1996, 2015, 2017 | 27 of 35 |
+| Italy | 1991–1995, 1997, 2003, 2015, 2018, 2024 | 25 of 35 |
+| Poland | 1991–1994, 2024 | 30 of 35 |
+
+**1991–1994 are extrapolated in every country, and 1995 in all but Poland.** From 1996 the
+series deviates from the formula in 25–30 of 30 years, which can only come from new survey
+data. The isolated later years are coincidence — a survey that happened to land on the
+inflation path — not a systematic gap.
+
+Consequences, enforced in code:
+
+- `metrics.SURVEY_FIRST_YEAR = 1996`, with the evidence recorded alongside it.
+- The four charts that reach back before 1996 **shade that era and label it** "PPPs
+  extrapolated, not surveyed", so a projection can never read as a measurement.
+- `validate.check_survey_backed_headline_years` **fails the run** if the decomposition's
+  baseline drifts into the extrapolated era. The headline anchors (2007 and 2025) are both
+  survey-backed; so are the UK price-level peak (2007) and the tuition comparison (2022).
+- The Poland claim is quoted from **1996**, not 1990, for exactly this reason.
 
 ### Levels, and the long run
 ![Real GDP per capita at PPP](../outputs/ppp/ppp_gdp_per_capita_over_time.png)
@@ -150,12 +193,14 @@ fails the run.
 
 ## Validation
 
-`python -m ppp_data` runs eleven checks and **refuses to write figures if any fails at error
+`python -m ppp_data` runs thirteen checks and **refuses to write figures if any fails at error
 level**. This is the answer to "do these PPP numbers actually make sense?":
 
 | Check | What it would catch |
 |---|---|
 | `no_duplicates` | Double-counting on re-fetch |
+| `survey_backed_headline_years` | A headline claim anchored on an extrapolated (pre-1996) PPP rather than a surveyed one |
+| `extrapolated_era_is_flagged` | Pre-survey years being plotted without being marked as projections |
 | `coverage` | A plotted country silently missing its series |
 | `sources_present` | An unattributed row |
 | `us_is_numeraire` | US price level index ≠ 1.00 — the numeraire misidentified |
@@ -182,6 +227,7 @@ A representative passing run:
 | # | Hazard | How it is handled |
 |---|---|---|
 | A | Current international $ embed worldwide inflation | Barred from level charts by `require_over_time`; enforced by test |
+| N | **PPPs are surveyed, not observed every year.** Pre-1996 values are extrapolated from a later benchmark and contain no independent price observation | Boundary established empirically (see above); `SURVEY_FIRST_YEAR = 1996`; the pre-survey era is shaded and labelled on every chart that reaches it; a check fails the run if a headline anchor falls in it |
 | B | **ICP benchmark revisions** (2011 → 2017 → 2021) shift levels *retroactively* | Vintages are never spliced; every figure names its vintage in the source note. Figures here are **not** comparable with PPP numbers published under an earlier round |
 | C | Maddison uses the 2011 benchmark | Its own chart; never joined to a World Bank line |
 | D | World Bank PPP starts in 1990 | PPP charts start in 1990 and say so; Maddison covers the earlier period separately |
@@ -237,7 +283,10 @@ All free, no API key, fetched live. Data accessed via the World Bank API; see
   - `PA.NUS.FCRF` — Official exchange rate (LCU per US$, period average)
   - `FP.CPI.TOTL` — Consumer price index (US, used as the deflator)
 
-  PPP estimates derive from the **International Comparison Program (ICP)**, 2021 round.
+  PPP estimates derive from the **International Comparison Program (ICP)**, 2021 round, and
+  — for the OECD/EU countries plotted here — from the **Eurostat-OECD PPP Programme**'s
+  annual rolling price survey, which is what makes 1996 onward survey-backed rather than
+  extrapolated.
   <https://data.worldbank.org/indicator/NY.GDP.PCAP.PP.KD>
 - **Bolt, J. & van Zanden, J. L.** (2024). *Maddison Project Database 2023*, via Our World in
   Data. Real GDP per capita in constant 2011 international $.
@@ -250,6 +299,7 @@ All free, no API key, fetched live. Data accessed via the World Bank API; see
 
 ```
 ppp_data/
+  paths.py         filesystem paths: regenerable CSVs to data/, figures to outputs/ppp/
   metrics.py       metric registry: units, ICP vintage, per-metric validity + caveats
   peers.py         which countries are plotted, and in what colour
   worldbank.py     World Bank client + the two derived price level indices
@@ -264,4 +314,4 @@ ppp_data/
   __main__.py      fetch -> validate -> combine -> chart
 ```
 
-Tests: `tests/test_ppp.py` (47 tests, fully offline).
+Tests: `tests/test_ppp.py` (51 tests, fully offline).

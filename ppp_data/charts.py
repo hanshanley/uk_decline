@@ -48,6 +48,30 @@ _FRAMING = (
 
 
 # ── 1. Levels at PPP ─────────────────────────────────────────────────────────
+def _mark_extrapolated_era(ax, years: list[int], *, label_at: str = "bottom") -> None:
+    """Shade the pre-survey years, where the PPPs are projected rather than measured.
+
+    PPPs come from price surveys. For these OECD countries the Eurostat-OECD rolling survey
+    supplies annual PPPs from the mid-1990s; earlier years are extrapolated from a later
+    benchmark by relative GDP deflators and contain no independent price observation. The
+    data is still worth showing — it is the only way to reach 1990 — but it must not read as
+    though it were measured.
+
+    ``label_at`` picks the corner of the shaded band the caption sits in, so it can be kept
+    clear of whichever series runs closest to it on a given chart.
+    """
+    if not years or min(years) >= metrics.SURVEY_FIRST_YEAR:
+        return
+    ax.axvspan(min(years), metrics.SURVEY_FIRST_YEAR, color=MUTED, alpha=0.07, zorder=0)
+    ax.axvline(metrics.SURVEY_FIRST_YEAR, color=MUTED, linewidth=0.8, linestyle=":",
+               alpha=0.8, zorder=1)
+    y, va = (0.985, "top") if label_at == "top" else (0.015, "bottom")
+    ax.text(metrics.SURVEY_FIRST_YEAR - 0.4, y,
+            "PPPs extrapolated,\nnot surveyed", transform=ax.get_xaxis_transform(),
+            fontsize=8, color=MUTED, style="italic", ha="right", va=va,
+            path_effects=white_stroke())
+
+
 def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
     """UK vs peers, real GDP per capita at PPP, constant 2021 international $."""
     metric = "gdp_per_capita_ppp_constant"
@@ -75,6 +99,7 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
         if peer.iso3 == peers.UK:
             uk_latest = (xs[-1], ys[-1])
 
+    _mark_extrapolated_era(ax, [y for xs in spans for y in xs], label_at="top")
     ax.set_title(f"Real GDP per capita at purchasing power parity, {_span(*spans)}",
                  fontweight="bold", pad=30)
     if uk_latest:
@@ -82,7 +107,9 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
                       "measured at domestic price levels")
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"${v:,.0f}k"))
     _tidy(ax, ylabel=f"GDP per capita (000s, {meta.unit})")
-    ax.legend(loc="upper left", frameon=False, labelcolor="linecolor", fontsize=10)
+    # Lower right is the only empty quadrant here: the upper left holds the
+    # extrapolated-era caption, and every series rises left-to-right.
+    ax.legend(loc="lower right", frameon=False, labelcolor="linecolor", fontsize=10)
 
     source_note(fig, _note(
         f"{_WB} \u2014 GDP per capita, PPP ({meta.wb_indicator}), {meta.unit} "
@@ -117,7 +144,12 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
         labels.append((ys[-1], peer.label, peer.colour))
         last_x = xs[-1] if last_x is None else max(last_x, xs[-1])
         if peer.iso3 == "POL":
-            facts.append(f"Poland climbed from {ys[0]:.0f}% of the UK to {ys[-1]:.0f}%")
+            # Quote the climb from the first survey-backed year: the 1990-95 values are
+            # extrapolated, so using them would present a projection as a starting point.
+            first = next((i for i, year in enumerate(xs)
+                          if year >= metrics.SURVEY_FIRST_YEAR), 0)
+            facts.append(f"Poland climbed from {ys[first]:.0f}% of the UK in {xs[first]} "
+                         f"to {ys[-1]:.0f}%")
         elif peer.iso3 == "USA":
             facts.append(f"the US stands at {ys[-1]:.0f}%")
 
@@ -129,6 +161,7 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
         # so their labels are spread apart rather than drawn on top of one another.
         labelled_ends(ax, labels, min_gap=4.0, x=last_x)
 
+    _mark_extrapolated_era(ax, [y for xs in spans for y in xs])
     ax.set_title(f"GDP per capita relative to the UK at PPP, {_span(*spans)}",
                  fontweight="bold", pad=30)
     if facts:
@@ -140,7 +173,9 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
         f"{_WB} \u2014 GDP per capita, PPP ({meta.wb_indicator}), {meta.unit} "
         f"[{meta.vintage} benchmark].",
         "Current-price international dollars are used because this is a same-year "
-        "cross-country ratio."))
+        "cross-country ratio.",
+        f"PPPs are survey-based from {metrics.SURVEY_FIRST_YEAR} (Eurostat-OECD rolling "
+        "survey); the shaded years are extrapolated from a later benchmark."))
     return save_fig(fig, out_dir / "ppp_gdp_relative_to_peers.png")
 
 
@@ -186,6 +221,7 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
                 color=MUTED, style="italic", ha="right", va="center",
                 path_effects=white_stroke())
 
+    _mark_extrapolated_era(ax, years)
     ax.set_title("How much of the UK's fall against the US is real?",
                  fontweight="bold", pad=30)
     _subtitle(ax, f"At market rates the UK fell from {peak_pct:.0f}% of the US in "
@@ -235,6 +271,7 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path | None:
     ax.plot([peak_year], [uk[peak_year]], "o", color=ACCENT, markersize=7,
             markeredgecolor="white", markeredgewidth=1.4, zorder=6)
 
+    _mark_extrapolated_era(ax, uk_years)
     ax.set_title("How expensive is Britain? Price levels relative to the United States",
                  fontweight="bold", pad=30)
     _subtitle(ax, f"UK prices peaked at {uk[peak_year]:.2f}\u00d7 US levels in {peak_year} "

@@ -47,6 +47,28 @@ SOURCE = "World Bank WDI"
 # comparable and must never be spliced.
 ICP_VINTAGE = "ICP 2021"
 
+# PPPs are *surveyed*, not observed continuously — and only in some years.
+#
+# The ICP runs benchmark price surveys periodically (2011, 2017, 2021). For OECD and EU
+# countries the World Bank additionally incorporates **annual** PPPs from the Eurostat-OECD
+# PPP Programme, which runs a rolling price survey; where those are unavailable it
+# extrapolates from the nearest benchmark by the country's GDP deflator relative to the US
+# (World Bank Data Help Desk, "How do you extrapolate the PPP conversion factors...").
+#
+# Every country plotted here is an OECD member, so from the mid-1990s their annual PPPs carry
+# real survey information. Before that they are pure extrapolation and contain no independent
+# price observation at all.
+#
+# This boundary was established empirically, not assumed: for each country-year we tested
+# whether the year-on-year move in PA.NUS.PPP equals the relative GDP-deflator move (i.e. the
+# extrapolation formula exactly reproduces it). 1991-1994 are extrapolated in *every* country
+# and 1995 in every country but Poland; from 1996 on, the series deviates from the formula in
+# 25-30 of 30 years, which can only come from new survey data.
+#
+# Consequence: a PPP comparison anchored before this year is a projection, not a measurement,
+# and should not be quoted as an observed starting point.
+SURVEY_FIRST_YEAR = 1996
+
 METRICS: dict[str, Metric] = {
     "gdp_per_capita_ppp_constant": Metric(
         "gdp_per_capita_ppp_constant",

@@ -574,6 +574,61 @@ def test_tuition_cpi_is_recovered_from_the_rows_for_offline_recharting() -> None
     assert abs(recovered[2022] - 100.0) < 1e-9
 
 
+# ── PPP survey coverage (PPPs are surveyed, not observed every year) ─────────
+def test_survey_first_year_is_documented() -> None:
+    # PPPs come from price surveys. For these OECD countries the Eurostat-OECD rolling
+    # survey supplies annual PPPs from the mid-1990s; earlier years are extrapolated.
+    assert metrics.SURVEY_FIRST_YEAR == 1996
+    assert metrics.SURVEY_FIRST_YEAR > 1990, "the plotted range starts before the survey era"
+
+
+def test_headline_anchor_in_the_extrapolated_era_fails_the_run() -> None:
+    # The decomposition baseline must rest on measured, not projected, PPPs.
+    rows = _consistent_rows()
+    assert validate.check_survey_backed_headline_years(rows).ok
+
+    original = validate.DECOMPOSITION_BASELINE_YEAR
+    validate.DECOMPOSITION_BASELINE_YEAR = 1992
+    try:
+        check = validate.check_survey_backed_headline_years(rows)
+    finally:
+        validate.DECOMPOSITION_BASELINE_YEAR = original
+    assert not check.ok and "extrapolated" in check.detail
+    assert check.level == validate.ERROR, "an extrapolated anchor must stop the pipeline"
+
+
+def test_extrapolated_years_are_reported_not_hidden() -> None:
+    rows = _consistent_rows() + [
+        _row("GBR", 1992, "gdp_per_capita_ppp_current", 30_000.0),
+    ]
+    check = validate.check_extrapolated_era_is_flagged(rows)
+    assert check.ok and check.level == validate.WARN  # legitimate to plot, must be declared
+    assert "1992" in check.detail and "extrapolated" in check.detail
+
+
+def test_charts_shade_the_pre_survey_era() -> None:
+    # The shading is what stops a projection reading as a measurement, so assert it is drawn
+    # for a pre-1996 range and not drawn for a wholly survey-backed one.
+    from ppp_data import charts
+
+    class _Ax:
+        def __init__(self):
+            self.spans, self.lines, self.texts = [], [], []
+        def axvspan(self, a, b, **kw): self.spans.append((a, b))
+        def axvline(self, x, **kw): self.lines.append(x)
+        def get_xaxis_transform(self): return None
+        def text(self, *a, **kw): self.texts.append(a)
+
+    early = _Ax()
+    charts._mark_extrapolated_era(early, [1990, 1995, 2000, 2024])
+    assert early.spans == [(1990, metrics.SURVEY_FIRST_YEAR)]
+    assert early.lines == [metrics.SURVEY_FIRST_YEAR] and early.texts
+
+    late = _Ax()
+    charts._mark_extrapolated_era(late, [2000, 2010, 2024])
+    assert late.spans == [] and late.lines == [] and late.texts == []
+
+
 def _run() -> int:
     tests = [(k, v) for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0
