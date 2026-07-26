@@ -203,6 +203,7 @@ BY_INDICATOR: dict[str, str] = {
 VALIDATION_ONLY: frozenset[str] = frozenset(
     m.id for m in METRICS.values() if m.validation_only
 )
+# Metrics that may be plotted as a level across years.
 TIME_SERIES_SAFE: frozenset[str] = frozenset(
     m.id for m in METRICS.values() if m.over_time
 )

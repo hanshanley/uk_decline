@@ -23,6 +23,7 @@ and monetary series are inflation-adjusted (real) unless explicitly labelled nom
 | Ageing | [`age_data/`](age_data/README.md) | Age structure & median age: UK vs US/Europe |
 | London & GDP | [`london_data/`](london_data/README.md) | London's share of UK GDP & GDP-per-head concentration |
 | Crime | [`crime_data/`](crime_data/README.md) | Long-run crime trend (CSEW) & homicide vs peers |
+| PPP (alternative lens) | [`ppp_data/`](ppp_data/README.md) | The same decline measured at purchasing power parity |
 
 All output images live in one place: **[`outputs/`](outputs)**, one subfolder per analysis.
 
@@ -94,17 +95,33 @@ the most comparable international measure, the UK (~1.1 per 100k) sits **far bel
 (~5.8)** and around its European peers. *Source: ONS Crime Survey for England & Wales;
 UN Office on Drugs and Crime (UNODC) via World Bank WDI.*
 
+### Purchasing power parity — how much of the decline is the exchange rate?
+![Decomposition of the UK/US gap](outputs/ppp/ppp_gap_decomposition_uk_us.png)
+Every monetary series above is measured at **market exchange rates**. Converting at
+**purchasing power parity** instead — what UK output buys *at home* rather than on world
+markets — materially qualifies the headline GDP result. Of the UK's 41-point fall against the
+US since 2007, **38 points are the exchange rate and relative price levels, and under 3 points
+are lost real output**; at PPP the UK went from 74% of the US to 72%.
+
+That is a real qualification, and it is reported as one. It is not a clean bill of health: a
+weaker pound genuinely makes imports, energy, and foreign travel dearer, so the story moves
+from *"Britain stopped producing"* to *"Britain's output lost value against the world"*. And
+the measures where currency cancels entirely still point the same way — Poland has reached
+**84% of UK GDP per head at PPP**, and UK tuition takes **22% of GDP per capita against 12% in
+the US**. See [`ppp_data/`](ppp_data/README.md) for the full parallel set, the method, and the
+caveats. *Source: World Bank WDI (NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.CD), ICP 2021 benchmark.*
+
 ## Repository layout
 
 ```
 uk_decline/
   europe_data/   markets_data/   nhs_data/   tax/
   tuition/       trust_data/     uk_migration/   age_data/   rail_data/   london_data/
-  crime_data/
+  crime_data/    ppp_data/
       └─ each: analysis code + README.md (+ CITATIONS where relevant)
   vizstyle/      # shared "Substack" plotting house style (palette + rcParams + helpers)
   outputs/       # ALL figures, one subfolder per analysis (tracked; render on GitHub)
-    gdp_income/  stock_markets/  nhs/  tax/  tuition/  trust/  migration/  age/  rail/  london/  crime/
+    gdp_income/  stock_markets/  nhs/  tax/  tuition/  trust/  migration/  age/  rail/  london/  crime/  ppp/
   data/          # raw / intermediate inputs (git-ignored, regenerable)
   tests/         # test suites
   requirements.txt
@@ -127,6 +144,7 @@ Each analysis runs as a module from the repo root, e.g.:
 ./.venv/bin/python -m rail_data                   # London rail delays -> outputs/rail/
 ./.venv/bin/python -m london_data                 # London's share of UK GDP -> outputs/london/
 ./.venv/bin/python -m crime_data                  # crime trend & homicide -> outputs/crime/
+./.venv/bin/python -m ppp_data                    # PPP alternative view -> outputs/ppp/
 ```
 
 See each analysis's README for its exact commands and full source citations.

@@ -89,12 +89,27 @@ def test_every_metric_has_a_unit_vintage_and_caveat() -> None:
         assert metric.id == metric_id
         assert metric.unit and metric.vintage
         assert metrics.CAVEATS.get(metric_id), f"{metric_id} has no caveat"
-        assert metric.over_time or metric.cross_section, f"{metric_id} is usable for nothing"
+        usable = metric.over_time or metric.cross_section or metric.validation_only
+        assert usable, f"{metric_id} is usable for nothing"
     # Indicator <-> metric round-trip for the fetched (non-derived) series.
     for indicator, metric_id in metrics.BY_INDICATOR.items():
         assert metrics.METRICS[metric_id].wb_indicator == indicator
     assert metrics.BY_INDICATOR["NY.GDP.PCAP.PP.KD"] == "gdp_per_capita_ppp_constant"
     assert metrics.BY_INDICATOR["PA.NUS.PPP"] == "ppp_conversion_factor"
+
+
+def test_the_direct_price_level_index_is_validation_only() -> None:
+    # It disagrees with the headline index across the euro changeover, so it must be barred
+    # from both plotting modes rather than merely left unused.
+    assert metrics.VALIDATION_ONLY == {"price_level_index_direct"}
+    direct = metrics.METRICS["price_level_index_direct"]
+    assert direct.validation_only
+    assert not direct.over_time and not direct.cross_section
+    assert "price_level_index_direct" not in metrics.TIME_SERIES_SAFE
+    assert "price_level_index_direct" not in metrics.CROSS_SECTION_SAFE
+    # ...while the headline index is safe for both.
+    assert "price_level_index" in metrics.TIME_SERIES_SAFE
+    assert "price_level_index" in metrics.CROSS_SECTION_SAFE
 
 
 def test_icp_vintage_is_named_on_ppp_metrics() -> None:

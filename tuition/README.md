@@ -34,6 +34,13 @@ Constant 2022 USD (CPI-adjusted) tells the same story (UK ~$11,363/yr, EU-27 ~$4
 *(PPP conversion was intentionally dropped — PPP baskets distort tuition comparisons; we use
 market-FX nominal plus CPI-deflated constant dollars.)*
 
+> **The PPP alternative, for comparison.** [`../ppp_data/`](../ppp_data/README.md) builds a
+> PPP-converted twin of the history chart, plus a **tuition-as-a-share-of-GDP-per-capita**
+> chart that is unit-free (the currency cancels, so it reads the same at market rates and at
+> PPP). PPP moves this number *against* the UK: because British prices now sit below US
+> prices, the fee cap is worth ~$12,990 in international dollars against ~$11,030 at market
+> rates, and a year's fees take **22% of UK GDP per head against 12% in the US**.
+
 Full per-country data: `data/processed/tuition_by_country.csv`.
 Region summary: `data/processed/summary.csv`.
 

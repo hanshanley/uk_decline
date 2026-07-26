@@ -35,6 +35,12 @@ economy converged.
 > crossover). We use (a) because it reflects the dollar value the UK economy actually reached.
 > Note: in **PPP** terms Poland is ~85% of the UK (its lower price level makes market-FX
 > understate it) — that series is in the dataset (`gdp_per_capita_ppp_*`).
+>
+> **See the PPP twin of these charts:** [`../ppp_data/`](../ppp_data/README.md) plots this
+> same comparison at purchasing power parity and decomposes the difference. It finds that
+> **~93% of the UK's fall against the US since 2007 is the exchange rate and relative price
+> levels rather than lost real output** — a genuine qualification of the chart above, and the
+> reason both views are published side by side rather than one being chosen.
 
 ### Median disposable income (a "typical household" measure)
 ![Median disposable income, PPS](../outputs/gdp_income/median_disposable_income_pps.png)

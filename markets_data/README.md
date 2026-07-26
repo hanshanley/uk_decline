@@ -33,6 +33,13 @@ exchange rates, not PPP). Series have tail-year gaps (the UK is missing after 20
 are never spliced or interpolated. Full per-metric citations are in
 [`../outputs/stock_markets/stock_market_size_summary.md`](../outputs/stock_markets/stock_market_size_summary.md).
 
+> **Why there is no PPP twin of these charts.** The repository has a parallel PPP analysis
+> ([`../ppp_data/`](../ppp_data/README.md)), but it deliberately **excludes** stock markets.
+> Equity market capitalisation is the value of claims on globally-traded cash flows, priced by
+> international investors in market currency; an investor selling UK shares receives dollars
+> at the market rate, not at PPP. Deflating market value by a domestic consumption basket
+> would answer no meaningful question.
+
 > **UK listed-company counts past 2022 (LSE factsheets).** The World Bank/WFE
 > `CM.MKT.LDOM.NO` series ends at 2022 for the UK, but the LSE publishes the underlying
 > counts monthly as machine-readable factsheets on its documents host (e.g.
