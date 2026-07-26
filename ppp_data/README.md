@@ -48,10 +48,11 @@ of the US.
 ### How expensive is Britain?
 ![Price level index](../outputs/ppp/price_level_index.png)
 
-The price level index (`PPP conversion factor ÷ market exchange rate`, US = 1.00) is the
+The price level index (how expensive a country is relative to the US, which is 1.00) is the
 whole difference between the two views. UK prices peaked at **1.42× US levels in 2007** and
 sit at **0.89× today** — sterling went from markedly over-valued to modestly under-valued
-against PPP.
+against PPP. (Conceptually this is the PPP conversion factor over the market exchange rate;
+for why it is *computed* a different way, see [below](#deriving-the-price-level-index).)
 
 ### The peer comparison changes character
 ![GDP per capita relative to the UK at PPP](../outputs/ppp/ppp_gdp_relative_to_peers.png)
@@ -87,9 +88,10 @@ headline chart implies.
 
 The second figure sidesteps the currency question entirely. Tuition as a share of GDP per
 capita is unit-free — the currency cancels, so the answer is identical at market rates and at
-PPP. On that basis a year's fees take **22.2% of UK GDP per head against 12.5% in the US**.
-This is the most robust affordability comparison available here, and it is the one that is
-least kind to the UK.
+PPP. On that basis, in **2022** (the last year both fee series cover — the NCES US series
+ends there) a year's fees took **24.2% of UK GDP per head against 12.5% in the US**. This is
+the most robust affordability comparison available here, and it is the one that is least kind
+to the UK.
 
 ## Method
 
@@ -184,7 +186,7 @@ A representative passing run:
 | C | Maddison uses the 2011 benchmark | Its own chart; never joined to a World Bank line |
 | D | World Bank PPP starts in 1990 | PPP charts start in 1990 and say so; Maddison covers the earlier period separately |
 | E | Constant-int'l-$ levels are only strictly benchmarked in 2021 | Cross-country ratios use the current-price series instead; documented above |
-| F | **PPP is not "the truth", it is a different question** | Every figure shows both bases or carries the framing line |
+| F | **PPP is not "the truth", it is a different question** | Every figure that could be read as "the real number" shows both bases or carries the framing line; the single-basis figures (price levels, the Maddison long run, the share-of-income chart) say in their own note what basis they are on |
 | G | PPP-converting equity market cap is meaningless | Stock markets excluded — see below |
 | H | Eurostat **PPS** (EU27 = 100) ≠ World Bank **international $** (US-referenced) | Never plotted on the same axis |
 | I | The EU row is a PPP-weighted aggregate, not a country | Labelled "EU average"; excluded from FX/price-level lookups, which need a single currency |
@@ -262,4 +264,4 @@ ppp_data/
   __main__.py      fetch -> validate -> combine -> chart
 ```
 
-Tests: `tests/test_ppp.py` (38 tests, fully offline).
+Tests: `tests/test_ppp.py` (47 tests, fully offline).

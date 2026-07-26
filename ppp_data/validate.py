@@ -174,27 +174,34 @@ def check_plausible_ranges(rows: list[dict]) -> Check:
 
 
 def check_relative_price_levels(rows: list[dict]) -> Check:
-    """Poland must be cheaper than the UK, and the UK cheaper than nowhere implausible.
+    """Poland must be cheaper than the UK, and the UK cheaper than the United States today.
 
-    A directional check that would fail immediately if the price level index were
+    Two directional checks that would fail immediately if the price level index were
     accidentally inverted (market FX divided by the PPP factor rather than the reverse).
+    A missing index is an ERROR, not a warning: the charts need it, and a WARN here would
+    let the run proceed to crash in :func:`ppp_data.charts.chart_price_level_index`.
     """
     latest: dict[str, tuple[int, float]] = {}
-    for iso3 in ("GBR", "POL", "DEU"):
+    for iso3 in ("GBR", "POL"):
         pli = series.series(rows, "price_level_index", iso3)
         if pli:
             year = max(pli)
             latest[iso3] = (year, pli[year])
-    if {"GBR", "POL"} - set(latest):
-        return Check("relative_price_levels", False, WARN,
-                     "missing a price level index for the UK or Poland")
+    missing = {"GBR", "POL"} - set(latest)
+    if missing:
+        return Check("relative_price_levels", False, ERROR,
+                     f"no price level index for {sorted(missing)}")
     (uk_year, uk), (pl_year, pl) = latest["GBR"], latest["POL"]
-    ok = pl < uk
-    return Check(
-        "relative_price_levels", ok, ERROR,
-        f"price level index: Poland {pl:.2f} ({pl_year}) vs the UK {uk:.2f} ({uk_year})"
-        + ("" if ok else " — Poland should be the cheaper country; the index may be inverted"),
-    )
+    cheaper_than_uk = pl < uk
+    uk_below_us = uk < 1.0  # the US is the numeraire at 1.00; the UK is below it today
+    ok = cheaper_than_uk and uk_below_us
+    detail = (f"price level index: Poland {pl:.2f} ({pl_year}) vs the UK {uk:.2f} "
+              f"({uk_year}), against the US at 1.00")
+    if not cheaper_than_uk:
+        detail += " — Poland should be the cheaper country; the index may be inverted"
+    if not uk_below_us:
+        detail += " — the UK is above US price levels, which last held before 2015"
+    return Check("relative_price_levels", ok, ERROR, detail)
 
 
 def check_ppp_beats_market_fx_for_poland(rows: list[dict]) -> Check:

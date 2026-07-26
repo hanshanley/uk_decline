@@ -107,9 +107,9 @@ That is a real qualification, and it is reported as one. It is not a clean bill 
 weaker pound genuinely makes imports, energy, and foreign travel dearer, so the story moves
 from *"Britain stopped producing"* to *"Britain's output lost value against the world"*. And
 the measures where currency cancels entirely still point the same way — Poland has reached
-**84% of UK GDP per head at PPP**, and UK tuition takes **22% of GDP per capita against 12% in
-the US**. See [`ppp_data/`](ppp_data/README.md) for the full parallel set, the method, and the
-caveats. *Source: World Bank WDI (NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.CD), ICP 2021 benchmark.*
+**84% of UK GDP per head at PPP**, and UK tuition took **24% of GDP per capita against 12% in
+the US** in 2022. See [`ppp_data/`](ppp_data/README.md) for the full parallel set, the method,
+and the caveats. *Source: World Bank WDI (NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.CD), ICP 2021 benchmark.*
 
 ## Repository layout
 

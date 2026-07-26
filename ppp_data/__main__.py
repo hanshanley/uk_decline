@@ -58,8 +58,10 @@ def main(argv: list[str] | None = None) -> int:
         rows += maddison.fetch(args.maddison_start, args.end)
         print(f"[ppp_data] {len(rows)} rows")
 
+    # Run the checks once and reuse them for both the gate and the manifest, so the two can
+    # never disagree about the same data.
+    checks = validate.run_all(rows)
     if args.validate:
-        checks = validate.run_all(rows)
         print("[ppp_data] validation:")
         print(validate.report(checks))
         failed = validate.failures(checks)
@@ -72,7 +74,8 @@ def main(argv: list[str] | None = None) -> int:
         written = combine.write_all(rows, extra_manifest={
             "requested_start": args.start,
             "requested_end": args.end,
-            "validation": [c._asdict() for c in validate.run_all(rows)],
+            "validation_skipped": not args.validate,
+            "validation": [c._asdict() for c in checks],
         })
         for name, path in written.items():
             print(f"[ppp_data] wrote {name:9s} {path}")

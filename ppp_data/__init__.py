@@ -15,8 +15,8 @@ Nothing here modifies the headline analyses. Every figure is additive and lives 
 
 Run it::
 
-    python -m ppp_data                 # fetch -> validate -> combine -> charts
-    python -m ppp_data --from-csv data/ppp_long.csv   # re-chart without re-fetching
+    python -m ppp_data              # fetch -> validate -> combine -> charts
+    python -m ppp_data --from-csv   # re-chart offline from data/ppp_long.csv
 
 See ``ppp_data/README.md`` for the methodology and the full list of caveats.
 """

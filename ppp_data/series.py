@@ -30,9 +30,15 @@ def ratio(rows: Iterable[dict], metric: str, numerator: str, denominator: str,
           *, check: bool = True) -> dict[int, float]:
     """``{year: numerator/denominator}`` for one metric, over the overlapping years.
 
-    Set ``check=False`` only for metrics that are ratios already (such as the price level
-    index); otherwise the metric must be declared valid for same-year cross-country
-    comparison, which rules out the constant-price PPP series.
+    By default the metric must be declared valid for same-year cross-country comparison,
+    which rules out the constant-price PPP series.
+
+    ``check=False`` is a deliberate escape hatch for one case:
+    :func:`ppp_data.validate.check_benchmark_year_agreement`, which ratios the
+    *constant*-price series precisely to confirm it agrees with the current-price series in
+    the ICP benchmark year — the one year where that series' cross-country levels are
+    anchored rather than extrapolated. Do not use it to plot a constant-price ratio in any
+    other year; that is exactly what the guard exists to prevent.
     """
     if check:
         metrics.require_cross_section(metric)

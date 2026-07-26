@@ -132,7 +132,7 @@ def test_make_row_uses_the_registered_unit() -> None:
 # ── Deriving the price level index ───────────────────────────────────────────
 def test_price_level_index_matches_the_published_uk_figure() -> None:
     # World Bank 2024 for the UK: PA.NUS.PPP = 0.664153, PA.NUS.FCRF = 0.782415.
-    pli = decompose.price_level_index(0.664153, 0.782415)
+    pli = decompose.price_level_index_direct(0.664153, 0.782415)
     assert abs(pli - 0.8489) < 1e-3, pli
     # Below 1.00 means cheaper than the US.
     assert pli < 1.0
@@ -140,7 +140,7 @@ def test_price_level_index_matches_the_published_uk_figure() -> None:
 
 def test_price_level_index_rejects_a_zero_exchange_rate() -> None:
     try:
-        decompose.price_level_index(0.66, 0.0)
+        decompose.price_level_index_direct(0.66, 0.0)
     except ValueError as exc:
         assert "zero" in str(exc)
     else:
@@ -387,7 +387,86 @@ def test_peer_names_come_from_the_curated_table() -> None:
     assert peers.UK == "GBR" and peers.US == "USA"
 
 
-def test_worldbank_fetches_conversion_factors_for_countries_only() -> None:
+def test_charts_skip_rather_than_crash_on_empty_input() -> None:
+    # A partial fetch must not crash the run or publish a blank figure: every chart returns
+    # None so `make_charts` simply omits it.
+    import tempfile
+
+    from ppp_data import charts
+
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp)
+        for chart in charts.CHARTS:
+            assert chart([], out) is None, f"{chart.__name__} did not skip empty input"
+        assert list(out.glob("*.png")) == [], "a blank figure was written for empty input"
+
+
+def test_decomposition_chart_skips_an_uncovered_start_year() -> None:
+    # `--start 2010` must not abort the run after the CSVs are already written.
+    import tempfile
+
+    from ppp_data import charts
+
+    rows = _consistent_rows()  # covers 2007, 2021, 2024
+    with tempfile.TemporaryDirectory() as tmp:
+        assert charts.chart_decomposition(rows, Path(tmp), start_year=1995) is None
+    assert charts.DECOMPOSITION_START_YEAR == 2007
+
+
+def test_missing_price_level_index_fails_the_error_gate() -> None:
+    # Previously this returned WARN, so `failures()` was empty, the run proceeded, and the
+    # price-level chart then crashed. It must stop the pipeline instead.
+    rows = [r for r in _consistent_rows() if r["metric"] != "price_level_index"]
+    failed = {c.name for c in validate.failures(validate.run_all(rows))}
+    assert "relative_price_levels" in failed
+
+
+def test_uk_above_us_price_levels_is_caught() -> None:
+    # An inversion that keeps Poland below the UK would slip past the Poland check alone.
+    rows = _consistent_rows()
+    for row in rows:
+        if row["metric"] == "price_level_index" and row["iso3"] in ("GBR", "POL"):
+            row["value"] *= 2.0
+    check = validate.check_relative_price_levels(rows)
+    assert not check.ok and "above US price levels" in check.detail
+
+
+def test_worldbank_paging_is_bounded() -> None:
+    # The page count comes from the remote payload, so it must not be able to drive an
+    # unbounded loop.
+    assert worldbank.MAX_PAGES > 0
+    calls = {"n": 0}
+
+    def _hostile(url, params=None, timeout=60):
+        calls["n"] += 1
+        return [{"pages": 10**9}, [{"countryiso3code": "GBR", "date": "2020", "value": 1.0}]]
+
+    import ppp_data.worldbank as wb
+
+    original = wb.get_json
+    wb.get_json = _hostile
+    try:
+        rows = list(wb._fetch_indicator("PA.NUS.PPP", ["GBR"], 2020, 2020))
+    finally:
+        wb.get_json = original
+    assert calls["n"] == worldbank.MAX_PAGES
+    assert len(rows) == worldbank.MAX_PAGES
+
+
+def test_worldbank_paging_stops_on_a_malformed_page_count() -> None:
+    def _malformed(url, params=None, timeout=60):
+        return [{"pages": "not-a-number"},
+                [{"countryiso3code": "GBR", "date": "2020", "value": 1.0}]]
+
+    import ppp_data.worldbank as wb
+
+    original = wb.get_json
+    wb.get_json = _malformed
+    try:
+        rows = list(wb._fetch_indicator("PA.NUS.PPP", ["GBR"], 2020, 2020))
+    finally:
+        wb.get_json = original
+    assert len(rows) == 1  # the one good page, then a clean stop
     assert set(worldbank.CONVERSION_INDICATORS) == {"PA.NUS.PPP", "PA.NUS.FCRF"}
     assert "NY.GDP.PCAP.PP.KD" in worldbank.GDP_INDICATORS
     assert worldbank.PPP_FIRST_YEAR == 1990
@@ -440,6 +519,59 @@ def test_tuition_still_converts_at_market_rates() -> None:
     from tuition import rates
 
     assert "PPP conversion was intentionally dropped" in rates.__doc__
+
+
+# ── Tuition ──────────────────────────────────────────────────────────────────
+def test_tuition_market_fx_column_follows_the_base_year() -> None:
+    # The column name must be derived from tuition.config.REAL_BASE_YEAR, not hard-coded,
+    # so the PPP twin cannot silently sit on a different base from its market-FX pair.
+    from ppp_data import tuition_ppp
+    from tuition import config as tuition_config
+
+    assert tuition_ppp.BASE_YEAR == tuition_config.REAL_BASE_YEAR
+    assert tuition_ppp.MARKET_FX_COLUMN == f"real_{tuition_ppp.BASE_YEAR}_usd"
+
+
+def test_tuition_history_missing_base_column_is_a_clear_error() -> None:
+    import tempfile
+    from ppp_data import tuition_ppp
+
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "history.csv"
+        path.write_text("country,iso3,region,year,nominal_local,currency,real_1999_usd\n"
+                        "United Kingdom,GBR,UK,2020,9250,GBP,1\n")
+        try:
+            tuition_ppp.load_history(path)
+        except RuntimeError as exc:
+            assert "REAL_BASE_YEAR" in str(exc)
+        else:
+            raise AssertionError("a mismatched base-year column must be rejected loudly")
+
+
+def test_tuition_share_subtitle_uses_a_shared_year() -> None:
+    # The UK fee series runs ahead of the US one, so quoting each at its own last point
+    # would compare different years while saying "now".
+    from ppp_data import tuition_ppp
+
+    text = tuition_ppp._share_subtitle([2020, 2022, 2024], [10.0, 20.0, 30.0],
+                                       [2020, 2022], [5.0, 6.0])
+    assert "In 2022" in text and "20.0%" in text and "6.0%" in text
+    assert "30.0%" not in text, "the UK's unmatched 2024 point must not be compared to 2022"
+
+
+def test_tuition_cpi_is_recovered_from_the_rows_for_offline_recharting() -> None:
+    # `--from-csv` is documented as offline, so the deflator must come from the CSV rather
+    # than a live World Bank call.
+    from ppp_data import tuition_ppp
+
+    rows = []
+    for year, cpi in ((2015, 80.0), (2022, 100.0)):
+        nominal = 50_000.0
+        rows.append(_row("GBR", year, "gdp_per_capita_nominal_usd", nominal))
+        rows.append(_row("GBR", year, "gdp_per_capita_real_usd", nominal * (100.0 / cpi)))
+    recovered = tuition_ppp.us_cpi_from_rows(rows)
+    assert abs(recovered[2015] - 80.0) < 1e-9
+    assert abs(recovered[2022] - 100.0) < 1e-9
 
 
 def _run() -> int:
