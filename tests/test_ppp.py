@@ -606,6 +606,142 @@ def test_extrapolated_years_are_reported_not_hidden() -> None:
     assert "1992" in check.detail and "extrapolated" in check.detail
 
 
+def test_decomposition_real_component_equals_real_divergence() -> None:
+    """The bar labelled "real output" must equal the actual real-output divergence.
+
+    Regression test for a real defect: the decomposition was built from the current-price
+    PPP ratio, whose movement mixes volume growth with shifts in the PPP price structure. It
+    reported a -2.9pp real effect when real output per head had actually diverged four times
+    that much. The real component must come from the constant-price (volume) series.
+    """
+    import math
+
+    from ppp_data import charts
+
+    rows = _consistent_rows()
+    # Give the UK a real-volume path that diverges from the US, and a price path that does
+    # not, so a decomposition reading the wrong series would visibly under-report.
+    for row in rows:
+        if row["iso3"] == "GBR" and row["year"] == 2024:
+            if row["metric"] == "gdp_per_capita_ppp_constant":
+                row["value"] *= 0.80          # 20% real underperformance
+            elif row["metric"] == "gdp_per_capita_nominal_usd":
+                row["value"] *= 0.80
+
+    uk = series.series(rows, "gdp_per_capita_ppp_constant", "GBR")
+    us = series.series(rows, "gdp_per_capita_ppp_constant", "USA")
+    expected = ((uk[2024] / uk[2007]) / (us[2024] / us[2007]) - 1) * 100
+
+    d = charts.uk_us_decomposition(rows, 2007, 2024)
+    implied = (math.exp(d.log_real / 100) - 1) * 100
+    assert abs(implied - expected) < 0.05, (implied, expected)
+    assert abs(expected + 20.0) < 0.05, "fixture should show a 20% real divergence"
+
+
+def test_validation_catches_a_non_volume_real_component() -> None:
+    # The guard must fire if the decomposition is ever pointed back at a non-volume series.
+    rows = _consistent_rows()
+    assert validate.check_decomposition_real_component_is_volume(rows).ok
+
+    from ppp_data import charts
+
+    original = charts.uk_us_decomposition
+    def _wrong(rows_, start_year, end_year=None):
+        d = original(rows_, start_year, end_year)
+        return d._replace(log_real=d.log_real / 4.0)  # the old, understated split
+    charts.uk_us_decomposition = _wrong
+    try:
+        check = validate.check_decomposition_real_component_is_volume(rows)
+    finally:
+        charts.uk_us_decomposition = original
+    assert not check.ok and check.level == validate.ERROR
+
+
+# ── Tuition ──────────────────────────────────────────────────────────────────
+def test_tuition_market_fx_column_follows_the_base_year() -> None:
+    # The column name must be derived from tuition.config.REAL_BASE_YEAR, not hard-coded,
+    # so the PPP twin cannot silently sit on a different base from its market-FX pair.
+    from ppp_data import tuition_ppp
+    from tuition import config as tuition_config
+
+    assert tuition_ppp.BASE_YEAR == tuition_config.REAL_BASE_YEAR
+    assert tuition_ppp.MARKET_FX_COLUMN == f"real_{tuition_ppp.BASE_YEAR}_usd"
+
+
+def test_tuition_history_missing_base_column_is_a_clear_error() -> None:
+    import tempfile
+    from ppp_data import tuition_ppp
+
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "history.csv"
+        path.write_text("country,iso3,region,year,nominal_local,currency,real_1999_usd\n"
+                        "United Kingdom,GBR,UK,2020,9250,GBP,1\n")
+        try:
+            tuition_ppp.load_history(path)
+        except RuntimeError as exc:
+            assert "REAL_BASE_YEAR" in str(exc)
+        else:
+            raise AssertionError("a mismatched base-year column must be rejected loudly")
+
+
+def test_tuition_share_subtitle_uses_a_shared_year() -> None:
+    # The UK fee series runs ahead of the US one, so quoting each at its own last point
+    # would compare different years while saying "now".
+    from ppp_data import tuition_ppp
+
+    text = tuition_ppp._share_subtitle([2020, 2022, 2024], [10.0, 20.0, 30.0],
+                                       [2020, 2022], [5.0, 6.0])
+    assert "In 2022" in text and "20.0%" in text and "6.0%" in text
+    assert "30.0%" not in text, "the UK's unmatched 2024 point must not be compared to 2022"
+
+
+def test_tuition_cpi_is_recovered_from_the_rows_for_offline_recharting() -> None:
+    # `--from-csv` is documented as offline, so the deflator must come from the CSV rather
+    # than a live World Bank call.
+    from ppp_data import tuition_ppp
+
+    rows = []
+    for year, cpi in ((2015, 80.0), (2022, 100.0)):
+        nominal = 50_000.0
+        rows.append(_row("GBR", year, "gdp_per_capita_nominal_usd", nominal))
+        rows.append(_row("GBR", year, "gdp_per_capita_real_usd", nominal * (100.0 / cpi)))
+    recovered = tuition_ppp.us_cpi_from_rows(rows)
+    assert abs(recovered[2015] - 80.0) < 1e-9
+    assert abs(recovered[2022] - 100.0) < 1e-9
+
+
+# ── PPP survey coverage (PPPs are surveyed, not observed every year) ─────────
+def test_survey_first_year_is_documented() -> None:
+    # PPPs come from price surveys. For these OECD countries the Eurostat-OECD rolling
+    # survey supplies annual PPPs from the mid-1990s; earlier years are extrapolated.
+    assert metrics.SURVEY_FIRST_YEAR == 1996
+    assert metrics.SURVEY_FIRST_YEAR > 1990, "the plotted range starts before the survey era"
+
+
+def test_headline_anchor_in_the_extrapolated_era_fails_the_run() -> None:
+    # The decomposition baseline must rest on measured, not projected, PPPs.
+    rows = _consistent_rows()
+    assert validate.check_survey_backed_headline_years(rows).ok
+
+    original = validate.DECOMPOSITION_BASELINE_YEAR
+    validate.DECOMPOSITION_BASELINE_YEAR = 1992
+    try:
+        check = validate.check_survey_backed_headline_years(rows)
+    finally:
+        validate.DECOMPOSITION_BASELINE_YEAR = original
+    assert not check.ok and "extrapolated" in check.detail
+    assert check.level == validate.ERROR, "an extrapolated anchor must stop the pipeline"
+
+
+def test_extrapolated_years_are_reported_not_hidden() -> None:
+    rows = _consistent_rows() + [
+        _row("GBR", 1992, "gdp_per_capita_ppp_current", 30_000.0),
+    ]
+    check = validate.check_extrapolated_era_is_flagged(rows)
+    assert check.ok and check.level == validate.WARN  # legitimate to plot, must be declared
+    assert "1992" in check.detail and "extrapolated" in check.detail
+
+
 def test_charts_shade_the_pre_survey_era() -> None:
     # The shading is what stops a projection reading as a measurement, so assert it is drawn
     # for a pre-1996 range and not drawn for a wholly survey-backed one.

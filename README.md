@@ -99,16 +99,17 @@ UN Office on Drugs and Crime (UNODC) via World Bank WDI.*
 ![Decomposition of the UK/US gap](outputs/ppp/ppp_gap_decomposition_uk_us.png)
 Every monetary series above is measured at **market exchange rates**. Converting at
 **purchasing power parity** instead — what UK output buys *at home* rather than on world
-markets — materially qualifies the headline GDP result. Of the UK's 41-point fall against the
-US since 2007, **38 points are the exchange rate and relative price levels, and under 3 points
-are lost real output**; at PPP the UK went from 74% of the US to 72%.
+markets — qualifies the headline GDP result without overturning it. Of the UK's 41-point fall
+against the US since 2007, **29 points are prices and the exchange rate, and 13 points are
+genuinely lost output**.
 
-That is a real qualification, and it is reported as one. It is not a clean bill of health: a
-weaker pound genuinely makes imports, energy, and foreign travel dearer, so the story moves
-from *"Britain stopped producing"* to *"Britain's output lost value against the world"*. And
-the measures where currency cancels entirely still point the same way — Poland has reached
-**84% of UK GDP per head at PPP**, and UK tuition took **24% of GDP per capita against 12% in
-the US** in 2022. See [`ppp_data/`](ppp_data/README.md) for the full parallel set, the method,
+So roughly 70% of the measured decline is currency rather than production — but the remaining
+30% is real, and the UK's post-2007 slowdown is the worst of its peers: real output per head
+grew **0.42% a year** against the US's **1.27%**. A weaker pound also genuinely makes imports
+and energy dearer. The story moves from *"Britain stopped producing"* to *"Britain grew slowly
+**and** its output lost value against the world"*. The measures where currency cancels
+entirely point the same way — Poland has reached **84% of UK GDP per head at PPP**, and UK
+tuition took **24% of GDP per capita against 12% in the US** in 2022. See [`ppp_data/`](ppp_data/README.md) for the full parallel set, the method,
 and the caveats. *Source: World Bank WDI (NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.CD), ICP 2021 benchmark.*
 
 ## Repository layout

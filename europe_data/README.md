@@ -38,9 +38,10 @@ economy converged.
 >
 > **See the PPP twin of these charts:** [`../ppp_data/`](../ppp_data/README.md) plots this
 > same comparison at purchasing power parity and decomposes the difference. It finds that
-> **~93% of the UK's fall against the US since 2007 is the exchange rate and relative price
-> levels rather than lost real output** — a genuine qualification of the chart above, and the
-> reason both views are published side by side rather than one being chosen.
+> **~70% of the UK's fall against the US since 2007 is prices and the exchange rate rather
+> than lost real output** — a genuine qualification of the chart above, though the remaining
+> ~30% is a real divergence in output per head. Both views are published side by side rather
+> than one being chosen.
 
 ### Median disposable income (a "typical household" measure)
 ![Median disposable income, PPS](../outputs/gdp_income/median_disposable_income_pps.png)

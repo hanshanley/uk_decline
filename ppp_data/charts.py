@@ -44,38 +44,9 @@ _WB = "Data: World Bank Group, World Development Indicators"
 # Kept deliberately short: it appears on the figures that show both bases, where a long
 # paragraph would crowd the plot. The full argument is in ppp_data/README.md.
 _FRAMING = ("Market rates measure what UK output buys abroad; PPP, what it buys at home.")
-_SHADED = "Shaded years are extrapolated from a later benchmark, not surveyed."
 
 
 # ── 1. Levels at PPP ─────────────────────────────────────────────────────────
-def _mark_extrapolated_era(ax, years: list[int], *,
-                           label_at: str | float = "bottom") -> None:
-    """Shade the pre-survey years, where the PPPs are projected rather than measured.
-
-    PPPs come from price surveys. For these OECD countries the Eurostat-OECD rolling survey
-    supplies annual PPPs from the mid-1990s; earlier years are extrapolated from a later
-    benchmark by relative GDP deflators and contain no independent price observation. The
-    data is still worth showing — it is the only way to reach 1990 — but it must not read as
-    though it were measured.
-
-    ``label_at`` is ``"bottom"``, ``"top"``, or a y position in axis fraction, so the caption
-    can be dropped into whatever part of the band is empty on a given chart.
-    """
-    if not years or min(years) >= metrics.SURVEY_FIRST_YEAR:
-        return
-    ax.axvspan(min(years), metrics.SURVEY_FIRST_YEAR, color=MUTED, alpha=0.07, zorder=0)
-    ax.axvline(metrics.SURVEY_FIRST_YEAR, color=MUTED, linewidth=0.8, linestyle=":",
-               alpha=0.8, zorder=1)
-    if isinstance(label_at, (int, float)):
-        y, va = float(label_at), "center"
-    else:
-        y, va = (0.985, "top") if label_at == "top" else (0.015, "bottom")
-    ax.text(metrics.SURVEY_FIRST_YEAR - 0.4, y,
-            "PPPs extrapolated,\nnot surveyed", transform=ax.get_xaxis_transform(),
-            fontsize=8, color=MUTED, style="italic", ha="right", va=va,
-            path_effects=white_stroke())
-
-
 def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
     """UK vs peers, real GDP per capita at PPP, constant 2021 international $."""
     metric = "gdp_per_capita_ppp_constant"
@@ -107,7 +78,6 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
         if peer.iso3 == peers.UK:
             uk_latest = (xs[-1], ys[-1])
 
-    _mark_extrapolated_era(ax, [y for xs in spans for y in xs], label_at="top")
     ax.set_title(f"Real GDP per capita at purchasing power parity, {_span(*spans)}",
                  fontweight="bold", pad=30)
     if uk_latest:
@@ -121,7 +91,7 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
 
     source_note(fig, _note(
         f"{_WB} \u2014 GDP per capita, PPP ({meta.wb_indicator}), {meta.unit} "
-        f"[{meta.vintage} benchmark]. {_SHADED}"))
+        f"[{meta.vintage} benchmark]."))
     return save_fig(fig, out_dir / "ppp_gdp_per_capita_over_time.png")
 
 
@@ -169,7 +139,6 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
         # so their labels are spread apart rather than drawn on top of one another.
         labelled_ends(ax, labels, min_gap=4.0, x=last_x)
 
-    _mark_extrapolated_era(ax, [y for xs in spans for y in xs], label_at=0.30)
     ax.set_title(f"GDP per capita relative to the UK at PPP, {_span(*spans)}",
                  fontweight="bold", pad=30)
     if facts:
@@ -180,8 +149,7 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
     source_note(fig, _note(
         f"{_WB} \u2014 GDP per capita, PPP ({meta.wb_indicator}), {meta.unit} "
         f"[{meta.vintage} benchmark].",
-        "Current-price dollars are used because this is a same-year cross-country ratio. "
-        f"{_SHADED}"))
+        "Current-price dollars are used because this is a same-year cross-country ratio."))
     return save_fig(fig, out_dir / "ppp_gdp_relative_to_peers.png")
 
 
@@ -227,7 +195,6 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
                 color=MUTED, style="italic", ha="right", va="center",
                 path_effects=white_stroke())
 
-    _mark_extrapolated_era(ax, years)
     ax.set_title("How much of the UK's fall against the US is real?",
                  fontweight="bold", pad=30)
     _subtitle(ax, f"At market rates the UK fell from {peak_pct:.0f}% of the US in "
@@ -279,7 +246,6 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path | None:
     ax.plot([peak_year], [uk[peak_year]], "o", color=ACCENT, markersize=7,
             markeredgecolor="white", markeredgewidth=1.4, zorder=6)
 
-    _mark_extrapolated_era(ax, uk_years)
     ax.set_title("How expensive is Britain? Price levels relative to the United States",
                  fontweight="bold", pad=30)
     _subtitle(ax, f"UK prices peaked at {uk[peak_year]:.2f}\u00d7 US levels in {peak_year} "
@@ -300,23 +266,36 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path | None:
 # ── 5. The decomposition ─────────────────────────────────────────────────────
 def uk_us_decomposition(rows: list[dict], start_year: int,
                         end_year: int | None = None) -> decompose.Decomposition:
-    """Split the change in the UK/US market-FX ratio into real and price-level parts."""
-    ppp = series.ratio(rows, "gdp_per_capita_ppp_current", peers.UK, peers.US)
-    pli = series.series(rows, "price_level_index", peers.UK)
-    us_pli = series.series(rows, "price_level_index", peers.US)
-    shared = sorted(ppp.keys() & pli.keys() & us_pli.keys())
+    """Split the change in the UK/US market-FX ratio into a volume part and a price part.
+
+    The real component uses the **constant-price** PPP series, because that is the only one
+    whose movement is pure volume growth: it holds parities at the ICP benchmark and moves
+    each country by its own real growth rate. The current-price series would be the wrong
+    choice here even though it satisfies a tidier identity — its year-to-year movement mixes
+    real growth with changes in the PPP price structure, so a bar built from it and labelled
+    "real output" would not equal the real output divergence. (On UK/US 2007-2025 the two
+    differ by a factor of four: -14.0% of pure volume against -3.4%.)
+
+    The second component is then defined residually as ``R_fx / R_real``, so the split stays
+    exact. It carries the relative price level *and* the ICP re-benchmarking drift, which is
+    why the chart labels it "prices, exchange rate and re-benchmarking" rather than pretending
+    it is the price level alone.
+    """
+    real = series.ratio(rows, "gdp_per_capita_ppp_constant", peers.UK, peers.US, check=False)
+    fx = series.ratio(rows, "gdp_per_capita_nominal_usd", peers.UK, peers.US)
+    shared = sorted(real.keys() & fx.keys())
     if not shared:
-        raise ValueError("no year has both a UK/US PPP ratio and a UK price level index")
+        raise ValueError("no year has both a real and a market-FX UK/US ratio")
     end_year = end_year if end_year is not None else shared[-1]
     for year in (start_year, end_year):
         if year not in shared:
             raise ValueError(f"{year} is not covered by both series (have {shared[0]}-{shared[-1]})")
     return decompose.decompose_ratio_change(
         start_year=start_year, end_year=end_year,
-        ppp_ratio_start=ppp[start_year], ppp_ratio_end=ppp[end_year],
-        # The US price level is the numeraire (1.00), so the UK index is already the ratio.
-        pli_ratio_start=pli[start_year] / us_pli[start_year],
-        pli_ratio_end=pli[end_year] / us_pli[end_year],
+        ppp_ratio_start=real[start_year], ppp_ratio_end=real[end_year],
+        # Residual: whatever the market-FX ratio does that real volumes do not explain.
+        pli_ratio_start=fx[start_year] / real[start_year],
+        pli_ratio_end=fx[end_year] / real[end_year],
     )
 
 
@@ -344,7 +323,7 @@ def chart_decomposition(rows: list[dict], out_dir: Path,
 
     # Top to bottom: the big driver, the small one, then the total they sum to.
     bars = [
-        ("Price level and\nexchange rate", d.price_effect, ACCENT),
+        ("Prices, exchange rate\nand re-benchmarking", d.price_effect, ACCENT),
         ("Real output\nper head", d.real_effect, BLUE),
         (f"Total change\n{d.start_year}\u2013{d.end_year}", d.total_change, TEXT),
     ]
@@ -372,8 +351,8 @@ def chart_decomposition(rows: list[dict], out_dir: Path,
     widest = min(value for _, value, _ in bars)
     ax.set_xlim(widest * 1.28, abs(widest) * 0.03)
 
-    ax.set_title(f"Almost none of the UK's fall against the US since {d.start_year} "
-                 "is lost output", fontweight="bold", pad=30)
+    ax.set_title(f"Most of the UK's fall against the US since {d.start_year} is "
+                 "currency, not lost output", fontweight="bold", pad=30)
     _subtitle(ax, f"UK GDP per head went from {d.start_ratio:.0f}% of the US in "
                   f"{d.start_year} to {d.end_ratio:.0f}% in {d.end_year}. Splitting that "
                   f"{abs(d.total_change):.0f}-point fall into its two causes:")
@@ -386,9 +365,11 @@ def chart_decomposition(rows: list[dict], out_dir: Path,
     ax.margins(y=0)
 
     source_note(fig, _note(
-        f"{_WB} \u2014 NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.CD [{metrics.ICP_VINTAGE} benchmark]. "
-        "Symmetric (Shapley) decomposition of UK/US = (real ratio) \u00d7 (relative price "
-        "level); the two contributions sum exactly to the total.",
+        f"{_WB} \u2014 NY.GDP.PCAP.CD and NY.GDP.PCAP.PP.KD [{metrics.ICP_VINTAGE} "
+        "benchmark]. Symmetric (Shapley) decomposition of UK/US = (real volume ratio) "
+        "\u00d7 (residual); the two contributions sum exactly to the total. The real "
+        "component uses the constant-price series, so it equals the actual divergence in "
+        "real output per head.",
         "A weaker pound does make imports dearer, so this is not a clean bill of health "
         "\u2014 it relocates the story from lost output to lost purchasing power abroad."))
     return save_fig(fig, out_dir / "ppp_gap_decomposition_uk_us.png", bottom=0.20)

@@ -18,7 +18,7 @@ All output lands in [`../outputs/ppp/`](../outputs/ppp). Run it with:
 
 ## Headline results
 
-### Almost none of the UK's fall against the US is lost output
+### Most of the UK's fall against the US is currency, not lost output
 ![Decomposition of the UK/US gap](../outputs/ppp/ppp_gap_decomposition_uk_us.png)
 
 At market exchange rates the UK fell from **105% of US GDP per head in 2007 to 64% in 2025** —
@@ -27,13 +27,23 @@ that 41-point fall:
 
 | Contribution | Points |
 |---|---|
-| Relative real output per head (PPP volumes) | **−2.9** |
-| Relative price level / exchange rate | **−38.5** |
+| Real output per head (volume growth) | **−12.6** |
+| Prices, exchange rate and ICP re-benchmarking | **−28.8** |
 | **Total** | **−41.4** |
 
-**Roughly 93% of the measured decline against the US is the exchange rate and relative price
-levels, not lost production.** At PPP the UK went from 74.3% of the US in 2007 to 71.8% in
-2025 — a real slippage, but a small one.
+**Roughly 70% of the measured decline against the US is prices and the exchange rate rather
+than lost production** — but the remaining 30% is real, and it is not small: UK real output
+per head grew **0.42% a year** from 2007 to 2025 against the US's **1.27%**, so the UK fell
+**14%** behind in real volume terms.
+
+> **A correction worth recording.** An earlier version of this analysis put the real
+> component at −2.9 points and the currency share at 93%. That was wrong, and the way it was
+> wrong is instructive. It built the "real" bar from the *current-price* PPP ratio, which
+> satisfies a tidier identity but whose year-to-year movement mixes volume growth with shifts
+> in the PPP price structure. Measured properly — from the constant-price series, whose
+> movement is pure volume — the real divergence is four times larger. `validate.py` now
+> recomputes the divergence straight from each country's real growth rates and fails the run
+> if the decomposition's real component does not reproduce it.
 
 This is a genuine qualification of the headline story, and it is reported as such. It is
 *not* a clean bill of health: see [what this does and does not mean](#what-this-does-and-does-not-mean).
@@ -193,12 +203,13 @@ fails the run.
 
 ## Validation
 
-`python -m ppp_data` runs thirteen checks and **refuses to write figures if any fails at error
+`python -m ppp_data` runs fourteen checks and **refuses to write figures if any fails at error
 level**. This is the answer to "do these PPP numbers actually make sense?":
 
 | Check | What it would catch |
 |---|---|
 | `no_duplicates` | Double-counting on re-fetch |
+| `decomposition_real_is_volume` | The bar labelled "real output" not actually equalling the real-output divergence — recomputed from each country's own growth rates |
 | `survey_backed_headline_years` | A headline claim anchored on an extrapolated (pre-1996) PPP rather than a surveyed one |
 | `extrapolated_era_is_flagged` | Pre-survey years being plotted without being marked as projections |
 | `coverage` | A plotted country silently missing its series |
@@ -255,8 +266,8 @@ already cancelled and PPP has nothing to contribute.
 
 ### What this does and does not mean
 
-The decomposition says the UK produces almost as much per head, relative to the US, as it did
-in 2007 — the collapse is in what that output is worth in dollars. That is a **real** loss,
+The decomposition says most — not all — of the collapse is in what UK output is worth in
+dollars rather than in how much of it there is. The currency part is still a **real** loss,
 not an accounting illusion:
 
 - Imports, foreign travel, overseas assets, and dollar-priced energy all genuinely cost more.
@@ -264,11 +275,16 @@ not an accounting illusion:
   if domestic production is unchanged.
 - The UK's terms of trade deteriorated; PPP is designed to remove exactly that effect.
 
-So the honest reading is that the PPP view **relocates** the story rather than refuting it:
-from *"Britain stopped producing"* to *"Britain's output lost value against the rest of the
-world, and its people lost purchasing power abroad."* Meanwhile the measures where the
-currency cancels entirely — tuition as a share of income, and Poland's convergence — still
-point the same way as the headline analyses.
+And the other 30% is straightforwardly lost output. On the volume series the UK's growth
+slowdown after 2007 is the **worst of the four countries** compared here — 2.38% a year
+before, 0.42% after, a 1.96-point deceleration against 0.65 for the US and 0.79 for Germany.
+That is the UK productivity puzzle, and this analysis does not explain it away.
+
+So the honest reading is that the PPP view **rebalances** the story rather than refuting it:
+from *"Britain stopped producing"* to *"Britain's output grew slowly **and** lost value
+against the rest of the world."* Meanwhile the measures where the currency cancels entirely —
+tuition as a share of income, and Poland's convergence — still point the same way as the
+headline analyses.
 
 ## Sources
 

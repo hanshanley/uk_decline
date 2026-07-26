@@ -285,6 +285,43 @@ def check_extrapolated_era_is_flagged(rows: list[dict]) -> Check:
     )
 
 
+def check_decomposition_real_component_is_volume(rows: list[dict]) -> Check:
+    """The bar labelled "real output" must equal the actual real-output divergence.
+
+    This is the consistency trap that caught this analysis once already: the current-price
+    PPP ratio looks like a real measure and satisfies a tidy identity, but its movement mixes
+    volume growth with shifts in the PPP price structure. Labelling a bar built from it "real
+    output per head" understated the real divergence four-fold.
+
+    Here we recompute the real divergence directly from each country's own real growth rates
+    and confirm the decomposition's real component reproduces it.
+    """
+    from . import charts  # imported late: charts imports validate-adjacent modules
+
+    uk = series.series(rows, "gdp_per_capita_ppp_constant", peers.UK)
+    us = series.series(rows, "gdp_per_capita_ppp_constant", peers.US)
+    shared = sorted(uk.keys() & us.keys())
+    a = DECOMPOSITION_BASELINE_YEAR
+    if not shared or a not in shared:
+        return Check("decomposition_real_is_volume", False, WARN,
+                     f"no constant-price series covering {a}")
+    b = shared[-1]
+    # The divergence in real output per head, straight from the two volume series.
+    expected = ((uk[b] / uk[a]) / (us[b] / us[a]) - 1) * 100
+    d = charts.uk_us_decomposition(rows, a, b)
+    # The Shapley real effect is that divergence applied to the ratio, so compare the
+    # implied relative change rather than the raw percentage points.
+    implied = (d.log_real / 100)
+    got = (pow(2.718281828459045, implied) - 1) * 100
+    ok = abs(got - expected) < 0.15
+    return Check(
+        "decomposition_real_is_volume", ok, ERROR,
+        f"real output per head diverged {expected:+.1f}% between {a} and {b}; the "
+        f"decomposition's real component implies {got:+.1f}%"
+        + ("" if ok else " \u2014 the real bar is not measuring real volume"),
+    )
+
+
 def check_no_duplicates(rows: list[dict]) -> Check:
     """One observation per metric, country, and year — no double-counting on re-fetch."""
     counts = Counter((r["metric"], r["iso3"], r["year"]) for r in rows)
@@ -370,6 +407,7 @@ CHECKS: tuple[Callable[[list[dict]], Check], ...] = (
     check_no_duplicates,
     check_coverage,
     check_survey_backed_headline_years,
+    check_decomposition_real_component_is_volume,
     check_extrapolated_era_is_flagged,
     check_sources_present,
     check_us_is_numeraire,
