@@ -640,21 +640,33 @@ def test_decomposition_real_component_equals_real_divergence() -> None:
 
 def test_validation_catches_a_non_volume_real_component() -> None:
     # The guard must fire if the decomposition is ever pointed back at a non-volume series.
+    # The fixture needs a genuine real divergence, otherwise understating it is undetectable.
     rows = _consistent_rows()
-    assert validate.check_decomposition_real_component_is_volume(rows).ok
+    for row in rows:
+        if (row["iso3"] == "GBR" and row["year"] == 2024
+                and row["metric"] in ("gdp_per_capita_ppp_constant",
+                                      "gdp_per_capita_nominal_usd")):
+            row["value"] *= 0.80  # a 20% real underperformance against the US
 
     from ppp_data import charts
 
     original = charts.uk_us_decomposition
-    def _wrong(rows_, start_year, end_year=None):
-        d = original(rows_, start_year, end_year)
-        return d._replace(log_real=d.log_real / 4.0)  # the old, understated split
-    charts.uk_us_decomposition = _wrong
+    baseline = validate.DECOMPOSITION_BASELINE_YEAR
+    validate.DECOMPOSITION_BASELINE_YEAR = 2007
     try:
+        assert validate.check_decomposition_real_component_is_volume(rows).ok
+
+        def _wrong(rows_, start_year, end_year=None):
+            d = original(rows_, start_year, end_year)
+            return d._replace(log_real=d.log_real / 4.0)  # the old, understated split
+
+        charts.uk_us_decomposition = _wrong
         check = validate.check_decomposition_real_component_is_volume(rows)
     finally:
         charts.uk_us_decomposition = original
+        validate.DECOMPOSITION_BASELINE_YEAR = baseline
     assert not check.ok and check.level == validate.ERROR
+    assert "not measuring real volume" in check.detail
 
 
 # ── Tuition ──────────────────────────────────────────────────────────────────
@@ -742,27 +754,12 @@ def test_extrapolated_years_are_reported_not_hidden() -> None:
     assert "1992" in check.detail and "extrapolated" in check.detail
 
 
-def test_charts_shade_the_pre_survey_era() -> None:
-    # The shading is what stops a projection reading as a measurement, so assert it is drawn
-    # for a pre-1996 range and not drawn for a wholly survey-backed one.
+def test_charts_do_not_reference_the_removed_shading_helper() -> None:
+    # The pre-survey shading was removed from the figures at the user's request; the caveat
+    # now lives in the README and the validation output instead of on the plots.
     from ppp_data import charts
 
-    class _Ax:
-        def __init__(self):
-            self.spans, self.lines, self.texts = [], [], []
-        def axvspan(self, a, b, **kw): self.spans.append((a, b))
-        def axvline(self, x, **kw): self.lines.append(x)
-        def get_xaxis_transform(self): return None
-        def text(self, *a, **kw): self.texts.append(a)
-
-    early = _Ax()
-    charts._mark_extrapolated_era(early, [1990, 1995, 2000, 2024])
-    assert early.spans == [(1990, metrics.SURVEY_FIRST_YEAR)]
-    assert early.lines == [metrics.SURVEY_FIRST_YEAR] and early.texts
-
-    late = _Ax()
-    charts._mark_extrapolated_era(late, [2000, 2010, 2024])
-    assert late.spans == [] and late.lines == [] and late.texts == []
+    assert not hasattr(charts, "_mark_extrapolated_era")
 
 
 def _run() -> int:

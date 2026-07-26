@@ -48,12 +48,19 @@ per head grew **0.42% a year** from 2007 to 2025 against the US's **1.27%**, so 
 This is a genuine qualification of the headline story, and it is reported as such. It is
 *not* a clean bill of health: see [what this does and does not mean](#what-this-does-and-does-not-mean).
 
-### The two views side by side
-![UK vs US at market rates and at PPP](../outputs/ppp/ppp_vs_market_fx_uk_us.png)
+### The three views side by side
+![UK vs US at market rates, at PPP and in real volume](../outputs/ppp/ppp_vs_market_fx_uk_us.png)
 
-The shaded gap between the lines *is* the currency effect. The UK's 2007 "parity with the
-US" was substantially a strong-pound artefact: in the same year, at PPP, the UK was only 74%
-of the US.
+The shaded gap between the market-rate and PPP-level lines *is* the currency effect. The UK's
+2007 "parity with the US" was substantially a strong-pound artefact: in the same year, at PPP,
+the UK was only 74% of the US.
+
+The figure carries a third line for the reason set out in the correction above. Two lines
+would invite the reading "the PPP line is the real story, so almost nothing was lost" — but
+the PPP-level line is a *level* comparison at each year's prices, and its movement is not pure
+volume. The dashed constant-price line is, and it falls considerably further: from **82% of
+the US in 2007 to 70% in 2025**. That third line is the quantity the decomposition chart
+splits out, so the two figures now tell the same story.
 
 ### How expensive is Britain?
 ![Price level index](../outputs/ppp/price_level_index.png)
@@ -115,8 +122,8 @@ inflation path — not a systematic gap.
 Consequences, enforced in code:
 
 - `metrics.SURVEY_FIRST_YEAR = 1996`, with the evidence recorded alongside it.
-- The four charts that reach back before 1996 **shade that era and label it** "PPPs
-  extrapolated, not surveyed", so a projection can never read as a measurement.
+- The extrapolated era is documented here and reported in every validation run, rather than
+  shaded on the figures (the shading was removed as visual clutter).
 - `validate.check_survey_backed_headline_years` **fails the run** if the decomposition's
   baseline drifts into the extrapolated era. The headline anchors (2007 and 2025) are both
   survey-backed; so are the UK price-level peak (2007) and the tuition comparison (2022).
@@ -129,6 +136,11 @@ Consequences, enforced in code:
 The World Bank's PPP series starts in 1990. The Maddison Project reaches back to 1970 but is
 benchmarked on **2011** international dollars rather than the World Bank's 2021, so it gets
 its own chart and is never spliced onto the World Bank line.
+
+Both level charts are drawn from constant-price series, which the metric registry marks
+`cross_section=False`. Read them for **slopes, not spacing**: the country gaps are anchored to
+the benchmark year and extrapolated away from it. The same-year comparison belongs to the
+current-price chart above, and each figure's source note says which it is.
 
 ### Tuition
 ![Tuition at PPP](../outputs/ppp/ppp_tuition_history.png)
@@ -238,7 +250,8 @@ A representative passing run:
 | # | Hazard | How it is handled |
 |---|---|---|
 | A | Current international $ embed worldwide inflation | Barred from level charts by `require_over_time`; enforced by test |
-| N | **PPPs are surveyed, not observed every year.** Pre-1996 values are extrapolated from a later benchmark and contain no independent price observation | Boundary established empirically (see above); `SURVEY_FIRST_YEAR = 1996`; the pre-survey era is shaded and labelled on every chart that reaches it; a check fails the run if a headline anchor falls in it |
+| N | **PPPs are surveyed, not observed every year.** Pre-1996 values are extrapolated from a later benchmark and contain no independent price observation | Boundary established empirically (see above); `SURVEY_FIRST_YEAR = 1996`; a check **fails the run** if a headline anchor falls in it, and every run reports how many plotted years are extrapolated |
+| O | **"Real" can mean two different things.** The current-price PPP ratio moves with both volume growth *and* the PPP price structure; only the constant-price series is pure volume | The decomposition's real component uses the constant-price series, and `decomposition_real_is_volume` recomputes the divergence from each country's own growth rates and fails if they disagree |
 | B | **ICP benchmark revisions** (2011 → 2017 → 2021) shift levels *retroactively* | Vintages are never spliced; every figure names its vintage in the source note. Figures here are **not** comparable with PPP numbers published under an earlier round |
 | C | Maddison uses the 2011 benchmark | Its own chart; never joined to a World Bank line |
 | D | World Bank PPP starts in 1990 | PPP charts start in 1990 and say so; Maddison covers the earlier period separately |

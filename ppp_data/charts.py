@@ -26,7 +26,9 @@ from pathlib import Path
 
 import matplotlib.ticker as mtick
 
-from vizstyle import ACCENT, BLUE, GRID, MUTED, TEXT, save_fig, source_note, white_stroke
+from vizstyle import (
+    ACCENT, BLUE, GREEN, GRID, MUTED, TEXT, save_fig, source_note, white_stroke,
+)
 
 from . import decompose, metrics, peers, series
 from .figure import labelled_ends, note as _note, span as _span, subtitle as _subtitle, themed_plt as _plt, tidy as _tidy
@@ -82,16 +84,20 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
                  fontweight="bold", pad=30)
     if uk_latest:
         _subtitle(ax, f"The UK reached ${uk_latest[1]:,.0f}k per head in {uk_latest[0]}, "
-                      "measured at domestic price levels")
+                      f"measured at domestic price levels and held at 2021 prices")
     labelled_ends(ax, labels, min_gap=max(v for v, _, _ in labels) * 0.045, x=last_x,
                   fontsize=10)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"${v:,.0f}k"))
-    _tidy(ax, ylabel="GDP per capita, PPP (000s)")
+    _tidy(ax, ylabel=f"GDP per capita (000s, {meta.unit})")
     ax.margins(x=0.12)  # room on the right for the end labels
 
     source_note(fig, _note(
         f"{_WB} \u2014 GDP per capita, PPP ({meta.wb_indicator}), {meta.unit} "
-        f"[{meta.vintage} benchmark]."))
+        f"[{meta.vintage} benchmark].",
+        "This series is built for growth over time: the gaps between countries are anchored "
+        "to the 2021 benchmark and extrapolated away from it, so read the slopes rather than "
+        "the spacing. The companion chart 'GDP per capita relative to the UK at PPP' makes "
+        "the same-year comparison on the current-price series."))
     return save_fig(fig, out_dir / "ppp_gdp_per_capita_over_time.png")
 
 
@@ -155,33 +161,45 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
 
 # ── 3. The two bases side by side ────────────────────────────────────────────
 def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
-    """The UK as a share of the US, at market exchange rates and at PPP."""
+    """The UK as a share of the US on all three measures that matter.
+
+    Three lines, because two would mislead. The market-FX and PPP-level lines alone invite
+    the reading "the PPP line is the real story, so almost nothing was lost" — but the
+    current-price PPP line is a *level* comparison at each year's prices, and its movement is
+    not pure volume growth. The constant-price line is, and it falls considerably further.
+    Showing all three keeps this figure consistent with the decomposition chart, which splits
+    the market-FX fall using the volume series.
+    """
     fx_metric, ppp_metric = "gdp_per_capita_nominal_usd", "gdp_per_capita_ppp_current"
     metrics.require_cross_section(fx_metric)
     metrics.require_cross_section(ppp_metric)
 
     fx = series.ratio(rows, fx_metric, peers.UK, peers.US)
     ppp = series.ratio(rows, ppp_metric, peers.UK, peers.US)
-    years = [y for y in sorted(fx.keys() & ppp.keys()) if y >= START_YEAR]
+    real = series.ratio(rows, "gdp_per_capita_ppp_constant", peers.UK, peers.US, check=False)
+    years = [y for y in sorted(fx.keys() & ppp.keys() & real.keys()) if y >= START_YEAR]
     if not years:
-        return None  # both bases are needed to draw the comparison at all
+        return None
     fx_pct = [fx[y] * 100 for y in years]
     ppp_pct = [ppp[y] * 100 for y in years]
+    real_pct = [real[y] * 100 for y in years]
 
     plt = _plt()
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
-    ax.fill_between(years, fx_pct, ppp_pct, color=MUTED, alpha=0.14, zorder=1)
+    ax.fill_between(years, fx_pct, ppp_pct, color=MUTED, alpha=0.13, zorder=1)
     ax.plot(years, fx_pct, color=ACCENT, linewidth=2.8, zorder=4)
     ax.plot(years, ppp_pct, color=BLUE, linewidth=2.8, zorder=4)
+    ax.plot(years, real_pct, color=GREEN, linewidth=2.2, linestyle="--", zorder=3)
+
     labelled_ends(ax, [(fx_pct[-1], "at market\nexchange rates", ACCENT),
-                       (ppp_pct[-1], "at PPP", BLUE)],
-                  min_gap=3.0, x=years[-1], fontsize=9.5)
+                       (ppp_pct[-1], "at PPP\n(living standards)", BLUE),
+                       (real_pct[-1], "real output\nper head", GREEN)],
+                  min_gap=4.5, x=years[-1], fontsize=9.5)
 
     peak_year = max(years, key=lambda y: fx[y])
     peak_pct = fx[peak_year] * 100
     ax.plot([peak_year], [peak_pct], "o", color=ACCENT, markersize=7,
             markeredgecolor="white", markeredgewidth=1.4, zorder=6)
-    # Anchored below-left of the peak: above it would run into the title block.
     ax.annotate(
         f"{peak_year}: the sterling peak\n{peak_pct:.0f}% of the US at market rates,\n"
         f"but only {ppp[peak_year]*100:.0f}% at PPP",
@@ -190,23 +208,24 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
         arrowprops={"arrowstyle": "-", "color": MUTED, "linewidth": 0.9,
                     "connectionstyle": "arc3,rad=0.15"})
 
-    mid = (fx_pct[-1] + ppp_pct[-1]) / 2
-    ax.annotate("the gap is the\nexchange rate", xy=(years[-1] - 2, mid), fontsize=9.5,
-                color=MUTED, style="italic", ha="right", va="center",
-                path_effects=white_stroke())
-
+    # Every line on this axis is "UK as % of the US", so state all three the same way — as
+    # levels on that axis, not as a mix of levels and percentage changes.
+    real_then = real[peak_year] * 100
     ax.set_title("How much of the UK's fall against the US is real?",
                  fontweight="bold", pad=30)
     _subtitle(ax, f"At market rates the UK fell from {peak_pct:.0f}% of the US in "
-                  f"{peak_year} to {fx_pct[-1]:.0f}% in {years[-1]}; at PPP it went from "
-                  f"{ppp[peak_year]*100:.0f}% to {ppp_pct[-1]:.0f}%")
+                  f"{peak_year} to {fx_pct[-1]:.0f}%; in real output per head it slipped "
+                  f"from {real_then:.0f}% to {real_pct[-1]:.0f}%")
+
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}%"))
     _tidy(ax, ylabel="UK GDP per capita as % of the US")
+    ax.margins(x=0.14)
 
     source_note(fig, _note(
-        f"{_WB} \u2014 GDP per capita in current US$ (NY.GDP.PCAP.CD) and in current "
-        f"international $ (NY.GDP.PCAP.PP.CD) [{metrics.ICP_VINTAGE} benchmark]. Same-year "
-        "ratios, so both are free of inflation.", _FRAMING))
+        f"{_WB} \u2014 NY.GDP.PCAP.CD (market rates), NY.GDP.PCAP.PP.CD (PPP levels) and "
+        f"NY.GDP.PCAP.PP.KD (real volumes), {metrics.ICP_VINTAGE} benchmark. The PPP-level "
+        "line compares living standards at each year's prices; only the constant-price line "
+        "isolates real output growth, which is why the two differ.", _FRAMING))
     return save_fig(fig, out_dir / "ppp_vs_market_fx_uk_us.png")
 
 
@@ -402,28 +421,34 @@ def chart_long_run(rows: list[dict], out_dir: Path) -> Path | None:
     labelled_ends(ax, labels, min_gap=max(v for v, _, _ in labels) * 0.05, x=last_x,
                   fontsize=10)
 
-    # The story this chart exists to tell: over half a century the UK converged with its
-    # European peers while the US pulled steadily away from all of them.
+    # The story this chart exists to tell: the US pulled steadily away from Europe. Stated as
+    # a growth comparison, not a level ratio: this series is `cross_section=False`, so the
+    # honest claim is about how fast each country grew, not how they stack up in any one year.
     uk = dict(zip(*plotted[peers.UK])) if plotted[peers.UK][0] else {}
     us = dict(zip(*plotted[peers.US])) if plotted[peers.US][0] else {}
-    subtitle_text = f"Benchmarked on Maddison's 2011 prices \u2014 a different vintage from the World Bank series, so the two are never spliced"
+    subtitle_text = ("Benchmarked on Maddison's 2011 prices \u2014 a different vintage from "
+                     "the World Bank series, so the two are never spliced")
     if uk and us:
-        first, last = min(uk.keys() & us.keys()), max(uk.keys() & us.keys())
-        a, b = uk[first] / us[first] * 100, uk[last] / us[last] * 100
-        subtitle_text = (f"The US pulled away steadily: the UK slipped from {a:.0f}% of US "
-                         f"output per head in {first} to {b:.0f}% by {last}")
+        shared = uk.keys() & us.keys()
+        first, last = min(shared), max(shared)
+        span = last - first
+        uk_cagr = ((uk[last] / uk[first]) ** (1 / span) - 1) * 100
+        us_cagr = ((us[last] / us[first]) ** (1 / span) - 1) * 100
+        subtitle_text = (f"The US pulled away steadily: {us_cagr:.2f}% a year of real growth "
+                         f"per head from {first} to {last}, against the UK's {uk_cagr:.2f}%")
 
     ax.set_title(f"Real GDP per capita at PPP over the long run, {_span(span_years)}",
                  fontweight="bold", pad=30)
     _subtitle(ax, subtitle_text)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"${v:,.0f}k"))
-    _tidy(ax, ylabel="GDP per capita, PPP (000s)")
+    _tidy(ax, ylabel=f"GDP per capita, PPP (000s, {meta.unit})")
     ax.margins(x=0.12)
 
     source_note(fig, _note(
         "Data: Maddison Project Database 2023 (Bolt & van Zanden), via Our World in Data "
         f"\u2014 {meta.unit}. On the ICP 2011 benchmark, so its levels are not comparable "
-        "with the World Bank's ICP 2021 series shown elsewhere in this analysis."))
+        "with the World Bank's ICP 2021 series shown elsewhere in this analysis, and the "
+        "spacing between countries should be read as indicative rather than exact."))
     return save_fig(fig, out_dir / "ppp_gdp_long_run_maddison.png")
 
 

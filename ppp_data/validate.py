@@ -264,8 +264,10 @@ def check_extrapolated_era_is_flagged(rows: list[dict]) -> Check:
     """Pre-survey years may be plotted, but the package must know they are extrapolated.
 
     A WARN, not an ERROR: showing the extrapolated era is legitimate — it is the only way to
-    reach back to 1990 — provided the figures and prose say so rather than presenting a
-    projection as an observation.
+    reach back to 1990 — provided the caveat is recorded somewhere the reader will meet it.
+    The figures no longer shade the era; the caveat lives in ``ppp_data/README.md`` and in
+    this line of the validation output, and ``check_survey_backed_headline_years`` is what
+    actually prevents a headline claim from resting on it.
     """
     from . import metrics as _metrics
 
@@ -280,8 +282,8 @@ def check_extrapolated_era_is_flagged(rows: list[dict]) -> Check:
     return Check(
         "extrapolated_era_is_flagged", True, WARN,
         f"{len(early)} plotted year(s) ({early[0]}-{early[-1]}) predate "
-        f"{_metrics.SURVEY_FIRST_YEAR} and are extrapolated, not surveyed; charts covering "
-        "them must mark the boundary",
+        f"{_metrics.SURVEY_FIRST_YEAR} and are extrapolated rather than surveyed; no headline "
+        "claim is anchored on them (see survey_backed_headline_years)",
     )
 
 
