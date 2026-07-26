@@ -33,12 +33,15 @@ def ratio(rows: Iterable[dict], metric: str, numerator: str, denominator: str,
     By default the metric must be declared valid for same-year cross-country comparison,
     which rules out the constant-price PPP series.
 
-    ``check=False`` is a deliberate escape hatch for one case:
-    :func:`ppp_data.validate.check_benchmark_year_agreement`, which ratios the
-    *constant*-price series precisely to confirm it agrees with the current-price series in
-    the ICP benchmark year — the one year where that series' cross-country levels are
-    anchored rather than extrapolated. Do not use it to plot a constant-price ratio in any
-    other year; that is exactly what the guard exists to prevent.
+    ``check=False`` is a deliberate escape hatch for the constant-price series, whose
+    cross-country levels are anchored on the ICP benchmark year and extrapolated away from
+    it. Three call sites use it, all deliberately and all labelled as volume rather than
+    level comparisons: :func:`ppp_data.validate.check_benchmark_year_agreement` (which ratios
+    it precisely to confirm it agrees with the current-price series in the benchmark year),
+    and the two UK/US figures that plot real-volume divergence —
+    :func:`ppp_data.charts.chart_ppp_vs_market_fx` and
+    :func:`ppp_data.charts.uk_us_decomposition`. Do not use it to present a constant-price
+    ratio as a same-year *level* comparison; that is what the guard exists to prevent.
     """
     if check:
         metrics.require_cross_section(metric)

@@ -39,8 +39,9 @@ from .paths import CHART_DIR
 START_YEAR = 1990
 
 # The baseline year for the real-vs-currency decomposition: the UK's high-water mark against
-# the US, and the year the rest of the repository measures decline from.
-DECOMPOSITION_START_YEAR = 2007
+# the US, and the year the rest of the repository measures decline from. Single source of
+# truth lives in `metrics` so `validate`'s guards can never check a different year.
+DECOMPOSITION_START_YEAR = metrics.DECOMPOSITION_BASELINE_YEAR
 
 _WB = "Data: World Bank Group, World Development Indicators"
 # Kept deliberately short: it appears on the figures that show both bases, where a long
@@ -323,7 +324,7 @@ def chart_decomposition(rows: list[dict], out_dir: Path,
     """Why the UK fell against the US: the two contributions, in percentage points.
 
     Deliberately **not** a waterfall. A waterfall would put the endpoint levels (105% and
-    64% of the US) and the two changes (-2.9 and -38.5 points) on one axis, so bars drawn
+    64% of the US) and the two changes (-12.6 and -28.8 points) on one axis, so bars drawn
     from zero and bars floating in mid-air would look like the same kind of quantity when
     they are not. This chart plots one quantity only — the contribution to the change, in
     percentage points — and leaves the levels to the subtitle and the endpoint annotation.
@@ -428,9 +429,11 @@ def chart_long_run(rows: list[dict], out_dir: Path) -> Path | None:
     us = dict(zip(*plotted[peers.US])) if plotted[peers.US][0] else {}
     subtitle_text = ("Benchmarked on Maddison's 2011 prices \u2014 a different vintage from "
                      "the World Bank series, so the two are never spliced")
-    if uk and us:
-        shared = uk.keys() & us.keys()
-        first, last = min(shared), max(shared)
+    shared = sorted(uk.keys() & us.keys())
+    # A growth rate needs at least two distinct years; a truncated fetch (or a one-year
+    # --start/--end window) falls back to the generic subtitle rather than dividing by zero.
+    if len(shared) > 1:
+        first, last = shared[0], shared[-1]
         span = last - first
         uk_cagr = ((uk[last] / uk[first]) ** (1 / span) - 1) * 100
         us_cagr = ((us[last] / us[first]) ** (1 / span) - 1) * 100

@@ -21,6 +21,7 @@ expected to drift as the World Bank revises its estimates).
 
 from __future__ import annotations
 
+import math
 from collections import Counter
 from typing import Callable, Iterable, NamedTuple
 
@@ -54,9 +55,20 @@ CURRENCY_BASIS_BREAKS: dict[str, tuple[int, str]] = {
 BENCHMARK_YEAR = 2021
 BENCHMARK_TOLERANCE = 0.02  # 2%
 
+# What fraction of price_level_index country-years must also carry the independent direct
+# route. Well below the ~86% the full fetch achieves (the euro-changeover years are excluded
+# upstream), but high enough that a truncated conversion-factor fetch cannot slip through.
+CROSS_CHECK_COVERAGE_FLOOR = 0.60
+
 # The year the decomposition is anchored on; kept here so the survey-coverage check can
-# confirm the headline claim rests on measured rather than projected PPPs.
-DECOMPOSITION_BASELINE_YEAR = 2007
+# confirm the headline claim rests on measured rather than projected PPPs. Defined once in
+# `metrics` so the chart and the check that guards it can never drift apart.
+DECOMPOSITION_BASELINE_YEAR = metrics.DECOMPOSITION_BASELINE_YEAR
+
+# How far the decomposition's real component may sit from the divergence recomputed straight
+# from the two volume series, in percentage points. Tight: they are the same quantity by
+# construction, so anything visible here is a wiring error rather than rounding.
+REAL_COMPONENT_TOLERANCE_PP = 0.15
 
 # Plausibility envelopes. Deliberately wide: they catch order-of-magnitude and
 # wrong-series errors, not small revisions.
@@ -131,8 +143,20 @@ def check_price_level_agreement(rows: list[dict]) -> Check:
     if not checked:
         return Check("price_level_agreement", False, ERROR,
                      "no country-year had both routes to the price level index")
+    # A coverage floor, not just a non-empty check: a partial conversion-factor fetch would
+    # otherwise cross-check a handful of country-years, report PASS, and silently drop
+    # countries from the figures that depend on PA.NUS.PPP.
+    headline_years = sum(1 for (metric, _, _) in values if metric == "price_level_index")
+    coverage = checked / headline_years if headline_years else 0.0
+    if coverage < CROSS_CHECK_COVERAGE_FLOOR:
+        return Check("price_level_agreement", False, ERROR,
+                     f"only {checked} of {headline_years} price-level country-years "
+                     f"({coverage:.0%}) could be cross-checked against the direct route; "
+                     f"at least {CROSS_CHECK_COVERAGE_FLOOR:.0%} required \u2014 the "
+                     "conversion-factor fetch is incomplete")
     detail = (
-        f"checked {checked} country-years; worst agreeing error {worst[0]:.2%} "
+        f"checked {checked} country-years ({coverage:.0%} of the price-level series); worst "
+        f"agreeing error {worst[0]:.2%} "
         f"({worst[1]} {worst[2]}); {explained} disagreement(s) explained by a documented "
         "currency changeover"
     )
@@ -239,23 +263,22 @@ def check_survey_backed_headline_years(rows: list[dict]) -> Check:
     is a projection rather than a measurement. This check fails if the decomposition's
     baseline — the number the whole analysis turns on — drifts into the extrapolated era.
     """
-    from . import metrics as _metrics
 
     anchors = {"decomposition baseline": DECOMPOSITION_BASELINE_YEAR}
     ppp = series.series(rows, "gdp_per_capita_ppp_current", peers.UK)
     if ppp:
         anchors["latest plotted year"] = max(ppp)
     extrapolated = {name: year for name, year in anchors.items()
-                    if year < _metrics.SURVEY_FIRST_YEAR}
+                    if year < metrics.SURVEY_FIRST_YEAR}
     detail = (
         f"headline anchors {sorted(anchors.values())} are at or after "
-        f"{_metrics.SURVEY_FIRST_YEAR}, the first year these countries' PPPs carry "
+        f"{metrics.SURVEY_FIRST_YEAR}, the first year these countries' PPPs carry "
         "Eurostat-OECD survey data"
     )
     if extrapolated:
         detail = ("anchored on extrapolated PPPs: "
                   + "; ".join(f"{n} = {y}" for n, y in extrapolated.items())
-                  + f" (before {_metrics.SURVEY_FIRST_YEAR} the PPPs are projected from a "
+                  + f" (before {metrics.SURVEY_FIRST_YEAR} the PPPs are projected from a "
                     "later benchmark, not surveyed)")
     return Check("survey_backed_headline_years", not extrapolated, ERROR, detail)
 
@@ -269,20 +292,19 @@ def check_extrapolated_era_is_flagged(rows: list[dict]) -> Check:
     this line of the validation output, and ``check_survey_backed_headline_years`` is what
     actually prevents a headline claim from resting on it.
     """
-    from . import metrics as _metrics
 
     years = [r["year"] for r in rows if r["metric"] == "gdp_per_capita_ppp_current"]
     if not years:
         return Check("extrapolated_era_is_flagged", False, WARN,
                      "no PPP GDP rows to classify")
-    early = sorted({y for y in years if y < _metrics.SURVEY_FIRST_YEAR})
+    early = sorted({y for y in years if y < metrics.SURVEY_FIRST_YEAR})
     if not early:
         return Check("extrapolated_era_is_flagged", True, WARN,
                      "every plotted year is survey-backed")
     return Check(
         "extrapolated_era_is_flagged", True, WARN,
         f"{len(early)} plotted year(s) ({early[0]}-{early[-1]}) predate "
-        f"{_metrics.SURVEY_FIRST_YEAR} and are extrapolated rather than surveyed; no headline "
+        f"{metrics.SURVEY_FIRST_YEAR} and are extrapolated rather than surveyed; no headline "
         "claim is anchored on them (see survey_backed_headline_years)",
     )
 
@@ -290,10 +312,10 @@ def check_extrapolated_era_is_flagged(rows: list[dict]) -> Check:
 def check_decomposition_real_component_is_volume(rows: list[dict]) -> Check:
     """The bar labelled "real output" must equal the actual real-output divergence.
 
-    This is the consistency trap that caught this analysis once already: the current-price
-    PPP ratio looks like a real measure and satisfies a tidy identity, but its movement mixes
-    volume growth with shifts in the PPP price structure. Labelling a bar built from it "real
-    output per head" understated the real divergence four-fold.
+    The consistency trap this guards against: the current-price PPP ratio looks like a real
+    measure and satisfies a tidy identity, but its movement mixes volume growth with shifts in
+    the PPP price structure. A bar built from it and labelled "real output per head" understates
+    the real divergence roughly four-fold.
 
     Here we recompute the real divergence directly from each country's own real growth rates
     and confirm the decomposition's real component reproduces it.
@@ -310,12 +332,18 @@ def check_decomposition_real_component_is_volume(rows: list[dict]) -> Check:
     b = shared[-1]
     # The divergence in real output per head, straight from the two volume series.
     expected = ((uk[b] / uk[a]) / (us[b] / us[a]) - 1) * 100
-    d = charts.uk_us_decomposition(rows, a, b)
+    try:
+        d = charts.uk_us_decomposition(rows, a, b)
+    except ValueError as exc:
+        # The decomposition also needs the market-FX series to span both endpoints, and the
+        # WDI routinely publishes the volume series a year ahead of it. Report that as a
+        # failed check rather than letting it abort the whole validation stage.
+        return Check("decomposition_real_is_volume", False, WARN,
+                     f"cannot decompose {a}-{b}: {exc}")
     # The Shapley real effect is that divergence applied to the ratio, so compare the
     # implied relative change rather than the raw percentage points.
-    implied = (d.log_real / 100)
-    got = (pow(2.718281828459045, implied) - 1) * 100
-    ok = abs(got - expected) < 0.15
+    got = (math.exp(d.log_real / 100) - 1) * 100
+    ok = abs(got - expected) < REAL_COMPONENT_TOLERANCE_PP
     return Check(
         "decomposition_real_is_volume", ok, ERROR,
         f"real output per head diverged {expected:+.1f}% between {a} and {b}; the "
@@ -376,8 +404,13 @@ def check_spot_values(rows: list[dict]) -> Check:
 def check_metric_units(rows: list[dict]) -> Check:
     """Every row's unit label must match its metric's registered unit.
 
-    Cheap, but it is the check that would catch a constant-price series being written out
-    under a current-price label — the kind of mix-up that is invisible on a finished chart.
+    Note what this can and cannot catch. Rows produced by the pipeline take their ``unit``
+    *from* the registry (``metrics.make_row``, ``worldbank.derive_real_usd``,
+    ``maddison.fetch``), so for a fresh fetch this check is true by construction. It earns its
+    place on the ``--from-csv`` path, where the tidy CSV is read back from disk and may be
+    stale, hand-edited, or written by an older version of the registry. Catching a
+    constant-price series relabelled as current-price at *fetch* time is the job of
+    ``check_spot_values`` and ``check_benchmark_year_agreement``, which compare values.
     """
     wrong = [
         f"{r['metric']} {r['iso3']} {r['year']}: {r['unit']!r}"
@@ -392,6 +425,43 @@ def check_metric_units(rows: list[dict]) -> Check:
     if unknown:
         detail += f"; unregistered metric(s): {unknown}"
     return Check("metric_units", not wrong and not unknown, ERROR, detail)
+
+
+def check_price_level_identity(rows: list[dict]) -> Check:
+    """The identity the whole analysis rests on must hold in the emitted data.
+
+    ``GDPpc(current US$) = GDPpc(current int'l $) x price level index`` for every country-year.
+    It is true by construction at derivation time — the index is *defined* as that quotient —
+    so this is an integrity check on the finished dataset rather than on the formula: it
+    catches a year misalignment, a truncated series, or a row-level corruption that leaves the
+    three GDP series no longer describing the same country-year. Mutation testing showed that
+    shifting one series by a single year is otherwise undetected by every other check.
+    """
+    values = series.index(rows)
+    checked = 0
+    worst = (0.0, "", 0)
+    broken: list[str] = []
+    for (metric, iso3, year), pli in values.items():
+        if metric != "price_level_index" or not pli:
+            continue
+        fx = values.get(("gdp_per_capita_nominal_usd", iso3, year))
+        ppp = values.get(("gdp_per_capita_ppp_current", iso3, year))
+        if not fx or not ppp:
+            continue
+        checked += 1
+        error = abs(fx / ppp - pli) / abs(pli)
+        worst = max(worst, (error, iso3, year))
+        if error > IDENTITY_TOLERANCE:
+            broken.append(f"{iso3} {year} ({error:.2%})")
+    if not checked:
+        return Check("price_level_identity", False, ERROR,
+                     "no country-year had all three series needed to test the identity")
+    detail = (f"GDPpc(US$) = GDPpc(int'l $) x price level index holds across {checked} "
+              f"country-years; worst error {worst[0]:.2e} ({worst[1]} {worst[2]})")
+    if broken:
+        detail = (f"identity BROKEN for {len(broken)} of {checked} country-years: "
+                  + ", ".join(broken[:5]) + " \u2014 the three GDP series are misaligned")
+    return Check("price_level_identity", not broken, ERROR, detail)
 
 
 def check_sources_present(rows: list[dict]) -> Check:
@@ -413,6 +483,7 @@ CHECKS: tuple[Callable[[list[dict]], Check], ...] = (
     check_extrapolated_era_is_flagged,
     check_sources_present,
     check_us_is_numeraire,
+    check_price_level_identity,
     check_price_level_agreement,
     check_benchmark_year_agreement,
     check_plausible_ranges,

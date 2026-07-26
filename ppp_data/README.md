@@ -36,14 +36,11 @@ than lost production** — but the remaining 30% is real, and it is not small: U
 per head grew **0.42% a year** from 2007 to 2025 against the US's **1.27%**, so the UK fell
 **14%** behind in real volume terms.
 
-> **A correction worth recording.** An earlier version of this analysis put the real
-> component at −2.9 points and the currency share at 93%. That was wrong, and the way it was
-> wrong is instructive. It built the "real" bar from the *current-price* PPP ratio, which
-> satisfies a tidier identity but whose year-to-year movement mixes volume growth with shifts
-> in the PPP price structure. Measured properly — from the constant-price series, whose
-> movement is pure volume — the real divergence is four times larger. `validate.py` now
-> recomputes the divergence straight from each country's real growth rates and fails the run
-> if the decomposition's real component does not reproduce it.
+The real component is measured from the **constant-price** PPP series, whose movement is pure
+volume. The current-price series satisfies a tidier identity but its year-to-year movement
+mixes volume growth with shifts in the PPP price structure, which would understate the real
+divergence roughly four-fold. `validate.py` recomputes the divergence directly from each
+country's real growth rates and fails the run if the decomposition does not reproduce it.
 
 This is a genuine qualification of the headline story, and it is reported as such. It is
 *not* a clean bill of health: see [what this does and does not mean](#what-this-does-and-does-not-mean).
@@ -55,12 +52,12 @@ The shaded gap between the market-rate and PPP-level lines *is* the currency eff
 2007 "parity with the US" was substantially a strong-pound artefact: in the same year, at PPP,
 the UK was only 74% of the US.
 
-The figure carries a third line for the reason set out in the correction above. Two lines
-would invite the reading "the PPP line is the real story, so almost nothing was lost" — but
-the PPP-level line is a *level* comparison at each year's prices, and its movement is not pure
-volume. The dashed constant-price line is, and it falls considerably further: from **82% of
-the US in 2007 to 70% in 2025**. That third line is the quantity the decomposition chart
-splits out, so the two figures now tell the same story.
+The figure carries a third line deliberately. Two would invite the reading "the PPP line is
+the real story, so almost nothing was lost" — but the PPP-level line is a *level* comparison
+at each year's prices, and its movement is not pure volume. The dashed constant-price line is,
+and it falls considerably further: from **82% of the US in 2007 to 70% in 2025**. That third
+line is the quantity the decomposition chart splits out, so the two figures measure the same
+thing.
 
 ### How expensive is Britain?
 ![Price level index](../outputs/ppp/price_level_index.png)
@@ -115,7 +112,7 @@ information:
 | Poland | 1991–1994, 2024 | 30 of 35 |
 
 **1991–1994 are extrapolated in every country, and 1995 in all but Poland.** From 1996 the
-series deviates from the formula in 25–30 of 30 years, which can only come from new survey
+series deviates from the formula in 25–29 of 30 years, which can only come from new survey
 data. The isolated later years are coincidence — a survey that happened to land on the
 inflation path — not a systematic gap.
 
@@ -215,7 +212,7 @@ fails the run.
 
 ## Validation
 
-`python -m ppp_data` runs fourteen checks and **refuses to write figures if any fails at error
+`python -m ppp_data` runs fifteen checks and **refuses to write figures if any fails at error
 level**. This is the answer to "do these PPP numbers actually make sense?":
 
 | Check | What it would catch |
@@ -227,7 +224,8 @@ level**. This is the answer to "do these PPP numbers actually make sense?":
 | `coverage` | A plotted country silently missing its series |
 | `sources_present` | An unattributed row |
 | `us_is_numeraire` | US price level index ≠ 1.00 — the numeraire misidentified |
-| `price_level_agreement` | The two independent routes disagreeing: wrong series, misaligned years, or a currency-basis break |
+| `price_level_identity` | `GDPpc(US$) = GDPpc(int'l $) × PLI` broken in the emitted data — a year misalignment or truncation between the three GDP series |
+| `price_level_agreement` | The two independent routes disagreeing: wrong series, misaligned years, or a currency-basis break; also fails if fewer than 60% of country-years can be cross-checked at all |
 | `benchmark_year_agreement` | Constant- and current-price PPP ratios diverging in the ICP benchmark year |
 | `plausible_ranges` | Order-of-magnitude errors, misplaced decimals, wrong indicator |
 | `relative_price_levels` | An inverted index (Poland must be cheaper than the UK) |
@@ -337,7 +335,7 @@ ppp_data/
   maddison.py      long-run PPP series (re-labelled from europe_data.maddison)
   series.py        slicing tidy rows into per-country series and ratios
   decompose.py     the symmetric real-vs-price-level decomposition
-  validate.py      the fourteen sanity checks
+  validate.py      the fifteen sanity checks
   combine.py       long/wide CSVs + manifest
   figure.py        shared chart helpers (wrapped notes, non-colliding end labels)
   charts.py        the six GDP and price-level figures
@@ -345,4 +343,4 @@ ppp_data/
   __main__.py      fetch -> validate -> combine -> chart
 ```
 
-Tests: `tests/test_ppp.py` (53 tests, fully offline).
+Tests: `tests/test_ppp.py` (59 tests, fully offline).

@@ -63,11 +63,16 @@ ICP_VINTAGE = "ICP 2021"
 # whether the year-on-year move in PA.NUS.PPP equals the relative GDP-deflator move (i.e. the
 # extrapolation formula exactly reproduces it). 1991-1994 are extrapolated in *every* country
 # and 1995 in every country but Poland; from 1996 on, the series deviates from the formula in
-# 25-30 of 30 years, which can only come from new survey data.
+# 25-29 of 30 years, which can only come from new survey data.
 #
 # Consequence: a PPP comparison anchored before this year is a projection, not a measurement,
 # and should not be quoted as an observed starting point.
 SURVEY_FIRST_YEAR = 1996
+
+# The year the UK/US decomposition is anchored on: the UK's high-water mark against the US and
+# the baseline the rest of the repository measures from. Defined here rather than in `charts`
+# so the figure and the validation checks that guard it read the same constant.
+DECOMPOSITION_BASELINE_YEAR = 2007
 
 METRICS: dict[str, Metric] = {
     "gdp_per_capita_ppp_constant": Metric(

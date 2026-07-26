@@ -561,17 +561,42 @@ def test_tuition_share_subtitle_uses_a_shared_year() -> None:
 
 def test_tuition_cpi_is_recovered_from_the_rows_for_offline_recharting() -> None:
     # `--from-csv` is documented as offline, so the deflator must come from the CSV rather
-    # than a live World Bank call.
+    # than a live World Bank call. The CPI is the *US* CPI, so it must be read from the US
+    # rows specifically -- see the regression test below.
     from ppp_data import tuition_ppp
 
     rows = []
     for year, cpi in ((2015, 80.0), (2022, 100.0)):
         nominal = 50_000.0
-        rows.append(_row("GBR", year, "gdp_per_capita_nominal_usd", nominal))
-        rows.append(_row("GBR", year, "gdp_per_capita_real_usd", nominal * (100.0 / cpi)))
+        rows.append(_row("USA", year, "gdp_per_capita_nominal_usd", nominal))
+        rows.append(_row("USA", year, "gdp_per_capita_real_usd", nominal * (100.0 / cpi)))
     recovered = tuition_ppp.us_cpi_from_rows(rows)
     assert abs(recovered[2015] - 80.0) < 1e-9
     assert abs(recovered[2022] - 100.0) < 1e-9
+
+
+def test_tuition_cpi_does_not_depend_on_row_order() -> None:
+    # Regression: the recovered CPI is `nominal / real`, which is only the deflator ratio when
+    # both values come from the SAME country. Keying by year alone let whichever country
+    # sorted last win each metric independently, so a change in sort order upstream silently
+    # produced a CPI that was wrong by ~29%.
+    import random
+
+    from ppp_data import tuition_ppp
+
+    rows = []
+    for iso3, scale in (("USA", 1.0), ("GBR", 0.7), ("POL", 0.4)):
+        for year, cpi in ((2015, 80.0), (2022, 100.0)):
+            nominal = 50_000.0 * scale
+            rows.append(_row(iso3, year, "gdp_per_capita_nominal_usd", nominal))
+            rows.append(_row(iso3, year, "gdp_per_capita_real_usd", nominal * (100.0 / cpi)))
+
+    expected = {2015: 80.0, 2022: 100.0}
+    for seed in range(12):
+        shuffled = random.Random(seed).sample(rows, len(rows))
+        recovered = tuition_ppp.us_cpi_from_rows(shuffled)
+        for year, want in expected.items():
+            assert abs(recovered[year] - want) < 1e-9, f"seed {seed}, year {year}"
 
 
 # ── PPP survey coverage (PPPs are surveyed, not observed every year) ─────────
@@ -609,10 +634,9 @@ def test_extrapolated_years_are_reported_not_hidden() -> None:
 def test_decomposition_real_component_equals_real_divergence() -> None:
     """The bar labelled "real output" must equal the actual real-output divergence.
 
-    Regression test for a real defect: the decomposition was built from the current-price
-    PPP ratio, whose movement mixes volume growth with shifts in the PPP price structure. It
-    reported a -2.9pp real effect when real output per head had actually diverged four times
-    that much. The real component must come from the constant-price (volume) series.
+    The real component must come from the constant-price (volume) series. Building it from the
+    current-price PPP ratio, whose movement mixes volume growth with shifts in the PPP price
+    structure, understates the real divergence roughly four-fold.
     """
     import math
 
@@ -669,97 +693,101 @@ def test_validation_catches_a_non_volume_real_component() -> None:
     assert "not measuring real volume" in check.detail
 
 
-# ── Tuition ──────────────────────────────────────────────────────────────────
-def test_tuition_market_fx_column_follows_the_base_year() -> None:
-    # The column name must be derived from tuition.config.REAL_BASE_YEAR, not hard-coded,
-    # so the PPP twin cannot silently sit on a different base from its market-FX pair.
-    from ppp_data import tuition_ppp
-    from tuition import config as tuition_config
-
-    assert tuition_ppp.BASE_YEAR == tuition_config.REAL_BASE_YEAR
-    assert tuition_ppp.MARKET_FX_COLUMN == f"real_{tuition_ppp.BASE_YEAR}_usd"
-
-
-def test_tuition_history_missing_base_column_is_a_clear_error() -> None:
-    import tempfile
-    from ppp_data import tuition_ppp
-
-    with tempfile.TemporaryDirectory() as tmp:
-        path = Path(tmp) / "history.csv"
-        path.write_text("country,iso3,region,year,nominal_local,currency,real_1999_usd\n"
-                        "United Kingdom,GBR,UK,2020,9250,GBP,1\n")
-        try:
-            tuition_ppp.load_history(path)
-        except RuntimeError as exc:
-            assert "REAL_BASE_YEAR" in str(exc)
-        else:
-            raise AssertionError("a mismatched base-year column must be rejected loudly")
-
-
-def test_tuition_share_subtitle_uses_a_shared_year() -> None:
-    # The UK fee series runs ahead of the US one, so quoting each at its own last point
-    # would compare different years while saying "now".
-    from ppp_data import tuition_ppp
-
-    text = tuition_ppp._share_subtitle([2020, 2022, 2024], [10.0, 20.0, 30.0],
-                                       [2020, 2022], [5.0, 6.0])
-    assert "In 2022" in text and "20.0%" in text and "6.0%" in text
-    assert "30.0%" not in text, "the UK's unmatched 2024 point must not be compared to 2022"
-
-
-def test_tuition_cpi_is_recovered_from_the_rows_for_offline_recharting() -> None:
-    # `--from-csv` is documented as offline, so the deflator must come from the CSV rather
-    # than a live World Bank call.
-    from ppp_data import tuition_ppp
-
-    rows = []
-    for year, cpi in ((2015, 80.0), (2022, 100.0)):
-        nominal = 50_000.0
-        rows.append(_row("GBR", year, "gdp_per_capita_nominal_usd", nominal))
-        rows.append(_row("GBR", year, "gdp_per_capita_real_usd", nominal * (100.0 / cpi)))
-    recovered = tuition_ppp.us_cpi_from_rows(rows)
-    assert abs(recovered[2015] - 80.0) < 1e-9
-    assert abs(recovered[2022] - 100.0) < 1e-9
-
-
-# ── PPP survey coverage (PPPs are surveyed, not observed every year) ─────────
-def test_survey_first_year_is_documented() -> None:
-    # PPPs come from price surveys. For these OECD countries the Eurostat-OECD rolling
-    # survey supplies annual PPPs from the mid-1990s; earlier years are extrapolated.
-    assert metrics.SURVEY_FIRST_YEAR == 1996
-    assert metrics.SURVEY_FIRST_YEAR > 1990, "the plotted range starts before the survey era"
-
-
-def test_headline_anchor_in_the_extrapolated_era_fails_the_run() -> None:
-    # The decomposition baseline must rest on measured, not projected, PPPs.
-    rows = _consistent_rows()
-    assert validate.check_survey_backed_headline_years(rows).ok
-
-    original = validate.DECOMPOSITION_BASELINE_YEAR
-    validate.DECOMPOSITION_BASELINE_YEAR = 1992
-    try:
-        check = validate.check_survey_backed_headline_years(rows)
-    finally:
-        validate.DECOMPOSITION_BASELINE_YEAR = original
-    assert not check.ok and "extrapolated" in check.detail
-    assert check.level == validate.ERROR, "an extrapolated anchor must stop the pipeline"
-
-
-def test_extrapolated_years_are_reported_not_hidden() -> None:
-    rows = _consistent_rows() + [
-        _row("GBR", 1992, "gdp_per_capita_ppp_current", 30_000.0),
-    ]
-    check = validate.check_extrapolated_era_is_flagged(rows)
-    assert check.ok and check.level == validate.WARN  # legitimate to plot, must be declared
-    assert "1992" in check.detail and "extrapolated" in check.detail
-
-
 def test_charts_do_not_reference_the_removed_shading_helper() -> None:
-    # The pre-survey shading was removed from the figures at the user's request; the caveat
-    # now lives in the README and the validation output instead of on the plots.
+    # The pre-survey caveat lives in the README and the validation output rather than as
+    # shading on the plots; this asserts the helper stays gone.
     from ppp_data import charts
 
     assert not hasattr(charts, "_mark_extrapolated_era")
+
+
+# ── Robustness of the validation gate itself ─────────────────────────────────
+def test_validation_reports_rather_than_crashes_on_a_partial_fetch() -> None:
+    # Regression: the WDI routinely publishes the constant-price volume series a year ahead of
+    # the market-FX series. `uk_us_decomposition` raises ValueError in that case, and the
+    # exception used to escape `run_all`, turning the stage whose job is to REPORT failures
+    # into an unhandled traceback that `--skip-validation` could not bypass.
+    from ppp_data import validate
+
+    rows = _consistent_rows()
+    baseline = validate.DECOMPOSITION_BASELINE_YEAR
+    validate.DECOMPOSITION_BASELINE_YEAR = 2007
+    try:
+        trimmed = [r for r in rows
+                   if not (r["metric"] == "gdp_per_capita_nominal_usd" and r["year"] == 2024)]
+        check = validate.check_decomposition_real_component_is_volume(trimmed)
+    finally:
+        validate.DECOMPOSITION_BASELINE_YEAR = baseline
+    assert not check.ok
+    assert "cannot decompose" in check.detail
+
+
+def test_price_level_identity_catches_a_year_misalignment() -> None:
+    # The identity GDPpc(US$) = GDPpc(int'l $) x PLI is true by construction at derivation
+    # time, so this guards the emitted dataset: shifting one series by a single year was
+    # previously undetected by every other check.
+    from ppp_data import validate
+
+    rows = [
+        _row("GBR", 2020, "gdp_per_capita_nominal_usd", 40_000.0),
+        _row("GBR", 2020, "gdp_per_capita_ppp_current", 50_000.0),
+        _row("GBR", 2020, "price_level_index", 0.8),
+    ]
+    assert validate.check_price_level_identity(rows).ok
+
+    broken = [dict(r) for r in rows]
+    broken[0]["value"] = 45_000.0  # as if the market-FX row came from the wrong year
+    check = validate.check_price_level_identity(broken)
+    assert not check.ok and check.level == validate.ERROR
+    assert "misaligned" in check.detail
+
+
+def test_price_level_agreement_requires_real_coverage() -> None:
+    # Regression: the check previously failed only when ZERO country-years carried both
+    # routes, so a truncated conversion-factor fetch could cross-check a single country-year,
+    # report PASS, and silently drop countries from the figures.
+    from ppp_data import validate
+
+    rows = []
+    for year in range(2000, 2020):
+        rows.append(_row("GBR", year, "price_level_index", 0.9))
+    rows.append(_row("GBR", 2000, "price_level_index_direct", 0.9))
+    check = validate.check_price_level_agreement(rows)
+    assert not check.ok and check.level == validate.ERROR
+    assert "incomplete" in check.detail
+
+
+def test_long_run_chart_survives_a_degenerate_year_window() -> None:
+    # Regression: the CAGR subtitle divided by (last - first) without guarding a single-year
+    # or empty overlap, raising ZeroDivisionError/ValueError AFTER the CSVs had been written.
+    import tempfile
+
+    from ppp_data import charts, metrics
+
+    unit = metrics.METRICS["gdp_per_capita_real_maddison"].unit
+
+    def _m(iso3, year, value):
+        return {"metric": "gdp_per_capita_real_maddison", "iso3": iso3, "country": iso3,
+                "year": year, "value": value, "unit": unit, "source": "Maddison"}
+
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp)
+        single = [_m("GBR", 2020, 40_000.0), _m("USA", 2020, 55_000.0)]
+        assert charts.chart_long_run(single, out) is not None
+
+        disjoint = [_m("GBR", 2019, 40_000.0), _m("USA", 2021, 55_000.0)]
+        assert charts.chart_long_run(disjoint, out) is not None
+
+
+def test_decomposition_baseline_year_has_one_source_of_truth() -> None:
+    # The figure is drawn from charts.DECOMPOSITION_START_YEAR while the validation gate
+    # checks validate.DECOMPOSITION_BASELINE_YEAR; if they can drift, the "no headline claim
+    # anchored pre-1996" invariant is bypassable by editing one constant.
+    from ppp_data import charts, metrics, validate
+
+    assert (charts.DECOMPOSITION_START_YEAR
+            == validate.DECOMPOSITION_BASELINE_YEAR
+            == metrics.DECOMPOSITION_BASELINE_YEAR)
 
 
 def _run() -> int:

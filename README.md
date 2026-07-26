@@ -110,7 +110,7 @@ and energy dearer. The story moves from *"Britain stopped producing"* to *"Brita
 **and** its output lost value against the world"*. The measures where currency cancels
 entirely point the same way — Poland has reached **84% of UK GDP per head at PPP**, and UK
 tuition took **24% of GDP per capita against 12% in the US** in 2022. See [`ppp_data/`](ppp_data/README.md) for the full parallel set, the method,
-and the caveats. *Source: World Bank WDI (NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.CD), ICP 2021 benchmark.*
+and the caveats. *Source: World Bank WDI (NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.KD), ICP 2021 benchmark.*
 
 ## Repository layout
 

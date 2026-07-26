@@ -9,9 +9,20 @@ Taking a ratio against the United States (whose PLI is 1.00 by construction) giv
 
     R_fx  =  R_ppp  x  R_pli
 
-so any change in how the UK compares to the US at market rates is the product of a change
-in **real relative output** and a change in **relative prices / the exchange rate**. This
-module measures those two contributions.
+so any change in how the UK compares to the US at market rates is the product of a change in
+**relative PPP-converted output** and a change in **relative prices / the exchange rate**.
+
+One caveat the identity above quietly hides: ``R_ppp`` here is the *current-price* PPP ratio,
+and its year-to-year movement is **not** pure volume growth — it also carries shifts in the
+PPP price structure. Reading a change in ``R_ppp`` as a change in real output understates the
+real divergence roughly four-fold. So the production caller
+(:func:`ppp_data.charts.uk_us_decomposition`) does not use the identity as written: it feeds
+the **constant-price volume ratio** as the real factor and derives the second factor as the
+residual ``R_fx / R_real``, which therefore carries ICP re-benchmarking drift as well as
+prices and the exchange rate. That is why the chart labels the second bar "prices, exchange
+rate and re-benchmarking" rather than "price level", and why
+:func:`ppp_data.validate.check_decomposition_real_component_is_volume` recomputes the real
+component from each country's own growth rates on every run.
 
 The split uses the symmetric (Shapley) decomposition of a two-factor product rather than a
 sequential one, so it is exact *and* independent of which factor you vary first — there is
@@ -32,17 +43,23 @@ def price_level_index_direct(ppp_conversion_factor: float,
 
     Above 1.00 the country is expensive relative to the United States; below 1.00, cheap.
 
-    This is the *textbook* definition, and it is the one the package uses only as a
-    cross-check — hence the ``_direct`` suffix, matching the ``price_level_index_direct``
-    metric. The headline index is built instead from the two GDP-per-capita series, where
-    the local-currency units cancel; see :func:`ppp_data.worldbank.derive_price_level_index`
-    for why that distinction matters across the euro changeover.
+    This is the *textbook* definition. It is not called by the pipeline: the equivalent
+    row-level implementation :func:`ppp_data.worldbank.derive_price_level_index_direct` emits
+    the ``price_level_index_direct`` metric that
+    :func:`ppp_data.validate.check_price_level_agreement` reconciles against the headline
+    index. This function is the scalar form of the same formula, kept for tests and for
+    readers who want the definition in one line. The headline index is built instead from the
+    two GDP-per-capita series, where the local-currency units cancel; see
+    :func:`ppp_data.worldbank.derive_price_level_index` for why that distinction matters
+    across the euro changeover.
 
     The two routes are reconciled by :func:`ppp_data.validate.check_price_level_agreement`,
     which is the package's real end-to-end check that the right series were pulled and
-    aligned. (An identity check against the *headline* index would be vacuous: that index is
-    defined as ``nominal_usd / ppp_current``, so ``ppp_current * pli == nominal_usd`` holds
-    by construction.)
+    aligned. :func:`ppp_data.validate.check_price_level_identity` is the weaker companion: the
+    headline index is *defined* as ``nominal_usd / ppp_current``, so that identity holds by
+    construction at derivation time and the check guards only the emitted dataset — it exists
+    because mutation testing showed a one-year shift of a single series was otherwise
+    undetected.
     """
     if market_exchange_rate == 0:
         raise ValueError("market exchange rate of zero: cannot form a price level index")

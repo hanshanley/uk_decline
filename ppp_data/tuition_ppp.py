@@ -35,7 +35,7 @@ from europe_data.worldbank import us_cpi
 from tuition import config as tuition_config
 from vizstyle import ACCENT, BLUE, GOLD, MUTED, save_fig, source_note, white_stroke
 
-from . import series
+from . import peers, series
 from .figure import labelled_ends, note, subtitle, themed_plt, tidy
 from .metrics import ICP_VINTAGE
 from .paths import CHART_DIR, TUITION_HISTORY_CSV
@@ -61,9 +61,9 @@ class TuitionPoint(NamedTuple):
     year: int
     nominal_local: float
     currency: str
-    real_base_usd: float        # market exchange rates (as published by ``tuition``)
-    real_base_intl: float       # purchasing power parity
-    share_of_gdp_pc_pct: float  # unit-free: currency cancels
+    real_base_usd: float            # market exchange rates (as published by ``tuition``)
+    real_base_intl: float | None    # purchasing power parity; None if the CPI lacks that year
+    share_of_gdp_pc_pct: float      # unit-free: currency cancels
 
 
 def load_history(path: Path | str = TUITION_HISTORY_CSV) -> list[dict]:
@@ -90,11 +90,16 @@ def us_cpi_from_rows(rows: list[dict]) -> dict[int, float]:
 
     This lets ``--from-csv`` re-chart entirely offline: the CPI is already encoded in the
     CSV, so there is no need to go back to the network for it.
+
+    The ratio is identical for every country (the same US CPI deflates them all), but the two
+    metrics must be read from the *same* country or the ratio is meaningless — so this reads
+    the United States explicitly rather than whichever row happens to sort last.
     """
     out: dict[int, float] = {}
     by_year: dict[int, dict[str, float]] = {}
     for row in rows:
-        if row["metric"] in ("gdp_per_capita_real_usd", "gdp_per_capita_nominal_usd"):
+        if (row["iso3"] == peers.US
+                and row["metric"] in ("gdp_per_capita_real_usd", "gdp_per_capita_nominal_usd")):
             by_year.setdefault(row["year"], {})[row["metric"]] = row["value"]
     for year, pair in by_year.items():
         real = pair.get("gdp_per_capita_real_usd")
@@ -138,7 +143,10 @@ def build(rows: list[dict], history: list[dict] | None = None,
         gdp_ppp = values.get(("gdp_per_capita_ppp_current", iso3, year))
         gdp_usd = values.get(("gdp_per_capita_nominal_usd", iso3, year))
         fx = values.get(("market_exchange_rate", iso3, year))
-        if not (cpi_year and ppp_factor and gdp_ppp and gdp_usd and fx):
+        # The share of GDP per capita is unit-free and needs no deflator, so it is NOT gated
+        # on the CPI: the WDI publishes GDP for a year before the CPI-deflated series catches
+        # up, and dropping the whole row would silently truncate the share chart.
+        if not (ppp_factor and gdp_ppp and gdp_usd and fx):
             continue
 
         tuition_intl = nominal / ppp_factor          # current international $
@@ -160,7 +168,7 @@ def build(rows: list[dict], history: list[dict] | None = None,
             country=row["country"], iso3=iso3, region=row["region"], year=year,
             nominal_local=nominal, currency=row["currency"],
             real_base_usd=float(row[MARKET_FX_COLUMN]),
-            real_base_intl=tuition_intl * (cpi_base / cpi_year),
+            real_base_intl=tuition_intl * (cpi_base / cpi_year) if cpi_year else None,
             share_of_gdp_pc_pct=(share_ppp + share_fx) / 2.0 * 100.0,
         ))
     out.sort(key=lambda p: (p.region, p.year))
@@ -169,7 +177,12 @@ def build(rows: list[dict], history: list[dict] | None = None,
 
 def _by_country(points: list[TuitionPoint], country: str,
                 attr: str) -> tuple[list[int], list[float]]:
-    chosen = [p for p in points if p.country == country]
+    """Years and values for one country, dropping years where the value is unavailable.
+
+    ``real_base_intl`` is None when the US CPI does not yet cover a fee year, so each series
+    is filtered independently rather than dropping the whole point.
+    """
+    chosen = [p for p in points if p.country == country and getattr(p, attr) is not None]
     return [p.year for p in chosen], [getattr(p, attr) for p in chosen]
 
 
@@ -208,8 +221,14 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
     """
     plt = themed_plt()
 
-    uk_years, uk_ppp = _by_country(points, "United Kingdom", "real_base_intl")
-    _, uk_fx = _by_country(points, "United Kingdom", "real_base_usd")
+    # This figure exists to compare the two conversion bases, so it is drawn only over years
+    # where both exist. `real_base_intl` is None when the US CPI has not yet caught up with
+    # the fee year, which would otherwise leave the two series unequal lengths.
+    ppp_by_year = dict(zip(*_by_country(points, "United Kingdom", "real_base_intl")))
+    fx_by_year = dict(zip(*_by_country(points, "United Kingdom", "real_base_usd")))
+    uk_years = sorted(ppp_by_year.keys() & fx_by_year.keys())
+    uk_ppp = [ppp_by_year[y] for y in uk_years]
+    uk_fx = [fx_by_year[y] for y in uk_years]
     us_years, us_ppp = _by_country(points, "United States", "real_base_intl")
     if not uk_years:
         return None
@@ -245,8 +264,10 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
         "Sources: UK \u2014 England statutory fee caps (legislation.gov.uk / GOV.UK); US "
         "\u2014 NCES Digest 2023 Table 330.10. UK fees converted at the World Bank PPP "
         f"factor (PA.NUS.PPP, {ICP_VINTAGE}) and at the market rate, both deflated by US CPI "
-        f"to constant {BASE_YEAR} dollars. The US is the PPP numeraire, so its line is the "
-        "same on either basis. PPP factors start in 1990; earlier fee years are omitted."))
+        f"to constant {BASE_YEAR} dollars. The US is the PPP numeraire, so the conversion "
+        "leaves its fees unchanged; its line is deflated by World Bank CPI here rather than "
+        "by the NCES series' own BLS deflator, so it differs from the market-rate tuition "
+        "chart by up to about 3%. PPP factors start in 1990; earlier fee years are omitted."))
     return save_fig(fig, out_dir / "ppp_tuition_history.png", bottom=0.18)
 
 

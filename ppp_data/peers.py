@@ -25,8 +25,9 @@ UK = "GBR"
 US = "USA"
 
 # The UK is always terracotta and heavier than everything else; the US is near-black as
-# the primary comparator. Poland is included because it is the clearest case where PPP
-# and market exchange rates tell materially different stories.
+# the primary comparator. These five are the countries with a full World Bank PPP series
+# back to 1990; Poland joins the charts where its convergence is the point (RELATIVE_PEERS,
+# PRICE_LEVEL_PEERS).
 PEERS: list[Peer] = [
     Peer("GBR", "United Kingdom", ACCENT, "-", 2.8),
     Peer("USA", "United States", TEXT, "-", 1.9),
