@@ -33,17 +33,19 @@ import matplotlib.ticker as mtick
 
 from europe_data.worldbank import us_cpi
 from tuition import config as tuition_config
-from vizstyle import (
-    ACCENT, BLUE, GOLD, MUTED, house_style, save_fig, source_note, white_stroke,
-)
+from vizstyle import ACCENT, BLUE, GOLD, MUTED, save_fig, source_note, white_stroke
 
 from . import series
-from .figure import labelled_ends, note, subtitle, tidy
+from .metrics import ICP_VINTAGE
+from .figure import labelled_ends, note, subtitle, themed_plt, tidy
 from .paths import CHART_DIR, TUITION_HISTORY_CSV
 
-# The base year the tuition package deflates to; imported rather than repeated so the PPP
-# twin can never drift onto a different base from the figure it is paired with.
+# The base year the tuition package deflates to, and the name of the column it publishes in
+# that base. Both are derived from `tuition.config` so the PPP twin can never drift onto a
+# different base from the market-FX figure it is paired with — deriving the column name (not
+# hard-coding `real_2022_usd`) is what makes that guarantee real rather than aspirational.
 BASE_YEAR = tuition_config.REAL_BASE_YEAR
+MARKET_FX_COLUMN = f"real_{BASE_YEAR}_usd"
 
 # How far the two routes to "tuition as a share of GDP per capita" may differ. They are
 # algebraically identical, so the only gap should come from the rounding in the World Bank's
@@ -67,7 +69,40 @@ class TuitionPoint(NamedTuple):
 def load_history(path: Path | str = TUITION_HISTORY_CSV) -> list[dict]:
     """Read the tuition history published by ``tuition.build_history``."""
     with open(path, newline="") as fh:
-        return list(csv.DictReader(fh))
+        rows = list(csv.DictReader(fh))
+    if rows and MARKET_FX_COLUMN not in rows[0]:
+        raise RuntimeError(
+            f"{path} has no {MARKET_FX_COLUMN!r} column (found: {sorted(rows[0])}). "
+            f"tuition.config.REAL_BASE_YEAR is {BASE_YEAR}; rebuild the tuition history "
+            "with `python -m tuition.build_history` so both analyses share a base year."
+        )
+    return rows
+
+
+def us_cpi_from_rows(rows: list[dict]) -> dict[int, float]:
+    """Recover the US CPI deflator ratios already implied by the fetched rows.
+
+    ``europe_data.worldbank.deflate_to_real_usd`` builds ``gdp_per_capita_real_usd`` as
+    ``nominal x (CPI_base / CPI_year)``, so the ratio of the real to the nominal series is
+    exactly ``CPI_base / CPI_year`` for that year. Returning a CPI index scaled so the base
+    year is 100 reproduces what :func:`europe_data.worldbank.us_cpi` would return, up to a
+    constant factor that cancels in every deflation.
+
+    This lets ``--from-csv`` re-chart entirely offline: the CPI is already encoded in the
+    CSV, so there is no need to go back to the network for it.
+    """
+    out: dict[int, float] = {}
+    by_year: dict[int, dict[str, float]] = {}
+    for row in rows:
+        if row["metric"] in ("gdp_per_capita_real_usd", "gdp_per_capita_nominal_usd"):
+            by_year.setdefault(row["year"], {})[row["metric"]] = row["value"]
+    for year, pair in by_year.items():
+        real = pair.get("gdp_per_capita_real_usd")
+        nominal = pair.get("gdp_per_capita_nominal_usd")
+        if real and nominal:
+            # real/nominal == CPI_base/CPI_year, so CPI_year is proportional to its inverse.
+            out[year] = 100.0 * nominal / real
+    return out
 
 
 def build(rows: list[dict], history: list[dict] | None = None,
@@ -75,6 +110,10 @@ def build(rows: list[dict], history: list[dict] | None = None,
     """Re-express each fee at PPP and as a share of GDP per capita.
 
     ``rows`` are the tidy PPP rows; ``history`` defaults to the published tuition history.
+    ``cpi`` defaults to the deflator implied by ``rows`` (see :func:`us_cpi_from_rows`), and
+    falls back to a live World Bank fetch only if the rows do not carry it — so the
+    documented offline path stays offline.
+
     A fee year is skipped entirely when the PPP conversion factor or GDP per capita is
     unavailable for it — the World Bank's PPP series begins in 1990, and nothing is
     extrapolated backwards to fill the gap.
@@ -82,7 +121,10 @@ def build(rows: list[dict], history: list[dict] | None = None,
     history = history if history is not None else load_history()
     values = series.index(rows)
     years = [int(r["year"]) for r in history]
-    cpi = cpi if cpi is not None else us_cpi(min(years), max(max(years), BASE_YEAR))
+    if cpi is None:
+        cpi = us_cpi_from_rows(rows)
+        if BASE_YEAR not in cpi:  # the rows did not carry the deflator; go to the source
+            cpi = us_cpi(min(years), max(max(years), BASE_YEAR))
     cpi_base = cpi.get(BASE_YEAR)
     if not cpi_base:
         raise RuntimeError(f"no US CPI for the {BASE_YEAR} base year; cannot deflate")
@@ -117,7 +159,7 @@ def build(rows: list[dict], history: list[dict] | None = None,
         out.append(TuitionPoint(
             country=row["country"], iso3=iso3, region=row["region"], year=year,
             nominal_local=nominal, currency=row["currency"],
-            real_base_usd=float(row["real_2022_usd"]),
+            real_base_usd=float(row[MARKET_FX_COLUMN]),
             real_base_intl=tuition_intl * (cpi_base / cpi_year),
             share_of_gdp_pc_pct=(share_ppp + share_fx) / 2.0 * 100.0,
         ))
@@ -131,11 +173,34 @@ def _by_country(points: list[TuitionPoint], country: str,
     return [p.year for p in chosen], [getattr(p, attr) for p in chosen]
 
 
+def _share_subtitle(uk_years: list[int], uk: list[float],
+                    us_years: list[int], us: list[float]) -> str:
+    """The UK-vs-US sentence, quoted at the latest year both series actually cover.
+
+    The two fee series end in different years — the England fee cap runs ahead of the NCES
+    US series — so quoting each at its own last point would compare (say) 2024 with 2022
+    while saying "now". On the one figure whose selling point is that it is immune to
+    methodological choices, that would be the only sloppy comparison on it.
+    """
+    if not us_years:
+        return (f"A year's fees took {uk[-1]:.1f}% of UK GDP per head in {uk_years[-1]}"
+                " \u2014 a comparison no exchange rate or PPP basket can move")
+    shared = sorted(set(uk_years) & set(us_years))
+    tail = "\u2014 a comparison no exchange rate or PPP basket can move"
+    if not shared:
+        return (f"UK fees took {uk[-1]:.1f}% of GDP per head in {uk_years[-1]}; US fees "
+                f"{us[-1]:.1f}% in {us_years[-1]} {tail}")
+    year = shared[-1]
+    uk_at = uk[uk_years.index(year)]
+    us_at = us[us_years.index(year)]
+    return (f"In {year} a year's fees took {uk_at:.1f}% of UK GDP per head, against "
+            f"{us_at:.1f}% in the US {tail}")
+
+
 def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
     """UK and US tuition in constant base-year international dollars, PPP vs market FX."""
-    import matplotlib.pyplot as plt
+    plt = themed_plt()
 
-    house_style()
     uk_years, uk_ppp = _by_country(points, "United Kingdom", "real_base_intl")
     _, uk_fx = _by_country(points, "United Kingdom", "real_base_usd")
     us_years, us_ppp = _by_country(points, "United States", "real_base_intl")
@@ -179,9 +244,8 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
 
 def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | None:
     """Annual tuition as a percentage of GDP per capita — free of any currency choice."""
-    import matplotlib.pyplot as plt
+    plt = themed_plt()
 
-    house_style()
     uk_years, uk = _by_country(points, "United Kingdom", "share_of_gdp_pc_pct")
     us_years, us = _by_country(points, "United States", "share_of_gdp_pc_pct")
     de_years, de = _by_country(points, "Germany", "share_of_gdp_pc_pct")
@@ -210,9 +274,7 @@ def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | Non
                   fontsize=9.5)
 
     ax.set_title("Tuition as a share of GDP per capita", fontweight="bold", pad=30)
-    subtitle(ax, f"A year's fees now take {uk[-1]:.1f}% of UK GDP per head, against "
-                 f"{us[-1]:.1f}% in the US \u2014 a comparison no exchange rate or PPP "
-                 "basket can move")
+    subtitle(ax, _share_subtitle(uk_years, uk, us_years, us))
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}%"))
     tidy(ax, ylabel="Annual tuition as % of GDP per capita")
     ax.set_ylim(bottom=0)
@@ -221,7 +283,8 @@ def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | Non
     source_note(fig, note(
         "Sources: fees as above; GDP per capita from the World Bank (NY.GDP.PCAP.CD and "
         "NY.GDP.PCAP.PP.CD). Fees and income are taken in the same currency, so the units "
-        "cancel and the figure is the same at market rates as at PPP."))
+        f"cancel and the figure is the same at market rates as at PPP. PPP parities are on "
+        f"the {ICP_VINTAGE} benchmark."))
     return save_fig(fig, out_dir / "tuition_share_of_gdp_per_capita.png")
 
 

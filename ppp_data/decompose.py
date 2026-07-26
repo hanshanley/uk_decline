@@ -26,26 +26,27 @@ import math
 from typing import NamedTuple
 
 
-def price_level_index(ppp_conversion_factor: float, market_exchange_rate: float) -> float:
+def price_level_index_direct(ppp_conversion_factor: float,
+                             market_exchange_rate: float) -> float:
     """PPP conversion factor divided by the market exchange rate (US = 1.00).
 
     Above 1.00 the country is expensive relative to the United States; below 1.00, cheap.
+
+    This is the *textbook* definition, and it is the one the package uses only as a
+    cross-check — hence the ``_direct`` suffix, matching the ``price_level_index_direct``
+    metric. The headline index is built instead from the two GDP-per-capita series, where
+    the local-currency units cancel; see :func:`ppp_data.worldbank.derive_price_level_index`
+    for why that distinction matters across the euro changeover.
+
+    The two routes are reconciled by :func:`ppp_data.validate.check_price_level_agreement`,
+    which is the package's real end-to-end check that the right series were pulled and
+    aligned. (An identity check against the *headline* index would be vacuous: that index is
+    defined as ``nominal_usd / ppp_current``, so ``ppp_current * pli == nominal_usd`` holds
+    by construction.)
     """
     if market_exchange_rate == 0:
         raise ValueError("market exchange rate of zero: cannot form a price level index")
     return ppp_conversion_factor / market_exchange_rate
-
-
-def identity_relative_error(nominal_usd: float, ppp_current: float, pli: float) -> float:
-    """Relative error in ``nominal_usd == ppp_current * pli``.
-
-    The three World Bank series are published independently, so this is a genuine
-    cross-check on the data rather than a tautology. :mod:`ppp_data.validate` runs it over
-    every country-year and fails the pipeline if the identity breaks down.
-    """
-    if nominal_usd == 0:
-        raise ValueError("nominal US$ GDP per capita of zero: cannot form a relative error")
-    return abs(ppp_current * pli - nominal_usd) / abs(nominal_usd)
 
 
 class Decomposition(NamedTuple):
