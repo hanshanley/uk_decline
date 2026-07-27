@@ -86,7 +86,7 @@ def iso3_codes() -> list[str]:
 
 # --- Data sources -----------------------------------------------------------
 # OECD "Education at a Glance" average annual tuition fees (Table C5): mostly
-# published as Excel/PDF, with a best-effort SDMX attempt in fetch_oecd.py.
+# published as Excel/PDF; fetch_oecd.py checks the SDMX API and reports what it finds.
 OECD_SDMX_BASE = "https://sdmx.oecd.org/public/rest/data"
 OECD_TUITION_HINT = (
     "https://www.oecd.org/en/data/indicators/tuition-fees.html "

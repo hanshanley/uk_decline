@@ -144,8 +144,8 @@ tuition/            # self-contained package
   dataset.py        #   shared primary-row loader (filter + value coercion)
   theme.py          #   shared Substack plotting theme
 fetch_nces.py       # download + parse the real NCES US tuition table (primary source)
-fetch_oecd.py       # best-effort OECD SDMX pull
-fetch_eurostat.py   # best-effort Eurostat/Eurydice pull
+fetch_oecd.py       # checks the OECD SDMX API for a usable fee series
+fetch_eurostat.py   # checks Eurostat/Eurydice for a usable fee series
 build_dataset.py    # snapshot: merge curated + fetched, convert to nominal + constant-2022 USD
 build_history.py    # historical: NCES US + UK caps + Germany -> real 2022 USD
 analyze.py          # per-region median & average + verdict
