@@ -67,7 +67,7 @@ Historical data: `data/processed/tuition_history.csv`.
 ## Data sources & provenance
 
 **Full formal citations** (organization, title, year, access date) are in
-**[`CITATIONS_tuition.md`](CITATIONS_tuition.md)**. Every figure is traceable to the source
+**[`CITATIONS.md`](CITATIONS.md)**. Every figure is traceable to the source
 below (each output CSV row also carries `source` / `source_url`). **Primary** =
 fetched/derived from an authoritative primary dataset;
 **secondary** = compiled from a published summary of the primary report (flagged for
