@@ -7,6 +7,7 @@ Or with pytest: pytest tests/test_crime.py -q
 from __future__ import annotations
 
 import sys
+import io
 from pathlib import Path
 
 import pandas as pd
@@ -119,6 +120,19 @@ def test_ons_host_allowlist() -> None:
         else:  # pragma: no cover
             raise AssertionError(f"expected rejection of {bad!r}")
     csew._ensure_ons_host("https://www.ons.gov.uk/file?uri=x")  # ok, no raise
+
+
+def test_download_workbook_accepts_current_sheet_name(monkeypatch) -> None:
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+        _synthetic_a1a().to_excel(writer, sheet_name="Table A1a", header=False, index=False)
+
+    class _Resp:
+        content = buf.getvalue()
+
+    monkeypatch.setattr(csew, "_ons_get", lambda *a, **k: _Resp())
+    rows = csew.build_rows(csew.download_workbook("https://www.ons.gov.uk/file?uri=x"))
+    assert any(r["year"] == 2002 for r in rows)
 
 
 def _run() -> int:

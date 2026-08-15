@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import datetime as dt
 import os
 
 from tuition import config
@@ -106,13 +107,27 @@ def convert(rows: list[dict], rates: dict[str, dict], us_deflator: dict[int, flo
     return out
 
 
-def _us_cpi_deflator() -> dict[int, float]:
-    """Fetch US CPI and return {year: CPI_2022 / CPI_year} for real-terms deflation."""
-    series = fetch_series(config.WB_CPI_INDICATOR, ["USA"], 2010, config.REAL_BASE_YEAR + 3).get("USA", {})
+def _us_cpi_deflator(years: set[int] | None = None) -> dict[int, float]:
+    """Return requested-year deflators, using the nearest published US CPI observation."""
+    years = years or set(range(2010, config.REAL_BASE_YEAR + 4))
+    latest_complete_year = dt.date.today().year - 1
+    series = fetch_series(
+        config.WB_CPI_INDICATOR,
+        ["USA"],
+        min(years) - 3,
+        min(max(years) + 3, latest_complete_year),
+    ).get("USA", {})
     base = series.get(config.REAL_BASE_YEAR)
     if not base:
         return {}
-    return {year: base / cpi for year, cpi in series.items() if cpi}
+    out: dict[int, float] = {}
+    for year in years:
+        if not series:
+            continue
+        nearest = min(series, key=lambda available: (abs(available - year), -available))
+        if abs(nearest - year) <= 3 and series[nearest]:
+            out[year] = base / series[nearest]
+    return out
 
 
 def main() -> None:
@@ -137,9 +152,10 @@ def main() -> None:
             requested.setdefault(row["iso3"], set()).add(int(row["year"]))
         rates = fetch_rates_for_years(requested)
         save_rates(rates)
-        deflator = _us_cpi_deflator()
+        requested_years = {int(row["year"]) for row in rows}
+        deflator = _us_cpi_deflator(requested_years)
         missing_cpi = sorted(
-            {int(row["year"]) for row in rows} - set(deflator)
+            requested_years - set(deflator)
         )
         if missing_cpi:
             raise RuntimeError(

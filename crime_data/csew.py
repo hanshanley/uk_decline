@@ -34,7 +34,7 @@ DATASET_PATH = (
     "/peoplepopulationandcommunity/crimeandjustice/datasets/"
     "crimeinenglandandwalesappendixtables"
 )
-SHEET = "Table_A1a"
+SHEETS = ("Table A1a", "Table_A1a")
 REGION = "England and Wales"
 METRIC = "csew_incidents_1000s"
 UNIT = "incidents (thousands)"
@@ -89,10 +89,14 @@ def resolve_download_url() -> str:
 
 
 def download_workbook(url: str | None = None, timeout: int = 120) -> pd.DataFrame:
-    """Download the Appendix-Tables workbook and return the ``Table_A1a`` sheet (header-less)."""
+    """Download the Appendix-Tables workbook and return the A1a sheet (header-less)."""
     url = url or resolve_download_url()
     resp = _ons_get(url, timeout)
-    return pd.read_excel(io.BytesIO(resp.content), sheet_name=SHEET, header=None)
+    workbook = pd.ExcelFile(io.BytesIO(resp.content))
+    sheet = next((name for name in SHEETS if name in workbook.sheet_names), None)
+    if sheet is None:
+        raise ValueError(f"CSEW A1a worksheet not found; available sheets: {workbook.sheet_names}")
+    return workbook.parse(sheet_name=sheet, header=None)
 
 
 def _clean_label(text: str) -> str:

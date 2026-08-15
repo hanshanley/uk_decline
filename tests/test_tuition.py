@@ -120,6 +120,19 @@ def test_fetch_rates_for_years_uses_nearest_real_observation(monkeypatch):
     assert got[("USA", 2023)]["fx_year"] == 2023
 
 
+def test_fetch_rates_for_future_year_caps_world_bank_range(monkeypatch):
+    calls = []
+
+    def fake_fetch(indicator, iso3s, start, end):
+        calls.append(end)
+        return {"GBR": {2025: 0.8}}
+
+    monkeypatch.setattr(rates, "_fetch_series", fake_fetch)
+    got = rates.fetch_rates_for_years({"GBR": {2026}})
+    assert got[("GBR", 2026)]["fx_year"] == 2025
+    assert calls == [rates.dt.date.today().year - 1]
+
+
 # --- primary-row inclusion (shared by analyze + plots) ----------------------
 def test_is_primary_predicate():
     assert config.is_primary({"include_primary": "1"}) is True
@@ -181,3 +194,33 @@ def test_nearest_year_lookup():
     assert build_history._nearest(s, 2012) == (2012, 90.0)   # exact
     assert build_history._nearest(s, 2011) == (2012, 90.0)   # nearest
     assert build_history._nearest({}, 2000) is None
+
+
+def test_future_fee_cap_uses_latest_complete_world_bank_year(monkeypatch):
+    calls = []
+
+    def fake_fetch(indicator, iso3s, start, end):
+        calls.append(end)
+        if indicator == config.WB_CPI_INDICATOR:
+            return {"USA": {2022: 100.0, 2025: 110.0}}
+        return {"GBR": {2025: 0.8}}
+
+    monkeypatch.setattr(build_history, "fetch_series", fake_fetch)
+    rows = [{
+        "country": "United Kingdom", "iso3": "GBR", "region": "UK",
+        "year": "2026", "annual_tuition_local": "9790", "currency": "GBP",
+        "source": "published cap", "source_url": "https://example.com",
+    }]
+    out = build_history.deflate_manual(rows)
+    assert out[0]["year"] == 2026
+    assert all(end <= build_history.dt.date.today().year - 1 for end in calls)
+
+
+def test_future_snapshot_uses_nearest_published_cpi(monkeypatch):
+    monkeypatch.setattr(
+        build_dataset,
+        "fetch_series",
+        lambda *a, **k: {"USA": {2022: 100.0, 2025: 110.0}},
+    )
+    got = build_dataset._us_cpi_deflator({2026})
+    assert got == {2026: 100.0 / 110.0}

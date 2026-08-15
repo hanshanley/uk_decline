@@ -12,6 +12,7 @@ unavailable, so the pipeline still runs offline.
 from __future__ import annotations
 
 import csv
+import datetime as dt
 import os
 from typing import Iterable, Optional
 
@@ -105,11 +106,12 @@ def fetch_rates_for_years(
     if not requested:
         return {}
     all_years = {year for years in requested.values() for year in years}
+    latest_complete_year = dt.date.today().year - 1
     series = _fetch_series(
         config.WB_FX_INDICATOR,
         list(requested),
         min(all_years) - 3,
-        max(all_years) + 3,
+        min(max(all_years) + 3, latest_complete_year),
     )
 
     out: dict[tuple[str, int], dict] = {}

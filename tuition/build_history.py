@@ -18,6 +18,7 @@ no fabricated fallback for the historical deflators.
 from __future__ import annotations
 
 import csv
+import datetime as dt
 import os
 
 from tuition import config
@@ -80,9 +81,12 @@ def deflate_manual(rows: list[dict]) -> list[dict]:
     iso3s = sorted({r["iso3"] for r in rows})
     max_year = max(int(r["year"]) for r in rows)
     top = max(config.REAL_BASE_YEAR, max_year)
+    fetch_end = min(top, dt.date.today().year - 1)
     # US CPI is the single deflator (base = 2022); market FX per country per year.
-    us_cpi = fetch_series(config.WB_CPI_INDICATOR, ["USA"], 1970, top).get("USA", {})
-    fx = fetch_series(config.WB_FX_INDICATOR, iso3s, 1970, top)
+    # World Bank rejects ranges ending in a not-yet-complete calendar year. Future
+    # published fee caps therefore use the nearest available official CPI/FX observation.
+    us_cpi = fetch_series(config.WB_CPI_INDICATOR, ["USA"], 1970, fetch_end).get("USA", {})
+    fx = fetch_series(config.WB_FX_INDICATOR, iso3s, 1970, fetch_end)
 
     us_base = _nearest(us_cpi, config.REAL_BASE_YEAR)
     if not us_base:

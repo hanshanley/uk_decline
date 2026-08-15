@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pandas as pd  # noqa: E402
 
-from nhs_data import charts, combine, metrics, nations, summary  # noqa: E402
+from nhs_data import charts, combine, metrics, nations, population, summary  # noqa: E402
 
 
 def _synthetic_rows() -> list[dict]:
@@ -168,6 +168,25 @@ def test_add_per_capita_resilient_to_population_failure(monkeypatch) -> None:
     ]
     out = combine.add_per_capita(rows)
     assert out == rows  # raw rows preserved, no crash
+
+
+def test_population_fetch_skips_blank_observations(monkeypatch) -> None:
+    payload = {
+        "obs": [
+            {
+                "geography": {"geogcode": "E92000001"},
+                "time": {"value": 2024},
+                "obs_value": {"value": 57_000_000},
+            },
+            {
+                "geography": {"geogcode": "S92000003"},
+                "time": {"value": 2024},
+                "obs_value": {"value": ""},
+            },
+        ]
+    }
+    monkeypatch.setattr(population, "get_json", lambda *a, **k: payload)
+    assert population.fetch() == {("ENG", 2024): 57_000_000.0}
 
 
 def _run() -> int:

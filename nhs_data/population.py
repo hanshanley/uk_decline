@@ -60,5 +60,9 @@ def fetch(
             continue
         if end_year is not None and year > end_year:
             continue
-        out[(nation, year)] = float(value)
+        try:
+            parsed = float(value)
+        except (TypeError, ValueError):
+            continue
+        out[(nation, year)] = parsed
     return out
