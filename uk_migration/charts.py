@@ -14,7 +14,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
-from matplotlib.lines import Line2D
 from matplotlib.ticker import MaxNLocator
 
 from .combine import COMBINED_CSV
@@ -59,8 +58,9 @@ def _series(df: pd.DataFrame, metric: str, category: str = "all") -> pd.DataFram
 def _save(fig, name: str, source: str) -> Path:
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     path = FIGURES_DIR / name
+    fig.subplots_adjust(bottom=0.20 if "\n" in source else 0.14)
     fig.text(
-        0.005, 0.005, f"Source: {source}", ha="left", va="bottom",
+        0.005, 0.012, f"Source: {source}", ha="left", va="bottom",
         fontsize=8, style="italic", color=SUBSTACK_MUTED,
     )
     fig.savefig(path, dpi=200, bbox_inches="tight")
@@ -89,20 +89,15 @@ def _plot_ons_methods(
     *,
     color: str = SUBSTACK_BLUE,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Plot official ONS methods with a clean 2012 handoff and no overlap."""
+    """Plot one visual line with a clean 2012 methodology handoff and no overlap."""
     ips = _series(df, ips_metric)
     ips = ips[ips["period"] < METHOD_BREAK_YEAR]
     admin = _series(df, admin_metric)
     admin = admin[admin["period"] >= METHOD_BREAK_YEAR]
-    if not ips.empty:
+    combined = pd.concat([ips, admin]).sort_values("period")
+    if not combined.empty:
         ax.plot(
-            ips["period"], ips["value"], color=color, linewidth=2.0,
-            label="ONS IPS survey estimate (through 2011)",
-        )
-    if not admin.empty:
-        ax.plot(
-            admin["period"], admin["value"], marker="o", color=color, linewidth=2.6,
-            label="ONS administrative estimate (2012–2025)",
+            combined["period"], combined["value"], color=color, linewidth=2.6,
         )
     return ips, admin
 
@@ -140,7 +135,6 @@ def chart_immigration(df: pd.DataFrame) -> Path:
     _style_title(ax, "UK long-term immigration over time")
     ax.set_xlabel("Year")
     ax.set_ylabel("Immigration per year")
-    ax.legend(loc="upper left", frameon=False)
     _style_axes(ax)
     return _save(fig, "immigration_over_time.png", _SOURCE_BY_ORIGIN)
 
@@ -155,7 +149,6 @@ def chart_net_migration(df: pd.DataFrame) -> Path:
     _style_title(ax, "UK net long-term migration over time")
     ax.set_xlabel("Year")
     ax.set_ylabel("People (net)")
-    ax.legend(loc="upper left", frameon=False)
     _style_axes(ax)
     return _save(fig, "net_migration.png", _SOURCE_BY_ORIGIN)
 
@@ -232,23 +225,19 @@ def chart_legal_vs_irregular(df: pd.DataFrame) -> Path:
 
 def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
     ips = _series(df, "net_migration_by_origin_per_1000_pop")
+    ips = ips[ips["period"] < METHOD_BREAK_YEAR]
     ons = _series(df, "net_migration_per_1000_pop")
+    ons = ons[ons["period"] >= METHOD_BREAK_YEAR]
+    combined = pd.concat([ips, ons]).sort_values("period")
     fig, ax = plt.subplots(figsize=(11, 6))
-    if not ips.empty:
+    if not combined.empty:
         ax.plot(
-            ips["period"], ips["value"], color=SUBSTACK_BLUE, linewidth=2.0,
-            label="ONS IPS survey estimate",
-        )
-    if not ons.empty:
-        ax.plot(
-            ons["period"], ons["value"], marker="o", color=SUBSTACK_BLUE, linewidth=2.6,
-            label="ONS administrative estimate",
+            combined["period"], combined["value"], color=SUBSTACK_BLUE, linewidth=2.6,
         )
     ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
     _style_title(ax, "UK net migration per 1,000 population")
     ax.set_xlabel("Year")
     ax.set_ylabel("Per 1,000 population")
-    ax.legend(loc="upper left", frameon=False)
     _style_axes(ax, thousands=False)
     return _save(
         fig, "net_migration_per_capita.png",
@@ -265,11 +254,6 @@ _ORIGIN_GROUPS = [
     ("non_eu", SUBSTACK_ACCENT, "Non-EU / Non-EU+"),
 ]
 
-# The charts make a clean method handoff at 2012: IPS through 2011, admin-based thereafter.
-_METHOD_LEGEND = [
-    Line2D([0], [0], color=SUBSTACK_TEXT, linestyle="-", label="IPS survey (through 2011)"),
-    Line2D([0], [0], color=SUBSTACK_TEXT, linestyle="--", label="Admin-based (2012\u20132025)"),
-]
 _SOURCE_BY_ORIGIN = (
     f"{SOURCE_ONS_IPS}; {SOURCE_ONS} (admin-based, 2012+)\n"
     "Note: methodology changes at 2012; IPS is shown through 2011 and administrative "
@@ -283,21 +267,20 @@ def _chart_by_origin(df: pd.DataFrame, ips_metric: str, admin_metric: str,
     for cat, color, label in _ORIGIN_GROUPS:
         ips = _series(df, ips_metric, cat)
         ips = ips[ips["period"] < METHOD_BREAK_YEAR]
-        if not ips.empty:
-            ax.plot(ips["period"], ips["value"], marker="o", markersize=3, color=color, label=label)
         admin = _series(df, admin_metric, cat)
         admin = admin[admin["period"] >= METHOD_BREAK_YEAR]
-        if not admin.empty:
-            ax.plot(admin["period"], admin["value"], marker="o", markersize=3,
-                    linestyle="--", color=color)
+        combined = pd.concat([ips, admin]).sort_values("period")
+        if not combined.empty:
+            ax.plot(
+                combined["period"], combined["value"], color=color, linewidth=2.0,
+                label=label,
+            )
     if zero_line:
         ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
     _style_title(ax, title)
     ax.set_xlabel("Year")
     ax.set_ylabel(ylabel)
-    group_legend = ax.legend(loc="upper left", frameon=False)
-    ax.add_artist(group_legend)
-    ax.legend(handles=_METHOD_LEGEND, loc="lower right", frameon=False, fontsize=9)
+    ax.legend(loc="upper left", frameon=False)
     _style_axes(ax)
     return _save(fig, name, _SOURCE_BY_ORIGIN)
 
