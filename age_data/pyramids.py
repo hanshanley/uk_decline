@@ -31,7 +31,8 @@ def _fetch_counts(
 ) -> dict[tuple[str, int, str, str], float]:
     """Return ``{(iso3, year, band_label, sex_label): count}`` for every 5-year band."""
     counts: dict[tuple[str, int, str, str], float] = {}
-    for batch in _batches(iso3s):
+    batch_size = len(iso3s) if start == end else COUNTRY_BATCH_SIZE
+    for batch in _batches(iso3s, batch_size):
         codes = ";".join(batch)
         for band_code, band_label, _mid in config.AGE_BANDS:
             for sex_code, sex_label in config.SEXES.items():

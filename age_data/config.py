@@ -165,7 +165,7 @@ CAVEATS: dict[str, str] = {
 
 # --- Citations (proper bibliographic form; the organisations that collected the data) ---
 # Access date recorded for the live pulls performed while building this section.
-ACCESS_DATE = "2026-07-03"
+ACCESS_DATE = "2026-08-15"
 
 CITATIONS: dict[str, str] = {
     "un_wpp": (

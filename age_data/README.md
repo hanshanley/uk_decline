@@ -1,13 +1,13 @@
 # Age-distribution sub-analysis — how the UK is ageing: UK vs Europe vs US
 
 Part of the `uk_decline` study. Shows **how the UK's age distribution has changed over
-time** (1960–2024) — the population-ageing story — benchmarked against the **US** and
+time** (1960–2025) — the population-ageing story — benchmarked against the **US** and
 **European countries**.
 
 > **Short answer:** the UK **is ageing, but more slowly than continental Europe.** The
-> share aged **65+ rose from ~11.7% (1960) to ~19.5% (2024)**; the derived **median age
-> rose to ~41**. Yet the UK remains **younger than the European median** (65+: 20.6%,
-> median age ~43) and **older than the US** (65+: 17.9%, median age ~39).
+> share aged **65+ rose from ~11.7% (1960) to ~19.7% (2025)**; the derived **median age
+> rose to ~41**. Yet the UK remains **younger than the European median** (65+: 21.0%,
+> median age ~44) and **older than the US** (65+: 18.4%, median age ~40).
 
 ## What it shows (three views)
 
@@ -21,16 +21,16 @@ time** (1960–2024) — the population-ageing story — benchmarked against the
 "**Median** country" is the cross-country median of each metric — UK vs the median
 European country vs US, computed in `age_data/stats.py`.
 
-## Results (latest live run, 1960–2024; 2024 headline)
+## Results (latest live run, 1960–2025; 2025 headline)
 
 | Metric | UK | Europe median | Europe mean | US |
 |---|---:|---:|---:|---:|
-| Population aged 0–14 (%) | 17.2 | 15.0 | 15.2 | 17.3 |
-| Population aged 15–64 (%) | 63.3 | 64.6 | 64.5 | 64.7 |
-| Population aged 65+ (%) | **19.5** | 20.6 | 20.3 | 17.9 |
-| Old-age dependency ratio | 30.8 | 31.9 | 31.9 | 27.7 |
-| Child dependency ratio | 27.1 | 23.2 | 23.6 | 26.8 |
-| Median age (years, *derived*) | **41.0** | 43.3 | 43.4 | 39.3 |
+| Population aged 0–14 (%) | 17.0 | 14.9 | 15.0 | 17.1 |
+| Population aged 15–64 (%) | 63.3 | 64.3 | 64.3 | 64.5 |
+| Population aged 65+ (%) | **19.7** | 21.0 | 20.7 | 18.4 |
+| Old-age dependency ratio | 31.1 | 32.8 | 32.6 | 28.5 |
+| Child dependency ratio | 26.8 | 23.3 | 23.3 | 26.5 |
+| Median age (years, *derived*) | **41.1** | 43.8 | 43.7 | 39.5 |
 
 Full per-country, per-year data: `data/age_combined_long.csv` (tidy) and
 `data/age_combined_wide.csv`. Run metadata + citations: `data/age_manifest.json`.
@@ -61,10 +61,10 @@ Per the World Bank's own metadata, the 5-year age/sex bands are *"World Bank sta
 using the World Bank's total population and age/sex distributions of the United Nations
 Population Division's World Population Prospects."*
 
-You can reproduce any single number directly, e.g. the UK's 2024 share aged 65+:
+You can reproduce any single number directly, e.g. the UK's 2025 share aged 65+:
 
 ```bash
-curl -s "https://api.worldbank.org/v2/country/GBR/indicator/SP.POP.65UP.TO.ZS?format=json&date=2024:2024"
+curl -s "https://api.worldbank.org/v2/country/GBR/indicator/SP.POP.65UP.TO.ZS?format=json&date=2025:2025"
 ```
 
 ### Median age — a transparent derivation (not a published figure)
@@ -89,7 +89,7 @@ with a published value, and it is fully reproducible from the same band counts. 
 
 For offline reproducibility, the pipeline falls back to `data/raw/manual_age.csv` **only**
 when the live fetch returns nothing. **It is not hand-typed** — it is a verifiable
-**snapshot of the live World Bank data** (latest-year broad structure + derived median age
+**snapshot of the live World Bank data** (2024 broad structure + derived median age
 for all countries, plus the UK pyramid bands for 1960 and 2024), each row keeping its World
 Bank `source` + `year`.
 
@@ -119,10 +119,10 @@ Rendered by `age_data/charts.py` in the shared **Substack style** (matching the 
 section and `pre1870_reapportionment_package`). **Every figure carries a source note
 crediting the UN Population Division & World Bank.** Written to `../outputs/age/`:
 
-- `uk_age_structure_over_time.png` — stacked area, UK 0–14 / 15–64 / 65+ share, 1960–2024.
+- `uk_age_structure_over_time.png` — stacked area, UK 0–14 / 15–64 / 65+ share, 1960–2025.
 - `share_65plus_over_time.png` — % aged 65+ over time, UK vs Europe median vs US.
 - `median_age_over_time.png` — derived median age over time, UK vs Europe median vs US.
-- `uk_population_pyramid.png` — UK population pyramid, 1960 (outline) vs 2024 (filled).
+- `uk_population_pyramid.png` — UK population pyramid, 1960 (outline) vs 2025 (filled).
 
 ## Layout (age sub-analysis files)
 

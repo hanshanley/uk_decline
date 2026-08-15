@@ -62,8 +62,9 @@ def _fetch_indicator(
 def fetch(start: int, end: int, iso3s: Iterable[str] | None = None) -> list[dict]:
     """Fetch broad age-structure + dependency-ratio rows for the given years/countries."""
     codes = list(iso3s) if iso3s is not None else config.iso3_codes()
+    batch_size = len(codes) if start == end else COUNTRY_BATCH_SIZE
     out: list[dict] = []
     for metric, (indicator, _unit) in config.BROAD_INDICATORS.items():
-        for batch in _batches(codes):
+        for batch in _batches(codes, batch_size):
             out.extend(_fetch_indicator(metric, indicator, batch, start, end))
     return out
