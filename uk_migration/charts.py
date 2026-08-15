@@ -134,7 +134,7 @@ def chart_immigration(df: pd.DataFrame) -> Path:
         ax, df, "immigration_by_origin", "immigration"
     )
     _annotate_peak_and_latest(ax, admin)
-    _style_title(ax, "UK long-term immigration over time (ONS only)")
+    _style_title(ax, "UK long-term immigration over time")
     ax.set_xlabel("Year")
     ax.set_ylabel("Immigration per year")
     ax.legend(loc="upper left", frameon=False)
@@ -149,7 +149,7 @@ def chart_net_migration(df: pd.DataFrame) -> Path:
     )
     _annotate_peak_and_latest(ax, admin)
     ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
-    _style_title(ax, "UK net long-term migration over time (ONS only)")
+    _style_title(ax, "UK net long-term migration over time")
     ax.set_xlabel("Year")
     ax.set_ylabel("People (net)")
     ax.legend(loc="upper left", frameon=False)
@@ -242,7 +242,7 @@ def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
             label="ONS administrative estimate",
         )
     ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
-    _style_title(ax, "UK net migration per 1,000 population (ONS only)")
+    _style_title(ax, "UK net migration per 1,000 population")
     ax.set_xlabel("Year")
     ax.set_ylabel("Per 1,000 population")
     ax.legend(loc="upper left", frameon=False)
