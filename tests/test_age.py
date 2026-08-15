@@ -54,6 +54,12 @@ def test_worldbank_parse(monkeypatch):
     assert {r["iso3"] for r in rows} == {"GBR", "USA"}
     # 5 broad indicators x 2 valid countries = 10 rows.
     assert len(rows) == 10
+
+
+def test_age_source_batches_preserve_country_order():
+    codes = [f"C{i:02d}" for i in range(23)]
+    assert list(worldbank._batches(codes)) == [codes[:10], codes[10:20], codes[20:]]
+    assert list(pyramids._batches(codes)) == [codes[:10], codes[10:20], codes[20:]]
     assert set(worldbank.METRICS) == set(config.BROAD_INDICATORS)
 
 

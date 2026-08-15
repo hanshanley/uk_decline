@@ -9,7 +9,7 @@ redistributed by the World Bank (see :data:`age_data.config.CITATIONS`).
 
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, Iterator
 
 from . import config
 from ._http import get_json
@@ -18,40 +18,47 @@ from .combine import make_row
 SOURCE = config.SOURCE_WB
 METRIC = "pop_band_share_pct"
 METRICS = (METRIC,)
+COUNTRY_BATCH_SIZE = 10
+
+
+def _batches(items: list[str], size: int = COUNTRY_BATCH_SIZE) -> Iterator[list[str]]:
+    for start in range(0, len(items), size):
+        yield items[start:start + size]
 
 
 def _fetch_counts(
     iso3s: list[str], start: int, end: int
 ) -> dict[tuple[str, int, str, str], float]:
     """Return ``{(iso3, year, band_label, sex_label): count}`` for every 5-year band."""
-    codes = ";".join(iso3s)
     counts: dict[tuple[str, int, str, str], float] = {}
-    for band_code, band_label, _mid in config.AGE_BANDS:
-        for sex_code, sex_label in config.SEXES.items():
-            indicator = f"SP.POP.{band_code}.{sex_code}"
-            page = 1
-            while True:
-                payload = get_json(
-                    f"{config.WORLD_BANK_BASE}/country/{codes}/indicator/{indicator}",
-                    params={
-                        "format": "json",
-                        "per_page": 1000,
-                        "date": f"{start}:{end}",
-                        "page": page,
-                    },
-                )
-                if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
-                    break
-                meta, rows = payload[0], payload[1]
-                for row in rows:
-                    value = row.get("value")
-                    iso3 = row.get("countryiso3code") or ""
-                    if value is None or iso3 not in config.BY_ISO3:
-                        continue
-                    counts[(iso3, int(row["date"]), band_label, sex_label)] = float(value)
-                if page >= int(meta.get("pages", 1)):
-                    break
-                page += 1
+    for batch in _batches(iso3s):
+        codes = ";".join(batch)
+        for band_code, band_label, _mid in config.AGE_BANDS:
+            for sex_code, sex_label in config.SEXES.items():
+                indicator = f"SP.POP.{band_code}.{sex_code}"
+                page = 1
+                while True:
+                    payload = get_json(
+                        f"{config.WORLD_BANK_BASE}/country/{codes}/indicator/{indicator}",
+                        params={
+                            "format": "json",
+                            "per_page": 1000,
+                            "date": f"{start}:{end}",
+                            "page": page,
+                        },
+                    )
+                    if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
+                        break
+                    meta, rows = payload[0], payload[1]
+                    for row in rows:
+                        value = row.get("value")
+                        iso3 = row.get("countryiso3code") or ""
+                        if value is None or iso3 not in config.BY_ISO3:
+                            continue
+                        counts[(iso3, int(row["date"]), band_label, sex_label)] = float(value)
+                    if page >= int(meta.get("pages", 1)):
+                        break
+                    page += 1
     return counts
 
 

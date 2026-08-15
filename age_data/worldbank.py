@@ -16,6 +16,12 @@ from .combine import make_row
 SOURCE = config.SOURCE_WB
 # Metric ids this source owns (used to scope the offline fallback).
 METRICS = tuple(config.BROAD_INDICATORS)
+COUNTRY_BATCH_SIZE = 10
+
+
+def _batches(items: list[str], size: int = COUNTRY_BATCH_SIZE) -> Iterator[list[str]]:
+    for start in range(0, len(items), size):
+        yield items[start:start + size]
 
 
 def _fetch_indicator(
@@ -58,5 +64,6 @@ def fetch(start: int, end: int, iso3s: Iterable[str] | None = None) -> list[dict
     codes = list(iso3s) if iso3s is not None else config.iso3_codes()
     out: list[dict] = []
     for metric, (indicator, _unit) in config.BROAD_INDICATORS.items():
-        out.extend(_fetch_indicator(metric, indicator, codes, start, end))
+        for batch in _batches(codes):
+            out.extend(_fetch_indicator(metric, indicator, batch, start, end))
     return out
