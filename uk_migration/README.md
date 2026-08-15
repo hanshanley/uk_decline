@@ -7,11 +7,18 @@ below (full list in [`../outputs/migration/SOURCES.md`](../outputs/migration/SOU
 
 ## Headline results (figures in [`../outputs/migration/`](../outputs/migration))
 
-![UK net migration over time](../outputs/migration/net_migration.png)
+![UK long-term immigration over time](../outputs/migration/immigration_over_time.png)
+
+The ONS-only series shows the long-run rise without relying on the World Bank's modelled net
+migration series: annual long-term immigration was roughly **200k in the 1960s–70s**, reached
+about **600k by the mid-2000s**, and peaked at **1.44M in 2023** before falling to **813k in
+2025**. The chart shows the overlapping IPS survey and administrative estimates separately,
+so the methodology change is visible rather than silently spliced.
 
 | File | Shows |
 |---|---|
-| `net_migration.png` / `net_migration_per_capita.png` | Net long-term migration, total and per-capita. |
+| `immigration_over_time.png` | ONS-only long-run immigration inflow, with the method break shown. |
+| `net_migration.png` / `net_migration_per_capita.png` | ONS-only net migration, total and per-capita. |
 | `immigration_vs_emigration.png` | Inflows vs outflows over time. |
 | `immigration_by_origin.png` / `net_migration_by_origin.png` | Flows by citizenship/origin. |
 | `visas_by_category.png` | Entry-clearance visas by category (Home Office). |
@@ -23,8 +30,9 @@ below (full list in [`../outputs/migration/SOURCES.md`](../outputs/migration/SOU
 - **Office for National Statistics (ONS)** — Long-Term International Migration
   (immigration, emigration, net migration), incl. the 1964–2015 IPS-by-citizenship series.
 - **UK Home Office** — Immigration System Statistics (visas, asylum, irregular arrivals).
-- **World Bank** — World Development Indicators for `GBR` (`SM.POP.NETM`, `SP.POP.TOTL`, etc.),
-  used for population denominators.
+- **World Bank** — World Development Indicators `SP.POP.TOTL`, used only as the population
+  denominator in per-capita charts. Its modelled migration series remains in the downloadable
+  dataset for reference but is not plotted in the headline charts.
 
 `*_per_1000_pop` / per-capita series are **derived** (flow ÷ World Bank population × 1000).
 Migration figures are headcounts, so no CPI/inflation adjustment applies. Full citations

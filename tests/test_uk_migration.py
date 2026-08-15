@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import pytest
+import pandas as pd
 
-from uk_migration import normalize, schema
+from uk_migration import charts, normalize, schema
 from uk_migration._aggregate import aggregate_by_year
 from uk_migration.sources import asylum, irregular, ons_ltim, visas
 
@@ -197,6 +198,25 @@ def test_normalize_per_capita_is_exact_ratio_of_real_series():
     # stock (not whitelisted) and the population-less year are excluded
     assert all("migrant_stock" not in r["metric"] for r in out)
     assert all(r["period"] != 1975 for r in out)
+
+
+def test_ons_headline_charts_ignore_modelled_world_bank_series(tmp_path, monkeypatch):
+    rows = [
+        schema.row(1964, "immigration_by_origin", 211_000, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.INFLOW, source="ONS IPS"),
+        schema.row(2015, "immigration_by_origin", 631_000, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.INFLOW, source="ONS IPS"),
+        schema.row(2023, "immigration", 1_441_000, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.INFLOW, source="ONS admin"),
+        schema.row(2025, "immigration", 813_000, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.INFLOW, source="ONS admin"),
+        schema.row(2023, "net_migration_wb", 500_000, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.NET, source="World Bank"),
+    ]
+    monkeypatch.setattr(charts, "FIGURES_DIR", tmp_path)
+    path = charts.chart_immigration(pd.DataFrame(rows))
+    assert path.name == "immigration_over_time.png"
+    assert path.stat().st_size > 0
 
 
 def test_ons_ips_history_parse_by_origin_in_thousands():

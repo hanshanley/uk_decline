@@ -80,27 +80,81 @@ def _style_title(ax, title: str) -> None:
     ax.set_title(title, fontweight="bold", pad=14)
 
 
-def chart_net_migration(df: pd.DataFrame) -> Path:
-    ons = _series(df, "net_migration")
-    wb = _series(df, "net_migration_wb")
+def _plot_ons_methods(
+    ax,
+    df: pd.DataFrame,
+    ips_metric: str,
+    admin_metric: str,
+    *,
+    color: str = SUBSTACK_BLUE,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Plot the two official ONS methods without splicing them into a fake single series."""
+    ips = _series(df, ips_metric)
+    admin = _series(df, admin_metric)
+    if not ips.empty:
+        ax.plot(
+            ips["period"], ips["value"], color=color, linewidth=2.0,
+            label="ONS IPS survey estimate (1964–2015)",
+        )
+    if not admin.empty:
+        ax.plot(
+            admin["period"], admin["value"], marker="o", color=color, linewidth=2.6,
+            label="ONS administrative estimate (2012–2025)",
+        )
+    return ips, admin
+
+
+def _annotate_peak_and_latest(ax, data: pd.DataFrame) -> None:
+    if data.empty:
+        return
+    peak = data.loc[data["value"].idxmax()]
+    latest = data.iloc[-1]
+    for row, label, offset in (
+        (peak, f"Peak {row_value_millions(peak['value'])}", (0, 12)),
+        (latest, f"{int(latest['period'])}: {row_value_millions(latest['value'])}", (0, -20)),
+    ):
+        ax.annotate(
+            label,
+            xy=(row["period"], row["value"]),
+            xytext=offset,
+            textcoords="offset points",
+            ha="center",
+            fontsize=9,
+            color=SUBSTACK_TEXT,
+        )
+
+
+def row_value_millions(value: float) -> str:
+    return f"{value / 1_000_000:.2f}M"
+
+
+def chart_immigration(df: pd.DataFrame) -> Path:
     fig, ax = plt.subplots(figsize=(11, 6))
-    if not wb.empty:
-        ax.plot(
-            wb["period"], wb["value"], marker="s", markersize=4, linestyle="--",
-            color=SUBSTACK_MUTED, alpha=0.7, label="World Bank net migration (modelled)",
-        )
-    if not ons.empty:
-        ax.plot(
-            ons["period"], ons["value"], marker="o", color=SUBSTACK_BLUE,
-            label="ONS net migration (annual)",
-        )
+    _ips, admin = _plot_ons_methods(
+        ax, df, "immigration_by_origin", "immigration"
+    )
+    _annotate_peak_and_latest(ax, admin)
+    _style_title(ax, "UK long-term immigration over time (ONS only)")
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Immigration per year")
+    ax.legend(loc="upper left", frameon=False)
+    _style_axes(ax)
+    return _save(fig, "immigration_over_time.png", _SOURCE_BY_ORIGIN)
+
+
+def chart_net_migration(df: pd.DataFrame) -> Path:
+    fig, ax = plt.subplots(figsize=(11, 6))
+    _ips, admin = _plot_ons_methods(
+        ax, df, "net_migration_by_origin", "net_migration"
+    )
+    _annotate_peak_and_latest(ax, admin)
     ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
-    _style_title(ax, "UK net long-term migration over time")
+    _style_title(ax, "UK net long-term migration over time (ONS only)")
     ax.set_xlabel("Year")
     ax.set_ylabel("People (net)")
     ax.legend(loc="upper left", frameon=False)
     _style_axes(ax)
-    return _save(fig, "net_migration.png", f"{SOURCE_ONS}; {SOURCE_WB}")
+    return _save(fig, "net_migration.png", _SOURCE_BY_ORIGIN)
 
 
 def chart_inflow_outflow(df: pd.DataFrame) -> Path:
@@ -174,26 +228,29 @@ def chart_legal_vs_irregular(df: pd.DataFrame) -> Path:
 
 
 def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
+    ips = _series(df, "net_migration_by_origin_per_1000_pop")
     ons = _series(df, "net_migration_per_1000_pop")
-    wb = _series(df, "net_migration_wb_per_1000_pop")
-    imm = _series(df, "immigration_per_1000_pop")
     fig, ax = plt.subplots(figsize=(11, 6))
-    if not wb.empty:
+    if not ips.empty:
         ax.plot(
-            wb["period"], wb["value"], marker="s", markersize=4, linestyle="--",
-            color=SUBSTACK_MUTED, alpha=0.8, label="Net migration (World Bank, modelled)",
+            ips["period"], ips["value"], color=SUBSTACK_BLUE, linewidth=2.0,
+            label="ONS IPS survey estimate",
         )
     if not ons.empty:
-        ax.plot(ons["period"], ons["value"], marker="o", color=SUBSTACK_BLUE, label="Net migration (ONS)")
-    if not imm.empty:
-        ax.plot(imm["period"], imm["value"], marker="o", color=SUBSTACK_GREEN, label="Immigration inflow (ONS)")
+        ax.plot(
+            ons["period"], ons["value"], marker="o", color=SUBSTACK_BLUE, linewidth=2.6,
+            label="ONS administrative estimate",
+        )
     ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
-    _style_title(ax, "UK migration per 1,000 population (population-adjusted)")
+    _style_title(ax, "UK net migration per 1,000 population (ONS only)")
     ax.set_xlabel("Year")
     ax.set_ylabel("Per 1,000 population")
     ax.legend(loc="upper left", frameon=False)
     _style_axes(ax, thousands=False)
-    return _save(fig, "net_migration_per_capita.png", f"{SOURCE_ONS}; {SOURCE_WB} (population)")
+    return _save(
+        fig, "net_migration_per_capita.png",
+        f"{SOURCE_ONS_IPS}; {SOURCE_ONS}; {SOURCE_WB} (population denominator only)",
+    )
 
 
 _ORIGIN_GROUPS = [
@@ -251,6 +308,7 @@ def chart_net_migration_by_origin(df: pd.DataFrame) -> Path:
 
 
 CHARTS = (
+    chart_immigration,
     chart_net_migration,
     chart_inflow_outflow,
     chart_immigration_by_origin,
@@ -264,8 +322,10 @@ CHARTS = (
 
 # chart file -> (what it shows, data sources)
 _CHART_DOCS: list[tuple[str, str, str]] = [
-    ("net_migration.png", "UK net long-term migration over time (1960+)",
-     f"{SOURCE_ONS}; {SOURCE_WB} (SM.POP.NETM)"),
+    ("immigration_over_time.png", "UK long-term immigration over time, 1964–2025",
+     _SOURCE_BY_ORIGIN),
+    ("net_migration.png", "UK net long-term migration over time, 1964–2025",
+     _SOURCE_BY_ORIGIN),
     ("immigration_vs_emigration.png", "Annual immigration vs emigration flows (2012+)", SOURCE_ONS),
     ("immigration_by_origin.png", "Immigration by citizenship group, 1964\u20132025 (IPS + admin-based)", _SOURCE_BY_ORIGIN),
     ("net_migration_by_origin.png", "Net migration by citizenship group, 1964\u20132025 (IPS + admin-based)", _SOURCE_BY_ORIGIN),
@@ -277,8 +337,8 @@ _CHART_DOCS: list[tuple[str, str, str]] = [
      f"{SOURCE_HO}, illegal-entry-routes dataset"),
     ("legal_vs_irregular.png", "Total immigration vs detected irregular arrivals, log scale",
      f"{SOURCE_ONS}; {SOURCE_HO}"),
-    ("net_migration_per_capita.png", "Migration per 1,000 population, population-adjusted (1960+)",
-     f"{SOURCE_ONS}; {SOURCE_WB} (SP.POP.TOTL population denominator)"),
+    ("net_migration_per_capita.png", "ONS net migration per 1,000 population, 1964–2025",
+     f"{SOURCE_ONS_IPS}; {SOURCE_ONS}; {SOURCE_WB} (SP.POP.TOTL denominator only)"),
 ]
 
 
@@ -301,9 +361,10 @@ def write_sources_doc() -> Path:
         "  <https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/internationalmigration/adhocs/006408longterminternationalmigrationintoandoutoftheukbycitizenship1964to2015>",
         "- **Home Office Immigration System Statistics** — visas, asylum, irregular arrivals.",
         "  <https://www.gov.uk/government/statistical-data-sets/immigration-system-statistics-data-tables>",
-        "- **World Bank WDI** (country `GBR`) — migrant stock, net migration, and total population",
-        "  (`SM.POP.TOTL`, `SM.POP.TOTL.ZS`, `SM.POP.NETM`, `SP.POP.TOTL`).",
-        "  <https://api.worldbank.org/v2/country/GBR/indicator/SM.POP.NETM?format=json>",
+        "- **World Bank WDI** (country `GBR`) — total population (`SP.POP.TOTL`), used only",
+        "  as the denominator for per-capita charts. The pipeline retains the World Bank's",
+        "  modelled migration series as reference data, but the headline charts do not plot it.",
+        "  <https://api.worldbank.org/v2/country/GBR/indicator/SP.POP.TOTL?format=json>",
         "",
         "The `*_per_1000_pop` series are **derived** (flow ÷ World Bank population × 1000) — a",
         "population adjustment, since headcounts are not monetary and CPI inflation does not apply.",

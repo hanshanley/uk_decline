@@ -12,9 +12,10 @@ No values are hand-entered, interpolated, or synthesised; each traces to a sourc
   <https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/internationalmigration/adhocs/006408longterminternationalmigrationintoandoutoftheukbycitizenship1964to2015>
 - **Home Office Immigration System Statistics** — visas, asylum, irregular arrivals.
   <https://www.gov.uk/government/statistical-data-sets/immigration-system-statistics-data-tables>
-- **World Bank WDI** (country `GBR`) — migrant stock, net migration, and total population
-  (`SM.POP.TOTL`, `SM.POP.TOTL.ZS`, `SM.POP.NETM`, `SP.POP.TOTL`).
-  <https://api.worldbank.org/v2/country/GBR/indicator/SM.POP.NETM?format=json>
+- **World Bank WDI** (country `GBR`) — total population (`SP.POP.TOTL`), used only
+  as the denominator for per-capita charts. The pipeline retains the World Bank's
+  modelled migration series as reference data, but the headline charts do not plot it.
+  <https://api.worldbank.org/v2/country/GBR/indicator/SP.POP.TOTL?format=json>
 
 The `*_per_1000_pop` series are **derived** (flow ÷ World Bank population × 1000) — a
 population adjustment, since headcounts are not monetary and CPI inflation does not apply.
@@ -23,7 +24,8 @@ population adjustment, since headcounts are not monetary and CPI inflation does 
 
 | File | Shows | Source |
 |---|---|---|
-| `net_migration.png` | UK net long-term migration over time (1960+) | ONS Long-Term International Migration (ons.gov.uk); World Bank WDI (api.worldbank.org) (SM.POP.NETM) |
+| `immigration_over_time.png` | UK long-term immigration over time, 1964–2025 | ONS IPS Long-Term International Migration, 1964–2015, ad hoc 006408 (ons.gov.uk); ONS Long-Term International Migration (ons.gov.uk) (admin-based, 2012+) |
+| `net_migration.png` | UK net long-term migration over time, 1964–2025 | ONS IPS Long-Term International Migration, 1964–2015, ad hoc 006408 (ons.gov.uk); ONS Long-Term International Migration (ons.gov.uk) (admin-based, 2012+) |
 | `immigration_vs_emigration.png` | Annual immigration vs emigration flows (2012+) | ONS Long-Term International Migration (ons.gov.uk) |
 | `immigration_by_origin.png` | Immigration by citizenship group, 1964–2025 (IPS + admin-based) | ONS IPS Long-Term International Migration, 1964–2015, ad hoc 006408 (ons.gov.uk); ONS Long-Term International Migration (ons.gov.uk) (admin-based, 2012+) |
 | `net_migration_by_origin.png` | Net migration by citizenship group, 1964–2025 (IPS + admin-based) | ONS IPS Long-Term International Migration, 1964–2015, ad hoc 006408 (ons.gov.uk); ONS Long-Term International Migration (ons.gov.uk) (admin-based, 2012+) |
@@ -31,4 +33,4 @@ population adjustment, since headcounts are not monetary and CPI inflation does 
 | `asylum_applications.png` | Asylum applications, main applicants (2001+) | Home Office Immigration System Statistics (gov.uk), asylum-claims dataset |
 | `irregular_arrivals.png` | Detected irregular arrivals incl. small boats (2018+) | Home Office Immigration System Statistics (gov.uk), illegal-entry-routes dataset |
 | `legal_vs_irregular.png` | Total immigration vs detected irregular arrivals, log scale | ONS Long-Term International Migration (ons.gov.uk); Home Office Immigration System Statistics (gov.uk) |
-| `net_migration_per_capita.png` | Migration per 1,000 population, population-adjusted (1960+) | ONS Long-Term International Migration (ons.gov.uk); World Bank WDI (api.worldbank.org) (SP.POP.TOTL population denominator) |
+| `net_migration_per_capita.png` | ONS net migration per 1,000 population, 1964–2025 | ONS IPS Long-Term International Migration, 1964–2015, ad hoc 006408 (ons.gov.uk); ONS Long-Term International Migration (ons.gov.uk); World Bank WDI (api.worldbank.org) (SP.POP.TOTL denominator only) |
