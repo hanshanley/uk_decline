@@ -7,7 +7,7 @@ import os
 
 import pytest
 
-from age_data import combine, config, fallback, median_age, pyramids, stats, worldbank
+from age_data import combine, config, fallback, fetch_age, median_age, pyramids, stats, worldbank
 
 
 # --- make_row ---------------------------------------------------------------
@@ -22,6 +22,10 @@ def test_make_row_derives_country_region_unit():
 
 def test_make_row_us_region():
     assert combine.make_row("USA", 2024, "pop_share_65plus_pct", 17.9, "s")["region"] == config.US
+
+
+def test_cli_defaults_to_latest_complete_year():
+    assert fetch_age.parse_args([]).end == fetch_age.dt.date.today().year - 1
 
 
 def test_make_row_rejects_unknown_metric():

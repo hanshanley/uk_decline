@@ -5,8 +5,8 @@ four-year bachelor's degree across the **UK**, the **EU-27**, and the **US**, to
 claim that *the UK has a higher average cost of degrees*.
 
 > **Short answer: yes.** On **domestic, tuition-only** figures, the UK's average annual
-> tuition (~**$12,179**, England's £9,250 cap) is **higher than both** the EU-27 average
-> (~**$426/yr**, median **$0**) and the US average published **in-state public** tuition
+> tuition (~**$12,890**, England's published £9,790 cap for 2026/27) is **higher than both**
+> the EU-27 average (~**$425/yr**, median **$0**) and the US average published **in-state public** tuition
 > (~**$11,610/yr**). See caveats — the picture flips for US *private* colleges.
 
 ## Scope
@@ -26,11 +26,11 @@ Latest run (nominal USD, annual domestic tuition, one figure per country):
 
 | Region | n | Avg / yr | Median / yr | Avg 4-yr | Median 4-yr |
 |---|---:|---:|---:|---:|---:|
-| **UK** | 1 | $12,179 | $12,179 | $48,718 | $48,718 |
-| **EU-27** | 27 | $426 | $0 | $1,706 | $0 |
+| **UK** | 1 | $12,890 | $12,890 | $51,562 | $51,562 |
+| **EU-27** | 27 | $425 | $0 | $1,701 | $0 |
 | **US** | 1 | $11,610 | $11,610 | $46,440 | $46,440 |
 
-Constant 2022 USD (CPI-adjusted) tells the same story (UK ~$11,363/yr, EU-27 ~$410/yr, US ~$10,832/yr).
+Constant 2022 USD (CPI-adjusted) tells the same story (UK ~$12,026/yr, EU-27 ~$408/yr, US ~$10,832/yr).
 *(PPP conversion was intentionally dropped — PPP baskets distort tuition comparisons; we use
 market-FX nominal plus CPI-deflated constant dollars.)*
 
@@ -53,14 +53,15 @@ adjusted** view is the historical series in **constant 2022 USD** (`../outputs/t
 | Year | UK (England cap) | US (public in-state) | Germany |
 |---|---:|---:|---:|
 | 1971 | $0 (free) | $3,115 | $0 |
-| 1998 | $2,082 | ~$5,880 | $0 |
-| 2012 | **$13,919** | $10,454 | $0 |
+| 1998 | $2,973 | ~$5,880 | $0 |
+| 2012 | **$18,122** | $10,454 | $0 |
 | 2022 | $11,401 | $9,750 | $0 |
+| 2026 | $12,026 | — | — |
 
 **Key finding:** in real terms the UK went from **free (until 1998)** to **overtaking US
-public college in 2012** ($13,919 vs $10,454), peaking then; the £9,250 cap has been frozen
-since 2017, so its *real* value has since eroded to ~$11,401 — still above the US public
-in-state figure ($9,750, 2022). Germany (representative EU) has stayed free throughout.
+public college in 2012** ($18,122 vs $10,454). The cap stayed at £9,250 from 2017 through
+2024/25, then rose to £9,535 in 2025/26 and a published £9,790 for 2026/27; that latest cap
+is worth about $12,026 in constant 2022 dollars. Germany (representative EU) has stayed free throughout.
 
 Historical data: `data/processed/tuition_history.csv`.
 
@@ -127,7 +128,7 @@ verification in-row).
 All figures use the shared Substack style (matching `pre1870_reapportionment_package`) and
 carry an italic **source note citing the data provenance**:
 
-- `tuition_history_real_usd.png` — real (constant 2022 USD) tuition 1963/71→2022, UK vs US
+- `tuition_history_real_usd.png` — real (constant 2022 USD) tuition 1963/71→2026, UK vs US
   vs Germany. *(the primary-sourced, inflation-adjusted headline chart)*
 - `tuition_region_comparison.png` — average & median annual tuition, UK vs EU-27 vs US.
 - `tuition_by_country.png` — per-country ranking, colored by region.
@@ -171,6 +172,6 @@ tests/test_tuition.py
   zeros are legitimate data points and are kept, which is why the EU **median is $0**.
 - **3-vs-4-year programmes.** Most UK/EU bachelor's are 3 years; the ×4 total is a
   normalized comparison, not literal programme length.
-- **Reference years differ** (EU 2023/24, US & UK 2024/25); nominal figures use the latest
+- **Reference years differ** (EU 2023/24, US 2024/25, UK 2026/27); nominal figures use the latest
   World Bank year available per country; these are recorded per row in the outputs.
 - Figures are **most-common statutory fees**, not enrollment-weighted averages.

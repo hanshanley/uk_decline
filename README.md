@@ -51,13 +51,13 @@ and the number of UK-listed companies has nearly halved since its 2006 peak.
 ### NHS — waiting lists have ballooned, and per-head the smaller nations fare worst
 ![NHS RTT waiting list per 1,000 people](outputs/nhs/rtt_waiting_list_per_1000.png)
 Adjusted for population, the referral-to-treatment waiting list has roughly doubled across all
-four nations — and **Wales (251) and Northern Ireland (240 per 1,000) now exceed England (128)**.
+four nations; the latest rates are **240 per 1,000 in Northern Ireland, 233 in Wales, and 123 in England**.
 *Source: NHS England / Public Health Scotland / StatsWales / DoH Northern Ireland.*
 
 ### Rail — London train disruption has climbed back to early-2000s levels
 ![Trains cancelled or significantly late — London & South East](outputs/rail/rail_london_casl.png)
 The share of London & South East trains **cancelled or significantly late has roughly doubled** —
-from ~2.4% (2007) to ~5% (2024) — even though the lenient headline "on time" measure (PPM) has
+from ~2.4% (2007) to ~5% (2025) — even though the lenient headline "on time" measure (PPM) has
 stayed broadly flat. *Source: Office of Rail and Road (ORR) Data Portal, Table 3103; London & South
 East reconstructed as a trains-weighted sector aggregate (validated against ORR's official sector figure).*
 
@@ -65,9 +65,10 @@ East reconstructed as a trains-weighted sector aggregate (validated against ORR'
 ![Tax-to-GDP over time](outputs/tax/tax_to_gdp_over_time.png)
 *Source: OECD Revenue Statistics & Taxing Wages.*
 
-### Tuition — a UK degree now costs as much as a US one
+### Tuition — England now costs more than US public tuition
 ![Tuition: UK vs US vs EU-27](outputs/tuition/tuition_region_comparison_real.png)
-UK annual tuition (~$11.4k) now matches the US, while most of the EU remains free.
+The published 2026/27 English cap is **~$12.0k in constant 2022 dollars**, above US public
+tuition (~$10.8k), while most of the EU remains free.
 *Source: Eurydice / NCES / UK fee cap; constant 2022 USD (CPI-adjusted).*
 
 ### Institutional trust — confidence in government
@@ -88,7 +89,7 @@ has become *more* concentrated in the capital over the past quarter-century.
 ### Crime — the fall is real, but crime has shifted online
 ![Total CSEW crime, England & Wales](outputs/crime/crime_csew_total.png)
 Traditional victim-based crime has **fallen dramatically** — from a **19.8M** peak (1995) to
-**~4.4M** incidents (2025) on the Crime Survey for England & Wales. But once **fraud and
+**~4.3M** incidents (2026) on the Crime Survey for England & Wales. But once **fraud and
 computer misuse** are counted (measured from 2017), total crime is **~9.6M — roughly double**
 the headline, i.e. crime has largely **moved online** rather than disappeared. On homicide,
 the most comparable international measure, the UK (~1.1 per 100k) sits **far below the US

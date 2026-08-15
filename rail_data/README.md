@@ -11,7 +11,7 @@ seasonal rail statistics):
 
 | Metric | What it is | Trend |
 |---|---|---|
-| **CaSL** (`casl_pct`) | % of trains **cancelled or significantly late** — the disruption measure | Roughly **doubled**: ~2.4% (2007) → ~5% (2024). Now back near the early-2000s (post-Hatfield) crisis level. |
+| **CaSL** (`casl_pct`) | % of trains **cancelled or significantly late** — the disruption measure | Roughly **doubled**: ~2.4% (2007) → ~5% (2025); Q1 2026 was 4.6%. Now back near the early-2000s (post-Hatfield) crisis level. |
 | **PPM** (`ppm_pct`) | Public Performance Measure — % of trains **"on time"** (within 5 min) — the lenient headline | Broadly **flat** (~90% → ~87%). |
 
 The headline "on time" figure hides the deterioration: serious disruption

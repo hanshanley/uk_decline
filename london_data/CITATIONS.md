@@ -2,7 +2,7 @@
 
 Formal citation for the dataset used, identified by the **organization that collected /
 published** it. Access date reflects when the data was retrieved for this analysis
-(8 July 2026).
+(15 August 2026).
 
 ---
 
@@ -11,7 +11,7 @@ published** it. Access date reflects when the data was retrieved for this analys
 ### United Kingdom — regional GDP by ITL region (London vs UK)
 **Office for National Statistics (ONS).** (2025). *Regional economic activity by gross
 domestic product, UK: 1998 to 2023* — dataset “Regional gross domestic product (GDP): all
-ITL regions.” Newport, Wales: Office for National Statistics. Retrieved 8 July 2026, from
+ITL regions.” Newport, Wales: Office for National Statistics. Retrieved 15 August 2026, from
 <https://www.ons.gov.uk/economy/grossdomesticproductgdp/datasets/regionalgrossdomesticproductallnutslevelregions>
 
 *Tables used:*

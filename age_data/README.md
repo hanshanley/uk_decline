@@ -53,7 +53,7 @@ every output row carries a `source` field.
 
 > World Bank (2025). *World Development Indicators*. Washington, DC: The World Bank.
 > <https://databank.worldbank.org/source/world-development-indicators>. Retrieved
-> 2026-07-03 via the World Bank API (`https://api.worldbank.org/v2`), indicators `SP.POP.*`.
+> 2026-08-15 via the World Bank API (`https://api.worldbank.org/v2`), indicators `SP.POP.*`.
 
 Indicators used: `SP.POP.0014.TO.ZS`, `SP.POP.1564.TO.ZS`, `SP.POP.65UP.TO.ZS`,
 `SP.POP.DPND.OL`, `SP.POP.DPND.YG`, and the 5-year age-sex bands `SP.POP.{00-04…80UP}.{MA,FE}`.
@@ -104,7 +104,7 @@ across years and countries by construction.
 
 ```bash
 # runtime deps in requirements.txt (requests, tenacity, tqdm, matplotlib); tests need pytest
-.venv/bin/python -m age_data.fetch_age --start 1960 --end 2024     # live WB fetch + CSVs + charts
+.venv/bin/python -m age_data.fetch_age                              # live WB fetch + CSVs + charts
 .venv/bin/python -m age_data.fetch_age --no-charts                 # data only
 .venv/bin/python -m age_data.fetch_age --sources structure         # skip pyramids/median age
 .venv/bin/python -m pytest tests/test_age.py -q

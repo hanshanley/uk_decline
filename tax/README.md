@@ -7,7 +7,7 @@ two complementary lenses.
 > **Short answer:** the UK's tax burden sits **clearly below the European median/average
 > on every measure, and roughly level with the US.** In 2024 the UK's total tax take was
 > **34.4% of GDP** (Europe median **38.0%**, US **25.6%**), and the labour tax wedge on an
-> average-wage single worker was **29.9%** (Europe median **41.0%**, US **30.1%**).
+> average-wage single worker was **32.4% in 2025** (Europe median **41.1%**, US **30.0%**).
 
 ## What "tax burden" means here (two lenses)
 
@@ -23,18 +23,18 @@ tax wedge** as the standard proxy for the typical/median worker. The individual 
 reported at **67% / 100% / 167% of the average wage** (a single person, no children) plus a
 **one-earner married couple with 2 children** at 100% AW.
 
-## Results (latest live run — 2024 snapshot; tax-to-GDP time series 1965–2024)
+## Results (latest live run — 2025 Taxing Wages; tax-to-GDP through 2024)
 
 Headline comparison, latest year with data per metric:
 
 | Metric (single worker at avg wage unless noted) | Year | UK | Europe median | Europe mean | US |
 |---|---:|---:|---:|---:|---:|
 | Total tax revenue (% of GDP) | 2024 | **34.4%** | 38.0% | 37.5% | 25.6% |
-| Labour tax wedge — 67% AW | 2024 | **25.6%** | 36.3% | 35.8% | 27.6% |
-| Labour tax wedge — 100% AW | 2024 | **29.9%** | 41.0% | 40.3% | 30.1% |
-| Labour tax wedge — 167% AW | 2024 | **37.7%** | 44.5% | 44.7% | 34.4% |
-| Labour tax wedge — one-earner couple, 2 kids, 100% AW | 2024 | **26.1%** | 32.0% | 29.2% | 20.1% |
-| Net personal avg tax rate — 100% AW | 2024 | **21.9%** | 27.9% | 28.6% | 24.4% |
+| Labour tax wedge — 67% AW | 2025 | **28.0%** | 37.0% | 36.0% | 27.5% |
+| Labour tax wedge — 100% AW | 2025 | **32.4%** | 41.1% | 40.4% | 30.0% |
+| Labour tax wedge — 167% AW | 2025 | **39.3%** | 44.7% | 44.9% | 34.4% |
+| Labour tax wedge — one-earner couple, 2 kids, 100% AW | 2025 | **28.8%** | 31.5% | 29.5% | 19.6% |
+| Net personal avg tax rate — 100% AW | 2025 | **23.1%** | 27.9% | 28.7% | 24.3% |
 
 Full per-country data: `data/tax_combined_long.csv` (tidy) and `data/tax_combined_wide.csv`
 (one row per country-year). Run metadata + source list: `data/tax_manifest.json`.
@@ -49,12 +49,12 @@ is hand-authored, modelled, or estimated by this project. Every output row carri
 `data/tax_manifest.json` under `citations`, and on every figure's source note):
 
 > OECD (2024). *Revenue Statistics — Comparative tables*. OECD Tax Statistics (database).
-> Paris: Organisation for Economic Co-operation and Development. Retrieved 2026-07-03 via
+> Paris: Organisation for Economic Co-operation and Development. Retrieved 2026-08-15 via
 > the OECD SDMX API (`https://sdmx.oecd.org/public/rest/data`), dataflow
 > `OECD.CTP.TPS,DSD_REV_COMP_OECD@DF_RSOECD,2.0`.
 >
 > OECD (2024). *Taxing Wages — Comparative tables*. OECD Tax Statistics (database). Paris:
-> Organisation for Economic Co-operation and Development. Retrieved 2026-07-03 via the OECD
+> Organisation for Economic Co-operation and Development. Retrieved 2026-08-15 via the OECD
 > SDMX API, dataflow `OECD.CTP.TPS,DSD_TAX_WAGES_COMP@DF_TW_COMP,2.1`.
 
 | Source | OECD SDMX dataflow | Exact query key |
@@ -70,10 +70,10 @@ is hand-authored, modelled, or estimated by this project. Every output row carri
   **one-earner** married couple (spouse not employed, `INCOME_SPOUSE=NOEARN_UNEMP`). This
   avoids collapsing the several spouse-income configurations OECD publishes for couples.
 
-You can reproduce any single number directly, e.g. the UK's 2024 tax wedge at the average wage:
+You can reproduce any single number directly, e.g. the UK's 2025 tax wedge at the average wage:
 
 ```bash
-curl -s "https://sdmx.oecd.org/public/rest/data/OECD.CTP.TPS,DSD_TAX_WAGES_COMP@DF_TW_COMP,2.1/GBR.AV_TW.PT_COS_LB.S_C0.AW100._Z.A?startPeriod=2024&endPeriod=2024&format=csvfilewithlabels"
+curl -s "https://sdmx.oecd.org/public/rest/data/OECD.CTP.TPS,DSD_TAX_WAGES_COMP@DF_TW_COMP,2.1/GBR.AV_TW.PT_COS_LB.S_C0.AW100._Z.A?startPeriod=2025&endPeriod=2025&format=csvfilewithlabels"
 ```
 
 ### Offline fallback (`data/raw/manual_tax.csv`)
@@ -106,7 +106,7 @@ OECD's own harmonised definitions; where a level isn't strictly apples-to-apples
 
 ```bash
 # runtime deps in requirements.txt (requests, tenacity, tqdm, matplotlib); tests need pytest
-.venv/bin/python -m tax.fetch_tax --start 1965 --end 2024     # live OECD fetch + CSVs + charts
+.venv/bin/python -m tax.fetch_tax                              # live OECD fetch + CSVs + charts
 .venv/bin/python -m tax.fetch_tax --no-charts                 # data only
 .venv/bin/python -m pytest tests/test_tax.py -q
 ```

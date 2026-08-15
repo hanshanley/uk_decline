@@ -2,7 +2,7 @@
 
 Formal citations for every dataset used, identified by the **organization that collected /
 published** it. Access dates reflect when the data was retrieved for this analysis
-(3 July 2026). Each entry notes which figures it supports.
+(15 August 2026). Each entry notes which figures it supports.
 
 ---
 
@@ -14,7 +14,7 @@ Department of Education.** (2023). *Digest of Education Statistics 2023*, Table 
 “Average undergraduate tuition, fees, room, and board rates charged for full-time students
 in degree-granting postsecondary institutions, by level and control of institution:
 Selected academic years, 1963-64 through 2022-23.” Washington, DC: U.S. Department of
-Education. Retrieved 3 July 2026, from
+Education. Retrieved 15 August 2026, from
 <https://nces.ed.gov/programs/digest/d23/tables/dt23_330.10.asp>
 *Underlying collection instruments:* Higher Education General Information Survey (HEGIS)
 and the Integrated Postsecondary Education Data System (IPEDS).
@@ -40,7 +40,7 @@ education tuition fees in England* (Research Briefing CBP-8151).
 
 ### Inflation and exchange rates
 **The World Bank Group.** (2024). *World Development Indicators.* Washington, DC: The World
-Bank. Retrieved via the World Bank API on 3 July 2026.
+Bank. Retrieved via the World Bank API on 15 August 2026.
 - Consumer price index (2010 = 100) — indicator `FP.CPI.TOTL`: <https://data.worldbank.org/indicator/FP.CPI.TOTL>
 - Official exchange rate (LCU per US$, period average) — indicator `PA.NUS.FCRF`: <https://data.worldbank.org/indicator/PA.NUS.FCRF>
 

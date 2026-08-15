@@ -12,8 +12,8 @@ Data is collected by the UN Population Division (World Population Prospects) and
 redistributed by the World Bank (see README_age.md / data/age_manifest.json citations).
 
 Examples:
-    python fetch_age.py                        # all sources, 1960-current
-    python fetch_age.py --start 1960 --end 2024
+    python fetch_age.py                        # all sources, 1960-latest complete year
+    python fetch_age.py --start 1960 --end 2025
     python fetch_age.py --sources structure    # skip pyramids/median age
     python fetch_age.py --no-charts
 """
@@ -64,7 +64,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     p.add_argument("--start", type=int, default=1960, help="First year (inclusive).")
     p.add_argument(
-        "--end", type=int, default=dt.date.today().year, help="Last year (inclusive)."
+        "--end", type=int, default=dt.date.today().year - 1,
+        help="Last year (inclusive); defaults to the latest complete calendar year."
     )
     p.add_argument(
         "--sources",

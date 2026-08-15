@@ -9,8 +9,8 @@ worse".
 
 | Measure | What it shows | Trend |
 |---|---|---|
-| **Total CSEW crime** (excl. fraud) | The ONS-preferred long-run trend measure | **Fell sharply**: peak **19.8M** incidents (1995) → **~4.4M** (2025). |
-| **Total CSEW crime incl. fraud & computer misuse** | The same headline once online harms are counted (from 2017) | **~9.6M** (2025) — i.e. **roughly double** the excl.-fraud figure. Crime has shifted **online**, not simply vanished. |
+| **Total CSEW crime** (excl. fraud) | The ONS-preferred long-run trend measure | **Fell sharply**: peak **19.8M** incidents (1995) → **~4.3M** (2026). |
+| **Total CSEW crime incl. fraud & computer misuse** | The same headline once online harms are counted (from 2017) | **~9.6M** (2026) — i.e. **more than double** the excl.-fraud figure. Crime has shifted **online**, not simply vanished. |
 | **Homicide rate** | The most internationally comparable crime statistic | UK **~1.1 per 100k** — far below the **US (~5.8)** and now around/below the **EU-27 mean**. |
 
 The headline "crime has halved" narrative is true for traditional victim-based crime, but

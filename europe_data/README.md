@@ -76,7 +76,7 @@ Bank PP.*) remain in the dataset for reference but can distort cross-country lev
 ## Citations
 
 Full citations for the organizations that collected/compiled each dataset (data accessed
-**3 July 2026**):
+**15 August 2026**):
 
 - **World Bank** (2026). *World Development Indicators* — GDP per capita, constant 2015 US$
   (`NY.GDP.PCAP.KD`); GDP per capita, current US$ (`NY.GDP.PCAP.CD`); GDP per capita, PPP

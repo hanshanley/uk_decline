@@ -25,7 +25,7 @@ share of GDP, and the number of listed domestic companies.
   domestic companies, current US$ (`CM.MKT.LCAP.CD`); % of GDP (`CM.MKT.LCAP.GD.ZS`); listed
   domestic companies (`CM.MKT.LDOM.NO`); US CPI (`FP.CPI.TOTL`, used to deflate to constant
   2024 US$). Washington, DC: World Bank Group. Underlying data compiled by the **World
-  Federation of Exchanges** and **S&P Global**. Accessed 3 July 2026.
+  Federation of Exchanges** and **S&P Global**. Accessed 15 August 2026.
   <https://data.worldbank.org/indicator/CM.MKT.LCAP.CD>
 
 Real figures are the nominal series deflated by US CPI to **constant 2024 US$** (market
