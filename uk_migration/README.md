@@ -12,8 +12,8 @@ below (full list in [`../outputs/migration/SOURCES.md`](../outputs/migration/SOU
 The ONS-only series shows the long-run rise without relying on the World Bank's modelled net
 migration series: annual long-term immigration was roughly **200k in the 1960s–70s**, reached
 about **600k by the mid-2000s**, and peaked at **1.44M in 2023** before falling to **813k in
-2025**. The chart shows the overlapping IPS survey and administrative estimates separately,
-so the methodology change is visible rather than silently spliced.
+2025**. The chart uses a clean method handoff: IPS through 2011 and administrative estimates
+from 2012, with the methodology change noted below the chart.
 
 | File | Shows |
 |---|---|

@@ -219,6 +219,28 @@ def test_ons_headline_charts_ignore_modelled_world_bank_series(tmp_path, monkeyp
     assert path.stat().st_size > 0
 
 
+def test_ons_method_segments_have_clean_2012_handoff():
+    df = pd.DataFrame([
+        schema.row(2011, "immigration_by_origin", 500_000, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.INFLOW, source="ONS IPS"),
+        schema.row(2012, "immigration_by_origin", 510_000, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.INFLOW, source="ONS IPS"),
+        schema.row(2012, "immigration", 640_000, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.INFLOW, source="ONS admin"),
+        schema.row(2013, "immigration", 700_000, unit="people",
+                   legality=schema.TOTAL, flow_type=schema.INFLOW, source="ONS admin"),
+    ])
+    fig, ax = charts.plt.subplots()
+    try:
+        ips, admin = charts._plot_ons_methods(
+            ax, df, "immigration_by_origin", "immigration"
+        )
+    finally:
+        charts.plt.close(fig)
+    assert ips["period"].tolist() == [2011]
+    assert admin["period"].tolist() == [2012, 2013]
+
+
 def test_ons_ips_history_parse_by_origin_in_thousands():
     from uk_migration.sources import ons_ips_history
     # Minimal replica of the IPS "Data" sheet: header rows then year rows.

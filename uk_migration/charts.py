@@ -29,6 +29,7 @@ SOURCE_ONS = "ONS Long-Term International Migration (ons.gov.uk)"
 SOURCE_ONS_IPS = "ONS IPS Long-Term International Migration, 1964\u20132015, ad hoc 006408 (ons.gov.uk)"
 SOURCE_HO = "Home Office Immigration System Statistics (gov.uk)"
 SOURCE_WB = "World Bank WDI (api.worldbank.org)"
+METHOD_BREAK_YEAR = 2012
 
 # ---- Substack theme (shared vizstyle house style) --------------------------
 from vizstyle import (  # noqa: E402
@@ -88,13 +89,15 @@ def _plot_ons_methods(
     *,
     color: str = SUBSTACK_BLUE,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Plot the two official ONS methods without splicing them into a fake single series."""
+    """Plot official ONS methods with a clean 2012 handoff and no overlap."""
     ips = _series(df, ips_metric)
+    ips = ips[ips["period"] < METHOD_BREAK_YEAR]
     admin = _series(df, admin_metric)
+    admin = admin[admin["period"] >= METHOD_BREAK_YEAR]
     if not ips.empty:
         ax.plot(
             ips["period"], ips["value"], color=color, linewidth=2.0,
-            label="ONS IPS survey estimate (1964–2015)",
+            label="ONS IPS survey estimate (through 2011)",
         )
     if not admin.empty:
         ax.plot(
@@ -249,7 +252,9 @@ def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
     _style_axes(ax, thousands=False)
     return _save(
         fig, "net_migration_per_capita.png",
-        f"{SOURCE_ONS_IPS}; {SOURCE_ONS}; {SOURCE_WB} (population denominator only)",
+        f"{SOURCE_ONS_IPS}; {SOURCE_ONS}; {SOURCE_WB} (population denominator only)\n"
+        "Note: methodology changes at 2012; IPS is shown through 2011 and administrative "
+        "estimates from 2012.",
     )
 
 
@@ -260,12 +265,16 @@ _ORIGIN_GROUPS = [
     ("non_eu", SUBSTACK_ACCENT, "Non-EU / Non-EU+"),
 ]
 
-# solid = historical IPS series (1964-2015); dashed = admin-based ONS series (2012+).
+# The charts make a clean method handoff at 2012: IPS through 2011, admin-based thereafter.
 _METHOD_LEGEND = [
-    Line2D([0], [0], color=SUBSTACK_TEXT, linestyle="-", label="IPS survey (1964\u20132015)"),
+    Line2D([0], [0], color=SUBSTACK_TEXT, linestyle="-", label="IPS survey (through 2011)"),
     Line2D([0], [0], color=SUBSTACK_TEXT, linestyle="--", label="Admin-based (2012\u20132025)"),
 ]
-_SOURCE_BY_ORIGIN = f"{SOURCE_ONS_IPS}; {SOURCE_ONS} (admin-based, 2012+)"
+_SOURCE_BY_ORIGIN = (
+    f"{SOURCE_ONS_IPS}; {SOURCE_ONS} (admin-based, 2012+)\n"
+    "Note: methodology changes at 2012; IPS is shown through 2011 and administrative "
+    "estimates from 2012."
+)
 
 
 def _chart_by_origin(df: pd.DataFrame, ips_metric: str, admin_metric: str,
@@ -273,9 +282,11 @@ def _chart_by_origin(df: pd.DataFrame, ips_metric: str, admin_metric: str,
     fig, ax = plt.subplots(figsize=(11, 6))
     for cat, color, label in _ORIGIN_GROUPS:
         ips = _series(df, ips_metric, cat)
+        ips = ips[ips["period"] < METHOD_BREAK_YEAR]
         if not ips.empty:
             ax.plot(ips["period"], ips["value"], marker="o", markersize=3, color=color, label=label)
         admin = _series(df, admin_metric, cat)
+        admin = admin[admin["period"] >= METHOD_BREAK_YEAR]
         if not admin.empty:
             ax.plot(admin["period"], admin["value"], marker="o", markersize=3,
                     linestyle="--", color=color)
