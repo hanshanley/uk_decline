@@ -73,3 +73,14 @@ def test_chart_renders(tmp_path) -> None:
     output = charts.make_chart(frame, tmp_path / "sterling.png")
     assert output.exists()
     assert output.stat().st_size > 20_000
+
+
+def test_index_to_2000() -> None:
+    frame = ecb.build_annual(_monthly())
+    indexed = charts.index_to_year(frame)
+    base = indexed[indexed["year"] == 2000]
+    assert base["index"].tolist() == pytest.approx([100, 100, 100, 100])
+    usd_2001 = indexed[
+        (indexed["year"] == 2001) & (indexed["currency"] == "USD")
+    ].iloc[0]
+    assert usd_2001["index"] == pytest.approx((1.5 / 2.1) * 100)

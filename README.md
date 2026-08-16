@@ -68,9 +68,9 @@ banks. *Source: Trussell end-of-year statistics and official 2025 parcel workboo
 
 ### Sterling — how much foreign currency one pound buys
 ![Sterling exchange rates](outputs/sterling/sterling_exchange_rates.png)
-The pound's path is not identical against every currency. This chart shows actual
-annual-average dollars, euros, yen, and Swiss francs bought by **£1**, from 2000 through
-the latest 2026 observation. *Source: European Central Bank reference exchange rates.*
+The pound's path is not identical against every currency. The chart places dollars,
+euros, yen, and Swiss francs bought by **£1** on one comparable **2000 = 100** scale,
+through the latest 2026 observation. *Source: European Central Bank reference exchange rates.*
 
 ### NHS — waiting lists have ballooned, and per-head the smaller nations fare worst
 ![NHS RTT waiting list per 1,000 people](outputs/nhs/rtt_waiting_list_per_1000.png)

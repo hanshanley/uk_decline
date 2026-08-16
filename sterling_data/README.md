@@ -2,12 +2,12 @@
 
 ![Sterling exchange rates](../outputs/sterling/sterling_exchange_rates.png)
 
-This analysis shows how much foreign currency **£1 buys** against the US dollar, euro,
-Japanese yen, and Swiss franc from 2000 through the latest available month.
+This analysis compares how much foreign currency **£1 buys** against the US dollar,
+euro, Japanese yen, and Swiss franc from 2000 through the latest available month.
 
-The panels use actual exchange-rate units rather than an index, so each can be read
-directly: for example, `$1.30` means one pound buys 1.30 US dollars. The header on each
-panel also reports the percentage change since 2000.
+All four currencies are shown on one comparable scale, indexed to **2000 = 100**.
+Values above 100 mean the pound buys more of that currency than in 2000; values below
+100 mean it buys less.
 
 ## Source and method
 
@@ -34,4 +34,3 @@ is explicitly labelled year-to-date because the API currently runs through July.
 ./.venv/bin/python -m sterling_data --from-csv data/sterling_exchange_rates.csv
 ./.venv/bin/pytest tests/test_sterling.py -q
 ```
-
