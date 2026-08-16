@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import sys
 import io
+import tempfile
 from pathlib import Path
 
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from crime_data import countries, csew, homicide  # noqa: E402
+from crime_data import charts, countries, csew, homicide, nations  # noqa: E402
 
 
 def test_country_mappings() -> None:
@@ -133,6 +134,56 @@ def test_download_workbook_accepts_current_sheet_name(monkeypatch) -> None:
     monkeypatch.setattr(csew, "_ons_get", lambda *a, **k: _Resp())
     rows = csew.build_rows(csew.download_workbook("https://www.ons.gov.uk/file?uri=x"))
     assert any(r["year"] == 2002 for r in rows)
+
+
+def test_21st_century_chart_filters_out_earlier_data() -> None:
+    df = pd.DataFrame([
+        {
+            "offence_group": charts.TOTAL_EXCL,
+            "date": "1995-12-31",
+            "value": 19_786.0,
+            "source": "Test source",
+        },
+        {
+            "offence_group": charts.TOTAL_EXCL,
+            "date": "2002-03-31",
+            "value": 12_771.0,
+            "source": "Test source",
+        },
+        {
+            "offence_group": charts.TOTAL_EXCL,
+            "date": "2024-03-31",
+            "value": 4_589.0,
+            "source": "Test source",
+        },
+    ])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        out_dir = Path(tmp)
+        path = charts.chart_csew_21st_century(df, out_dir)
+
+        assert path == out_dir / "crime_csew_21st_century.png"
+        assert path.is_file()
+
+
+def test_nation_homicide_rows_start_in_2000() -> None:
+    rows = nations._assemble_rows(
+        england_wales_rates={1999: 13.0, 2000: 12.5, 2001: 14.0},
+        scotland_counts={1999: 100, 2000: 120},
+        northern_ireland_counts={1999: 20, 2000: 30},
+        scotland_population={1999: 5_000_000, 2000: 5_000_000},
+        northern_ireland_population={1999: 1_500_000, 2000: 1_500_000},
+        start=2000,
+    )
+
+    assert min(row["year"] for row in rows) == 2000
+    assert {row["jurisdiction"] for row in rows} == {
+        nations.ENGLAND_WALES,
+        nations.SCOTLAND,
+        nations.NORTHERN_IRELAND,
+    }
+    scotland = next(row for row in rows if row["jurisdiction"] == nations.SCOTLAND)
+    assert scotland["value"] == 24.0
 
 
 def _run() -> int:

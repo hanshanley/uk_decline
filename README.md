@@ -15,6 +15,8 @@ and monetary series are inflation-adjusted (real) unless explicitly labelled nom
 |---|---|---|
 | GDP & incomes | [`europe_data/`](europe_data/README.md) | Real GDP per capita & median incomes: UK vs US/Europe |
 | Stock markets | [`markets_data/`](markets_data/README.md) | UK vs US listed-market size (cap, % of GDP, listings) |
+| Austerity | [`austerity_data/`](austerity_data/README.md) | Real public-service spending cuts and public investment after 2010 |
+| Food banks | [`foodbank_data/`](foodbank_data/README.md) | Emergency food parcels distributed by the Trussell network |
 | NHS | [`nhs_data/`](nhs_data/README.md) | NHS waiting times & lists across the four nations |
 | Tax burden | [`tax/`](tax/README.md) | Tax-to-GDP, tax wedge: UK vs Europe vs US |
 | Tuition | [`tuition/`](tuition/README.md) | Cost of a four-year degree: UK vs EU vs US |
@@ -47,6 +49,20 @@ capita. *Source: World Bank WDI (NY.GDP.PCAP.CD deflated by US CPI, FP.CPI.TOTL)
 UK listed-market capitalisation fell from a peak of **~27% of the US (1990) to ~8% (2022)**,
 and the number of UK-listed companies has nearly halved since its 2006 peak.
 *Source: World Federation of Exchanges via World Bank WDI.*
+
+### Austerity — the headline total hid deep cuts to services and investment
+![UK austerity spending and investment](outputs/austerity/uk_austerity_spending_investment.png)
+Real spending did not fall evenly after 2010. **Housing and community amenities fell by about
+one-third at the trough**, culture and public safety also contracted sharply, while health was
+protected. Public sector net investment fell from **2.5% of GDP in 2010–11 to 1.5% in
+2013–14**. *Source: HM Treasury Public Spending Statistics, July 2026, Tables 4.1 and 4.3.*
+
+### Food banks — emergency parcel use remains far above its pre-pandemic level
+![Trussell emergency food parcels](outputs/food_banks/trussell_food_parcels_annual.png)
+Food banks in Trussell's UK community distributed **2.64 million emergency food parcels in
+2025**. That was down 12% from 2024 and 18% below the 2023 peak, but still **45% above
+2019**. Parcels measure supplies distributed, not unique people, and exclude independent food
+banks. *Source: Trussell end-of-year statistics and official 2025 parcel workbook.*
 
 ### NHS — waiting lists have ballooned, and per-head the smaller nations fare worst
 ![NHS RTT waiting list per 1,000 people](outputs/nhs/rtt_waiting_list_per_1000.png)
@@ -88,6 +104,7 @@ has become *more* concentrated in the capital over the past quarter-century.
 
 ### Crime — the fall is real, but crime has shifted online
 ![Total CSEW crime, England & Wales](outputs/crime/crime_csew_total.png)
+![Homicide rates across UK jurisdictions since 2000](outputs/crime/crime_homicide_nations.png)
 Traditional victim-based crime has **fallen dramatically** — from a **19.8M** peak (1995) to
 **~4.3M** incidents (2026) on the Crime Survey for England & Wales. But once **fraud and
 computer misuse** are counted (measured from 2017), total crime is **~9.6M — roughly double**
@@ -117,13 +134,13 @@ and the caveats. *Source: World Bank WDI (NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.KD), IC
 
 ```
 uk_decline/
-  europe_data/   markets_data/   nhs_data/   tax/
+  europe_data/   markets_data/   austerity_data/   foodbank_data/   nhs_data/   tax/
   tuition/       trust_data/     uk_migration/   age_data/   rail_data/   london_data/
   crime_data/    ppp_data/
       └─ each: analysis code + README.md (+ CITATIONS where relevant)
   vizstyle/      # shared "Substack" plotting house style (palette + rcParams + helpers)
   outputs/       # ALL figures, one subfolder per analysis (tracked; render on GitHub)
-    gdp_income/  stock_markets/  nhs/  tax/  tuition/  trust/  migration/  age/  rail/  london/  crime/  ppp/
+    gdp_income/  stock_markets/  austerity/  food_banks/  nhs/  tax/  tuition/  trust/  migration/  age/  rail/  london/  crime/  ppp/
   data/          # raw / intermediate inputs (git-ignored, regenerable)
   tests/         # test suites
   requirements.txt
@@ -142,6 +159,8 @@ Each analysis runs as a module from the repo root, e.g.:
 ./.venv/bin/python -m europe_data.fetch_data      # fetch data -> data/
 ./.venv/bin/python -m europe_data.plot_uk_decline # figures -> outputs/gdp_income/
 ./.venv/bin/python -m markets_data                # UK vs US markets -> outputs/stock_markets/
+./.venv/bin/python -m austerity_data              # austerity -> outputs/austerity/
+./.venv/bin/python -m foodbank_data               # food-bank use -> outputs/food_banks/
 ./.venv/bin/python -m nhs_data                    # NHS -> outputs/nhs/
 ./.venv/bin/python -m rail_data                   # London rail delays -> outputs/rail/
 ./.venv/bin/python -m london_data                 # London's share of UK GDP -> outputs/london/

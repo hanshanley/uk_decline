@@ -12,17 +12,19 @@ import argparse
 import csv
 import pathlib
 
-from . import charts, csew, homicide
+from . import charts, csew, homicide, nations
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 CSEW_CSV = DATA / "crime_csew_long.csv"
 HOMICIDE_CSV = DATA / "crime_homicide_long.csv"
+NATIONS_CSV = DATA / "crime_homicide_nations_long.csv"
 CHARTS_DIR = ROOT / "outputs" / "crime"
 
 _CSEW_FIELDS = ["region", "offence_group", "level", "period", "date", "year",
                 "metric", "value", "unit", "source"]
 _HOMICIDE_FIELDS = ["iso3", "country", "year", "metric", "value", "unit", "source"]
+_NATIONS_FIELDS = ["jurisdiction", "year", "metric", "value", "unit", "source"]
 
 
 def _write_csv(rows: list[dict], path: pathlib.Path, fields: list[str]) -> None:
@@ -35,20 +37,23 @@ def _write_csv(rows: list[dict], path: pathlib.Path, fields: list[str]) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="UK crime statistics (CSEW trend + homicide).")
-    p.add_argument("--sources", nargs="+", choices=["csew", "homicide"],
-                   default=["csew", "homicide"], help="Which sources to fetch.")
+    p.add_argument("--sources", nargs="+", choices=["csew", "homicide", "nations"],
+                   default=["csew", "homicide", "nations"],
+                   help="Which sources to fetch.")
     p.add_argument("--from-csv", action="store_true",
                    help="Skip fetching; build charts from existing CSVs.")
     p.add_argument("--charts-dir", default=str(CHARTS_DIR), help="Chart output directory.")
     args = p.parse_args(argv)
 
-    csew_src = homicide_src = None
+    csew_src = homicide_src = nations_src = None
 
     if args.from_csv:
         if CSEW_CSV.exists():
             csew_src = str(CSEW_CSV)
         if HOMICIDE_CSV.exists():
             homicide_src = str(HOMICIDE_CSV)
+        if NATIONS_CSV.exists():
+            nations_src = str(NATIONS_CSV)
         print(f"[crime_data] using existing CSVs in {DATA}")
     else:
         if "csew" in args.sources:
@@ -61,8 +66,15 @@ def main(argv: list[str] | None = None) -> int:
             _write_csv(rows, HOMICIDE_CSV, _HOMICIDE_FIELDS)
             print(f"[crime_data] wrote {len(rows)} homicide rows -> {HOMICIDE_CSV}")
             homicide_src = str(HOMICIDE_CSV)
+        if "nations" in args.sources:
+            rows = nations.build_rows()
+            _write_csv(rows, NATIONS_CSV, _NATIONS_FIELDS)
+            print(f"[crime_data] wrote {len(rows)} nation rows -> {NATIONS_CSV}")
+            nations_src = str(NATIONS_CSV)
 
-    written = charts.make_charts(csew_src, homicide_src, args.charts_dir)
+    written = charts.make_charts(
+        csew_src, homicide_src, nations_src, args.charts_dir
+    )
     for path in written:
         print(f"[crime_data] chart -> {path}")
     return 0

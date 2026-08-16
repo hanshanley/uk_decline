@@ -1,14 +1,17 @@
-"""House-style charts for the crime analysis (three figures).
+"""House-style charts for the crime analysis (five figures).
 
 All use the shared ``vizstyle`` house theme (warm tan, serif, UK in the terracotta accent,
 italic source note taken from the data's own ``source`` column):
 
   1. ``crime_csew_total.png``   — long-run total CSEW crime, England & Wales, 1981->latest:
      the large fall from the mid-1990s peak.
-  2. ``crime_fraud_gap.png``    — the same headline total *excluding* vs *including* fraud &
+  2. ``crime_csew_21st_century.png`` — the same series zoomed to the 21st century.
+  3. ``crime_fraud_gap.png``    — the same headline total *excluding* vs *including* fraud &
      computer misuse: once online harms are counted, "total crime" is far higher, i.e. crime
      has shifted online rather than simply disappearing.
-  3. ``crime_homicide_peers.png`` — intentional homicide rate, UK vs US vs the EU-27 mean.
+  4. ``crime_homicide_peers.png`` — intentional homicide rate, UK vs US vs the EU-27 mean.
+  5. ``crime_homicide_nations.png`` — homicide rates across England & Wales, Scotland,
+     and Northern Ireland since 2000.
 """
 
 from __future__ import annotations
@@ -29,6 +32,7 @@ TOTAL_INCL = "ALL CSEW HEADLINE CRIME INCLUDING FRAUD AND COMPUTER MISUSE"
 # Minimum EU-27 members that must report a homicide rate in a given year before we plot the
 # "EU-27 mean" for that year (a simple majority of 27).
 _MIN_EU_REPORTERS = 14
+_TWENTY_FIRST_CENTURY_START = pd.Timestamp("2000-01-01")
 
 
 def _load(source) -> pd.DataFrame:
@@ -98,7 +102,48 @@ def chart_csew_total(df, out_dir):
     return _save(fig, out_dir, "crime_csew_total.png")
 
 
-# ── 2. The fraud / online-crime gap ──────────────────────────────────────────
+# ── 2. Total crime in the 21st century ───────────────────────────────────────
+def chart_csew_21st_century(df, out_dir):
+    plt.rcParams.update(_THEME)
+    s = _series(df, TOTAL_EXCL)
+    s = s[s["date"] >= _TWENTY_FIRST_CENTURY_START]
+    if s.empty:
+        return None
+
+    x, y = s["date"], s["value"] / 1_000.0
+    fig, ax = plt.subplots(figsize=(11, 6))
+    ax.plot(x, y, color=ACCENT, linewidth=2.8)
+    ax.fill_between(x, y, y.min(), color=ACCENT, alpha=0.10)
+
+    first_value, latest_value = y.iloc[0], y.iloc[-1]
+    ax.plot([x.iloc[0], x.iloc[-1]], [first_value, latest_value], "o", color=ACCENT,
+            markersize=6, markeredgecolor="white", markeredgewidth=1.2, zorder=5)
+    ax.annotate(f"{first_value:.1f}M", xy=(x.iloc[0], first_value),
+                xytext=(0, 12), textcoords="offset points", fontsize=10,
+                color=MUTED, ha="center")
+    _end_label(ax, x.iloc[-1], latest_value, f"{latest_value:.1f}M", ACCENT)
+
+    if first_value:
+        change = (latest_value / first_value - 1) * 100
+        direction = "down" if change < 0 else "up"
+        subtitle = (
+            f"Total CSEW headline crime excluding fraud & computer misuse — "
+            f"{abs(change):.0f}% {direction} from {x.iloc[0].year} to {x.iloc[-1].year}"
+        )
+    else:
+        subtitle = "Total CSEW headline crime excluding fraud & computer misuse"
+
+    _style_incidents_axes(
+        ax,
+        "Crime in England & Wales in the 21st century",
+        subtitle,
+    )
+    ax.margins(x=0.08)
+    _source_note(fig, s)
+    return _save(fig, out_dir, "crime_csew_21st_century.png")
+
+
+# ── 3. The fraud / online-crime gap ──────────────────────────────────────────
 def chart_fraud_gap(df, out_dir):
     plt.rcParams.update(_THEME)
     excl, incl = _series(df, TOTAL_EXCL), _series(df, TOTAL_INCL)
@@ -133,7 +178,7 @@ def chart_fraud_gap(df, out_dir):
     return _save(fig, out_dir, "crime_fraud_gap.png")
 
 
-# ── 3. Homicide vs peers ─────────────────────────────────────────────────────
+# ── 4. Homicide vs peers ─────────────────────────────────────────────────────
 def chart_homicide_peers(df, out_dir):
     from . import countries
 
@@ -181,6 +226,47 @@ def chart_homicide_peers(df, out_dir):
     return _save(fig, out_dir, "crime_homicide_peers.png")
 
 
+def chart_homicide_nations(df, out_dir):
+    plt.rcParams.update(_THEME)
+    sub = df[df["metric"] == "homicide_rate_per_million"].copy()
+    if sub.empty:
+        return None
+    sub["year"] = sub["year"].astype(int)
+    sub = sub[sub["year"] >= 2000]
+    if sub.empty:
+        return None
+
+    styles = {
+        "England & Wales": (ACCENT, "-", 2.8, -0.1),
+        "Scotland": (BLUE, "-", 2.2, -0.6),
+        "Northern Ireland": (MUTED, "--", 1.9, 0.6),
+    }
+    fig, ax = plt.subplots(figsize=(11, 6))
+    for jurisdiction, (color, linestyle, width, label_offset) in styles.items():
+        series = sub[sub["jurisdiction"] == jurisdiction].sort_values("year")
+        if series.empty:
+            continue
+        ax.plot(series["year"], series["value"], color=color, linestyle=linestyle,
+                linewidth=width)
+        _end_label(ax, series["year"].iloc[-1], series["value"].iloc[-1],
+                   jurisdiction, color, dy=label_offset)
+
+    ax.set_title("Homicide rates across the UK since 2000", fontweight="bold", pad=30)
+    ax.text(
+        0.5, 1.015,
+        "Recorded homicide victims per million people; England and Wales reported jointly",
+        transform=ax.transAxes, ha="center", va="bottom", fontsize=12, color=MUTED,
+    )
+    ax.set_xlabel("Reporting year", labelpad=2)
+    ax.set_ylabel("Homicides per million people", labelpad=2)
+    ax.set_xlim(2000, sub["year"].max() + 2)
+    ax.set_ylim(0, None)
+    ax.grid(axis="y")
+    ax.set_axisbelow(True)
+    _source_note(fig, sub)
+    return _save(fig, out_dir, "crime_homicide_nations.png")
+
+
 def _save(fig, out_dir, filename) -> pathlib.Path:
     plt.tight_layout(pad=0.5)
     plt.subplots_adjust(bottom=0.12)
@@ -192,19 +278,24 @@ def _save(fig, out_dir, filename) -> pathlib.Path:
     return out_path
 
 
-def make_charts(csew_source=None, homicide_source=None,
+def make_charts(csew_source=None, homicide_source=None, nations_source=None,
                 out_dir="outputs/crime") -> list[pathlib.Path]:
     """Render all crime charts that have data. Returns the written paths."""
     written: list[pathlib.Path] = []
     if csew_source is not None:
         cdf = _load(csew_source)
-        for fn in (chart_csew_total, chart_fraud_gap):
+        for fn in (chart_csew_total, chart_csew_21st_century, chart_fraud_gap):
             p = fn(cdf, out_dir)
             if p:
                 written.append(p)
     if homicide_source is not None:
         hdf = _load(homicide_source)
         p = chart_homicide_peers(hdf, out_dir)
+        if p:
+            written.append(p)
+    if nations_source is not None:
+        ndf = _load(nations_source)
+        p = chart_homicide_nations(ndf, out_dir)
         if p:
             written.append(p)
     return written

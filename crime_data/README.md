@@ -49,6 +49,22 @@ Each chart prints its source as a caption, taken from the data's own `source` co
   sources); redistributed by the World Bank. Fetched live via `https://api.worldbank.org/v2`.
 - **Coverage:** UK + EU-27 + US; UK ~1990–2021.
 
+### 3. UK official homicide series → nation comparison since 2000
+
+The broad crime surveys and police-recorded crime categories are not harmonised across the
+UK nations, so the country breakdown uses homicide: the most consistently defined measure.
+England and Wales are combined because that is how the ONS Homicide Index publishes the
+official series.
+
+- **England & Wales:** ONS Homicide Index, rate per million population.
+- **Scotland:** Scottish Government *Homicide in Scotland*, divided by ONS mid-year
+  population estimates.
+- **Northern Ireland:** PSNI *Trends in Police Recorded Crime*, divided by ONS mid-year
+  population estimates.
+- **Coverage:** reporting year 2000 to latest available.
+- Reporting periods differ slightly: England & Wales and Scotland use financial years
+  ending in the labelled year, while the PSNI chart uses calendar years.
+
 *(Not built: `data.police.uk` publishes a key-less police-recorded-crime API, but it is
 street-level and only spans recent years, so it is unsuitable for the long-run trend. It
 would be a natural extension for local/street-level analysis.)*
@@ -71,9 +87,15 @@ would be a natural extension for local/street-level analysis.)*
 - `data/crime_csew_long.csv` — tidy: `region, offence_group, level, period, date, year,
   metric, value, unit, source` (git-ignored, regenerable).
 - `data/crime_homicide_long.csv` — tidy: `iso3, country, year, metric, value, unit, source`.
+- `data/crime_homicide_nations_long.csv` — homicide rates for England & Wales, Scotland,
+  and Northern Ireland from 2000.
 - `outputs/crime/crime_csew_total.png` — long-run total crime, England & Wales (the fall).
+- `outputs/crime/crime_csew_21st_century.png` — the same CSEW series zoomed to the
+  21st century.
 - `outputs/crime/crime_fraud_gap.png` — total crime excl. vs incl. fraud & computer misuse.
 - `outputs/crime/crime_homicide_peers.png` — homicide rate, UK vs US vs EU-27 mean.
+- `outputs/crime/crime_homicide_nations.png` — homicide rates across UK jurisdictions
+  since 2000.
 
 Charts follow the shared house style (`vizstyle`: warm tan background, serif type, UK in the
 terracotta accent, italic source note).

@@ -12,6 +12,6 @@ rosy, and UK homicide sits above several European peers. Every value is fetched 
 parsed verbatim from the source; nothing is hand-entered.
 """
 
-__all__ = ["countries", "csew", "homicide", "charts"]
+__all__ = ["countries", "csew", "homicide", "nations", "charts"]
 
 __version__ = "0.1.0"
