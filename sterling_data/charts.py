@@ -11,7 +11,7 @@ import pandas as pd
 from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, MUTED, TEXT, house_style, source_note
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT = ROOT / "outputs" / "sterling" / "sterling_exchange_rates.png"
+DEFAULT_OUTPUT = ROOT / "outputs" / "sterling" / "sterling_exchange_rates_indexed.png"
 
 SERIES = {
     "USD": ("US dollar", ACCENT),
@@ -45,13 +45,13 @@ def index_to_year(frame: pd.DataFrame, base_year: int = 2000) -> pd.DataFrame:
 
 def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     """Render all currencies on one comparable 2000=100 scale."""
-    frame = index_to_year(_load(source))
+    frame = _load(source)
+    frame = frame[frame["period_status"] == "full_year"].copy()
+    frame = index_to_year(frame)
     house_style()
 
     fig, ax = plt.subplots(figsize=(13.5, 7.6))
     latest_year = int(frame["year"].max())
-    latest = frame[frame["year"] == latest_year]
-    latest_months = int(latest["months"].iloc[0])
 
     for currency, (label, color) in SERIES.items():
         sub = frame[frame["currency"] == currency].sort_values("year")
@@ -116,8 +116,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         fig,
         "Source: European Central Bank euro foreign exchange reference rates, "
         "monthly averages; pound cross-rates derived from each currency's euro rate.\n"
-        f"The {latest_year} observation averages January–July ({latest_months} months) "
-        "and is not a full-year rate.",
+        f"Only complete calendar years are shown; the latest is {latest_year}.",
         x=0.065,
         y=0.02,
     )

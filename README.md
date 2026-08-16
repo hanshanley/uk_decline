@@ -18,6 +18,7 @@ and monetary series are inflation-adjusted (real) unless explicitly labelled nom
 | Austerity | [`austerity_data/`](austerity_data/README.md) | Real public-service spending cuts and public investment after 2010 |
 | Food banks | [`foodbank_data/`](foodbank_data/README.md) | Emergency food parcels distributed by the Trussell network |
 | Sterling | [`sterling_data/`](sterling_data/README.md) | How much foreign currency £1 buys against major currencies |
+| Trade openness | [`trade_data/`](trade_data/README.md) | Exports plus imports as a percentage of GDP |
 | NHS | [`nhs_data/`](nhs_data/README.md) | NHS waiting times & lists across the four nations |
 | Tax burden | [`tax/`](tax/README.md) | Tax-to-GDP, tax wedge: UK vs Europe vs US |
 | Tuition | [`tuition/`](tuition/README.md) | Cost of a four-year degree: UK vs EU vs US |
@@ -67,10 +68,16 @@ Food banks in Trussell's UK community distributed **2.64 million emergency food 
 banks. *Source: Trussell end-of-year statistics and official 2025 parcel workbook.*
 
 ### Sterling — how much foreign currency one pound buys
-![Sterling exchange rates](outputs/sterling/sterling_exchange_rates.png)
+![Sterling exchange rates](outputs/sterling/sterling_exchange_rates_indexed.png)
 The pound's path is not identical against every currency. The chart places dollars,
 euros, yen, and Swiss francs bought by **£1** on one comparable **2000 = 100** scale,
-through the latest 2026 observation. *Source: European Central Bank reference exchange rates.*
+through the latest complete year, 2025. *Source: European Central Bank reference exchange rates.*
+
+### Trade — how much of the economy crosses borders?
+![Trade as a share of GDP](outputs/trade/trade_share_gdp.png)
+Trade—exports plus imports of goods and services—accounts for roughly **62% of UK GDP**
+in the latest observation. The chart compares the UK with Germany, France, Japan, and
+the United States. *Source: World Bank WDI, NE.TRD.GNFS.ZS.*
 
 ### NHS — waiting lists have ballooned, and per-head the smaller nations fare worst
 ![NHS RTT waiting list per 1,000 people](outputs/nhs/rtt_waiting_list_per_1000.png)
@@ -142,13 +149,14 @@ and the caveats. *Source: World Bank WDI (NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.KD), IC
 ```
 uk_decline/
   europe_data/   markets_data/   austerity_data/   foodbank_data/   sterling_data/
+  trade_data/
   nhs_data/      tax/
   tuition/       trust_data/     uk_migration/   age_data/   rail_data/   london_data/
   crime_data/    ppp_data/
       └─ each: analysis code + README.md (+ CITATIONS where relevant)
   vizstyle/      # shared "Substack" plotting house style (palette + rcParams + helpers)
   outputs/       # ALL figures, one subfolder per analysis (tracked; render on GitHub)
-    gdp_income/  stock_markets/  austerity/  food_banks/  sterling/  nhs/  tax/  tuition/  trust/  migration/  age/  rail/  london/  crime/  ppp/
+    gdp_income/  stock_markets/  austerity/  food_banks/  sterling/  trade/  nhs/  tax/  tuition/  trust/  migration/  age/  rail/  london/  crime/  ppp/
   data/          # raw / intermediate inputs (git-ignored, regenerable)
   tests/         # test suites
   requirements.txt
@@ -170,6 +178,7 @@ Each analysis runs as a module from the repo root, e.g.:
 ./.venv/bin/python -m austerity_data              # austerity -> outputs/austerity/
 ./.venv/bin/python -m foodbank_data               # food-bank use -> outputs/food_banks/
 ./.venv/bin/python -m sterling_data               # pound exchange rates -> outputs/sterling/
+./.venv/bin/python -m trade_data                  # trade share of GDP -> outputs/trade/
 ./.venv/bin/python -m nhs_data                    # NHS -> outputs/nhs/
 ./.venv/bin/python -m rail_data                   # London rail delays -> outputs/rail/
 ./.venv/bin/python -m london_data                 # London's share of UK GDP -> outputs/london/
