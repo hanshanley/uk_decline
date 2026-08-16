@@ -143,7 +143,7 @@ def chart_csew_total(df, out_dir):
     ax.xaxis.set_major_locator(mdates.YearLocator(5))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
     ax.set_xlim(x.iloc[0] - pd.DateOffset(years=1),
-                x.iloc[-1] + pd.DateOffset(years=2.6))
+                x.iloc[-1] + pd.DateOffset(months=31))
     _source_note(fig, s)
     return _save(fig, out_dir, "crime_csew_total.png")
 
@@ -191,7 +191,7 @@ def chart_csew_21st_century(df, out_dir):
     ax.xaxis.set_major_locator(mdates.YearLocator(4))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
     ax.set_xlim(x.iloc[0] - pd.DateOffset(years=1),
-                x.iloc[-1] + pd.DateOffset(years=2.6))
+                x.iloc[-1] + pd.DateOffset(months=31))
     _source_note(fig, s)
     return _save(fig, out_dir, "crime_csew_21st_century.png")
 

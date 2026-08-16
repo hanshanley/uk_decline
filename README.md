@@ -58,7 +58,7 @@ protected. Public sector net investment fell from **2.5% of GDP in 2010–11 to 
 2013–14**. *Source: HM Treasury Public Spending Statistics, July 2026, Tables 4.1 and 4.3.*
 
 ### Food banks — emergency parcel use remains far above its pre-pandemic level
-![Trussell emergency food parcels](outputs/food_banks/trussell_food_parcels_annual.png)
+![Trussell emergency food parcels](outputs/food_banks/trussell_food_parcels.png)
 Food banks in Trussell's UK community distributed **2.64 million emergency food parcels in
 2025**. That was down 12% from 2024 and 18% below the 2023 peak, but still **45% above
 2019**. Parcels measure supplies distributed, not unique people, and exclude independent food

@@ -15,7 +15,7 @@ emergency food.
 The historical chart therefore begins its timeline in 2000, labels 2000–04 as
 **unreported rather than zero**, and starts quantitative bars in 2005/06.
 
-There are three deliberately separate statistical views:
+There are three deliberately separate statistical series in the data:
 
 1. **Archived financial-year reports, 2005/06–2017/18.** Wording evolves from
    "people fed" to "three-day emergency food supplies". These are counts of supplies
@@ -53,16 +53,16 @@ reporting. The analysis therefore never joins the six-month and full-year series
 ./.venv/bin/python -m pytest tests/test_foodbank.py -q
 ```
 
-## Outputs
+## Output
 
 - `data/food_bank_calendar_year.csv` — calendar-year UK series, 2015–2025.
 - `data/food_bank_midyear.csv` — like-for-like April–September series, 2018–2024.
 - `data/food_bank_fiscal_year.csv` — sourced fiscal history, 2005/06–2023/24,
   including source-vintage and comparability fields.
-- `outputs/food_banks/trussell_food_parcels_history.png` — timeline from 2000 and
-  financial-year bars from the first defensible annual observation.
-- `outputs/food_banks/trussell_food_parcels_annual.png` — primary full-year chart.
-- `outputs/food_banks/trussell_food_parcels_midyear.png` — separate mid-year chart.
+- `outputs/food_banks/trussell_food_parcels.png` — the single primary chart:
+  a linear, long-run fiscal series from 2005/06 to 2023/24 plus a clearly separate
+  calendar-year tail through 2025. The axis begins in 2000, with pre-2005 years
+  explicitly described as unreported rather than zero.
 - `outputs/food_banks/summary.md` — exact headline values, definitions, and citations.
 
 The raw official XLSX/PPTX files are preserved under `data/raw/food_bank_*`. The fetcher

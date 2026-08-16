@@ -187,9 +187,7 @@ def test_charts_render_from_official_data() -> None:
     try:
         written = charts.make_charts(annual, midyear, fiscal, test_dir)
         assert {path.name for path in written} == {
-            "trussell_food_parcels_history.png",
-            "trussell_food_parcels_annual.png",
-            "trussell_food_parcels_midyear.png",
+            "trussell_food_parcels.png",
         }
         assert all(path.stat().st_size > 50_000 for path in written)
     finally:
