@@ -60,9 +60,8 @@ reporting. The analysis therefore never joins the six-month and full-year series
 - `data/food_bank_fiscal_year.csv` — sourced fiscal history, 2005/06–2023/24,
   including source-vintage and comparability fields.
 - `outputs/food_banks/trussell_food_parcels.png` — the single primary chart:
-  aligned panels for all parcels and parcels distributed for children. The long-run
-  fiscal series reaches 2023/24; a short dotted segment carries each measure to the
-  latest calendar-year observation in 2025.
+  a long-run bar series. Early bars show totals only; from 2018/19 onward the bars
+  split into adult and child recipients. The latest bar is calendar-year 2025.
 - `outputs/food_banks/summary.md` — exact headline values, definitions, and citations.
 
 The raw official XLSX/PPTX files are preserved under `data/raw/food_bank_*`. The fetcher

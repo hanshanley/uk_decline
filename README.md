@@ -17,6 +17,7 @@ and monetary series are inflation-adjusted (real) unless explicitly labelled nom
 | Stock markets | [`markets_data/`](markets_data/README.md) | UK vs US listed-market size (cap, % of GDP, listings) |
 | Austerity | [`austerity_data/`](austerity_data/README.md) | Real public-service spending cuts and public investment after 2010 |
 | Food banks | [`foodbank_data/`](foodbank_data/README.md) | Emergency food parcels distributed by the Trussell network |
+| Sterling | [`sterling_data/`](sterling_data/README.md) | How much foreign currency £1 buys against major currencies |
 | NHS | [`nhs_data/`](nhs_data/README.md) | NHS waiting times & lists across the four nations |
 | Tax burden | [`tax/`](tax/README.md) | Tax-to-GDP, tax wedge: UK vs Europe vs US |
 | Tuition | [`tuition/`](tuition/README.md) | Cost of a four-year degree: UK vs EU vs US |
@@ -31,12 +32,13 @@ All output images live in one place: **[`outputs/`](outputs)**, one subfolder pe
 
 ## Key results
 
-**The whole thesis in one image — eight measures at a glance:**
+**Eight of the clearest economic and social pressure points at a glance:**
 
 ![The UK in relative decline](outputs/uk_decline_scorecard.png)
 
-Every panel is tracked from **2007** — the eve of the financial crisis and the UK's high-water
-mark on most of these measures — so the eight trends read as one holistic decline. Each measure below in detail.
+Each panel uses the earliest comparable observation appropriate to that official series.
+The selection emphasizes living standards, public services, state capacity, hardship,
+institutions, and changing crime patterns.
 
 ### GDP per capita — the US pulls away, and even Poland is catching up
 ![Real GDP per capita relative to the UK (UK = 100)](outputs/gdp_income/uk_gdp_relative_to_peers.png)
@@ -63,6 +65,12 @@ Food banks in Trussell's UK community distributed **2.64 million emergency food 
 2025**. That was down 12% from 2024 and 18% below the 2023 peak, but still **45% above
 2019**. Parcels measure supplies distributed, not unique people, and exclude independent food
 banks. *Source: Trussell end-of-year statistics and official 2025 parcel workbook.*
+
+### Sterling — how much foreign currency one pound buys
+![Sterling exchange rates](outputs/sterling/sterling_exchange_rates.png)
+The pound's path is not identical against every currency. This chart shows actual
+annual-average dollars, euros, yen, and Swiss francs bought by **£1**, from 2000 through
+the latest 2026 observation. *Source: European Central Bank reference exchange rates.*
 
 ### NHS — waiting lists have ballooned, and per-head the smaller nations fare worst
 ![NHS RTT waiting list per 1,000 people](outputs/nhs/rtt_waiting_list_per_1000.png)
@@ -133,13 +141,14 @@ and the caveats. *Source: World Bank WDI (NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.KD), IC
 
 ```
 uk_decline/
-  europe_data/   markets_data/   austerity_data/   foodbank_data/   nhs_data/   tax/
+  europe_data/   markets_data/   austerity_data/   foodbank_data/   sterling_data/
+  nhs_data/      tax/
   tuition/       trust_data/     uk_migration/   age_data/   rail_data/   london_data/
   crime_data/    ppp_data/
       └─ each: analysis code + README.md (+ CITATIONS where relevant)
   vizstyle/      # shared "Substack" plotting house style (palette + rcParams + helpers)
   outputs/       # ALL figures, one subfolder per analysis (tracked; render on GitHub)
-    gdp_income/  stock_markets/  austerity/  food_banks/  nhs/  tax/  tuition/  trust/  migration/  age/  rail/  london/  crime/  ppp/
+    gdp_income/  stock_markets/  austerity/  food_banks/  sterling/  nhs/  tax/  tuition/  trust/  migration/  age/  rail/  london/  crime/  ppp/
   data/          # raw / intermediate inputs (git-ignored, regenerable)
   tests/         # test suites
   requirements.txt
@@ -160,6 +169,7 @@ Each analysis runs as a module from the repo root, e.g.:
 ./.venv/bin/python -m markets_data                # UK vs US markets -> outputs/stock_markets/
 ./.venv/bin/python -m austerity_data              # austerity -> outputs/austerity/
 ./.venv/bin/python -m foodbank_data               # food-bank use -> outputs/food_banks/
+./.venv/bin/python -m sterling_data               # pound exchange rates -> outputs/sterling/
 ./.venv/bin/python -m nhs_data                    # NHS -> outputs/nhs/
 ./.venv/bin/python -m rail_data                   # London rail delays -> outputs/rail/
 ./.venv/bin/python -m london_data                 # London's share of UK GDP -> outputs/london/

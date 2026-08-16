@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""Build the unified "UK decline scorecard" — an 8-panel small-multiples image that
-pulls one signature series from each analysis (GDP, markets, NHS, tax, tuition, trust,
-migration, ageing), UK-highlighted, each annotated with its start->latest change.
+"""Build the unified UK scorecard: eight high-signal economic and social indicators.
 
 All series are read from generated data/output CSVs (no re-fetch). Writes
 outputs/uk_decline_scorecard.png.
@@ -31,13 +29,13 @@ OUT = ROOT / "outputs"
 REQUIRED_INPUTS = {
     DATA / "europe_combined_wide.csv": ".venv/bin/python -m europe_data.fetch_data",
     OUT / "nhs" / "nhs_waiting_times.csv": ".venv/bin/python -m nhs_data",
-    DATA / "tax_revenue_to_gdp.csv": ".venv/bin/python -m tax.fetch_tax",
     DATA / "processed" / "tuition_history.csv": ".venv/bin/python -m tuition.build_history",
     DATA / "trust" / "trust_combined_long.csv": ".venv/bin/python -m trust_data.fetch_trust",
-    DATA / "rail_performance.csv": ".venv/bin/python -m rail_data",
     DATA / "stock_market_size_wide.csv": ".venv/bin/python -m markets_data",
     DATA / "uk_listed_companies_lse.csv": ".venv/bin/python -m markets_data.lse_factsheets",
-    DATA / "london_gdp.csv": ".venv/bin/python -m london_data",
+    DATA / "austerity_spending.csv": ".venv/bin/python -m austerity_data",
+    DATA / "food_bank_calendar_year.csv": ".venv/bin/python -m foodbank_data",
+    DATA / "crime_csew_long.csv": ".venv/bin/python -m crime_data",
 }
 
 # ── House style ──────────────────────────────────────────────────────────────
@@ -48,9 +46,11 @@ from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, GREEN  # noqa: E402
 WORSE, BETTER, NEUTRAL = ACCENT, GREEN, MUTED
 plt.rcParams.update({
     "figure.facecolor": BG, "axes.facecolor": BG, "savefig.facecolor": BG,
-    "text.color": TEXT, "font.family": "serif",
+    "text.color": TEXT, "font.family": "sans-serif",
+    "font.sans-serif": ["Avenir Next", "Avenir", "Helvetica Neue", "Arial", "DejaVu Sans"],
     "axes.spines.top": False, "axes.spines.right": False, "axes.spines.left": False,
     "xtick.major.size": 0, "ytick.major.size": 0, "text.parse_math": False,
+    "grid.alpha": 0.35,
 })
 STROKE = [pe.withStroke(linewidth=3, foreground="white")]
 
@@ -87,13 +87,6 @@ def nhs_england():
     return ys, [pts[y] for y in ys]
 
 
-def tax_burden():
-    r = _rows(DATA / "tax_revenue_to_gdp.csv")
-    pts = {int(x["year"]): float(x["value"]) for x in r if x["iso3"] == "GBR" and x["metric"] == "tax_to_gdp_pct" and x.get("value")}
-    ys = sorted(pts)
-    return ys, [pts[y] for y in ys]
-
-
 def tuition_real():
     r = _rows(DATA / "processed" / "tuition_history.csv")
     pts = {int(x["year"]): float(x["real_2022_usd"]) for x in r if x["country"] == "United Kingdom" and x.get("real_2022_usd")}
@@ -104,39 +97,6 @@ def tuition_real():
 def trust_govt():
     r = _rows(DATA / "trust" / "trust_combined_long.csv")
     pts = {int(x["year"]): float(x["value"]) for x in r if x["iso3"] == "GBR" and x["metric"] == "trust_national_govt_pct" and x.get("value")}
-    ys = sorted(pts)
-    return ys, [pts[y] for y in ys]
-
-
-def net_migration():
-    r = _rows(DATA / "processed" / "uk_migration_long.csv")
-    pts = {}
-    for x in r:
-        if x["metric"] == "net_migration" and x.get("category") == "all" and x["source"].startswith("ONS") and x.get("value"):
-            y = _year(x["period"])
-            if y:
-                pts[y] = float(x["value"])
-    ys = sorted(pts)
-    return ys, [pts[y] for y in ys]
-
-
-def rail_delays():
-    """Annual mean of London & South East CaSL (% of trains cancelled or significantly late)."""
-    r = _rows(DATA / "rail_performance.csv")
-    buckets: dict[int, dict[str, float]] = {}
-    for x in r:
-        if (x["region"] == "London and South East" and x["metric"] == "casl_pct"
-                and x.get("value")):
-            buckets.setdefault(int(x["year"]), {})[x["quarter"]] = float(x["value"])
-    complete = {year: values for year, values in buckets.items() if len(values) == 4}
-    ys = sorted(complete)
-    return ys, [sum(complete[y].values()) / 4 for y in ys]
-
-
-def london_gdp_share():
-    r = _rows(DATA / "london_gdp.csv")
-    pts = {int(x["year"]): float(x["value"]) for x in r
-           if x["region"] == "London" and x["metric"] == "share_of_uk_gdp_pct" and x.get("value")}
     ys = sorted(pts)
     return ys, [pts[y] for y in ys]
 
@@ -160,35 +120,68 @@ def uk_listed_companies():
     return ys, [pts[y] for y in ys]
 
 
+def culture_spending():
+    """Real recreation, culture and religion spending in 2025-26 GBP billions."""
+    r = _rows(DATA / "austerity_spending.csv")
+    pts = {
+        int(x["year"]): float(x["value"])
+        for x in r
+        if x["metric"] == "functional_spending_real"
+        and x["category"] == "recreation_culture"
+        and x.get("value")
+    }
+    ys = sorted(pts)
+    return ys, [pts[y] for y in ys]
+
+
+def food_bank_parcels():
+    r = _rows(DATA / "food_bank_calendar_year.csv")
+    pts = {int(x["year"]): float(x["total"]) for x in r if x.get("total")}
+    ys = sorted(pts)
+    return ys, [pts[y] for y in ys]
+
+
+def fraud_share():
+    r = _rows(DATA / "crime_csew_long.csv")
+    excl_name = "ALL CSEW HEADLINE CRIME EXCLUDING FRAUD AND COMPUTER MISUSE"
+    incl_name = "ALL CSEW HEADLINE CRIME INCLUDING FRAUD AND COMPUTER MISUSE"
+    excl = {
+        int(x["year"]): float(x["value"])
+        for x in r if x["offence_group"] == excl_name and x.get("value")
+    }
+    incl = {
+        int(x["year"]): float(x["value"])
+        for x in r if x["offence_group"] == incl_name and x.get("value")
+    }
+    ys = sorted(set(excl) & set(incl))
+    return ys, [100 * (incl[y] - excl[y]) / incl[y] for y in ys]
+
+
 # title, loader, value formatter, good_direction (+1 up-is-good, -1 down-is-good, 0 neutral),
-# source, start_override. Every panel is tracked from the same COMMON_START year so the
-# scorecard reads as one holistic "UK since 2007" story; tuition is the one exception
-# (sparse data — its nearest anchor point is 2006, the pre-£9k-cap baseline).
-COMMON_START = 2007
+# source, start year. Baselines vary because the official comparable series do.
 
 PANELS = [
     ("GDP per capita vs the US", gdp_vs_us, lambda v: f"{v:.0f}%", +1,
-     "World Bank WDI (CPI-deflated real US$)", None),
-    ("Rail delays, London & SE", rail_delays, lambda v: f"{v:.1f}%", -1,
-     "Office of Rail and Road (ORR), Table 3103 (CaSL)", None),
+     "World Bank WDI · real US dollars", 2007),
+    ("UK-listed companies", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
+     "WFE / World Bank; LSE factsheets", 2007),
     ("NHS waiting list, England", nhs_england, lambda v: f"{v/1e6:.1f}M", -1,
-     "NHS England", None),
-    ("Tax burden (% of GDP)", tax_burden, lambda v: f"{v:.0f}%", -1,
-     "OECD Revenue Statistics", None),
+     "NHS England", 2007),
+    ("Culture & recreation spending", culture_spending, lambda v: f"£{v:.1f}bn", +1,
+     "HM Treasury · real 2025–26 prices", 2007),
     ("University tuition (real)", tuition_real, lambda v: f"${v/1e3:.1f}k", -1,
      "Eurydice / NCES / UK fee cap (constant 2022 US$)", 2006),
     ("Trust in national government", trust_govt, lambda v: f"{v:.0f}%", +1,
-     "OECD / Gallup World Poll via OWID", None),
-    ("UK-listed companies", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
-     "WFE via World Bank WDI (to 2022); LSE factsheets (2023+)", None),
-    ("London's share of UK GDP", london_gdp_share, lambda v: f"{v:.1f}%", -1,
-     "ONS, Regional GDP (current prices)", None),
+     "OECD / Gallup World Poll via OWID", 2007),
+    ("Emergency food parcels", food_bank_parcels, lambda v: f"{v/1e6:.1f}M", -1,
+     "Trussell · calendar-year UK totals", 2015),
+    ("Fraud share of headline crime", fraud_share, lambda v: f"{v:.0f}%", -1,
+     "ONS Crime Survey for England & Wales", 2017),
 ]
 
 
-def _panel(ax, title, loader, fmt, good_dir, source, start_override):
+def _panel(ax, title, loader, fmt, good_dir, source, start):
     xs, ys = loader()
-    start = start_override or COMMON_START
     pts = [(x, y) for x, y in zip(xs, ys) if x >= start]
     if not pts:
         ax.set_axis_off()
@@ -198,32 +191,28 @@ def _panel(ax, title, loader, fmt, good_dir, source, start_override):
     worse = (good_dir == +1 and change < 0) or (good_dir == -1 and change > 0)
     color = NEUTRAL if good_dir == 0 else (WORSE if worse else BETTER)
 
-    ax.plot(xs, ys, color=color, linewidth=2.6, solid_capstyle="round")
-    ax.fill_between(xs, ys, min(ys), color=color, alpha=0.10)
+    ax.plot(xs, ys, color=color, linewidth=2.4, solid_capstyle="round")
     ax.plot([xs[-1]], [ys[-1]], "o", color=color, markersize=6,
-            markeredgecolor="white", markeredgewidth=1.2, zorder=5)
+            markeredgecolor="white", markeredgewidth=1.5, zorder=5)
 
     # Header: title (top-left), latest value (top-right), start->latest (just above plot).
-    ax.set_title(title, fontsize=12, fontweight="bold", loc="left", pad=26, color=TEXT)
+    ax.set_title(title, fontsize=11.5, fontweight="bold", loc="left", pad=25, color=TEXT)
     ax.annotate(fmt(ys[-1]), xy=(1, 1), xycoords="axes fraction", xytext=(0, 18),
-                textcoords="offset points", fontsize=15, fontweight="bold", color=color,
+                textcoords="offset points", fontsize=14, fontweight="bold", color=color,
                 ha="right", va="bottom")
     ax.annotate(f"{fmt(ys[0])} in {xs[0]}  to  {fmt(ys[-1])} in {xs[-1]}",
                 xy=(0, 1), xycoords="axes fraction", xytext=(0, 3), textcoords="offset points",
-                fontsize=8.5, color=MUTED, ha="left", va="bottom")
+                fontsize=8, color=MUTED, ha="left", va="bottom")
 
     # Y-axis: a light left spine with ~3 labelled ticks so values are readable.
-    ax.spines["left"].set_visible(True)
-    ax.spines["left"].set_color(GRID)
-    ax.spines["left"].set_linewidth(0.8)
     ax.yaxis.set_major_locator(MaxNLocator(nbins=3))
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: fmt(v)))
-    ax.tick_params(axis="y", labelsize=8, colors=MUTED, length=0, pad=2)
-    ax.grid(axis="y", linestyle="-", linewidth=0.6, color=GRID, alpha=0.7)
+    ax.tick_params(axis="y", labelsize=7.5, colors=MUTED, length=0, pad=2)
+    ax.grid(axis="y", linestyle="-", linewidth=0.55, color=GRID, alpha=0.55)
     ax.set_axisbelow(True)
 
     ax.set_xticks([xs[0], xs[-1]])
-    ax.set_xticklabels([str(xs[0]), str(xs[-1])], fontsize=9, color=MUTED)
+    ax.set_xticklabels([str(xs[0]), str(xs[-1])], fontsize=8.5, color=MUTED)
     # Give each panel at least a minimum span relative to its own magnitude, so a
     # genuinely small move (e.g. tax burden 33->34%, median age 39->41) is not
     # magnified to fill the panel and overstate the change.
@@ -236,8 +225,8 @@ def _panel(ax, title, loader, fmt, good_dir, source, start_override):
         lo = 0.0
     ax.set_ylim(lo, hi)
     ax.margins(x=0.04)
-    ax.text(0.0, -0.24, source, transform=ax.transAxes, fontsize=6.8, color=MUTED,
-            style="italic", va="top")
+    ax.text(0.0, -0.23, source, transform=ax.transAxes, fontsize=6.6, color=MUTED,
+            va="top")
 
 
 def main() -> int:
@@ -256,16 +245,15 @@ def main() -> int:
     for ax, panel in zip(axes.flat, PANELS):
         _panel(ax, *panel)
 
-    fig.suptitle("The UK since 2007",
-                 fontsize=23, fontweight="bold", y=0.99)
+    fig.suptitle("Britain's pressure points",
+                 fontsize=22, fontweight="bold", y=0.99)
     fig.text(0.5, 0.935,
-             "Eight measures of Britain's slide, each tracked from 2007 \u2014 the eve of the "
-             "financial crisis.",
-             ha="center", fontsize=11.5, color=MUTED)
+             "Eight high-signal indicators from the latest comparable official series.",
+             ha="center", fontsize=11, color=MUTED)
     fig.text(0.5, 0.015,
-             "All series from official public sources (World Bank, OECD, ONS, NHS, ORR, "
-             "Eurydice/NCES, Gallup). Real/monetary figures are inflation-adjusted. See per-analysis READMEs.",
-             ha="center", fontsize=8.5, color=MUTED, style="italic")
+             "Baselines vary with data availability. Monetary series are inflation-adjusted. "
+             "Definitions and caveats are documented in each analysis README.",
+             ha="center", fontsize=8, color=MUTED)
 
     fig.tight_layout(rect=[0.01, 0.03, 0.99, 0.92])
     fig.subplots_adjust(hspace=0.55, wspace=0.28)

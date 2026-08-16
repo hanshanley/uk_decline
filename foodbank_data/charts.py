@@ -1,4 +1,4 @@
-"""Clear long-run charts for Trussell emergency food parcel data."""
+"""Publication-quality bar chart for Trussell emergency food parcel data."""
 
 from __future__ import annotations
 
@@ -8,33 +8,30 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 
-from vizstyle import ACCENT, BG, BLUE, GOLD, MUTED, TEXT, house_style, source_note
+from vizstyle import ACCENT, BG, BLUE, GOLD, GRID, MUTED, TEXT, house_style, source_note
 
 from .sources import ACCESSED_DATE, OUTPUT_DIR
 
 house_style()
 
 PRIMARY_OUTPUT = OUTPUT_DIR / "trussell_food_parcels.png"
+TOTAL_ONLY = "#A8ADB0"
+ADULT = BLUE
+CHILD = GOLD
 
 
 def _millions(value: float, _position: int | None = None) -> str:
     if value == 0:
         return "0"
-    return f"{value / 1_000_000:.2g}m"
+    return f"{value / 1_000_000:.1f}m"
 
 
-def _label(ax, x: float, y: float, text: str, color: str, *, dx=0, dy=9) -> None:
-    ax.annotate(
-        text,
-        (x, y),
-        xytext=(dx, dy),
-        textcoords="offset points",
-        ha="center",
-        va="bottom",
-        fontsize=9.5,
-        color=color,
-        fontweight="bold",
-    )
+def _total_label(value: float) -> str:
+    if value >= 1_000_000:
+        return f"{value / 1_000_000:.2f}m"
+    if value >= 100_000:
+        return f"{value / 1_000:.0f}k"
+    return f"{value:,.0f}"
 
 
 def foodbank_chart(
@@ -42,141 +39,145 @@ def foodbank_chart(
     annual: pd.DataFrame,
     out_path: Path = PRIMARY_OUTPUT,
 ) -> Path:
-    """Render aligned total and child-recipient panels on one timeline."""
-    fiscal = fiscal.sort_values("end_year")
+    """Render one long-run bar chart with age composition where available."""
+    fiscal = fiscal.sort_values("end_year").copy()
     annual = annual.sort_values("year")
     latest = annual.iloc[-1]
 
-    total_history = fiscal[["end_year", "total"]].rename(columns={"end_year": "year"})
-    child_history = fiscal.dropna(subset=["children"])[
-        ["end_year", "children"]
-    ].rename(columns={"end_year": "year"})
-
-    fig, (ax_total, ax_child) = plt.subplots(
-        2,
-        1,
-        figsize=(13.4, 8.8),
-        sharex=True,
-        gridspec_kw={"height_ratios": [1.55, 1], "hspace": 0.36},
+    # The long-run series uses fiscal observations through 2023/24. The latest
+    # calendar-year observation is appended at 2025 and identified in the note.
+    historical = fiscal.copy()
+    historical["x"] = historical["end_year"].astype(float)
+    latest_row = pd.DataFrame(
+        [{
+            "period_label": "2025",
+            "x": float(latest["year"]),
+            "total": float(latest["total"]),
+            "adults": float(latest["adults"]),
+            "children": float(latest["children"]),
+        }]
     )
 
-    ax_total.plot(
-        total_history["year"],
-        total_history["total"],
-        color=BLUE,
-        linewidth=3,
-        solid_capstyle="round",
-    )
-    ax_total.scatter(
-        total_history["year"],
-        total_history["total"],
-        s=24,
-        color=BLUE,
+    no_age = historical[historical["children"].isna()]
+    age = historical[historical["children"].notna()]
+
+    fig, ax = plt.subplots(figsize=(13.6, 7.8))
+
+    ax.bar(
+        no_age["x"],
+        no_age["total"],
+        width=0.72,
+        color=TOTAL_ONLY,
         edgecolor=BG,
         linewidth=0.8,
-        zorder=4,
+        label="Total (age breakdown unavailable)",
+        zorder=3,
     )
-    ax_total.scatter(
-        [latest["year"]],
-        [latest["total"]],
-        s=44,
-        color=ACCENT,
-        edgecolor=BG,
-        linewidth=0.9,
-        zorder=5,
-    )
-    ax_total.plot(
-        [total_history.iloc[-1]["year"], latest["year"]],
-        [total_history.iloc[-1]["total"], latest["total"]],
-        color=ACCENT,
-        linewidth=1.4,
-        linestyle=(0, (2, 3)),
-        alpha=0.75,
-    )
-
-    ax_child.plot(
-        child_history["year"],
-        child_history["children"],
-        color=GOLD,
-        linewidth=3,
-        solid_capstyle="round",
-    )
-    ax_child.scatter(
-        child_history["year"],
-        child_history["children"],
-        s=27,
-        color=GOLD,
+    ax.bar(
+        age["x"],
+        age["adults"],
+        width=0.72,
+        color=ADULT,
         edgecolor=BG,
         linewidth=0.8,
-        zorder=4,
+        label="Adults",
+        zorder=3,
     )
-    ax_child.scatter(
-        [latest["year"]],
-        [latest["children"]],
-        s=44,
-        color=ACCENT,
+    ax.bar(
+        age["x"],
+        age["children"],
+        width=0.72,
+        bottom=age["adults"],
+        color=CHILD,
         edgecolor=BG,
-        linewidth=0.9,
-        zorder=5,
+        linewidth=0.8,
+        label="Children",
+        zorder=3,
     )
-    ax_child.plot(
-        [child_history.iloc[-1]["year"], latest["year"]],
-        [child_history.iloc[-1]["children"], latest["children"]],
+    ax.bar(
+        latest_row["x"],
+        latest_row["adults"],
+        width=0.72,
+        color=ADULT,
+        edgecolor=BG,
+        linewidth=0.8,
+        zorder=3,
+    )
+    ax.bar(
+        latest_row["x"],
+        latest_row["children"],
+        width=0.72,
+        bottom=latest_row["adults"],
+        color=CHILD,
+        edgecolor=BG,
+        linewidth=0.8,
+        zorder=3,
+    )
+
+    labels = {
+        "2005/06": None,
+        "2011/12": None,
+        "2018/19": None,
+        "2023/24": None,
+    }
+    for period in labels:
+        row = historical.loc[historical["period_label"] == period].iloc[0]
+        ax.text(
+            row["x"],
+            row["total"] + 72_000,
+            _total_label(float(row["total"])),
+            ha="center",
+            va="bottom",
+            fontsize=9.2,
+            color=TEXT if period in {"2005/06", "2023/24"} else MUTED,
+            fontweight="bold" if period in {"2005/06", "2023/24"} else "normal",
+        )
+    ax.text(
+        latest["year"],
+        latest["total"] + 72_000,
+        _total_label(float(latest["total"])),
+        ha="center",
+        va="bottom",
+        fontsize=9.5,
         color=ACCENT,
-        linewidth=1.4,
-        linestyle=(0, (2, 3)),
-        alpha=0.75,
-    )
-
-    # Sparse direct labels only.
-    first = total_history.iloc[0]
-    fiscal_peak = total_history.iloc[-1]
-    _label(ax_total, first["year"], first["total"], "2,814", BLUE)
-    _label(ax_total, fiscal_peak["year"], fiscal_peak["total"], "3.12m", BLUE, dx=-8)
-    _label(ax_total, latest["year"], latest["total"], "2.64m", ACCENT)
-
-    first_child = child_history.iloc[0]
-    last_child = child_history.iloc[-1]
-    _label(ax_child, first_child["year"], first_child["children"], "586k", GOLD)
-    _label(ax_child, last_child["year"], last_child["children"], "1.14m", GOLD, dx=-8)
-    _label(ax_child, latest["year"], latest["children"], "912k", ACCENT)
-
-    for ax in (ax_total, ax_child):
-        ax.set_xlim(1999.7, 2026.2)
-        ax.grid(axis="y")
-        ax.set_axisbelow(True)
-        ax.spines["left"].set_visible(False)
-        ax.yaxis.set_major_formatter(mtick.FuncFormatter(_millions))
-
-    ax_total.set_ylim(0, 3_500_000)
-    ax_total.yaxis.set_major_locator(mtick.MultipleLocator(500_000))
-    ax_total.set_title(
-        "All emergency food parcels",
-        loc="left",
-        fontsize=14,
         fontweight="bold",
-        color=TEXT,
-        pad=8,
     )
 
-    ax_child.set_ylim(0, 1_300_000)
-    ax_child.yaxis.set_major_locator(mtick.MultipleLocator(250_000))
-    ax_child.set_title(
-        "Parcels distributed for children",
-        loc="left",
-        fontsize=14,
-        fontweight="bold",
+    # Directly identify the child share without adding a second chart.
+    ax.text(
+        latest["year"],
+        latest["adults"] + latest["children"] / 2,
+        "912k\nchildren",
+        ha="center",
+        va="center",
+        fontsize=8.5,
         color=TEXT,
-        pad=8,
+        fontweight="bold",
     )
-    ax_child.set_xticks([2000, 2005, 2010, 2015, 2020, 2025])
-    ax_child.set_xticklabels(["2000", "2005", "2010", "2015", "2020", "2025"])
-    ax_child.set_xlabel("Reporting year ending")
+
+    ax.set_xlim(1999.7, 2026.0)
+    ax.set_ylim(0, 3_500_000)
+    ax.set_xticks([2000, 2005, 2010, 2015, 2020, 2025])
+    ax.set_xticklabels(["2000", "2005", "2010", "2015", "2020", "2025"])
+    ax.yaxis.set_major_locator(mtick.MultipleLocator(500_000))
+    ax.yaxis.set_major_formatter(mtick.FuncFormatter(_millions))
+    ax.set_ylabel("Emergency food parcels distributed")
+    ax.set_xlabel("Reporting year ending")
+    ax.grid(axis="y")
+    ax.set_axisbelow(True)
+    ax.spines["left"].set_visible(False)
+    ax.legend(
+        loc="upper left",
+        frameon=False,
+        ncol=3,
+        handlelength=1.5,
+        columnspacing=1.5,
+    )
 
     fig.suptitle(
         "Emergency food parcels distributed by Trussell food banks",
         x=0.075,
-        y=0.972,
+        y=0.965,
         ha="left",
         fontsize=20,
         fontweight="bold",
@@ -184,8 +185,9 @@ def foodbank_chart(
     )
     fig.text(
         0.075,
-        0.925,
-        "UK totals. Child-recipient breakdowns are available from 2018/19.",
+        0.91,
+        "UK totals. Gold shows parcels distributed for children where the age "
+        "breakdown is available.",
         ha="left",
         fontsize=11,
         color=MUTED,
@@ -195,13 +197,13 @@ def foodbank_chart(
         fig,
         "Sources: Trussell archived reports and official 2023/24 fiscal dataset; "
         f"2025 calendar-year workbook. Accessed {ACCESSED_DATE}.\n"
-        "2005/06–2023/24 observations are financial years; the dotted final segment "
-        "leads to calendar-year 2025. Counts are distribution instances, not unique people.",
+        "2005/06–2023/24 are financial years; the final bar is calendar-year 2025. "
+        "Counts are distribution instances, not unique people.",
         x=0.075,
-        y=0.018,
+        y=0.022,
     )
 
-    fig.subplots_adjust(left=0.075, right=0.975, top=0.86, bottom=0.13)
+    fig.subplots_adjust(left=0.075, right=0.975, top=0.84, bottom=0.15)
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, dpi=220, bbox_inches="tight", pad_inches=0.15, facecolor=BG)

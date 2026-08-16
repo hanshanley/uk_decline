@@ -1,4 +1,4 @@
-"""Regression tests for scorecard input validation and annual completeness."""
+"""Regression tests for scorecard input validation and derived indicators."""
 
 from __future__ import annotations
 
@@ -7,29 +7,26 @@ import csv
 import scorecard
 
 
-def test_rail_delays_excludes_incomplete_year(tmp_path, monkeypatch):
-    path = tmp_path / "rail_performance.csv"
-    fields = ["region", "year", "quarter", "metric", "value"]
+def test_fraud_share_uses_matching_headline_totals(tmp_path, monkeypatch):
+    path = tmp_path / "crime_csew_long.csv"
+    fields = ["offence_group", "year", "value"]
     with path.open("w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=fields)
         writer.writeheader()
-        for quarter, value in zip(("Q1", "Q2", "Q3", "Q4"), (2.0, 3.0, 4.0, 5.0)):
+        for year, excl, incl in ((2017, 60, 100), (2018, 50, 100)):
             writer.writerow({
-                "region": "London and South East",
-                "year": 2025,
-                "quarter": quarter,
-                "metric": "casl_pct",
-                "value": value,
+                "offence_group":
+                    "ALL CSEW HEADLINE CRIME EXCLUDING FRAUD AND COMPUTER MISUSE",
+                "year": year,
+                "value": excl,
             })
-        writer.writerow({
-            "region": "London and South East",
-            "year": 2026,
-            "quarter": "Q1",
-            "metric": "casl_pct",
-            "value": 9.0,
-        })
+            writer.writerow({
+                "offence_group": "ALL CSEW HEADLINE CRIME INCLUDING FRAUD AND COMPUTER MISUSE",
+                "year": year,
+                "value": incl,
+            })
     monkeypatch.setattr(scorecard, "DATA", tmp_path)
-    assert scorecard.rail_delays() == ([2025], [3.5])
+    assert scorecard.fraud_share() == ([2017, 2018], [40.0, 50.0])
 
 
 def test_main_reports_all_missing_inputs(tmp_path, monkeypatch, capsys):
