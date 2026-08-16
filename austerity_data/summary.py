@@ -36,7 +36,7 @@ def build_summary(source, output: Path | str = DEFAULT_SUMMARY) -> Path:
     ]
     for category, label in function_labels.items():
         trough, trough_year = trough_change(df, category)
-        series = indexed_function_series(df, category)
+        series = indexed_function_series(df, category, end_year=END_YEAR)
         end_change = float(series.iloc[-1]["index"] - 100)
         lines.append(
             f"| {label} | {trough:.1f}% ({trough_year}) | {end_change:+.1f}% |"

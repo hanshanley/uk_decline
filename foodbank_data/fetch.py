@@ -13,6 +13,7 @@ from .sources import RAW_DIR, SOURCES, Source
 GetBytes = Callable[[str], bytes]
 _ALLOWED_HOSTS = {
     "cms.trussell.org.uk",
+    "hub.foodbank.org.uk",
     "trusselltrustprod.prod.acquia-sites.com",
 }
 _MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024

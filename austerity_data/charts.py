@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "outputs" / "austerity" / "uk_austerity_spending_investment.png"
 BASE_YEAR = "2010-11"
 END_YEAR = "2019-20"
+LATEST_YEAR = "2025-26"
 START_YEAR = "2000-01"
 
 SERIES = {
@@ -36,7 +37,7 @@ def indexed_function_series(
     category: str,
     start_year: str = START_YEAR,
     base_year: str = BASE_YEAR,
-    end_year: str = END_YEAR,
+    end_year: str = LATEST_YEAR,
 ) -> pd.DataFrame:
     """Return a linked official-vintage index with ``base_year=100``.
 
@@ -122,190 +123,122 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     df = _load(source)
     house_style()
 
-    fig = plt.figure(figsize=(15.2, 9.6), facecolor=BG)
+    fig = plt.figure(figsize=(14.2, 10.6), facecolor=BG)
     grid = fig.add_gridspec(
-        2,
-        2,
-        width_ratios=[2.15, 1],
-        height_ratios=[1.45, 1],
-        hspace=0.42,
+        2, 4,
+        height_ratios=[1.15, 1],
+        hspace=0.68,
         wspace=0.28,
     )
-    ax_lines = fig.add_subplot(grid[0, 0])
-    ax_bars = fig.add_subplot(grid[0, 1])
+    service_axes = [fig.add_subplot(grid[0, i]) for i in range(4)]
     ax_invest = fig.add_subplot(grid[1, :])
 
     fig.suptitle(
-        "Austerity did not shrink every budget equally",
-        x=0.055,
-        y=0.985,
+        "UK public spending before and after austerity",
+        x=0.06,
+        y=0.978,
         ha="left",
-        fontsize=25,
+        fontsize=22,
         fontweight="bold",
         color=TEXT,
     )
     fig.text(
-        0.057,
-        0.932,
-        "By 2019, the IFS estimated £40bn had been cut from departmental spending. "
-        "Protected health rose; housing, culture, policing and investment absorbed the squeeze.",
+        0.062,
+        0.934,
+        "Selected services in real terms, indexed to 2010–11 = 100; "
+        "public sector net investment shown as a share of GDP.",
         ha="left",
-        fontsize=13.5,
+        fontsize=13,
         color=MUTED,
     )
 
-    # Panel A: two decades of real functional spending around austerity.
-    for category, (label, color, width) in SERIES.items():
+    # Four small multiples avoid the misleading visual tangle of differently shaped series.
+    panel_order = [
+        "housing_community",
+        "public_order_safety",
+        "recreation_culture",
+        "health",
+    ]
+    panel_titles = {
+        "housing_community": "Housing & community",
+        "public_order_safety": "Public safety",
+        "recreation_culture": "Culture & recreation",
+        "health": "Health",
+    }
+    for ax, category in zip(service_axes, panel_order):
+        _label_text, color, _width = SERIES[category]
         series = indexed_function_series(df, category)
-        ax_lines.plot(
+        ax.axvspan(2010, 2019.9, color=ACCENT, alpha=0.055, linewidth=0)
+        ax.plot(
             series["year"],
             series["index"],
             color=color,
-            linewidth=width,
-            marker="o",
-            markersize=4.5,
-            markeredgecolor=BG,
-            markeredgewidth=0.8,
+            linewidth=2.8,
             zorder=4,
         )
+        ax.scatter(series["year"], series["index"], s=10, color=color, zorder=5)
+        ax.axhline(100, color=TEXT, linewidth=0.8, alpha=0.45)
         last = series.iloc[-1]
-        _label(
-            ax_lines,
-            float(last["year"]),
-            float(last["index"]),
-            f"{label}  {last['index']:.0f}",
-            color,
-        )
-
-    ax_lines.axvspan(2000, 2009.9, color=BLUE, alpha=0.035, linewidth=0)
-    ax_lines.text(
-        2000.25,
-        119.2,
-        "PRE-AUSTERITY EXPANSION",
-        color=BLUE,
-        fontsize=8.5,
-        fontweight="bold",
-    )
-    ax_lines.axhline(100, color=TEXT, linewidth=0.8, alpha=0.45)
-    ax_lines.text(2010.05, 101.2, "2010–11 level", color=MUTED, fontsize=9.5)
-    ax_lines.set_title(
-        "Two decades of real public spending by function",
-        loc="left",
-        fontsize=16,
-        pad=12,
-    )
-    ax_lines.text(
-        0,
-        1.01,
-        "Index, 2010–11 = 100",
-        transform=ax_lines.transAxes,
-        color=MUTED,
-        fontsize=10,
-    )
-    ax_lines.set_xlim(1999.7, 2022.35)
-    ax_lines.set_ylim(48, 130)
-    ax_lines.set_xticks([2000, 2005, 2010, 2015, 2019])
-    ax_lines.set_xticklabels(
-        ["2000–01", "2005–06", "2010–11", "2015–16", "2019–20"]
-    )
-    ax_lines.yaxis.set_major_formatter(mticker.FormatStrFormatter("%.0f"))
-    _style_axis(ax_lines)
-
-    housing = indexed_function_series(df, "housing_community")
-    austerity_housing = housing[housing["financial_year"] >= BASE_YEAR]
-    low = austerity_housing.loc[austerity_housing["index"].idxmin()]
-    ax_lines.annotate(
-        f"Housing bottomed at {low['index']:.0f}\n({low['financial_year']})",
-        xy=(low["year"], low["index"]),
-        xytext=(2011.4, 59),
-        color=ACCENT,
-        fontsize=10.5,
-        fontweight="bold",
-        arrowprops={"arrowstyle": "-", "color": ACCENT, "lw": 1.2},
-    )
-
-    # Panel B: the deepest fall each selected service experienced by 2019-20.
-    bar_categories = [
-        "housing_community",
-        "recreation_culture",
-        "public_order_safety",
-        "defence",
-        "health",
-    ]
-    labels = {
-        "housing_community": "Housing & community",
-        "recreation_culture": "Culture & recreation",
-        "public_order_safety": "Public order & safety",
-        "defence": "Defence",
-        "health": "Health",
-    }
-    colors = [ACCENT, GOLD, BLUE, MUTED, GREEN]
-    changes = [trough_change(df, category) for category in bar_categories]
-    values = [change for change, _year in changes]
-    y = list(range(len(bar_categories)))
-    ax_bars.barh(y, values, color=colors, height=0.58, alpha=0.95)
-    ax_bars.axvline(0, color=TEXT, linewidth=0.8)
-    for pos, value, (_change, year), color in zip(y, values, changes, colors):
-        ax_bars.text(
-            -1.1 if value < -5 else value + 0.7,
-            pos,
-            f"{value:.0f}%",
-            va="center",
-            ha="right" if value < -5 else "left",
-            color="white" if value < -5 else color,
-            fontsize=10.5,
+        first = series.iloc[0]
+        ax.text(
+            0.02, 0.93,
+            panel_titles[category],
+            transform=ax.transAxes,
+            fontsize=11.8,
             fontweight="bold",
-        )
-        ax_bars.text(
-            -35.8,
-            pos + 0.31,
-            f"trough {year}",
-            color=MUTED,
-            fontsize=8.3,
+            color=TEXT,
             va="top",
         )
-    ax_bars.set_yticks([])
-    for pos, category in zip(y, bar_categories):
-        ax_bars.text(
-            -37.2,
-            pos - 0.12,
-            labels[category],
-            color=TEXT,
-            fontsize=10.2,
-            va="center",
-            ha="left",
+        ax.text(
+            0.02, 0.83,
+            f"{first['index']:.0f} in 2000  ·  {last['index']:.0f} in 2025",
+            transform=ax.transAxes,
+            fontsize=9.2,
+            color=color,
+            fontweight="bold",
+            va="top",
         )
-    ax_bars.invert_yaxis()
-    ax_bars.set_xlim(-38, 4)
-    ax_bars.set_title("Deepest real-terms fall", loc="left", fontsize=16, pad=12)
-    ax_bars.text(
-        0,
-        1.01,
-        "From 2010–11, through 2019–20",
-        transform=ax_bars.transAxes,
-        color=MUTED,
-        fontsize=10,
-    )
-    ax_bars.xaxis.set_major_formatter(mticker.PercentFormatter(xmax=100, decimals=0))
-    ax_bars.grid(axis="x")
-    ax_bars.spines["left"].set_visible(False)
-    ax_bars.spines["bottom"].set_visible(False)
-    ax_bars.tick_params(axis="x", labelbottom=False)
+        ax.set_xlim(1999.7, 2025.4)
+        ax.set_ylim(45, 170)
+        ax.set_xticks([2000, 2010, 2020, 2025])
+        ax.set_xticklabels(["2000", "2010", "2020", "2025"])
+        ax.set_yticks([50, 75, 100, 125, 150])
+        ax.grid(axis="y")
+        ax.set_axisbelow(True)
+        ax.spines["left"].set_visible(False)
+        ax.spines["bottom"].set_color(GRID)
+        if ax is service_axes[0]:
+            ax.set_ylabel("Index (2010–11 = 100)", fontsize=10)
+        else:
+            ax.set_yticklabels([])
 
-    # Panel C: public sector net investment, with the austerity period shaded.
+    fig.text(
+        0.062,
+        0.862,
+        "Real public spending by function, 2000–01 to 2025–26",
+        fontsize=15.5,
+        fontweight="bold",
+        color=TEXT,
+    )
+    fig.text(
+        0.94,
+        0.862,
+        "shading marks 2010–19",
+        ha="right",
+        fontsize=9.5,
+        color=MUTED,
+    )
+
+    # Public sector net investment, with the austerity period shaded.
     investment = df[
         (df["metric"] == "public_sector_net_investment_pct_gdp")
         & (df["year"] >= 2000)
-        & (df["year"] <= 2019)
+        & (df["financial_year"] <= LATEST_YEAR)
     ].sort_values("year")
     ax_invest.axvspan(2010, 2019.9, color=ACCENT, alpha=0.07, linewidth=0)
-    ax_invest.fill_between(
-        investment["year"],
-        investment["value"],
-        0,
-        color=ACCENT,
-        alpha=0.16,
-    )
+    ax_invest.axvspan(2020, 2021.9, color=MUTED, alpha=0.06, linewidth=0)
+    ax_invest.fill_between(investment["year"], investment["value"], 0,
+                           color=ACCENT, alpha=0.13)
     ax_invest.plot(
         investment["year"],
         investment["value"],
@@ -319,35 +252,26 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     austerity_investment = investment[investment["financial_year"] >= BASE_YEAR]
     trough = austerity_investment.loc[austerity_investment["value"].idxmin()]
     start = investment[investment["financial_year"] == BASE_YEAR].iloc[0]
-    ax_invest.annotate(
-        f"{start['value']:.1f}% of GDP",
-        (start["year"], start["value"]),
-        xytext=(2009.25, 2.72),
-        fontsize=11,
-        color=TEXT,
-        fontweight="bold",
-        arrowprops={"arrowstyle": "-", "color": MUTED, "lw": 1},
-    )
-    ax_invest.annotate(
-        f"{trough['value']:.1f}% — the low",
-        (trough["year"], trough["value"]),
-        xytext=(2014.2, 1.25),
-        fontsize=11,
-        color=ACCENT,
-        fontweight="bold",
-        arrowprops={"arrowstyle": "-", "color": ACCENT, "lw": 1.2},
-    )
+    ax_invest.scatter([start["year"], trough["year"]],
+                      [start["value"], trough["value"]],
+                      s=42, color=[TEXT, ACCENT], edgecolor=BG, linewidth=1, zorder=6)
+    ax_invest.text(start["year"], start["value"] + 0.18,
+                   f"{start['value']:.1f}%", ha="center", fontsize=11,
+                   color=TEXT, fontweight="bold")
+    ax_invest.text(trough["year"], trough["value"] - 0.28,
+                   f"{trough['value']:.1f}% low", ha="center", fontsize=11,
+                   color=ACCENT, fontweight="bold")
     ax_invest.text(
-        2010.25,
-        3.22,
-        "AUSTERITY PERIOD",
-        color=ACCENT,
+        2010.2,
+        3.18,
+        "2010–19",
+        color=MUTED,
         fontsize=9,
-        fontweight="bold",
+        style="italic",
         alpha=0.9,
     )
     ax_invest.set_title(
-        "Public sector net investment was cut first",
+        "Public sector net investment",
         loc="left",
         fontsize=16,
         pad=12,
@@ -355,16 +279,16 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     ax_invest.text(
         0,
         1.01,
-        "Net capital investment as a share of GDP",
+        "Per cent of GDP",
         transform=ax_invest.transAxes,
         color=MUTED,
         fontsize=10,
     )
-    ax_invest.set_xlim(1999.7, 2019.4)
-    ax_invest.set_ylim(0, 3.4)
-    ax_invest.set_xticks([2000, 2005, 2010, 2013, 2016, 2019])
+    ax_invest.set_xlim(1999.7, 2025.4)
+    ax_invest.set_ylim(0, 3.35)
+    ax_invest.set_xticks([2000, 2005, 2010, 2015, 2020, 2025])
     ax_invest.set_xticklabels(
-        ["2000–01", "2005–06", "2010–11", "2013–14", "2016–17", "2019–20"]
+        ["2000–01", "2005–06", "2010–11", "2015–16", "2020–21", "2025–26"]
     )
     ax_invest.yaxis.set_major_formatter(
         mticker.FuncFormatter(
@@ -376,11 +300,11 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
 
     fig.text(
         0.057,
-        0.035,
-        "Note: Functional series for 2000–01 to 2002–03 use PESA 2012 and later "
-        "years use PSS 2026; each vintage is indexed to its own 2010–11 value "
-        "(their 2003–04 overlap differs by no more than one index point). Troughs "
-        "are minima through 2019–20. Education is omitted because of an accounting break.",
+        0.041,
+        "Note: 2000–01 to 2002–03 use PESA 2012; later years use PSS 2026. Each "
+        "vintage is indexed to its own 2010–11 value; their overlap differs by no "
+        "more than one index point.\nEducation is omitted because of an accounting "
+        "break. Net investment is after depreciation and includes net capital grants.",
         ha="left",
         fontsize=8.4,
         color=MUTED,
@@ -388,10 +312,9 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     )
     fig.text(
         0.057,
-        0.014,
-        "Source: HM Treasury, PESA 2012 Table 4.3 and Public Spending Statistics, "
-        "July 2026, Tables 4.1 and 4.3. Context: New York Times, 24 Feb. 2019, citing the Institute "
-        "for Fiscal Studies (£40bn departmental cuts; some budgets cut 30–40%).",
+        0.015,
+        "Source: HM Treasury, PESA 2012 Table 4.3 and Public Spending Statistics "
+        "July 2026, Tables 4.1 and 4.3. Context: New York Times / IFS, 2019.",
         ha="left",
         fontsize=8.4,
         color=MUTED,
@@ -400,7 +323,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
 
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    fig.subplots_adjust(left=0.07, right=0.95, top=0.84, bottom=0.11)
+    fig.subplots_adjust(left=0.065, right=0.955, top=0.79, bottom=0.12)
     fig.savefig(output, dpi=220, bbox_inches="tight", facecolor=BG)
     plt.close(fig)
     return output

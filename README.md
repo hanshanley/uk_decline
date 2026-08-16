@@ -103,8 +103,7 @@ has become *more* concentrated in the capital over the past quarter-century.
 *Source: ONS, Regional economic activity by GDP (current prices, all ITL regions).*
 
 ### Crime — the fall is real, but crime has shifted online
-![Total CSEW crime, England & Wales](outputs/crime/crime_csew_total.png)
-![Homicide rates across UK jurisdictions since 2000](outputs/crime/crime_homicide_nations.png)
+![CSEW crime including and excluding fraud](outputs/crime/crime_fraud_gap.png)
 Traditional victim-based crime has **fallen dramatically** — from a **19.8M** peak (1995) to
 **~4.3M** incidents (2026) on the Crime Survey for England & Wales. But once **fraud and
 computer misuse** are counted (measured from 2017), total crime is **~9.6M — roughly double**

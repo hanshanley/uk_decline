@@ -4,7 +4,7 @@ This analysis turns the fiscal story described by the
 [New York Times in February 2019](https://www.nytimes.com/2019/02/24/world/europe/britain-austerity-may-budget.html)
 into a reproducible chart using current official UK outturn data.
 
-The chart now starts in **2000–01**. HM Treasury's current functional table begins
+The chart now runs from **2000–01 through 2025–26**. HM Treasury's current functional table begins
 in 2003–04, so the first three observations come from the official PESA 2012
 historical table. Both vintages are indexed independently to 2010–11 = 100; at
 their 2003–04 overlap they differ by no more than one index point.

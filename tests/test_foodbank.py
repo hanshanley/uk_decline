@@ -12,9 +12,11 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from foodbank_data import charts, fetch, parse  # noqa: E402
+from foodbank_data import charts, fetch, history, parse  # noqa: E402
 from foodbank_data.sources import (  # noqa: E402
     CALENDAR_SOURCE,
+    FISCAL_ARCHIVE,
+    FISCAL_SLIDES_SOURCE,
     MIDYEAR_SOURCE,
     OUTPUT_DIR,
     RAW_DIR,
@@ -111,6 +113,50 @@ def test_official_workbooks_match_headlines() -> None:
     assert latest_midyear["change_vs_2019_pct"] == pytest.approx(69.277206, abs=1e-6)
 
 
+def test_historical_archive_starts_with_observation_not_zero() -> None:
+    frame = history.load_archive(FISCAL_ARCHIVE)
+    assert frame.iloc[0]["period_label"] == "2005/06"
+    assert int(frame.iloc[0]["total"]) == 2_814
+    assert int(frame.iloc[-1]["total"]) == 1_332_952
+    assert frame["start_year"].min() == 2005
+    assert (frame["total"] > 0).all()
+    assert 2000 not in frame["start_year"].tolist()
+
+
+def test_official_fiscal_pptx_embedded_table() -> None:
+    frame = history.parse_official_fiscal_pptx(
+        FISCAL_SLIDES_SOURCE.path(RAW_DIR)
+    )
+    assert frame["period_label"].tolist() == [
+        "2018/19",
+        "2019/20",
+        "2020/21",
+        "2021/22",
+        "2022/23",
+        "2023/24",
+    ]
+    assert int(frame.iloc[0]["total"]) == 1_606_810
+    assert int(frame.iloc[-1]["total"]) == 3_121_404
+    assert int(frame.iloc[-1]["adults"]) == 1_977_308
+    assert int(frame.iloc[-1]["children"]) == 1_144_096
+
+
+def test_fiscal_series_preserves_comparability_break() -> None:
+    frame = history.build_fiscal_history(
+        FISCAL_ARCHIVE,
+        FISCAL_SLIDES_SOURCE.path(RAW_DIR),
+    )
+    assert len(frame) == 19
+    groups = frame.groupby("comparability_group", sort=False)
+    assert groups["period_label"].first().to_dict() == {
+        "historical_archive": "2005/06",
+        "modern_fiscal": "2018/19",
+    }
+    first_modern = frame.loc[frame["period_label"] == "2018/19"].iloc[0]
+    assert pd.isna(first_modern["change_within_series_pct"])
+    assert set(frame["period_type"]) == {"financial_year"}
+
+
 def test_download_is_offline_testable() -> None:
     fake_xlsx = io.BytesIO()
     with zipfile.ZipFile(fake_xlsx, "w") as archive:
@@ -133,10 +179,15 @@ def test_download_is_offline_testable() -> None:
 def test_charts_render_from_official_data() -> None:
     annual = parse.parse_calendar_years(CALENDAR_SOURCE.path(RAW_DIR))
     midyear = parse.parse_midyear(MIDYEAR_SOURCE.path(RAW_DIR))
+    fiscal = history.build_fiscal_history(
+        FISCAL_ARCHIVE,
+        FISCAL_SLIDES_SOURCE.path(RAW_DIR),
+    )
     test_dir = OUTPUT_DIR / ".test"
     try:
-        written = charts.make_charts(annual, midyear, test_dir)
+        written = charts.make_charts(annual, midyear, fiscal, test_dir)
         assert {path.name for path in written} == {
+            "trussell_food_parcels_history.png",
             "trussell_food_parcels_annual.png",
             "trussell_food_parcels_midyear.png",
         }
