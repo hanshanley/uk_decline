@@ -1,4 +1,4 @@
-"""Single indexed chart comparing sterling against major currencies."""
+"""Single chart of major-currency strength against sterling."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import pandas as pd
 from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, MUTED, TEXT, house_style, source_note
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT = ROOT / "outputs" / "sterling" / "sterling_exchange_rates_indexed.png"
+DEFAULT_OUTPUT = ROOT / "outputs" / "sterling" / "sterling_currency_strength.png"
 
 SERIES = {
     "USD": ("US dollar", ACCENT),
@@ -25,29 +25,36 @@ def _load(source) -> pd.DataFrame:
     return source.copy() if hasattr(source, "columns") else pd.read_csv(source)
 
 
-def index_to_year(frame: pd.DataFrame, base_year: int = 2000) -> pd.DataFrame:
-    """Index each currency's exchange rate to ``base_year = 100``."""
-    indexed = frame.copy()
+def currency_strength_change(
+    frame: pd.DataFrame, base_year: int = 2000
+) -> pd.DataFrame:
+    """Return each foreign currency's percentage change against sterling.
+
+    Input values are foreign-currency units bought by £1. Inverting the ratio gives
+    the pound value of one foreign-currency unit. Positive values therefore mean
+    the foreign currency strengthened against sterling since ``base_year``.
+    """
+    result = frame.copy()
     bases = (
-        indexed[indexed["year"] == base_year]
+        result[result["year"] == base_year]
         .set_index("currency")["value"]
         .to_dict()
     )
     missing = set(SERIES) - set(bases)
     if missing:
         raise ValueError(f"missing {base_year} observations for {sorted(missing)}")
-    indexed["index"] = indexed.apply(
-        lambda row: float(row["value"]) / float(bases[row["currency"]]) * 100,
+    result["change_pct"] = result.apply(
+        lambda row: (float(bases[row["currency"]]) / float(row["value"]) - 1) * 100,
         axis=1,
     )
-    return indexed
+    return result
 
 
 def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
-    """Render all currencies on one comparable 2000=100 scale."""
+    """Render all currencies as changes in value against the pound."""
     frame = _load(source)
     frame = frame[frame["period_status"] == "full_year"].copy()
-    frame = index_to_year(frame)
+    frame = currency_strength_change(frame)
     house_style()
 
     fig, ax = plt.subplots(figsize=(13.5, 7.6))
@@ -58,14 +65,14 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         last = sub.iloc[-1]
         ax.plot(
             sub["year"],
-            sub["index"],
+            sub["change_pct"],
             color=color,
             linewidth=2.8,
             solid_capstyle="round",
         )
         ax.scatter(
             [last["year"]],
-            [last["index"]],
+            [last["change_pct"]],
             s=36,
             color=color,
             edgecolor=BG,
@@ -74,8 +81,8 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         )
         ax.text(
             float(last["year"]) + 0.35,
-            float(last["index"]),
-            f"{label}  {last['index']:.0f}",
+            float(last["change_pct"]),
+            f"{label}  {last['change_pct']:+.0f}%",
             color=color,
             fontsize=10.5,
             fontweight="bold",
@@ -83,20 +90,26 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
             ha="left",
         )
 
-    ax.axhline(100, color=TEXT, linewidth=0.9, alpha=0.45)
-    ax.text(2000.1, 102.5, "2000 = 100", color=MUTED, fontsize=9.5)
-    ax.set_xlim(1999.7, latest_year + 3.1)
-    ax.set_ylim(35, 145)
+    ax.axhline(0, color=TEXT, linewidth=0.9, alpha=0.5)
+    ax.text(
+        2000.1,
+        4,
+        "unchanged from 2000",
+        color=MUTED,
+        fontsize=9.5,
+    )
+    ax.set_xlim(1999.7, latest_year + 3.3)
+    ax.set_ylim(-30, 150)
     ax.set_xticks([2000, 2005, 2010, 2015, 2020, 2025])
-    ax.set_yticks([40, 60, 80, 100, 120, 140])
-    ax.yaxis.set_major_formatter(mtick.FormatStrFormatter("%.0f"))
-    ax.set_ylabel("Foreign currency bought by £1 (index, 2000 = 100)")
+    ax.set_yticks([-20, 0, 20, 40, 60, 80, 100, 120, 140])
+    ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=0))
+    ax.set_ylabel("Change in value against the pound since 2000")
     ax.grid(axis="y")
     ax.set_axisbelow(True)
     ax.spines["left"].set_visible(False)
 
     fig.suptitle(
-        "The pound against major currencies",
+        "How major currencies have moved against the pound",
         x=0.065,
         y=0.965,
         ha="left",
@@ -107,7 +120,8 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     fig.text(
         0.067,
         0.91,
-        "Foreign currency bought by £1, indexed to 2000. Higher means a stronger pound.",
+        "Cumulative change since 2000. Above zero means the foreign currency "
+        "has strengthened against sterling.",
         ha="left",
         fontsize=11.5,
         color=MUTED,
@@ -120,7 +134,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         x=0.065,
         y=0.02,
     )
-    fig.subplots_adjust(left=0.075, right=0.89, top=0.84, bottom=0.14)
+    fig.subplots_adjust(left=0.075, right=0.88, top=0.84, bottom=0.14)
 
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)

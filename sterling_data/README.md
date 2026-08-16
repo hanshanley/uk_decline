@@ -1,13 +1,13 @@
 # sterling_data — the value of the pound against major currencies
 
-![Sterling exchange rates](../outputs/sterling/sterling_exchange_rates_indexed.png)
+![Sterling exchange rates](../outputs/sterling/sterling_currency_strength.png)
 
 This analysis compares how much foreign currency **£1 buys** against the US dollar,
 euro, Japanese yen, and Swiss franc from 2000 through the latest complete year.
 
-All four currencies are shown on one comparable scale, indexed to **2000 = 100**.
-Values above 100 mean the pound buys more of that currency than in 2000; values below
-100 mean it buys less.
+All four currencies are shown as the **percentage change in their value against the
+pound since 2000**. Positive values mean the foreign currency strengthened against
+sterling; negative values mean it weakened.
 
 ## Source and method
 
