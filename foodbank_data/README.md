@@ -12,8 +12,8 @@ earliest exact nationwide annual count located in Trussell's archive is **2005/0
 2,814 people fed**, where the report describes each recipient as receiving three days'
 emergency food.
 
-The historical chart therefore begins its timeline in 2000, labels 2000–04 as
-**unreported rather than zero**, and starts quantitative bars in 2005/06.
+The primary chart therefore begins its timeline in 2000, treats 2000–04 as
+**unreported rather than zero**, and starts its quantitative line in 2005/06.
 
 There are three deliberately separate statistical series in the data:
 
@@ -60,9 +60,9 @@ reporting. The analysis therefore never joins the six-month and full-year series
 - `data/food_bank_fiscal_year.csv` — sourced fiscal history, 2005/06–2023/24,
   including source-vintage and comparability fields.
 - `outputs/food_banks/trussell_food_parcels.png` — the single primary chart:
-  a linear, long-run fiscal series from 2005/06 to 2023/24 plus a clearly separate
-  calendar-year tail through 2025. The axis begins in 2000, with pre-2005 years
-  explicitly described as unreported rather than zero.
+  aligned panels for all parcels and parcels distributed for children. The long-run
+  fiscal series reaches 2023/24; a short dotted segment carries each measure to the
+  latest calendar-year observation in 2025.
 - `outputs/food_banks/summary.md` — exact headline values, definitions, and citations.
 
 The raw official XLSX/PPTX files are preserved under `data/raw/food_bank_*`. The fetcher
@@ -92,8 +92,6 @@ Accessed **16 August 2026**:
 - Trussell, [official 2025 parcel-statistics XLSX](https://cms.trussell.org.uk/sites/default/files/2026-03/eys_2025_parcel_stats.xlsx).
 - Trussell, [Mid-year stats](https://www.trussell.org.uk/news-and-research/latest-stats/mid-year-stats).
 - Trussell, [official April–September 2024 XLSX](https://trusselltrustprod.prod.acquia-sites.com/sites/default/files/2024-11/MYS%202024%20parcel%20statistics%20%28web%29.xlsx).
-- The chart's 2016 context marker follows the
-  [Welfare Reform and Work Act 2016 explanatory notes](https://www.legislation.gov.uk/ukpga/2016/7/notes/division/3/index.htm).
 
 ## Definitions and caveats
 
@@ -105,4 +103,3 @@ Accessed **16 August 2026**:
   parcels received by a household containing children.
 - Trussell says some food banks had not completed data entry at publication and may
   revise earlier observations.
-- Policy and economic annotations are timing context, not causal claims.

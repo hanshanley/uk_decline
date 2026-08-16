@@ -89,9 +89,6 @@ the full-year chart.
   as parcels received by households that include children.
 - Trussell says some food banks had not completed data entry by publication, and
   earlier figures can be revised in later releases.
-- The charts' policy/economic labels provide timing context only; they do not claim
-  that any one event caused the observed change.
-
 ## Sources
 
 - Trussell, [Our story]({STORY_PAGE}) (2000 first food bank; network expansion from
@@ -113,8 +110,6 @@ the full-year chart.
   [official 2025 parcel-statistics workbook]({CALENDAR_SOURCE.url}).
 - Trussell, [Mid-year stats]({MID_YEAR_PAGE}) and
   [official April–September 2024 workbook]({MIDYEAR_SOURCE.url}).
-- Welfare Reform and Work Act 2016, explanatory notes on the four-year freeze:
-  <https://www.legislation.gov.uk/ukpga/2016/7/notes/division/3/index.htm>.
 - Accessed **{ACCESSED_DATE}**.
 """
     path = Path(path)
