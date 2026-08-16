@@ -91,13 +91,6 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         )
 
     ax.axhline(0, color=TEXT, linewidth=0.9, alpha=0.5)
-    ax.text(
-        2000.1,
-        4,
-        "unchanged from 2000",
-        color=MUTED,
-        fontsize=9.5,
-    )
     ax.set_xlim(1999.7, latest_year + 3.3)
     ax.set_ylim(-30, 150)
     ax.set_xticks([2000, 2005, 2010, 2015, 2020, 2025])
