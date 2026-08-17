@@ -94,6 +94,35 @@ def _with_year_gaps(series):
     return series.reindex(range(int(series.index.min()), int(series.index.max()) + 1))
 
 
+def _annotate_year_gaps(ax, series, label: str = "UK data unavailable") -> None:
+    """Shade and label contiguous missing-year runs in an annual series."""
+    missing = [int(year) for year, value in series.items() if value != value]
+    if not missing:
+        return
+    spans: list[tuple[int, int]] = []
+    start = previous = missing[0]
+    for year in missing[1:]:
+        if year == previous + 1:
+            previous = year
+            continue
+        spans.append((start, previous))
+        start = previous = year
+    spans.append((start, previous))
+    for start, end in spans:
+        ax.axvspan(start - 0.5, end + 0.5, color=MUTED, alpha=0.07, linewidth=0)
+        ax.text(
+            (start + end) / 2,
+            0.035,
+            f"{label}\n{start}\u2013{str(end)[-2:]}",
+            transform=ax.get_xaxis_transform(),
+            ha="center",
+            va="bottom",
+            fontsize=8.2,
+            color=MUTED,
+            style="italic",
+        )
+
+
 def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     """Render a single metric's per-region trend chart. Returns the path or None."""
     plt = _plt()
@@ -123,6 +152,8 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
             color=regions.COLOURS.get(code),
             zorder=5 if is_uk else 3,
         )
+        if is_uk:
+            _annotate_year_gaps(ax, annual)
 
     ax.set_title(meta.label, fontweight="bold", pad=14)
     ax.set_xlabel("Year", labelpad=2)
@@ -174,8 +205,8 @@ def chart_uk_us_ratio(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     # it just strands the whole series at the bottom of an empty axis.
     if top >= 60:
         ax.axhline(100, color=MUTED, linewidth=0.9, linestyle="--", alpha=0.7)
-        ax.text(pct.index[0], 101, "UK = US (parity)", fontsize=9, color=MUTED,
-                style="italic", va="bottom")
+        ax.text(pct.index[-1], 101, "UK = US (parity)", fontsize=9, color=MUTED,
+                style="italic", va="bottom", ha="right")
         ax.set_ylim(0, max(top * 1.12, 105))
     else:
         ax.set_ylim(0, top * 1.18)
@@ -192,6 +223,7 @@ def chart_uk_us_ratio(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ax.grid(axis="y")
     ax.set_axisbelow(True)
     ax.margins(x=0.03)
+    _annotate_year_gaps(ax, pct)
     _footnote(fig, _source_note(metric_id))
     fig.tight_layout(rect=[0, 0.02, 1, 1])
 

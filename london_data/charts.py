@@ -72,7 +72,6 @@ def _line_chart(df, metric, title, subtitle_fn, ylabel, filename, out_dir,
 
 def _chart_share(df, out_dir):
     def decorate(ax, x, y):
-        ax.fill_between(x, y, y.min() - 0.5, color=vs.ACCENT, alpha=0.08)
         for xi, yi, ha in ((x.iloc[0], y.iloc[0], "right"), (x.iloc[-1], y.iloc[-1], "left")):
             ax.plot([xi], [yi], "o", color=vs.ACCENT, markersize=6)
             label = f"  {yi:.1f}%" if ha == "left" else f"{yi:.1f}%  "

@@ -69,8 +69,7 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
     ]
     vals = [agg[r]["median_annual"] for r in order]
     means = [agg[r]["mean_annual"] for r in order]
-    colors = [(theme.ACCENT if r == config.UK else theme.TEXT if r == config.US else theme.GREEN)
-              for r in order]
+    colors = [REGION_COLOR[r] for r in order]
 
     fig, ax = plt.subplots(figsize=(11, 5.4))
     ypos = list(range(len(order)))
@@ -129,8 +128,10 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
             ax.annotate(_money(v), (v, i), ha="left", va="center", fontsize=8,
                         color=theme.TEXT, xytext=(3, 0), textcoords="offset points")
         else:
+            ax.plot(0, i, "o", color=theme.GREEN, markersize=4.5, zorder=4)
             ax.annotate("$0", (0, i), ha="left", va="center", fontsize=8,
-                        color=theme.MUTED, xytext=(3, 0), textcoords="offset points")
+                        color=theme.GREEN, fontweight="bold",
+                        xytext=(7, 0), textcoords="offset points")
 
     handles = [plt.Rectangle((0, 0), 1, 1, color=REGION_COLOR[r]) for r in (config.UK, config.EU, config.US)]
     ax.legend(handles, [REGION_LABELS[r] for r in (config.UK, config.EU, config.US)],

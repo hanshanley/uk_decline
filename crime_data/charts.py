@@ -234,7 +234,6 @@ def chart_fraud_gap(df, out_dir):
         xy=(xi.iloc[-2], (yi.iloc[-2] + ye.iloc[-2]) / 2),
         xytext=(-48, 0), textcoords="offset points", ha="right", va="center",
         fontsize=9, color=MUTED,
-        arrowprops={"arrowstyle": "-", "color": GRID, "lw": 0.8},
     )
     _style_incidents_axes(
         ax,
