@@ -91,19 +91,23 @@ def headline_bars(rows: list[dict], out_path: str, year: Optional[int] = None) -
         ("tax_wedge_pct", "single_nokids", "100aw", "Labour tax wedge\n(avg-wage worker)"),
         ("net_personal_avg_tax_rate_pct", "single_nokids", "100aw", "Net personal\navg tax rate"),
     ]
+    variant_rows = [
+        (_variant_rows(rows, metric, hh, aw), label)
+        for metric, hh, aw, label in variants
+    ]
+    if year is None:
+        latest = [_latest_year(recs) for recs, _label in variant_rows]
+        latest = [value for value in latest if value is not None]
+        year = min(latest) if latest else None
     labels: list[str] = []
     series: dict[str, list[float]] = {"uk": [], "europe_median": [], "us": []}
-    used_year: Optional[int] = None
-    for metric, hh, aw, label in variants:
-        recs = _variant_rows(rows, metric, hh, aw)
-        target = year if year is not None else _latest_year(recs)
-        if target is None:
+    for recs, label in variant_rows:
+        if year is None:
             continue
-        vals = _region_values([r for r in recs if r["year"] == target])
+        vals = _region_values([r for r in recs if r["year"] == year])
         if all(v is None for v in vals.values()):
             continue
         labels.append(label)
-        used_year = used_year or target
         for k in series:
             series[k].append(vals[k])
     if not labels:
@@ -140,7 +144,7 @@ def headline_bars(rows: list[dict], out_path: str, year: Optional[int] = None) -
     ax.yaxis.set_major_formatter(mtick.PercentFormatter())
     ax.set_ylabel("Tax burden")
     ax.set_title(
-        f"How the UK's tax burden compares, {used_year}", fontweight="bold", pad=14
+        f"How the UK's tax burden compares, {year}", fontweight="bold", pad=14
     )
     ax.legend(loc="upper right", frameon=False)
     return _finish(fig, ax, out_path)

@@ -51,18 +51,23 @@ Region summary: `data/processed/summary.csv`.
 The snapshot above is a nominal cross-section. The **fully primary-sourced, inflation-
 adjusted** view is the historical series in **constant 2022 USD** (`../outputs/tuition/tuition_history_real_usd.png`):
 
+England's source file records statutory change points. The pipeline carries each legally
+fixed **nominal** cap through the years in which it applies, then recalculates the market
+exchange-rate and inflation-adjusted value annually; real-dollar values are not held flat.
+
 | Year | UK (England cap) | US (public in-state) | Germany |
 |---|---:|---:|---:|
 | 1971 | $0 (free) | $3,115 | $0 |
 | 1998 | $2,973 | ~$5,880 | $0 |
 | 2012 | **$18,122** | $10,454 | $0 |
 | 2022 | $11,401 | $9,750 | $0 |
-| 2026 | $12,026 | — | — |
+| 2024 | $11,030 | — | — |
 
 **Key finding:** in real terms the UK went from **free (until 1998)** to **overtaking US
 public college in 2012** ($18,122 vs $10,454). The cap stayed at £9,250 from 2017 through
-2024/25, then rose to £9,535 in 2025/26 and a published £9,790 for 2026/27; that latest cap
-is worth about $12,026 in constant 2022 dollars. Germany (representative EU) has stayed free throughout.
+2024/25, then rose to £9,535 in 2025/26. Higher caps are published for 2025/26 and
+2026/27, but the real-dollar history does not plot them until same-year FX and CPI exist. Germany
+(representative EU) has stayed free throughout.
 
 Historical data: `data/processed/tuition_history.csv`.
 

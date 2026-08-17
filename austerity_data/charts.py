@@ -236,7 +236,6 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         & (df["financial_year"] <= LATEST_YEAR)
     ].sort_values("year")
     ax_invest.axvspan(2010, 2019.9, color=ACCENT, alpha=0.07, linewidth=0)
-    ax_invest.axvspan(2020, 2021.9, color=MUTED, alpha=0.06, linewidth=0)
     ax_invest.fill_between(investment["year"], investment["value"], 0,
                            color=ACCENT, alpha=0.13)
     ax_invest.plot(
@@ -285,7 +284,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         fontsize=10,
     )
     ax_invest.set_xlim(1999.7, 2025.4)
-    ax_invest.set_ylim(0, 3.35)
+    ax_invest.set_ylim(0, float(investment["value"].max()) * 1.08)
     ax_invest.set_xticks([2000, 2005, 2010, 2015, 2020, 2025])
     ax_invest.set_xticklabels(
         ["2000–01", "2005–06", "2010–11", "2015–16", "2020–21", "2025–26"]
@@ -302,8 +301,9 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         0.057,
         0.041,
         "Note: 2000–01 to 2002–03 use PESA 2012; later years use PSS 2026. Each "
-        "vintage is indexed to its own 2010–11 value; their overlap differs by no "
-        "more than one index point.\nEducation is omitted because of an accounting "
+        "vintage is indexed to its own 2010–11 value; at the 2003–04 seam the "
+        "panels differ by up to 3 index points, and by up to 7 across the full overlap.\n"
+        "Education is omitted because of an accounting "
         "break. Net investment is after depreciation and includes net capital grants.",
         ha="left",
         fontsize=8.4,

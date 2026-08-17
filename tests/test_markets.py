@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from markets_data import combine, markets, regions, worldbank  # noqa: E402
+from markets_data import charts, combine, markets, regions, worldbank  # noqa: E402
 
 
 def test_metric_indicator_mapping() -> None:
@@ -123,6 +123,16 @@ def test_to_wide_shape() -> None:
     # Missing metric for the US row is null, not an error.
     import pandas as pd
     assert pd.isna(us["market_cap_pct_gdp"])
+
+
+def test_chart_series_breaks_across_missing_years() -> None:
+    import pandas as pd
+
+    series = pd.Series([10.0, 20.0], index=[2014, 2021])
+    continuous = charts._with_year_gaps(series)
+    assert list(continuous.index) == list(range(2014, 2022))
+    assert pd.isna(continuous.loc[2015])
+    assert pd.isna(continuous.loc[2020])
 
 
 def _run() -> int:

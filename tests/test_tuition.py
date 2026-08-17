@@ -196,7 +196,28 @@ def test_nearest_year_lookup():
     assert build_history._nearest({}, 2000) is None
 
 
-def test_future_fee_cap_uses_latest_complete_world_bank_year(monkeypatch):
+def test_historical_uk_cap_expands_to_annual_policy_schedule():
+    rows = [
+        {
+            "country": "United Kingdom", "iso3": "GBR", "region": "UK",
+            "year": "2012", "annual_tuition_local": "9000", "currency": "GBP",
+            "source": "cap 2012", "source_url": "https://example.com/2012",
+        },
+        {
+            "country": "United Kingdom", "iso3": "GBR", "region": "UK",
+            "year": "2017", "annual_tuition_local": "9250", "currency": "GBP",
+            "source": "cap 2017", "source_url": "https://example.com/2017",
+        },
+    ]
+    expanded = build_history.expand_uk_fee_schedule(rows)
+    by_year = {int(row["year"]): float(row["annual_tuition_local"]) for row in expanded}
+    assert by_year == {
+        2012: 9000, 2013: 9000, 2014: 9000, 2015: 9000, 2016: 9000,
+        2017: 9250,
+    }
+
+
+def test_future_fee_cap_without_same_year_inputs_is_omitted(monkeypatch):
     calls = []
 
     def fake_fetch(indicator, iso3s, start, end):
@@ -213,7 +234,36 @@ def test_future_fee_cap_uses_latest_complete_world_bank_year(monkeypatch):
     }]
     out = build_history.deflate_manual(rows)
     assert out[0]["year"] == 2026
+    assert out[0]["real_2022_usd"] is None
     assert all(end <= build_history.dt.date.today().year - 1 for end in calls)
+
+
+def test_zero_fee_country_is_not_requested_from_fx_api(monkeypatch):
+    calls = []
+
+    def fake_fetch(indicator, iso3s, start, end):
+        calls.append((indicator, tuple(iso3s)))
+        if indicator == config.WB_CPI_INDICATOR:
+            return {"USA": {2022: 100.0}}
+        return {"GBR": {2022: 0.8}}
+
+    monkeypatch.setattr(build_history, "fetch_series", fake_fetch)
+    rows = [
+        {
+            "country": "United Kingdom", "iso3": "GBR", "region": "UK",
+            "year": "2022", "annual_tuition_local": "9250", "currency": "GBP",
+            "source": "UK", "source_url": "https://example.com/uk",
+        },
+        {
+            "country": "Germany", "iso3": "DEU", "region": "EU",
+            "year": "2022", "annual_tuition_local": "0", "currency": "EUR",
+            "source": "DE", "source_url": "https://example.com/de",
+        },
+    ]
+    out = build_history.deflate_manual(rows)
+    fx_calls = [iso3s for indicator, iso3s in calls if indicator == config.WB_FX_INDICATOR]
+    assert fx_calls == [("GBR",)]
+    assert next(row for row in out if row["iso3"] == "DEU")["real_2022_usd"] == 0
 
 
 def test_future_snapshot_uses_nearest_published_cpi(monkeypatch):

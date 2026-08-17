@@ -20,7 +20,7 @@ from tuition import config, theme
 # region key -> (label, colour, matplotlib draw style)
 SERIES = {
     config.US: ("US — public 4-year, in-state (NCES)", theme.GOLD, "line"),
-    config.UK: ("UK — England fee cap (statutory)", theme.ACCENT, "step"),
+    config.UK: ("UK — England fee cap (statutory)", theme.ACCENT, "line"),
     config.EU: ("Germany — public (representative EU)", theme.BLUE, "step"),
 }
 SOURCE_NOTE = (
@@ -35,6 +35,8 @@ def load_history() -> dict[str, list[tuple[int, float]]]:
     by_region: dict[str, list[tuple[int, float]]] = {}
     with open(config.HISTORY_OUT_CSV, newline="") as fh:
         for r in csv.DictReader(fh):
+            if r.get("real_2022_usd") in (None, ""):
+                continue
             by_region.setdefault(r["region"], []).append((int(r["year"]), float(r["real_2022_usd"])))
     for region in by_region:
         by_region[region].sort()

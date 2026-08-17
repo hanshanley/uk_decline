@@ -1,7 +1,7 @@
 """Generate trend charts from the combined NHS waiting-times table.
 
 One chart per canonical metric, with a line per nation over time. Charts are
-written to ``data/charts/``. Because metric definitions differ by nation
+written to ``outputs/nhs/``. Because metric definitions differ by nation
 (see :data:`nhs_data.metrics.CAVEATS`), each chart is framed as a per-nation
 *trend*, not a strict cross-nation comparison.
 """

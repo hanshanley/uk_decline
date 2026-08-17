@@ -168,21 +168,23 @@ def build(rows: list[dict], history: list[dict] | None = None,
         raise RuntimeError(f"no US CPI for the {BASE_YEAR} base year; cannot deflate")
 
     # The policy input is sparse (fee-change years), while the conversion inputs are annual.
-    # Expand only the legally fixed nominal England cap across the years for which all
-    # required official conversion series and the CPI are present.
-    uk_metric_years = {
-        year
-        for year in cpi
-        if all(
-            (metric, peers.UK, year) in values
-            for metric in (
-                "ppp_conversion_factor",
-                "gdp_per_capita_ppp_current",
-                "gdp_per_capita_nominal_usd",
-                "market_exchange_rate",
-            )
-        )
-    }
+    # Expand the cap wherever the four annual conversion/income series exist. CPI coverage
+    # may end earlier; that should suppress only the real-dollar lines, not the unit-free
+    # tuition-as-share-of-GDP series.
+    required_metrics = (
+        "ppp_conversion_factor",
+        "gdp_per_capita_ppp_current",
+        "gdp_per_capita_nominal_usd",
+        "market_exchange_rate",
+    )
+    uk_metric_years = set.intersection(*[
+        {
+            year
+            for metric, iso3, year in values
+            if metric == required and iso3 == peers.UK
+        }
+        for required in required_metrics
+    ])
     history = expand_uk_fee_schedule(history, uk_metric_years)
 
     out: list[TuitionPoint] = []

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import math
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
@@ -92,7 +93,9 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
 
     ax.axhline(0, color=TEXT, linewidth=0.9, alpha=0.5)
     ax.set_xlim(1999.7, latest_year + 3.3)
-    ax.set_ylim(-30, 150)
+    lo = math.floor((float(frame["change_pct"].min()) - 5) / 10) * 10
+    hi = math.ceil((float(frame["change_pct"].max()) + 5) / 10) * 10
+    ax.set_ylim(lo, hi)
     ax.set_xticks([2000, 2005, 2010, 2015, 2020, 2025])
     ax.set_yticks([-20, 0, 20, 40, 60, 80, 100, 120, 140])
     ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=0))

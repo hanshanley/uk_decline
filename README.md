@@ -3,11 +3,12 @@
 A data-driven look at the **United Kingdom's relative decline** across the economy, financial
 markets, public services, and society — benchmarked against the US and European peers.
 
-Every analysis is a **self-contained, reproducible pipeline** that pulls **only real,
-publicly-sourced data** from official APIs (World Bank, OECD, Eurostat, ONS, UK Home Office,
-UN Population Division via the World Bank, Maddison Project Database). **No values are
-hand-entered, mocked, interpolated, or synthesised** — each figure traces to a cited source,
-and monetary series are inflation-adjusted (real) unless explicitly labelled nominal.
+Every analysis is a **self-contained, reproducible pipeline** using **real,
+publicly-sourced data** from official APIs and cited primary-source tables (World Bank,
+OECD, Eurostat, ONS, UK Home Office, UN Population Division, Maddison Project Database).
+Some unavailable machine-readable tables are transcribed into curated source rows with
+row-level citations; no values are mocked, interpolated, or synthesised. Monetary series
+are inflation-adjusted (real) unless explicitly labelled nominal.
 
 ## Analyses
 
@@ -98,8 +99,10 @@ East reconstructed as a trains-weighted sector aggregate (validated against ORR'
 
 ### Tuition — England now costs more than US public tuition
 ![Tuition: UK vs US vs EU-27](outputs/tuition/tuition_region_comparison_real.png)
-The published 2026/27 English cap is **~$12.0k in constant 2022 dollars**, above US public
-tuition (~$10.8k), while most of the EU remains free.
+The latest fully observed English cap is **~$11.0k in constant 2022 dollars (2024)**,
+above the latest US public tuition observation (~$10.8k), while most of the EU remains
+free. Higher published caps are excluded from the real history until same-year FX and
+CPI exist.
 *Source: Eurydice / NCES / UK fee cap; constant 2022 USD (CPI-adjusted).*
 
 ### Institutional trust — confidence in government

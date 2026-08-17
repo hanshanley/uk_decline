@@ -147,7 +147,7 @@ def foodbank_chart(
     ax.text(
         latest["year"],
         latest["adults"] + latest["children"] / 2,
-        "912k\nchildren",
+        f"{latest['children'] / 1_000:.0f}k\nchildren",
         ha="center",
         va="center",
         fontsize=8.5,

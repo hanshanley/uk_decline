@@ -87,6 +87,13 @@ def _load(source):
     return pd.read_csv(source)
 
 
+def _with_year_gaps(series):
+    """Reindex an annual series so missing years break matplotlib lines."""
+    if series.empty:
+        return series
+    return series.reindex(range(int(series.index.min()), int(series.index.max()) + 1))
+
+
 def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     """Render a single metric's per-region trend chart. Returns the path or None."""
     plt = _plt()
@@ -103,9 +110,10 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     for code, g in sub.groupby("region_code"):
         region = regions.BY_CODE.get(code)
         is_uk = code == "GBR"
+        annual = _with_year_gaps(g.set_index("year")["value"])
         ax.plot(
-            g["year"],
-            g["value"],
+            annual.index,
+            annual.values,
             marker="o" if is_uk else None,
             markersize=4,
             markeredgecolor="white",
@@ -118,7 +126,8 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
 
     ax.set_title(meta.label, fontweight="bold", pad=14)
     ax.set_xlabel("Year", labelpad=2)
-    ax.set_ylabel(meta.unit, labelpad=2)
+    plotted_unit = str(sub["unit"].dropna().iloc[0]) if sub["unit"].notna().any() else meta.unit
+    ax.set_ylabel(plotted_unit, labelpad=2)
     if "US$" in meta.unit:
         ax.get_yaxis().set_major_formatter(
             mticker.FuncFormatter(lambda v, _p: markets.format_usd(v))
@@ -147,7 +156,7 @@ def chart_uk_us_ratio(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ratio = markets.uk_us_ratio(sub)
     if ratio is None:
         return None
-    pct = ratio * 100
+    pct = _with_year_gaps(ratio * 100)
     peak_year = int(pct.idxmax())
     peak_val = float(pct.max())
     last_year = int(pct.index[-1])

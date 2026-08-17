@@ -88,9 +88,12 @@ def uk_age_structure_over_time(rows: list[dict], out_path: str) -> Optional[str]
     ax.set_xlabel("Year")
     ax.set_ylabel("Share of UK population")
     ax.set_title("The UK is getting older: population by age group over time",
-                 fontweight="bold", pad=14)
+                 fontweight="bold", pad=38)
     handles, lbls = ax.get_legend_handles_labels()
-    ax.legend(handles[::-1], lbls[::-1], loc="center left", frameon=False)
+    ax.legend(
+        handles[::-1], lbls[::-1], loc="upper left",
+        bbox_to_anchor=(0, 1.04), ncol=3, frameon=False,
+    )
     return _finish(fig, ax, out_path)
 
 

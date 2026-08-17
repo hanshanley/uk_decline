@@ -266,6 +266,51 @@ def test_combine_dedupes_overlapping_rows(tmp_path):
 
 # --- charts -----------------------------------------------------------------
 
+def test_headline_bars_uses_one_common_year(monkeypatch, tmp_path):
+    from tax import charts
+
+    rows = []
+    for iso3, region_values in (
+        ("GBR", (34.0, 31.0, 24.0)),
+        ("USA", (26.0, 29.0, 21.0)),
+        ("FRA", (46.0, 40.0, 30.0)),
+    ):
+        tax_gdp, wedge, personal = region_values
+        rows.extend([
+            combine.make_row(iso3, 2024, "tax_to_gdp_pct", tax_gdp, "s"),
+            combine.make_row(
+                iso3, 2024, "tax_wedge_pct", wedge, "s",
+                "single_nokids", "100aw",
+            ),
+            combine.make_row(
+                iso3, 2024, "net_personal_avg_tax_rate_pct", personal, "s",
+                "single_nokids", "100aw",
+            ),
+            combine.make_row(
+                iso3, 2025, "tax_wedge_pct", 99.0, "s",
+                "single_nokids", "100aw",
+            ),
+            combine.make_row(
+                iso3, 2025, "net_personal_avg_tax_rate_pct", 98.0, "s",
+                "single_nokids", "100aw",
+            ),
+        ])
+
+    captured = {}
+
+    def fake_finish(fig, ax, out_path):
+        captured["title"] = ax.get_title()
+        captured["heights"] = [patch.get_height() for patch in ax.patches]
+        charts.plt.close(fig)
+        return out_path
+
+    monkeypatch.setattr(charts, "_finish", fake_finish)
+    charts.headline_bars(rows, str(tmp_path / "headline.png"))
+    assert captured["title"].endswith("2024")
+    # The UK series is drawn first: tax/GDP, wedge, personal rate.
+    assert captured["heights"][:3] == [34.0, 31.0, 24.0]
+
+
 def test_charts_render_all_writes_pngs(tmp_path):
     from tax import charts
 

@@ -2,7 +2,7 @@
 
 Each nation module exposes ``fetch(start_year, end_year) -> list[dict]`` returning
 rows with the :data:`nhs_data.metrics.ROW_FIELDS` schema. This module calls them
-all, concatenates the rows, and writes ``data/nhs_waiting_times.csv``.
+all, concatenates the rows, and writes ``outputs/nhs/nhs_waiting_times.csv``.
 """
 
 from __future__ import annotations

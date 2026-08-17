@@ -26,7 +26,8 @@ REGION_LABELS = config.REGION_LABELS
 REGION_COLOR = {config.UK: theme.ACCENT, config.EU: theme.BLUE, config.US: theme.GOLD}
 SOURCE_NOTE = (
     "Sources: Eurydice National Student Fee 2023/24 (EU-27); College Board Trends in "
-    "College Pricing 2024 (US, in-state public); UK fee cap. FX & CPI: World Bank."
+    "College Pricing 2024 (US, in-state public); UK 2026/27 fee cap. "
+    "The UK cap uses the latest available 2025 World Bank FX/CPI; source years differ."
 )
 
 
@@ -52,7 +53,20 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
     # Typical (median) annual fee per region; UK and US are ~single values so mean≈median,
     # and the EU median (~free) is the honest "typical" student experience.
     order = [r for r in (config.EU, config.US, config.UK) if r in agg]  # low -> high (barh)
-    labels = [REGION_LABELS[r] for r in order]
+    region_year = {}
+    for region in order:
+        years = [
+            int(row["year"])
+            for row in rows
+            if row["region"] == region and row.get("year") not in (None, "")
+        ]
+        region_year[region] = max(years) if years else None
+    labels = [
+        f"{REGION_LABELS[r]} ({region_year[r]})"
+        if region_year[r] is not None
+        else REGION_LABELS[r]
+        for r in order
+    ]
     vals = [agg[r]["median_annual"] for r in order]
     means = [agg[r]["mean_annual"] for r in order]
     colors = [(theme.ACCENT if r == config.UK else theme.TEXT if r == config.US else theme.GREEN)
@@ -82,7 +96,7 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
     ax.set_xlabel(f"Annual tuition & fees ({unit})")
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
     ax.set_xlim(0, max(vals) * 1.4)
-    ax.set_title("The UK now charges US-level university tuition \u2014 while the rest of the EU is free\n"
+    ax.set_title("Latest published domestic tuition — source years differ\n"
                  "public universities, domestic / in-state students",
                  fontweight="bold", pad=14)
     ax.grid(axis="x", linestyle="-", linewidth=0.5)
@@ -103,7 +117,8 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
     ax.set_yticklabels([name for name, _, _ in data], fontsize=9)
     ax.set_xlabel(f"Annual domestic tuition ({unit})")
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
-    ax.set_title("Annual domestic bachelor's tuition by country\nUK stands out against the EU-27",
+    ax.set_title("Latest published annual domestic bachelor's tuition\n"
+                 "EU: 2023/24 · US: 2024 · UK: published 2026/27 cap",
                  fontweight="bold", pad=14)
     ax.grid(axis="x", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)
@@ -113,6 +128,9 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
         if v > 0:
             ax.annotate(_money(v), (v, i), ha="left", va="center", fontsize=8,
                         color=theme.TEXT, xytext=(3, 0), textcoords="offset points")
+        else:
+            ax.annotate("$0", (0, i), ha="left", va="center", fontsize=8,
+                        color=theme.MUTED, xytext=(3, 0), textcoords="offset points")
 
     handles = [plt.Rectangle((0, 0), 1, 1, color=REGION_COLOR[r]) for r in (config.UK, config.EU, config.US)]
     ax.legend(handles, [REGION_LABELS[r] for r in (config.UK, config.EU, config.US)],
