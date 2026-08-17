@@ -584,6 +584,37 @@ def test_tuition_fee_schedule_expands_only_the_nominal_cap() -> None:
     }
 
 
+def test_frozen_nominal_cap_still_changes_in_real_converted_terms() -> None:
+    from ppp_data import tuition_ppp
+
+    history = [{
+        "country": "United Kingdom", "iso3": "GBR", "region": "UK",
+        "year": "2017", "nominal_local": "9250", "currency": "GBP",
+        tuition_ppp.MARKET_FX_COLUMN: "0",
+    }]
+    rows = []
+    for year, ppp_factor, fx in ((2017, 0.50, 0.80), (2018, 0.55, 0.75)):
+        # Keep the World Bank identity internally consistent:
+        # local GDP = PPP factor * GDP(PPP); GDP(USD) = local GDP / FX.
+        gdp_ppp = 100_000.0
+        gdp_usd = ppp_factor * gdp_ppp / fx
+        rows.extend([
+            _row("GBR", year, "ppp_conversion_factor", ppp_factor),
+            _row("GBR", year, "gdp_per_capita_ppp_current", gdp_ppp),
+            _row("GBR", year, "gdp_per_capita_nominal_usd", gdp_usd),
+            _row("GBR", year, "market_exchange_rate", fx),
+        ])
+    points = tuition_ppp.build(
+        rows,
+        history=history,
+        cpi={2017: 90.0, 2018: 100.0, tuition_ppp.BASE_YEAR: 120.0},
+    )
+    assert [point.year for point in points] == [2017, 2018]
+    assert points[0].nominal_local == points[1].nominal_local == 9250
+    assert points[0].real_base_usd != points[1].real_base_usd
+    assert points[0].real_base_intl != points[1].real_base_intl
+
+
 def test_tuition_cpi_is_recovered_from_the_rows_for_offline_recharting() -> None:
     # `--from-csv` is documented as offline, so the deflator must come from the CSV rather
     # than a live World Bank call. The CPI is the *US* CPI, so it must be read from the US
