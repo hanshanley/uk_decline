@@ -127,6 +127,11 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
     ax.legend(title="Nation", loc="best", frameon=False, labelcolor=TEXT)
     fig.autofmt_xdate()
     note = SOURCE_NOTE + (POP_SOURCE_NOTE if metric_id == "rtt_waiting_list_per_1000" else "")
+    if metric_id == "diagnostics_6week_breach_pct":
+        note += (
+            "\nCaveat: Wales reports 8+ week waits; England, Scotland and Northern "
+            "Ireland use a 6-week threshold. Compare Wales's trend, not its level."
+        )
     fig.text(0.01, 0.01, note, ha="left", fontsize=8, color=MUTED, style="italic")
     fig.tight_layout(rect=[0, 0.03, 1, 1])
 

@@ -2,7 +2,7 @@
 
 One chart per metric, with a line per country over time and the **UK highlighted** (bold,
 dark line) against the EU-27 and US comparators (thin, faded). Charts are written to
-``data/trust/charts/``. Survey trust and WGI governance indicators are on different scales
+``outputs/trust/``. Survey trust and WGI governance indicators are on different scales
 (see :data:`trust_data.metrics.CAVEATS`), so each chart is a single-metric trend.
 """
 
@@ -73,7 +73,8 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
 
     ax.set_title(meta.label)
     ax.set_xlabel("Year")
-    ax.set_ylabel(f"{meta.unit} (higher = more trust)")
+    direction = "more trust" if meta.family == "survey" else "better governance"
+    ax.set_ylabel(f"{meta.unit} (higher = {direction})")
     if meta.unit == "percent" and plotted_vals:
         # Fit the axis to what is actually drawn (the EU middle-50% band + the US/UK
         # lines), rather than a fixed 0-100 that strands every line in empty space.
@@ -83,7 +84,10 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     from matplotlib.ticker import MaxNLocator
     ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=8))
     ax.grid(True, axis="y", alpha=1.0)
-    ax.legend(fontsize=9, frameon=False)
+    ax.legend(
+        fontsize=9, frameon=False, loc="center left",
+        bbox_to_anchor=(1.01, 0.5),
+    )
 
     # Stamp the data source(s) straight from the data's own `source` column, mapped to a
     # formal short citation, so the caption is always traceable to the plotted rows.
@@ -94,7 +98,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     year_lo, year_hi = int(sub["year"].min()), int(sub["year"].max())
     caption = f"Source: {cites}. Data: {year_lo}\u2013{year_hi}."
     fig.text(0.01, 0.01, caption, fontsize=7, color="#6B6B6B", ha="left", va="bottom")
-    fig.tight_layout(rect=(0, 0.035, 1, 1))
+    fig.tight_layout(rect=(0, 0.035, 0.84, 1))
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

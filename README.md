@@ -82,8 +82,10 @@ the United States. *Source: World Bank WDI, NE.TRD.GNFS.ZS.*
 
 ### NHS — waiting lists have ballooned, and per-head the smaller nations fare worst
 ![NHS RTT waiting list per 1,000 people](outputs/nhs/rtt_waiting_list_per_1000.png)
-Adjusted for population, the referral-to-treatment waiting list has roughly doubled across all
-four nations; the latest rates are **240 per 1,000 in Northern Ireland, 233 in Wales, and 123 in England**.
+Adjusted for population, RTT waiting lists have risen very differently: roughly **1.5×
+in England, 1.8× in Wales, 2.6× in Scotland, and 5.5× in Northern Ireland** from each
+nation's first comparable observation. Latest rates are **240 per 1,000 in Northern
+Ireland, 233 in Wales, and 123 in England**.
 *Source: NHS England / Public Health Scotland / StatsWales / DoH Northern Ireland.*
 
 ### Rail — London train disruption has climbed back to early-2000s levels

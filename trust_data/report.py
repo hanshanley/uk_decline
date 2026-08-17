@@ -94,7 +94,9 @@ def write_showcase(
         if chart_exists:
             lines.append(f"![{meta.label}]({chart_rel})\n")
         lines.append(
-            f"- **Unit:** {meta.unit} (higher = more trust) · **Coverage:** {lo}–{hi}"
+            f"- **Unit:** {meta.unit} (higher = "
+            f"{'more trust' if meta.family == 'survey' else 'better governance'}) "
+            f"· **Coverage:** {lo}–{hi}"
         )
         lines.append(f"- **Source:** {'; '.join(_reference_for(s) for s in srcs)}\n")
 

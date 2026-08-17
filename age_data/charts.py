@@ -91,8 +91,8 @@ def uk_age_structure_over_time(rows: list[dict], out_path: str) -> Optional[str]
                  fontweight="bold", pad=38)
     handles, lbls = ax.get_legend_handles_labels()
     ax.legend(
-        handles[::-1], lbls[::-1], loc="upper left",
-        bbox_to_anchor=(0, 1.04), ncol=3, frameon=False,
+        handles[::-1], lbls[::-1], loc="center left",
+        bbox_to_anchor=(1.01, 0.5), frameon=False,
     )
     return _finish(fig, ax, out_path)
 

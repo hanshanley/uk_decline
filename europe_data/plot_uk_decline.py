@@ -7,7 +7,7 @@ the pre1870_reapportionment_package figures (warm tan background, serif fonts, m
 palette, italic source note, no top/right spines).
 
 Figures:
-  - gdp_per_capita_ppp_over_time.png   UK vs European peers + EU-27, GDP/capita PPP
+  - gdp_per_capita_real_over_time.png  UK vs peers, real GDP/capita at market FX
   - uk_gdp_relative_to_peers.png       UK GDP/capita as a share of the EU average and the US
   - median_disposable_income_pps.png   Median income (Eurostat PPS), UK ends ~2018
   - median_income_pip.png              PIP median income (2017 PPP $/day), UK to ~2021

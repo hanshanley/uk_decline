@@ -3,7 +3,7 @@
 Produces one trend chart per metric (a line per region over time) plus two
 **UK-as-a-share-of-US** ratio charts (market cap in US$, and market cap as % of
 GDP), the headline framing for the UK-vs-US comparison. Charts land in
-``data/charts/``.
+``outputs/stock_markets/``.
 
 Styling follows the "Substack" theme shared with
 ``pre1870_reapportionment_package`` (warm paper background, serif type, muted
@@ -127,6 +127,8 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ax.set_title(meta.label, fontweight="bold", pad=14)
     ax.set_xlabel("Year", labelpad=2)
     plotted_unit = str(sub["unit"].dropna().iloc[0]) if sub["unit"].notna().any() else meta.unit
+    if metric_id == "market_cap_usd_real":
+        plotted_unit = f"constant {int(sub['year'].max())} US$"
     ax.set_ylabel(plotted_unit, labelpad=2)
     if "US$" in meta.unit:
         ax.get_yaxis().set_major_formatter(

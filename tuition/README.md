@@ -17,7 +17,7 @@ claim that *the UK has a higher average cost of degrees*.
 | Cohort | **Domestic / in-country (EU) students** at public institutions |
 | Regions | **UK** (own category), **EU-27**, **US** |
 | Aggregation | **Per country, unweighted** median & average |
-| "Four-year" | annual tuition **× 4** (bachelor's are often 3 yrs in UK/EU — normalized) |
+| Degree totals | Summary table: annual tuition **× 4** normalized; chart annotations: typical 3-year UK/EU and 4-year US |
 | Currency | normalized to **USD** (nominal, market FX) and **constant 2022 USD** (CPI-adjusted) |
 
 ## Results
@@ -171,13 +171,13 @@ tests/test_tuition.py
   nonprofit* tuition is ~**$43,350/yr** — far above the UK. "Domestic US cost" here means
   the **in-state public** figure most students face; the private figure is kept as a
   reference row (`include_primary=0`).
-- **UK is nation-split.** The headline is **England (£9,250)**; **Scotland** charges
+- **UK is nation-split.** The headline is **England (£9,790 published for 2026/27)**; **Scotland** charges
   Scottish-domiciled students **£0** (reference row). **Wales** tracks England closely
   (~£9,000), but **Northern Ireland** caps NI-domiciled fees materially lower (~£4,750).
 - **Many EU states charge €0** for domestic students (Germany, the Nordics, etc.). These
   zeros are legitimate data points and are kept, which is why the EU **median is $0**.
-- **3-vs-4-year programmes.** Most UK/EU bachelor's are 3 years; the ×4 total is a
-  normalized comparison, not literal programme length.
+- **3-vs-4-year programmes.** The results table's ×4 total is a normalized comparison;
+  the region chart separately annotates typical 3-year UK/EU and 4-year US degrees.
 - **Reference years differ** (EU 2023/24, US 2024/25, UK 2026/27); nominal figures use the latest
   World Bank year available per country; these are recorded per row in the outputs.
 - Figures are **most-common statutory fees**, not enrollment-weighted averages.
