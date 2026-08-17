@@ -1,6 +1,6 @@
 # sterling_data — the value of the pound against major currencies
 
-![Sterling exchange rates](../outputs/sterling/sterling_currency_strength.png)
+![Sterling exchange rates](../outputs/sterling/sterling_currency_strength_v2.png)
 
 This analysis compares how much foreign currency **£1 buys** against the US dollar,
 euro, Japanese yen, and Swiss franc from 2000 through the latest complete year.

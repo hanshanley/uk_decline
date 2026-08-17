@@ -143,10 +143,11 @@ current-price chart above, and each figure's source note says which it is.
 ![Tuition at PPP](../outputs/ppp/ppp_tuition_history.png)
 ![Tuition as a share of GDP per capita](../outputs/ppp/tuition_share_of_gdp_per_capita.png)
 
-Here PPP moves the number the *other* way. Because UK prices are now below US prices, the
-England fee cap is worth **more** in international dollars (~$12,990) than in market dollars
-(~$11,030): measured against what a pound buys in Britain, a UK degree is dearer than the
-headline chart implies.
+The England fee cap changes only when policy changes, but both converted lines now move
+**every year**: the nominal statutory cap is carried through the years in which it applies,
+then each year's exchange rate, PPP factor and inflation adjustment are applied separately.
+Because UK prices are below US prices, the cap is generally worth more in international
+dollars than in market dollars.
 
 The second figure sidesteps the currency question entirely. Tuition as a share of GDP per
 capita is unit-free — the currency cancels, so the answer is identical at market rates and at

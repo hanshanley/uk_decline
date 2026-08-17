@@ -37,9 +37,10 @@ market-FX nominal plus CPI-deflated constant dollars.)*
 > **The PPP alternative, for comparison.** [`../ppp_data/`](../ppp_data/README.md) builds a
 > PPP-converted twin of the history chart, plus a **tuition-as-a-share-of-GDP-per-capita**
 > chart that is unit-free (the currency cancels, so it reads the same at market rates and at
-> PPP). PPP moves this number *against* the UK: because British prices now sit below US
-> prices, the fee cap is worth ~$12,990 in international dollars against ~$11,030 at market
-> rates, and in 2022 — the last year both fee series cover — a year's fees took **24% of UK
+> PPP). The PPP chart carries the legally fixed nominal cap through every applicable year,
+> then recomputes each year's PPP, market-rate and inflation-adjusted value; it does not draw
+> flat real-value steps between policy changes. In 2022 — the last year both fee series
+> cover — a year's fees took **24% of UK
 > GDP per head against 12% in the US**.
 
 Full per-country data: `data/processed/tuition_by_country.csv`.

@@ -8,10 +8,9 @@ power does a UK degree consume, compared with an American one?**
 Two figures come out of it:
 
 ``ppp_tuition_history``
-    The same fee series converted at the PPP conversion factor instead of the market rate,
-    then deflated by US CPI to constant base-year international dollars — the exact PPP
-    analogue of :func:`tuition.build_history.real_base_usd`. Both the PPP and the market-FX
-    line are drawn, because the difference between them is the point.
+    The statutory England fee cap is carried through every year in which it applies, then
+    converted using that year's PPP factor and market exchange rate and deflated by that
+    year's US CPI. Both lines therefore move annually even when the nominal cap is frozen.
 
 ``tuition_share_of_gdp_per_capita``
     Annual fees as a percentage of GDP per capita. This is unit-free: the currency cancels,
@@ -61,7 +60,7 @@ class TuitionPoint(NamedTuple):
     year: int
     nominal_local: float
     currency: str
-    real_base_usd: float            # market exchange rates (as published by ``tuition``)
+    real_base_usd: float | None     # market exchange rates; None if CPI lacks that year
     real_base_intl: float | None    # purchasing power parity; None if the CPI lacks that year
     share_of_gdp_pc_pct: float      # unit-free: currency cancels
 
@@ -110,6 +109,40 @@ def us_cpi_from_rows(rows: list[dict]) -> dict[int, float]:
     return out
 
 
+def expand_uk_fee_schedule(history: list[dict], years: set[int]) -> list[dict]:
+    """Expand sparse England fee-cap changes into an annual statutory schedule.
+
+    The manual history records only years in which the legal cap or its cited status
+    changes. Between those points the *nominal* cap is genuinely fixed, so carrying it
+    forward is not interpolation. Exchange rates, PPP factors and inflation are applied
+    later for each individual year and are never carried forward.
+    """
+    uk_changes = sorted(
+        (row for row in history if row["iso3"] == peers.UK),
+        key=lambda row: int(row["year"]),
+    )
+    other = [row for row in history if row["iso3"] != peers.UK]
+    if not uk_changes:
+        return history
+
+    first_fee_year = next(
+        (int(row["year"]) for row in uk_changes if float(row["nominal_local"]) > 0),
+        None,
+    )
+    if first_fee_year is None:
+        return history
+
+    expanded: list[dict] = []
+    for year in sorted(y for y in years if y >= first_fee_year):
+        applicable = [row for row in uk_changes if int(row["year"]) <= year]
+        if not applicable:
+            continue
+        row = dict(applicable[-1])
+        row["year"] = year
+        expanded.append(row)
+    return other + expanded
+
+
 def build(rows: list[dict], history: list[dict] | None = None,
           cpi: dict[int, float] | None = None) -> list[TuitionPoint]:
     """Re-express each fee at PPP and as a share of GDP per capita.
@@ -133,6 +166,24 @@ def build(rows: list[dict], history: list[dict] | None = None,
     cpi_base = cpi.get(BASE_YEAR)
     if not cpi_base:
         raise RuntimeError(f"no US CPI for the {BASE_YEAR} base year; cannot deflate")
+
+    # The policy input is sparse (fee-change years), while the conversion inputs are annual.
+    # Expand only the legally fixed nominal England cap across the years for which all
+    # required official conversion series and the CPI are present.
+    uk_metric_years = {
+        year
+        for year in cpi
+        if all(
+            (metric, peers.UK, year) in values
+            for metric in (
+                "ppp_conversion_factor",
+                "gdp_per_capita_ppp_current",
+                "gdp_per_capita_nominal_usd",
+                "market_exchange_rate",
+            )
+        )
+    }
+    history = expand_uk_fee_schedule(history, uk_metric_years)
 
     out: list[TuitionPoint] = []
     for row in history:
@@ -167,7 +218,7 @@ def build(rows: list[dict], history: list[dict] | None = None,
         out.append(TuitionPoint(
             country=row["country"], iso3=iso3, region=row["region"], year=year,
             nominal_local=nominal, currency=row["currency"],
-            real_base_usd=float(row[MARKET_FX_COLUMN]),
+            real_base_usd=tuition_usd * (cpi_base / cpi_year) if cpi_year else None,
             real_base_intl=tuition_intl * (cpi_base / cpi_year) if cpi_year else None,
             share_of_gdp_pc_pct=(share_ppp + share_fx) / 2.0 * 100.0,
         ))
@@ -234,12 +285,9 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
         return None
 
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
-    ax.fill_between(uk_years, uk_ppp, uk_fx, step="post", color=MUTED, alpha=0.16, zorder=1)
-    ax.step(uk_years, uk_fx, where="post", color=MUTED, linewidth=1.8, linestyle="--",
-            zorder=3)
-    ax.step(uk_years, uk_ppp, where="post", color=ACCENT, linewidth=3.0, zorder=4)
-    ax.plot(uk_years, uk_ppp, "o", color=ACCENT, markersize=5.5,
-            markeredgecolor="white", markeredgewidth=1.2, zorder=5)
+    ax.fill_between(uk_years, uk_ppp, uk_fx, color=MUTED, alpha=0.16, zorder=1)
+    ax.plot(uk_years, uk_fx, color=MUTED, linewidth=1.8, linestyle="--", zorder=3)
+    ax.plot(uk_years, uk_ppp, color=ACCENT, linewidth=3.0, zorder=4)
     if us_years:
         ax.plot(us_years, us_ppp, color=GOLD, linewidth=2.0, zorder=2)
 
@@ -251,10 +299,10 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
                   x=max(uk_years[-1], us_years[-1] if us_years else uk_years[-1]),
                   fontsize=10)
 
-    ax.set_title("A UK degree costs even more measured against British prices",
+    ax.set_title("England's tuition cap at market exchange rates and PPP",
                  fontweight="bold", pad=30)
-    subtitle(ax, f"Converted at PPP the England fee cap is worth ${uk_ppp[-1]:,.0f} a year, "
-                 f"against ${uk_fx[-1]:,.0f} at market exchange rates")
+    subtitle(ax, f"Annual conversion of the statutory cap; latest complete year "
+                 f"${uk_ppp[-1]:,.0f} at PPP and ${uk_fx[-1]:,.0f} at market rates")
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"${v:,.0f}"))
     tidy(ax, ylabel=f"Annual tuition (constant {BASE_YEAR} $)")
     ax.set_ylim(bottom=0)

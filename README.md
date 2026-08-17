@@ -68,7 +68,7 @@ Food banks in Trussell's UK community distributed **2.64 million emergency food 
 banks. *Source: Trussell end-of-year statistics and official 2025 parcel workbook.*
 
 ### Sterling — how much foreign currency one pound buys
-![Sterling exchange rates](outputs/sterling/sterling_currency_strength.png)
+![Sterling exchange rates](outputs/sterling/sterling_currency_strength_v2.png)
 The chart shows the cumulative change in the dollar, euro, yen, and Swiss franc
 **against the pound since 2000**. Positive values mean the foreign currency strengthened
 against sterling. *Source: European Central Bank reference exchange rates.*

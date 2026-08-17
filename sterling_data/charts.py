@@ -11,7 +11,7 @@ import pandas as pd
 from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, MUTED, TEXT, house_style, source_note
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT = ROOT / "outputs" / "sterling" / "sterling_currency_strength.png"
+DEFAULT_OUTPUT = ROOT / "outputs" / "sterling" / "sterling_currency_strength_v2.png"
 
 SERIES = {
     "USD": ("US dollar", ACCENT),

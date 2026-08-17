@@ -559,6 +559,31 @@ def test_tuition_share_subtitle_uses_a_shared_year() -> None:
     assert "30.0%" not in text, "the UK's unmatched 2024 point must not be compared to 2022"
 
 
+def test_tuition_fee_schedule_expands_only_the_nominal_cap() -> None:
+    from ppp_data import tuition_ppp
+
+    history = [
+        {
+            "country": "United Kingdom", "iso3": "GBR", "region": "UK",
+            "year": "2012", "nominal_local": "9000", "currency": "GBP",
+            tuition_ppp.MARKET_FX_COLUMN: "1",
+        },
+        {
+            "country": "United Kingdom", "iso3": "GBR", "region": "UK",
+            "year": "2017", "nominal_local": "9250", "currency": "GBP",
+            tuition_ppp.MARKET_FX_COLUMN: "1",
+        },
+    ]
+    expanded = tuition_ppp.expand_uk_fee_schedule(
+        history, {2012, 2013, 2014, 2015, 2016, 2017, 2018}
+    )
+    by_year = {int(row["year"]): float(row["nominal_local"]) for row in expanded}
+    assert by_year == {
+        2012: 9000, 2013: 9000, 2014: 9000, 2015: 9000, 2016: 9000,
+        2017: 9250, 2018: 9250,
+    }
+
+
 def test_tuition_cpi_is_recovered_from_the_rows_for_offline_recharting() -> None:
     # `--from-csv` is documented as offline, so the deflator must come from the CSV rather
     # than a live World Bank call. The CPI is the *US* CPI, so it must be read from the US
