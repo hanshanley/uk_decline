@@ -123,11 +123,11 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     df = _load(source)
     house_style()
 
-    fig = plt.figure(figsize=(14.2, 10.6), facecolor=BG)
+    fig = plt.figure(figsize=(14.2, 9.6), facecolor=BG)
     grid = fig.add_gridspec(
         2, 4,
-        height_ratios=[1.15, 1],
-        hspace=0.68,
+        height_ratios=[1.08, 1],
+        hspace=0.48,
         wspace=0.28,
     )
     service_axes = [fig.add_subplot(grid[0, i]) for i in range(4)]
@@ -191,12 +191,13 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         )
         ax.text(
             0.02, 0.83,
-            f"{first['index']:.0f} in 2000  ·  {last['index']:.0f} in 2025",
+            f"2000–01: {first['index']:.0f}\n2025–26: {last['index']:.0f}",
             transform=ax.transAxes,
             fontsize=9.2,
             color=color,
             fontweight="bold",
             va="top",
+            linespacing=1.25,
         )
         ax.set_xlim(1999.7, 2025.4)
         ax.set_ylim(45, 170)
@@ -223,7 +224,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     fig.text(
         0.94,
         0.862,
-        "shading marks 2010–19",
+        "Shading: 2010–11 to 2019–20",
         ha="right",
         fontsize=9.5,
         color=MUTED,
@@ -254,20 +255,29 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     ax_invest.scatter([start["year"], trough["year"]],
                       [start["value"], trough["value"]],
                       s=42, color=[TEXT, ACCENT], edgecolor=BG, linewidth=1, zorder=6)
-    ax_invest.text(start["year"], start["value"] + 0.18,
-                   f"{start['value']:.1f}%", ha="center", fontsize=11,
-                   color=TEXT, fontweight="bold")
-    ax_invest.text(trough["year"], trough["value"] - 0.28,
-                   f"{trough['value']:.1f}% low", ha="center", fontsize=11,
-                   color=ACCENT, fontweight="bold")
-    ax_invest.text(
-        2010.2,
-        3.18,
-        "2010–19",
-        color=MUTED,
-        fontsize=9,
-        style="italic",
-        alpha=0.9,
+    ax_invest.annotate(
+        f"2010–11\n{start['value']:.1f}% of GDP",
+        xy=(start["year"], start["value"]),
+        xytext=(-14, 18),
+        textcoords="offset points",
+        ha="center",
+        va="bottom",
+        fontsize=10.5,
+        color=TEXT,
+        fontweight="bold",
+        arrowprops={"arrowstyle": "-", "color": TEXT, "linewidth": 0.8},
+    )
+    ax_invest.annotate(
+        f"2013–14 low\n{trough['value']:.1f}% of GDP",
+        xy=(trough["year"], trough["value"]),
+        xytext=(0, -30),
+        textcoords="offset points",
+        ha="center",
+        va="top",
+        fontsize=10.5,
+        color=ACCENT,
+        fontweight="bold",
+        arrowprops={"arrowstyle": "-", "color": ACCENT, "linewidth": 0.8},
     )
     ax_invest.set_title(
         "Public sector net investment",
@@ -278,7 +288,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     ax_invest.text(
         0,
         1.01,
-        "Per cent of GDP",
+        "Percent of GDP",
         transform=ax_invest.transAxes,
         color=MUTED,
         fontsize=10,
@@ -323,7 +333,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
 
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    fig.subplots_adjust(left=0.065, right=0.955, top=0.79, bottom=0.12)
+    fig.subplots_adjust(left=0.065, right=0.955, top=0.79, bottom=0.13)
     fig.savefig(output, dpi=220, bbox_inches="tight", facecolor=BG)
     plt.close(fig)
     return output
