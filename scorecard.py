@@ -245,10 +245,11 @@ def main() -> int:
     for ax, panel in zip(axes.flat, PANELS):
         _panel(ax, *panel)
 
-    fig.suptitle("Britain's pressure points",
+    fig.suptitle("UK since 2007",
                  fontsize=22, fontweight="bold", y=0.99)
     fig.text(0.5, 0.935,
-             "Eight high-signal indicators from the latest comparable official series.",
+             "Eight official indicators of economic and social change; "
+             "baselines reflect data availability.",
              ha="center", fontsize=11, color=MUTED)
     fig.text(0.5, 0.015,
              "Baselines vary with data availability. Monetary series are inflation-adjusted. "
