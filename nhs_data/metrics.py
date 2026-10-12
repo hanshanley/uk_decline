@@ -116,7 +116,8 @@ CAVEATS: dict[str, str] = {
         "England/Wales report RTT 'incomplete pathways'; Scotland reports 'ongoing "
         "waits' by stage of treatment; NI reports outpatient/inpatient/day-case "
         "waits separately (only outpatient waits are used here). These count waits, "
-        "not unique people, and are not directly comparable across nations. NI's "
+        "not unique people, and are not directly comparable across nations. England "
+        "uses reported totals, excluding estimates for missing providers. NI's "
         "encompass rollout from November 2023 introduces a break: the Department "
         "says encompass and legacy figures are not directly comparable."
     ),
@@ -138,7 +139,10 @@ CAVEATS: dict[str, str] = {
     ),
     "cancer_62day_pct": (
         "62-day cancer pathway definitions and standards were revised at different "
-        "times per nation; watch for series breaks."
+        "times per nation. England's October 2023 standards change is a "
+        "comparability break, not an improvement or deterioration in performance. "
+        "Wales changes from the urgent suspected pathway to the broader suspected "
+        "cancer pathway from June 2019, with an earlier clock start."
     ),
     "diagnostics_6week_breach_pct": (
         "Diagnostic test lists (DM01 in England) cover different test sets per "
@@ -153,6 +157,23 @@ CAVEATS: dict[str, str] = {
         "as if it used the six-week threshold of the other nations."
     ),
 }
+
+
+def series_breaks(metric_id: str, nation_code: str) -> tuple[tuple[str, str], ...]:
+    """Known definition changes, shared by charts and endpoint summaries."""
+    family = METRICS[metric_id].family
+    if nation_code == "NIR" and family in {"rtt", "diagnostics"}:
+        return (
+            ("2023-11-09", "encompass"),
+            ("2024-06-06", "encompass"),
+            ("2024-11-07", "encompass"),
+            ("2025-05-08", "encompass"),
+        )
+    if nation_code == "ENG" and family == "cancer":
+        return (("2023-10-01", "cancer standards"),)
+    if nation_code == "WAL" and family == "cancer":
+        return (("2019-06-01", "suspected cancer pathway"),)
+    return ()
 
 
 def make_row(

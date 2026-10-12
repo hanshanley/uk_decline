@@ -9,6 +9,16 @@ and cadence. This package harmonises them onto a common schema while keeping the
 `source` on every row so comparisons stay honest — **compare trends, not exact
 levels** (see caveats below).
 
+Charts do not connect lines across known definition changes. England's cancer
+standards changed on **1 October 2023**. Northern Ireland's encompass system rolled
+out on **9 November 2023, 6 June 2024, 7 November 2024 and 8 May 2025**; aggregate
+RTT/diagnostic series are split at each step, not just the first implementation.
+Endpoint summaries suppress better/worse claims across these breaks. Indexed waiting
+counts start at the first exact date shared by all nations **after the last applicable
+change in the observed data**, so a system rollout is not labelled waiting-list growth.
+See [NHS England's comparability guidance](https://www.england.nhs.uk/statistics/statistical-work-areas/cancer-waiting-times/)
+and [DoH NI's rollout and quality statement](https://www.health-ni.gov.uk/news/publication-quarterly-northern-ireland-outpatient-inpatient-and-day-case-and-diagnostic-waiting-times-statistics-position-31-march-2026).
+
 ## Metrics
 
 | Metric id | Meaning | Unit |
@@ -31,8 +41,11 @@ levels** (see caveats below).
 | Northern Ireland | Department of Health (NI) | Excel/ODS downloads (no API) |
 | Population | ONS/NRS/NISRA mid-year estimates via **Nomis** (`NM_2002_1`) | JSON API |
 
-Counts come from official sources, including NHS England's historical overview
-with official estimates for missing data. England's median is approximated from
+Counts come from official sources. England uses the **reported-total column** of
+the historical overview and totals from monthly extracts; estimates for missing
+providers are **not** added, even though the historical workbook also contains an
+estimated-total column. Changes in reporting coverage can affect these counts.
+England's median is approximated from
 weekly count bands; a weighted average of Scottish stage medians is **not** a pooled
 median, so Scotland is omitted from that metric. The derived `rtt_waiting_list_per_1000` is computed as
 `waiting_list ÷ real ONS mid-year population × 1,000`, and is only produced for
@@ -135,8 +148,12 @@ Metric definitions differ by nation. Key differences (full text in
   OpenDataNI Emergency Care extract is ingested; DoH NI's most recent Emergency
   Care releases are PDF-only, so the NIR A&E series may lag the other three
   nations (which run to the latest published month).
-- **Cancer 62-day:** pathway definitions and standards were revised at different
-  times per nation — watch for series breaks.
+- **Cancer 62-day:** lines and endpoint summaries are split at England's
+  **1 October 2023** standards change and Wales's **June 2019** move from the
+  urgent suspected pathway to the broader suspected cancer pathway. The Welsh
+  clock starts earlier; the old and new percentages must not be treated as a
+  like-for-like deterioration.
+  [Welsh Government quality report](https://www.gov.wales/nhs-activity-and-performance-summary-quality-report-html).
 - **Diagnostics:** each nation covers a different set of tests. England/Scotland/
   NI have six-week measures here (NI's current official target is **9 weeks**,
   and its encompass figures are not comparable to legacy figures);
@@ -144,6 +161,12 @@ Metric definitions differ by nation. Key differences (full text in
   weekly bands allow a separate six-week series from August 2024. Older grouped
   over-eight-week observations are kept under `diagnostics_8week_breach_pct`,
   never spliced into the six-week series.
+
+Charts do not draw lines through the registered changes. Indexed RTT charts use
+the earliest exact common observation date after the latest observed NI encompass
+rollout step (9 November 2023, 6 June 2024, 7 November 2024 and 8 May 2025).
+This avoids attributing a reporting-system change to waiting-list growth; it does
+not make the four nations' underlying definitions identical.
 
 ## Tests
 

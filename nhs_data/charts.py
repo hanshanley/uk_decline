@@ -45,12 +45,20 @@ def _load(source):
     return _util.load_frame(source, DEFAULT_CSV)
 
 
-def _shared_baseline_date(sub):
-    """Earliest exact observation date shared by every nation in ``sub``."""
+def _shared_baseline_date(sub, metric_id=None):
+    """Earliest shared date after the latest definition change in the observed data."""
+    import pandas as pd
+
     date_sets = [set(g["date"]) for _, g in sub.groupby("nation_code")]
     if not date_sets:
         return None
     common = set.intersection(*date_sets)
+    if metric_id is not None:
+        for code, g in sub.groupby("nation_code"):
+            for date, _ in metrics.series_breaks(metric_id, code):
+                boundary = pd.Timestamp(date)
+                if boundary <= g["date"].max():
+                    common = {d for d in common if d >= boundary}
     return min(common) if common else None
 
 
@@ -72,12 +80,13 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
     # Rebase every nation to the earliest exact date that all nations publish. This avoids
     # silently comparing monthly and quarterly series against different baseline dates.
     base_date = None
-    base_year = None
     if indexed:
-        base_date = _shared_baseline_date(sub)
+        base_date = _shared_baseline_date(sub, metric_id)
         if base_date is None:
+            _util.warn("charts", metric_id, ValueError(
+                "no shared observation date within comparable definition periods"
+            ))
             return None
-        base_year = pd.Timestamp(base_date).year
 
     fig, ax = plt.subplots(figsize=(11, 6))
     plotted_codes = set()
@@ -95,25 +104,31 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
         label = g["nation"].iloc[0]
         if indexed:
             label = f"{label} (\u00d7{g['value'].iloc[-1] / base:.2f})"
-        ax.plot(
-            g["date"],
-            yvals,
-            marker="o",
-            markersize=4,
-            markeredgecolor="white",
-            markeredgewidth=0.8,
-            linewidth=2.4,
-            label=label,
-            color=NATION_COLOURS.get(code),
-        )
+        boundaries = [pd.Timestamp(date) for date, _ in metrics.series_breaks(metric_id, code)]
+        segments = g["date"].map(lambda d: sum(d >= boundary for boundary in boundaries))
+        labelled = False
+        for _, segment in g.groupby(segments):
+            ax.plot(
+                segment["date"],
+                yvals.loc[segment.index],
+                marker="o",
+                markersize=4,
+                markeredgecolor="white",
+                markeredgewidth=0.8,
+                linewidth=2.4,
+                label=label if not labelled else "_nolegend_",
+                color=NATION_COLOURS.get(code),
+            )
+            labelled = True
         plotted_codes.add(code)
 
     direction = "higher = better" if meta.higher_is_better else "lower = better"
     if indexed:
         ax.axhline(100, color=MUTED, linewidth=1.0, linestyle=":")
-        ax.set_title(f"{meta.label}\ngrowth indexed to {base_year} (= 100)",
+        base_period = f"{base_date:%b %Y}"
+        ax.set_title(f"{meta.label}\ngrowth indexed to {base_period} (= 100)",
                      fontweight="bold", pad=14)
-        ax.set_ylabel(f"Index, {base_year} = 100 ({direction})", labelpad=2)
+        ax.set_ylabel(f"Index, {base_period} = 100 ({direction})", labelpad=2)
     else:
         ax.set_title(meta.label, fontweight="bold", pad=14)
         ax.set_ylabel(f"{meta.unit} ({direction})", labelpad=2)
@@ -142,8 +157,19 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
     if metric_id in metrics.CAVEATS:
         import textwrap
         note += "\n" + textwrap.fill("Caveat: " + metrics.CAVEATS[metric_id], width=145)
-    fig.text(0.01, 0.01, note, ha="left", fontsize=8, color=MUTED, style="italic")
-    fig.tight_layout(rect=[0, 0.11, 1, 1])
+    affected = [
+        f"{code}: {', '.join(date[:7] for date, _ in metrics.series_breaks(metric_id, code))}"
+        for code in sorted(plotted_codes) if metrics.series_breaks(metric_id, code)
+    ]
+    if affected:
+        note += "\nKnown definition changes (" + "; ".join(affected) + "); lines do not bridge them."
+    caption = fig.text(0.01, 0.01, note, ha="left", va="bottom",
+                       fontsize=8, color=MUTED, style="italic")
+    fig.canvas.draw()
+    caption_top = caption.get_window_extent(fig.canvas.get_renderer()).transformed(
+        fig.transFigure.inverted()
+    ).y1
+    fig.tight_layout(rect=[0, max(0.11, caption_top + 0.025), 1, 1])
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

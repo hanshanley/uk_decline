@@ -112,8 +112,11 @@ def _warn(metric: str, exc: Exception) -> None:
 
 
 def _links(page_url: str) -> list[tuple[str, str]]:
+    payload = get_bytes(page_url)
+    if not payload.strip():
+        raise ValueError(f"empty NHS publication page: {page_url}")
     parser = _LinkParser()
-    parser.feed(get_bytes(page_url).decode("utf-8", "replace"))
+    parser.feed(payload.decode("utf-8", "replace"))
     return [(text, urljoin(page_url, href)) for text, href in parser.links if href]
 
 
@@ -474,12 +477,17 @@ def _fetch_ae(start_year: int, end_year: int) -> list[dict]:
 
 
 def _cancer_workbooks() -> list[str]:
-    urls = list(CANDIDATE_URLS["cancer_timeseries"])
-    for text, href in _links(LANDING_URLS["cancer"]):
+    urls = []
+    try:
+        links = _links(LANDING_URLS["cancer"])
+    except ValueError as exc:
+        _warn("cancer publication discovery; using pinned workbook", exc)
+        links = []
+    for text, href in links:
         label = f"{text} {href}".lower()
         if href.lower().endswith(".xlsx") and "national-time-series" in label:
             urls.append(href)
-    return _dedupe(urls)
+    return _dedupe(urls + CANDIDATE_URLS["cancer_timeseries"])
 
 
 def _parse_cancer_workbook(url: str, start_year: int, end_year: int) -> list[dict]:
@@ -546,6 +554,7 @@ def _fetch_cancer(start_year: int, end_year: int) -> list[dict]:
             if rows:
                 return rows
         except Exception as exc:
+            _warn("62-day cancer workbook", exc)
             last_error = exc
     raise ValueError("no cancer 62-day rows parsed") from last_error
 

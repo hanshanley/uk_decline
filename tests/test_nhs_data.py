@@ -350,6 +350,101 @@ def test_summary_does_not_infer_improvement_across_ni_encompass_break(tmp_path):
     assert "(worse)" not in text
 
 
+@pytest.mark.parametrize(
+    "code,metric_id,dates",
+    [
+        ("NIR", "rtt_waiting_list_total",
+         ["2023-09-30", "2023-12-31", "2024-03-31", "2024-06-30",
+          "2024-09-30", "2024-12-31", "2025-03-31", "2025-06-30"]),
+        ("ENG", "cancer_62day_pct",
+         ["2023-08-31", "2023-09-30", "2023-10-31", "2023-11-30"]),
+        ("WAL", "cancer_62day_pct",
+         ["2019-04-30", "2019-05-31", "2019-06-30", "2019-07-31"]),
+    ],
+)
+def test_nhs_lines_do_not_bridge_definition_changes(monkeypatch, tmp_path, code, metric_id, dates):
+    rows = [
+        metrics.make_row(nations.name_for_code(code), code, date[:7], date,
+                         metric_id, 80, "x")
+        for date in dates
+    ]
+    figures = []
+    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: figures.append(fig))
+    charts.chart_metric(combine.to_frame(rows), metric_id, tmp_path)
+    ax = figures[0].axes[0]
+    assert len(ax.lines) > 1
+    for date, _ in metrics.series_breaks(metric_id, code):
+        boundary = pd.Timestamp(date)
+        for line in ax.lines:
+            xs = pd.to_datetime(line.get_xdata())
+            assert not (xs.min() < boundary <= xs.max())
+    assert len(ax.get_legend_handles_labels()[0]) == 1
+    fig = figures[0]
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    assert fig.texts[0].get_window_extent(renderer).y1 < ax.xaxis.label.get_window_extent(renderer).y0
+
+
+def test_indexed_nhs_growth_uses_baseline_after_last_observed_rollout(monkeypatch, tmp_path):
+    rows = [
+        metrics.make_row(nations.name_for_code(code), code, date[:7], date,
+                         "rtt_waiting_list_total", value * scale, "x")
+        for code, scale in [("ENG", 2), ("NIR", 1)]
+        for date, value in [("2023-03-31", 10), ("2025-03-31", 20),
+                            ("2025-06-30", 50), ("2026-03-31", 55)]
+    ]
+    figures = []
+    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: figures.append(fig))
+    charts.chart_metric(combine.to_frame(rows), "rtt_waiting_list_total", tmp_path, indexed=True)
+    ax = figures[0].axes[0]
+    for line in ax.lines[:2]:
+        assert pd.Timestamp(line.get_xdata()[0]) == pd.Timestamp("2025-06-30")
+        assert list(line.get_ydata()) == pytest.approx([100, 110])
+        assert "\u00d71.10" in line.get_label()
+    assert "Jun 2025" in ax.get_title()
+
+
+def test_summary_does_not_compare_across_england_cancer_standards(tmp_path):
+    rows = [
+        metrics.make_row("England", "ENG", date[:7], date, "cancer_62day_pct", value, "x")
+        for date, value in [("2022-04-30", 70), ("2026-04-30", 60)]
+    ]
+    text = summary.build_summary(combine.to_frame(rows), tmp_path / "summary.md").read_text()
+    assert "Not like-for-like (cancer standards break)" in text
+    assert "(worse)" not in text
+
+
+def test_cancer_discovery_prefers_current_publication_to_pinned_snapshot(monkeypatch):
+    from nhs_data import england
+
+    current = "https://www.england.nhs.uk/CWT-National-Time-Series-current.xlsx"
+    monkeypatch.setattr(england, "_links", lambda page: [("Current national time series", current)])
+    assert england._cancer_workbooks()[0] == current
+
+
+def test_empty_nhs_landing_page_is_not_successful_discovery(monkeypatch, capsys):
+    from nhs_data import england
+
+    monkeypatch.setattr(england, "get_bytes", lambda url: b"")
+    with pytest.raises(ValueError, match="empty NHS publication page"):
+        england._links(england.LANDING_URLS["rtt"])
+    assert england._cancer_workbooks() == england.CANDIDATE_URLS["cancer_timeseries"]
+    assert "using pinned workbook" in capsys.readouterr().err
+
+
+def test_summary_does_not_compare_welsh_cancer_pathway_definitions(tmp_path):
+    rows = [
+        metrics.make_row("Wales", "WAL", date[:7], date, "cancer_62day_pct", value, "x")
+        for date, value in [("2009-10-31", 90), ("2026-05-31", 60)]
+    ]
+    text = summary.build_summary(combine.to_frame(rows), tmp_path / "summary.md").read_text()
+    assert "Not like-for-like (suspected cancer pathway break)" in text
+    assert "(worse)" not in text
+
+
 def _run() -> int:
     import inspect
 

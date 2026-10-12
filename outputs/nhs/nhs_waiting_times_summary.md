@@ -14,7 +14,7 @@ Recorded elective pathways / ongoing waits, not unique people. Scotland sums out
 | Wales | 392k (Sep 2011) | 690k (May 2026) | ↑ 297k (worse) |
 | Northern Ireland | 77k (Jun 2008) | 511k (Mar 2026) | Not like-for-like (encompass break) |
 
-> Caveat: England/Wales report RTT 'incomplete pathways'; Scotland reports 'ongoing waits' by stage of treatment; NI reports outpatient/inpatient/day-case waits separately (only outpatient waits are used here). These count waits, not unique people, and are not directly comparable across nations. NI's encompass rollout from November 2023 introduces a break: the Department says encompass and legacy figures are not directly comparable.
+> Caveat: England/Wales report RTT 'incomplete pathways'; Scotland reports 'ongoing waits' by stage of treatment; NI reports outpatient/inpatient/day-case waits separately (only outpatient waits are used here). These count waits, not unique people, and are not directly comparable across nations. England uses reported totals, excluding estimates for missing providers. NI's encompass rollout from November 2023 introduces a break: the Department says encompass and legacy figures are not directly comparable.
 
 ## Elective pathways / waits per 1,000 residents (waits per 1,000 residents)
 
@@ -59,12 +59,12 @@ Share of patients starting first cancer treatment within 62 days of an urgent re
 
 | Nation | First | Latest | Change |
 |---|---|---|---|
-| England | 69.0% (Apr 2022) | 70.0% (Apr 2026) | ↑ 0.9% (better) |
+| England | 69.0% (Apr 2022) | 70.0% (Apr 2026) | Not like-for-like (cancer standards break) |
 | Scotland | 94.8% (Mar 2012) | 72.2% (Mar 2026) | ↓ 22.6% (worse) |
-| Wales | 88.1% (Oct 2009) | 57.1% (May 2026) | ↓ 31.0% (worse) |
+| Wales | 88.1% (Oct 2009) | 57.1% (May 2026) | Not like-for-like (suspected cancer pathway break) |
 | Northern Ireland | 83.5% (Apr 2008) | 36.7% (Mar 2025) | ↓ 46.8% (worse) |
 
-> Caveat: 62-day cancer pathway definitions and standards were revised at different times per nation; watch for series breaks.
+> Caveat: 62-day cancer pathway definitions and standards were revised at different times per nation. England's October 2023 standards change is a comparability break, not an improvement or deterioration in performance. Wales changes from the urgent suspected pathway to the broader suspected cancer pathway from June 2019, with an earlier clock start.
 
 ## Diagnostics: six-week threshold (percent)
 

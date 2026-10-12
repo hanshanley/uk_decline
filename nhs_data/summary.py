@@ -78,9 +78,12 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
             worse = (delta > 0) != meta.higher_is_better and delta != 0
             tag = " (worse)" if worse else (" (better)" if delta != 0 else "")
             change = f"{arrow} {_fmt(abs(delta), meta.unit)}{tag}"
-            if (code == "NIR" and meta.family in {"rtt", "diagnostics"}
-                    and first["date"] < pd.Timestamp("2023-11-01") <= last["date"]):
-                change = "Not like-for-like (encompass break)"
+            breaks = {
+                label for date, label in metrics.series_breaks(metric_id, code)
+                if first["date"] < pd.Timestamp(date) <= last["date"]
+            }
+            if breaks:
+                change = f"Not like-for-like ({', '.join(sorted(breaks))} break)"
             lines.append(
                 f"| {nations.name_for_code(code)} "
                 f"| {_fmt(first['value'], meta.unit)} ({first['date']:%b %Y}) "
