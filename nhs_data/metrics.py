@@ -142,7 +142,9 @@ CAVEATS: dict[str, str] = {
         "times per nation. England's October 2023 standards change is a "
         "comparability break, not an improvement or deterioration in performance. "
         "Wales changes from the urgent suspected pathway to the broader suspected "
-        "cancer pathway from June 2019, with an earlier clock start."
+        "cancer pathway from June 2019, with an earlier clock start. NI's encompass "
+        "rollout from November 2023 also breaks comparability; revised 62-day "
+        "counts replace superseded data. Months missing any trust are omitted."
     ),
     "diagnostics_6week_breach_pct": (
         "Diagnostic test lists (DM01 in England) cover different test sets per "
@@ -162,7 +164,7 @@ CAVEATS: dict[str, str] = {
 def series_breaks(metric_id: str, nation_code: str) -> tuple[tuple[str, str], ...]:
     """Known definition changes, shared by charts and endpoint summaries."""
     family = METRICS[metric_id].family
-    if nation_code == "NIR" and family in {"rtt", "diagnostics"}:
+    if nation_code == "NIR" and family in {"rtt", "diagnostics", "cancer"}:
         return (
             ("2023-11-09", "encompass"),
             ("2024-06-06", "encompass"),

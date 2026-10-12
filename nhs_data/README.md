@@ -12,7 +12,7 @@ levels** (see caveats below).
 Charts do not connect lines across known definition changes. England's cancer
 standards changed on **1 October 2023**. Northern Ireland's encompass system rolled
 out on **9 November 2023, 6 June 2024, 7 November 2024 and 8 May 2025**; aggregate
-RTT/diagnostic series are split at each step, not just the first implementation.
+RTT/diagnostic/cancer series are split at each step, not just the first implementation.
 Endpoint summaries suppress better/worse claims across these breaks. Indexed waiting
 counts start at the first exact date shared by all nations **after the last applicable
 change in the observed data**, so a system rollout is not labelled waiting-list growth.
@@ -147,13 +147,26 @@ Metric definitions differ by nation. Key differences (full text in
   varies (weekly/monthly). **Northern Ireland:** only the machine-readable
   OpenDataNI Emergency Care extract is ingested; DoH NI's most recent Emergency
   Care releases are PDF-only, so the NIR A&E series may lag the other three
-  nations (which run to the latest published month).
+  nations. Every retained endpoint is dated; a cached endpoint is not a claim
+  that it is the latest publication available.
 - **Cancer 62-day:** lines and endpoint summaries are split at England's
   **1 October 2023** standards change and Wales's **June 2019** move from the
   urgent suspected pathway to the broader suspected cancer pathway. The Welsh
   clock starts earlier; the old and new percentages must not be treated as a
   like-for-like deterioration.
   [Welsh Government quality report](https://www.gov.wales/nhs-activity-and-performance-summary-quality-report-html).
+  NI's encompass rollout is also a comparability break. The
+  [April–June 2026 release, published 1 October 2026](https://www.health-ni.gov.uk/publications/northern-ireland-waiting-time-statistics-cancer-waiting-times-april-june-2026),
+  revises 31/62-day waits for quarters ending December 2023 through March 2026
+  after an adjusted-wait calculation error. The loader discovers the current
+  publication and identifies its 62-day **trust** table by column schema, not
+  the obsolete sheet name. It uses revised monthly counts and excludes
+  April–June 2024, when Belfast's validated counts are missing; the sum of
+  the other four trusts is not a complete NI result.
+  The refreshed April–June 2026 counts independently reproduce the
+  [published quarter total](https://www.health-ni.gov.uk/news/publication-northern-ireland-cancer-waiting-time-statistics-april-june-2026):
+  414 of 1,459 patients within 62 days (28.4%). This is a quarter aggregate,
+  not June's monthly percentage (30.8%).
 - **Diagnostics:** each nation covers a different set of tests. England/Scotland/
   NI have six-week measures here (NI's current official target is **9 weeks**,
   and its encompass figures are not comparable to legacy figures);
@@ -167,6 +180,14 @@ the earliest exact common observation date after the latest observed NI encompas
 rollout step (9 November 2023, 6 June 2024, 7 November 2024 and 8 May 2025).
 This avoids attributing a reporting-system change to waiting-list growth; it does
 not make the four nations' underlying definitions identical.
+
+NI outpatient and diagnostic loaders also discover the current publication before
+their pinned June 2026 release; discovery failures produce explicit warnings.
+Those three series were refreshed through June 2026 during the 12 October 2026
+audit. NHS England landing pages returned empty responses/browser challenges in
+the audit environment. England's retained June 2026 RTT and April 2026 cancer
+coverage is therefore explicitly older than some available publications, not
+certified current; the cancer loader warns when it uses its pinned workbook.
 
 ## Tests
 

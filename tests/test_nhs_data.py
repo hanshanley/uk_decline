@@ -65,6 +65,91 @@ def test_metrics_have_caveats() -> None:
         assert metric_id in metrics.CAVEATS and metrics.CAVEATS[metric_id]
 
 
+@pytest.mark.parametrize("kind,slug", [
+    ("cancer", "cancer"), ("outpatient", "outpatient"),
+    ("diagnostics", "diagnostic"),
+])
+def test_ni_discovers_current_publication_before_pinned(monkeypatch, kind, slug) -> None:
+    from nhs_data import northern_ireland as ni
+
+    current = (
+        "https://www.health-ni.gov.uk/publications/"
+        f"northern-ireland-waiting-time-statistics-{slug}-waiting-times-june-2026"
+    )
+    monkeypatch.setattr(ni, "_html", lambda url:
+        f'<a href="{current}">Current publication</a>'
+        f'<a href="{current.replace("june", "march")}">Previous publication</a>'
+    )
+    assert ni._current_publication(kind, "older-pinned-page") == current
+
+
+def test_ni_discovery_failure_warns_before_pinned_fallback(monkeypatch, capsys) -> None:
+    from nhs_data import northern_ireland as ni
+
+    monkeypatch.setattr(ni, "_html", lambda url: "")
+    assert ni._current_publication("cancer", "pinned-page") == "pinned-page"
+    assert "using pinned release" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("sheet", ["Table 4", "62 Day Wait by HSC Trust"])
+def test_ni_cancer_uses_trust_counts_and_omits_incomplete_months(
+    monkeypatch, capsys, sheet,
+) -> None:
+    from nhs_data import northern_ireland as ni
+
+    records = [
+        {"Treatment Month": month, "HSC Trust": trust,
+         "Patients Treated Within 62 Days": within,
+         "Total Patients Treated": total}
+        for month in ["May 2026", "June 2026"]
+        for trust, within, total in [
+            ("Belfast", 10, 100), ("Northern", 20, 50),
+            ("South Eastern", 5, 10), ("Southern", 5, 10), ("Western", 10, 30),
+        ]
+    ]
+    records[0]["Patients Treated Within 62 Days"] = None
+    frame = pd.DataFrame(records)
+    monkeypatch.setattr(ni, "_current_publication", lambda *args: "current-page")
+    monkeypatch.setattr(ni, "_find_attachment_on_pages", lambda *args, **kwargs:
+        ("current-workbook", "current-page"))
+    monkeypatch.setattr(ni, "_workbook", lambda url: {
+        sheet: frame,
+        "Table 5": frame.rename(columns={"HSC Trust": "Tumour Site"}),
+    })
+    rows = ni._fetch_cancer_62day()
+    assert [(r["period"], r["value"]) for r in rows] == [("2026-06", 25.0)]
+    assert "omitting 1 months" in capsys.readouterr().err
+    assert "date" not in frame.columns
+
+    duplicate = pd.concat([frame, frame.iloc[-1:]], ignore_index=True)
+    monkeypatch.setattr(ni, "_workbook", lambda url: {sheet: duplicate})
+    with pytest.raises(ValueError, match="duplicate"):
+        ni._fetch_cancer_62day()
+
+    for within, total in [(31, 30), (-1, 30), (float("inf"), float("inf"))]:
+        invalid = frame.astype({
+            "Patients Treated Within 62 Days": float, "Total Patients Treated": float,
+        })
+        invalid.loc[invalid.index[-1], [
+            "Patients Treated Within 62 Days", "Total Patients Treated",
+        ]] = [within, total]
+        monkeypatch.setattr(ni, "_workbook", lambda url: {sheet: invalid})
+        with pytest.raises(ValueError, match="numerator/denominator"):
+            ni._fetch_cancer_62day()
+
+
+def test_ni_cancer_summary_does_not_compare_across_encompass(tmp_path) -> None:
+    rows = [
+        metrics.make_row("Northern Ireland", "NIR", date[:7], date,
+                         "cancer_62day_pct", value, "fixture")
+        for date, value in [("2023-10-31", 60), ("2026-06-30", 30)]
+    ]
+    path = summary.build_summary(combine.to_frame(rows), path=tmp_path / "summary.md")
+    text = path.read_text()
+    assert "encompass" in text
+    assert "worse" not in text
+
+
 def test_to_frame_column_order_and_sort() -> None:
     df = combine.to_frame(_synthetic_rows())
     assert list(df.columns) == list(metrics.ROW_FIELDS)
@@ -356,6 +441,9 @@ def test_summary_does_not_infer_improvement_across_ni_encompass_break(tmp_path):
         ("NIR", "rtt_waiting_list_total",
          ["2023-09-30", "2023-12-31", "2024-03-31", "2024-06-30",
           "2024-09-30", "2024-12-31", "2025-03-31", "2025-06-30"]),
+        ("NIR", "cancer_62day_pct",
+         ["2023-10-31", "2023-11-30", "2024-05-31", "2024-07-31",
+          "2024-10-31", "2024-11-30", "2025-04-30", "2025-05-31"]),
         ("ENG", "cancer_62day_pct",
          ["2023-08-31", "2023-09-30", "2023-10-31", "2023-11-30"]),
         ("WAL", "cancer_62day_pct",

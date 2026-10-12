@@ -12,7 +12,7 @@ Recorded elective pathways / ongoing waits, not unique people. Scotland sums out
 | England | 4.19M (Aug 2007) | 7.18M (Jun 2026) | ↑ 2.99M (worse) |
 | Scotland | 247k (Oct 2012) | 654k (Jun 2026) | ↑ 406k (worse) |
 | Wales | 392k (Sep 2011) | 690k (May 2026) | ↑ 297k (worse) |
-| Northern Ireland | 77k (Jun 2008) | 511k (Mar 2026) | Not like-for-like (encompass break) |
+| Northern Ireland | 77k (Jun 2008) | 505k (Jun 2026) | Not like-for-like (encompass break) |
 
 > Caveat: England/Wales report RTT 'incomplete pathways'; Scotland reports 'ongoing waits' by stage of treatment; NI reports outpatient/inpatient/day-case waits separately (only outpatient waits are used here). These count waits, not unique people, and are not directly comparable across nations. England uses reported totals, excluding estimates for missing providers. NI's encompass rollout from November 2023 introduces a break: the Department says encompass and legacy figures are not directly comparable.
 
@@ -25,7 +25,7 @@ Recorded elective pathways / ongoing waits per 1,000 residents, using published 
 | England | 81.5/1k (Aug 2007) | 122.9/1k (Dec 2025) | ↑ 41.4/1k (worse) |
 | Scotland | 46.6/1k (Oct 2012) | 122.0/1k (Dec 2025) | ↑ 75.5/1k (worse) |
 | Wales | 128.1/1k (Sep 2011) | 233.4/1k (Dec 2025) | ↑ 105.3/1k (worse) |
-| Northern Ireland | 43.3/1k (Jun 2008) | 239.9/1k (Mar 2024) | Not like-for-like (encompass break) |
+| Northern Ireland | 43.3/1k (Jun 2008) | 273.3/1k (Dec 2025) | Not like-for-like (encompass break) |
 
 > Caveat: Derived: RTT waiting list ÷ real ONS mid-year population estimate × 1,000. Population comes from ONS/NRS/NISRA via Nomis; only years with a published estimate are shown (no projection/extrapolation). Not the proportion of residents waiting: people can have multiple waits. Inherits the per-nation RTT definitional differences.
 
@@ -62,9 +62,9 @@ Share of patients starting first cancer treatment within 62 days of an urgent re
 | England | 69.0% (Apr 2022) | 70.0% (Apr 2026) | Not like-for-like (cancer standards break) |
 | Scotland | 94.8% (Mar 2012) | 72.2% (Mar 2026) | ↓ 22.6% (worse) |
 | Wales | 88.1% (Oct 2009) | 57.1% (May 2026) | Not like-for-like (suspected cancer pathway break) |
-| Northern Ireland | 83.5% (Apr 2008) | 36.7% (Mar 2025) | ↓ 46.8% (worse) |
+| Northern Ireland | 83.5% (Apr 2008) | 30.8% (Jun 2026) | Not like-for-like (encompass break) |
 
-> Caveat: 62-day cancer pathway definitions and standards were revised at different times per nation. England's October 2023 standards change is a comparability break, not an improvement or deterioration in performance. Wales changes from the urgent suspected pathway to the broader suspected cancer pathway from June 2019, with an earlier clock start.
+> Caveat: 62-day cancer pathway definitions and standards were revised at different times per nation. England's October 2023 standards change is a comparability break, not an improvement or deterioration in performance. Wales changes from the urgent suspected pathway to the broader suspected cancer pathway from June 2019, with an earlier clock start. NI's encompass rollout from November 2023 also breaks comparability; revised 62-day counts replace superseded data. Months missing any trust are omitted.
 
 ## Diagnostics: six-week threshold (percent)
 
@@ -75,7 +75,7 @@ Share of patients on the diagnostic-test waiting list who have been waiting 6 we
 | England | 1.3% (Jun 2012) | 23.3% (Jun 2026) | ↑ 22.0% (worse) |
 | Scotland | 14.0% (Sep 2007) | 28.3% (Mar 2026) | ↑ 14.3% (worse) |
 | Wales | 48.5% (Aug 2024) | 42.7% (May 2026) | ↓ 5.8% (better) |
-| Northern Ireland | 36.1% (Mar 2008) | 68.2% (Mar 2026) | Not like-for-like (encompass break) |
+| Northern Ireland | 36.1% (Mar 2008) | 69.2% (Jun 2026) | Not like-for-like (encompass break) |
 
 > Caveat: Diagnostic test lists (DM01 in England) cover different test sets per nation. NI's current target is 9 weeks, not the 6-week threshold shown here; its encompass rollout from November 2023 breaks comparability with legacy figures. Welsh six-week values use detailed bands available from August 2024 only; the historical over-eight-week series is a separate metric, not a substitute or a continuation of this series.
 

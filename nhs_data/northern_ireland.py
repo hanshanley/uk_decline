@@ -15,12 +15,14 @@ from __future__ import annotations
 
 import html
 import io
+import math
 import re
 import time
 from functools import lru_cache
 from urllib.parse import urljoin
 
 import pandas as pd
+import requests
 
 from . import _http, _util
 from .metrics import make_row
@@ -39,12 +41,12 @@ ARTICLE_URLS = {
 OUTPATIENT_PUBLICATION_PAGE = (
     "https://www.health-ni.gov.uk/publications/"
     "northern-ireland-waiting-time-statistics-outpatient-waiting-times-"
-    "march-2026"
+    "june-2026"
 )
 DIAGNOSTICS_PUBLICATION_PAGE = (
     "https://www.health-ni.gov.uk/publications/"
     "northern-ireland-waiting-time-statistics-diagnostic-waiting-times-"
-    "march-2026"
+    "june-2026"
 )
 EMERGENCY_OPEN_DATA_URL = (
     "https://admin.opendatani.gov.uk/en/dataset/emergency-care-waiting-times"
@@ -52,7 +54,7 @@ EMERGENCY_OPEN_DATA_URL = (
 CANCER_62DAY_PAGE = (
     "https://www.health-ni.gov.uk/publications/"
     "northern-ireland-waiting-time-statistics-cancer-waiting-times-"
-    "january-march-2025"
+    "april-june-2026"
 )
 
 ATTACHMENT_RE = re.compile(
@@ -100,6 +102,8 @@ def _html(url: str) -> str:
             time.sleep(min(delay, 60))
             continue
         resp.raise_for_status()
+        if not resp.text.strip():
+            raise ValueError(f"empty publication page: {url}")
         return html.unescape(resp.text)
     if last_resp is not None:
         last_resp.raise_for_status()
@@ -124,6 +128,21 @@ def _attachment_urls(page_url: str) -> list[str]:
         if url not in urls:
             urls.append(url)
     return urls
+
+
+def _current_publication(metric: str, pinned: str) -> str:
+    try:
+        slug = "diagnostic" if metric == "diagnostics" else metric
+        pages = _publication_pages(
+            ARTICLE_URLS[metric], f"waiting-time-statistics-{slug}-waiting-times"
+        )
+        if not pages:
+            raise ValueError("no current publication link found")
+        # DoH lists the current publication before previous releases.
+        return pages[0]
+    except (requests.RequestException, ValueError, RuntimeError) as exc:
+        _warn(f"{metric} publication discovery; using pinned release", exc)
+        return pinned
 
 
 def _find_attachment_on_pages(
@@ -213,12 +232,12 @@ CORE_HSC_TRUSTS = frozenset(
 
 
 def _complete_quarters(df: pd.DataFrame, trust_col: str = "HSC Trust") -> set:
-    """Quarters (in the ``date`` column) where all five HSC trusts are present.
+    """Observation dates where all five HSC trusts have usable data.
 
     NI migrated trusts to the 'encompass' patient-record system on a rolling
     schedule (South Eastern Nov 2023, Belfast Jun 2024, Northern Nov 2024,
     Southern & Western May 2025). A trust's data is briefly absent right after its
-    migration, so that quarter's NI-wide total is incomplete. We keep only quarters
+    migration, so that period's NI-wide total is incomplete. We keep only periods
     with all five trusts present, so every emitted figure is a complete,
     source-traceable total — incomplete quarters are dropped, never interpolated.
     """
@@ -230,7 +249,7 @@ def _complete_quarters(df: pd.DataFrame, trust_col: str = "HSC Trust") -> set:
 
 def _fetch_outpatient_waiting_list() -> list[dict]:
     url, _page = _find_attachment_on_pages(
-        (OUTPATIENT_PUBLICATION_PAGE,),
+        (_current_publication("outpatient", OUTPATIENT_PUBLICATION_PAGE),),
         include=("outpatients",),
         exclude=("icats",),
     )
@@ -298,43 +317,52 @@ def _fetch_emergency_4hr() -> list[dict]:
 
 
 def _fetch_cancer_62day() -> list[dict]:
-    sheet = "62 Day Wait by HSC Trust"
-    workbook = None
-    for page in (CANCER_62DAY_PAGE,):
-        for url in _attachment_urls(page):
-            lower = url.lower()
-            if "cwt" not in lower or "icd10" in lower:
-                continue
-            candidate = _workbook(url)
-            if sheet in candidate:
-                workbook = candidate
-                break
-        if workbook is not None:
-            break
-    if workbook is None:
-        raise RuntimeError(f"no cancer workbook with {sheet!r}")
-    if sheet not in workbook:
-        raise RuntimeError(f"cancer workbook missing {sheet!r}")
-    df = workbook[sheet]
+    page = _current_publication("cancer", CANCER_62DAY_PAGE)
+    url, _page = _find_attachment_on_pages(
+        (page,), include=("cwt",), exclude=("icd10",),
+    )
     required = {
         "Treatment Month",
+        "HSC Trust",
         "Patients Treated Within 62 Days",
         "Total Patients Treated",
     }
-    if not required.issubset(df.columns):
-        raise RuntimeError("cancer workbook missing expected columns")
+    frames = [df for df in _workbook(url).values() if required.issubset(df.columns)]
+    if len(frames) != 1:
+        raise RuntimeError("expected one 62-day cancer table by HSC Trust")
+    df = frames[0].copy()
+    df["HSC Trust"] = df["HSC Trust"].astype(str).str.strip()
+    df = df[df["HSC Trust"].isin(CORE_HSC_TRUSTS)].copy()
 
-    df["date"] = _month_dates(df["Treatment Month"])
+    df["date"] = _dates(df["Treatment Month"]) + pd.offsets.MonthEnd(0)
     df["within"] = _number_series(df["Patients Treated Within 62 Days"])
     df["total"] = _number_series(df["Total Patients Treated"])
+    if df.dropna(subset=["date"]).duplicated(["date", "HSC Trust"]).any():
+        raise ValueError("duplicate cancer month/trust observations")
+    all_dates = set(df["date"].dropna())
+    df = df.dropna(subset=["date", "within", "total"])
+    if (
+        ~df["within"].map(math.isfinite)
+        | ~df["total"].map(math.isfinite)
+        | (df["within"] < 0)
+        | (df["total"] < df["within"])
+    ).any():
+        raise ValueError("invalid cancer numerator/denominator")
+    complete = _complete_quarters(df)
+    if all_dates - complete:
+        _warn("cancer_62day_pct", ValueError(
+            f"omitting {len(all_dates - complete)} months without all five trusts"
+        ))
     grouped = (
-        df.dropna(subset=["date", "within", "total"])
+        df[df["date"].isin(complete)]
         .groupby("date", as_index=False)[["within", "total"]]
         .sum()
         .sort_values("date")
     )
     grouped = grouped[grouped["total"] > 0]
     grouped["value"] = grouped["within"] / grouped["total"] * 100
+    if grouped.empty:
+        raise ValueError("no complete cancer months parsed")
     return [
         _make_metric_row(row.date, "cancer_62day_pct", row.value)
         for row in grouped.itertuples(index=False)
@@ -343,7 +371,7 @@ def _fetch_cancer_62day() -> list[dict]:
 
 def _fetch_diagnostics_6week_breach() -> list[dict]:
     url, _page = _find_attachment_on_pages(
-        (DIAGNOSTICS_PUBLICATION_PAGE,),
+        (_current_publication("diagnostics", DIAGNOSTICS_PUBLICATION_PAGE),),
         include=("diagnostic-waiting-times",),
         exclude=("reporting-turnaround",),
     )
