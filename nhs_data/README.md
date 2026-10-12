@@ -9,10 +9,14 @@ and cadence. This package harmonises them onto a common schema while keeping the
 `source` on every row so comparisons stay honest — **compare trends, not exact
 levels** (see caveats below).
 
-Charts do not connect lines across known definition changes. England's cancer
+Charts do not connect lines across registered definition/recording changes.
+England's RTT scope excludes sexual-health pathways from **April 2013** and
+community-service pathways from **February 2024**; its cancer
 standards changed on **1 October 2023**. Northern Ireland's encompass system rolled
 out on **9 November 2023, 6 June 2024, 7 November 2024 and 8 May 2025**; aggregate
 RTT/diagnostic/cancer series are split at each step, not just the first implementation.
+NI emergency-care lines are also split as a conservative recording-quality safeguard,
+not a claim that DoH explicitly declares its emergency-care series non-comparable.
 Endpoint summaries suppress better/worse claims across these breaks. Indexed waiting
 counts start at the first exact date shared by all nations **after the last applicable
 change in the observed data**, so a system rollout is not labelled waiting-list growth.
@@ -26,7 +30,7 @@ and [DoH NI's rollout and quality statement](https://www.health-ni.gov.uk/news/p
 | `rtt_waiting_list_total` | Recorded elective pathways / ongoing waits, not unique people | pathways / waits |
 | `rtt_waiting_list_per_1000` | Pathways / waits per 1,000 residents, not the share of residents waiting | waits per 1,000 residents |
 | `rtt_median_wait_weeks` | England's band-midpoint estimate and Wales's reported median; no Scottish pooled median | weeks |
-| `ae_4hr_pct` | A&E attendances admitted, transferred or discharged within 4 hours | percent |
+| `ae_4hr_pct` | Four-hour A&E performance; NI uses classified waiting-time records | percent |
 | `cancer_62day_pct` | Cancer treatments started within 62 days of urgent referral | percent |
 | `diagnostics_6week_breach_pct` | Diagnostic-test six-week threshold; Welsh detailed bands start August 2024 | percent |
 | `diagnostics_8week_breach_pct` | Welsh pathways waiting over 8 weeks; separate from six-week measures | percent |
@@ -35,16 +39,23 @@ and [DoH NI's rollout and quality statement](https://www.health-ni.gov.uk/news/p
 
 | Nation / series | Source | Access |
 |---|---|---|
-| England | NHS England statistical work areas | CSV/Excel bulk downloads (no API) |
+| England | NHS England statistical work areas | CSV/Excel downloads; official WordPress REST API for publication discovery when HTML is empty/challenged |
 | Scotland | Public Health Scotland `opendata.nhs.scot` | CKAN JSON API |
 | Wales | StatsWales `stats.gov.wales` | Paginated `api.stats.gov.wales/v1` JSON API |
-| Northern Ireland | Department of Health (NI) | Excel/ODS downloads (no API) |
+| Northern Ireland | Department of Health (NI) | Excel/ODS downloads and structured JSON count tables embedded in official interactive HTML |
 | Population | ONS/NRS/NISRA mid-year estimates via **Nomis** (`NM_2002_1`) | JSON API |
 
 Counts come from official sources. England uses the **reported-total column** of
 the historical overview and totals from monthly extracts; estimates for missing
 providers are **not** added, even though the historical workbook also contains an
 estimated-total column. Changes in reporting coverage can affect these counts.
+Monthly extracts also contain `NONC` pathways commissioned outside England;
+these are excluded from both totals and band-midpoint medians to match NHS England's
+published outputs. The August 2026 extract independently reconciles with the
+current overview: **7,158,164 reported pathways**, not 7,189,213 including `NONC`
+or 7,370,100 including estimates for missing providers.
+All 130 refreshed monthly totals reconcile exactly with that overview;
+band-midpoint medians differ from its interpolated medians by at most 0.50 weeks.
 England's median is approximated from
 weekly count bands; a weighted average of Scottish stage medians is **not** a pooled
 median, so Scotland is omitted from that metric. The derived `rtt_waiting_list_per_1000` is computed as
@@ -76,7 +87,7 @@ truth: `nhs_data/sources.py`, rendered into the generated summary):
 - **Department of Health (Northern Ireland), Information & Analysis Directorate**
   — *Northern Ireland Waiting Time Statistics: Outpatient, Diagnostic and Cancer
   Waiting Times; and Emergency Care Waiting Times.* https://www.health-ni.gov.uk/
-  and OpenDataNI, https://www.opendatani.gov.uk/.
+  and its NISRA-hosted interactive publications, https://datavis.nisra.gov.uk/health/.
 - **Office for National Statistics (ONS); National Records of Scotland (NRS);
   Northern Ireland Statistics and Research Agency (NISRA)** — *Mid-year
   population estimates (dataset NM_2002_1)*, used only for the derived per-1,000
@@ -143,12 +154,28 @@ Metric definitions differ by nation. Key differences (full text in
   [DoH says the new and legacy figures are not directly comparable](https://www.health-ni.gov.uk/news/publication-quarterly-northern-ireland-outpatient-inpatient-and-day-case-and-diagnostic-waiting-times-statistics-position-31-march-2026).
   Full five-trust coverage does not repair this definition break, so the summary
   does not label a change across it as better or worse.
+  England's sexual-health/community-service scope changes are also registered.
+  [The August 2026 RTT statistical notice](https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2026/10/Aug26-RTT-statistical-press-notice-PDF-389K-vjgRdG.pdf)
+  explains reporting coverage and the exclusion of non-English commissioned
+  pathways from published outputs.
 - **A&E 4-hour:** scope differs (all A&E types vs major/Type-1 only) and cadence
-  varies (weekly/monthly). **Northern Ireland:** only the machine-readable
-  OpenDataNI Emergency Care extract is ingested; DoH NI's most recent Emergency
-  Care releases are PDF-only, so the NIR A&E series may lag the other three
-  nations. Every retained endpoint is dated; a cached endpoint is not a claim
-  that it is the latest publication available.
+  varies (weekly/monthly). **Northern Ireland:** the current interactive release
+  contains an underlying count table, not just PDF charts. The loader discovers
+  that release and aggregates all Types 1–3, including urgent care centres, whose
+  inclusion changes the service mix. It sums within-four-hour counts and divides
+  by the sum of published waiting-time bands, **not all attendances or an average
+  of rounded department percentages**. Records outside the bands are not in that
+  denominator. All 4,045 positive-denominator department-month percentages reconcile
+  within the source's 0.1-point rounding; incomplete department/trust months are
+  excluded. June 2026 reproduces the [published report](https://datavis.nisra.gov.uk/health/ni-emergency-care-waiting-times-apr-jun-26.html):
+  71,018 attendances, 11,605 waits over twelve hours and 42.8% four-hour performance
+  (29,720 / 69,424 classified waits).
+  The whole April 2008–June 2026 history comes from that same current table.
+  Compared with the former cached series, the 123 overlapping months differ by
+  up to 1.99 percentage points; the old and current extracts are not spliced.
+  Encompass-affected statistics are in development. This project conservatively
+  splits emergency-care lines at rollout dates without attributing a cross-break
+  change to performance.
 - **Cancer 62-day:** lines and endpoint summaries are split at England's
   **1 October 2023** standards change and Wales's **June 2019** move from the
   urgent suspected pathway to the broader suspected cancer pathway. The Welsh
@@ -181,13 +208,24 @@ rollout step (9 November 2023, 6 June 2024, 7 November 2024 and 8 May 2025).
 This avoids attributing a reporting-system change to waiting-list growth; it does
 not make the four nations' underlying definitions identical.
 
-NI outpatient and diagnostic loaders also discover the current publication before
-their pinned June 2026 release; discovery failures produce explicit warnings.
-Those three series were refreshed through June 2026 during the 12 October 2026
-audit. NHS England landing pages returned empty responses/browser challenges in
-the audit environment. England's retained June 2026 RTT and April 2026 cancer
-coverage is therefore explicitly older than some available publications, not
-certified current; the cancer loader warns when it uses its pinned workbook.
+NI loaders discover current publications before their pinned June 2026 releases;
+discovery failures produce explicit warnings. NHS England's empty/challenged HTML
+pages are handled through the official REST API, with exact canonical-page validation.
+Older root-level publication aliases are normalised against the relevant work-area
+landing page before lookup. A pinned cancer fallback remains explicit and warning-bearing.
+
+### Verified coverage as of 12 October 2026
+
+| Nation | RTT / median where available | Cancer | Diagnostics | A&E |
+|---|---|---|---|---|
+| England | August 2026 | August 2026 | August 2026 | September 2026 |
+| Scotland | June 2026 (no pooled median) | June 2026 | June 2026 | August 2026 |
+| Wales | July 2026 | July 2026 | July 2026 (separate six/eight-week series) | August 2026 |
+| Northern Ireland | June 2026 (outpatient total only) | June 2026 | June 2026 | June 2026 |
+
+Derived per-capita observations end in 2025: no 2026 population estimate is
+invented or carried forward. Different endpoint dates and nation definitions remain
+real comparability constraints; successful retrieval does not remove them.
 
 ## Tests
 

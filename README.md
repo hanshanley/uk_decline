@@ -149,16 +149,33 @@ year's deflator. NI cancer/outpatient/diagnostic source discovery was repaired a
 those series refreshed through June 2026. NI's October 2026 cancer release revises
 historical waits after a calculation error; the refreshed dataset uses those
 revisions, omits months without all five trusts, and splits the encompass breaks.
-NHS England landing pages return empty responses/browser challenges in this audit
-environment. Cached June 2026 RTT and pinned April 2026 cancer coverage is explicitly
-not current: the official cancer index lists at least July 2026 data. These older
-endpoints remain dated rather than being presented as the latest publication.
+The freshness retry recovered NHS England publications through its official REST
+API despite empty/challenged HTML, and NI emergency-care history from structured
+counts embedded in its current interactive release. England's raw RTT extracts
+also include non-English commissioned `NONC` pathways; these are excluded from
+both totals and band-midpoint medians. August 2026 independently reconciles with
+the official overview at **7,158,164 reported pathways**, without missing-provider
+estimates. England's RTT service-scope changes and NI emergency-care recording
+changes are now segmented as well. The NI four-hour denominator is the sum of
+classified waiting-time bands, not all attendances or averaged department rates;
+June 2026 independently reproduces the published **42.8%**.
+
+Verified NHS coverage as of **12 October 2026**:
+
+| Nation | RTT / cancer / diagnostics | A&E |
+|---|---|---|
+| England | August 2026 | September 2026 |
+| Scotland | June 2026 | August 2026 |
+| Wales | July 2026 | August 2026 |
+| Northern Ireland | June 2026 | June 2026 |
+
+Per-capita NHS series stop in 2025 because no 2026 population is extrapolated.
 The rail reconstruction was independently compared with official Table 3113 over
 28 overlapping quarters: maximum discrepancies are **0.51 percentage points for
 London and South East** and **0.18 points for Great Britain**. These approximate
 series are not exact official sector aggregates.
 
-Verification: **303 regression tests passed**, as did all **16 GDP/PPP validation
+Verification: **317 regression tests passed**, as did all **16 GDP/PPP validation
 checks**. All **2,970 live country-year age profiles** passed the complete-profile
 checks; the opt-in age snapshot also passed. Affected NHS, age, rail, tuition,
 spending and overview figures were rebuilt, with representative published figures
