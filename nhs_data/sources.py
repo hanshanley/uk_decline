@@ -45,7 +45,8 @@ CITATIONS: list[Citation] = [
         "Department of Health (Northern Ireland), Information & Analysis Directorate",
         "Northern Ireland Waiting Time Statistics: Outpatient, Diagnostic and Cancer "
         "Waiting Times; and Emergency Care Waiting Times",
-        "https://www.health-ni.gov.uk/ and OpenDataNI, https://www.opendatani.gov.uk/",
+        "https://www.health-ni.gov.uk/ and NISRA-hosted interactive publications, "
+        "https://datavis.nisra.gov.uk/health/",
     ),
     Citation(
         "Office for National Statistics (ONS); National Records of Scotland (NRS); "
@@ -68,8 +69,9 @@ def render_markdown(accessed: date | None = None) -> str:
     accessed = accessed or date.today()
     lines = ["## Data sources & citations\n"]
     lines.append(
-        "Every value is collected and published by the official statistical body "
-        "for each nation; nothing is modelled or synthesised. Cite as:\n"
+        "Underlying observations are published by each nation's official statistical "
+        "body. Per-capita rates, aggregated percentages and England's band-midpoint "
+        "median are derived here; missing observations are not fabricated. Cite as:\n"
     )
     for c in CITATIONS:
         lines.append(

@@ -213,6 +213,18 @@ def test_ni_emergency_reads_complete_count_table_not_rounded_rates(monkeypatch, 
         ni._emergency_frame("<html>No underlying count table</html>")
 
 
+def test_summary_distinguishes_percentage_point_changes_from_relative_percent(tmp_path):
+    rows = [
+        metrics.make_row("England", "ENG", date[:7], date,
+                         "ae_4hr_pct", value, "NHS England")
+        for date, value in [("2026-08-31", 80), ("2026-09-30", 70)]
+    ]
+    text = summary.build_summary(combine.to_frame(rows), tmp_path / "summary.md").read_text()
+    assert "80.0%" in text and "70.0%" in text
+    assert "10.0 pp (worse)" in text
+    assert "10.0% (worse)" not in text
+
+
 def test_to_frame_column_order_and_sort() -> None:
     df = combine.to_frame(_synthetic_rows())
     assert list(df.columns) == list(metrics.ROW_FIELDS)
@@ -505,16 +517,28 @@ def test_chart_sources_include_only_plotted_nations(
     assert notes[0].split("\n", 1)[0] == expected
 
 
-def test_summary_does_not_infer_improvement_across_ni_encompass_break(tmp_path):
+@pytest.mark.parametrize("nation,code,metric_id,dates,label", [
+    ("Northern Ireland", "NIR", "rtt_waiting_list_total",
+     ["2020-03-31", "2024-03-31"], "encompass"),
+    ("Northern Ireland", "NIR", "ae_4hr_pct",
+     ["2023-10-31", "2023-11-30"], "encompass"),
+    ("England", "ENG", "rtt_waiting_list_total",
+     ["2024-01-31", "2024-02-29"], "community-service scope"),
+    ("England", "ENG", "rtt_waiting_list_total",
+     ["2013-03-31", "2013-04-30"], "sexual-health scope"),
+])
+def test_summary_does_not_infer_improvement_across_scope_or_recording_break(
+    tmp_path, nation, code, metric_id, dates, label
+):
     rows = [
-        metrics.make_row("Northern Ireland", "NIR", date[:7], date,
-                         "rtt_waiting_list_total", value, "DoH")
-        for date, value in [("2020-03-31", 100), ("2024-03-31", 200)]
+        metrics.make_row(nation, code, date[:7], date, metric_id, value, "Official source")
+        for date, value in zip(dates, [80, 40])
     ]
     path = summary.build_summary(combine.to_frame(rows), tmp_path / "summary.md")
     text = path.read_text()
-    assert "Not like-for-like (encompass break)" in text
+    assert f"Not like-for-like ({label} break)" in text
     assert "(worse)" not in text
+    assert "(better)" not in text
 
 
 @pytest.mark.parametrize(
@@ -531,6 +555,8 @@ def test_summary_does_not_infer_improvement_across_ni_encompass_break(tmp_path):
           "2024-10-31", "2024-11-30", "2025-04-30", "2025-05-31"]),
         ("ENG", "cancer_62day_pct",
          ["2023-08-31", "2023-09-30", "2023-10-31", "2023-11-30"]),
+        ("ENG", "rtt_waiting_list_total",
+         ["2013-03-31", "2013-04-30", "2024-01-31", "2024-02-29"]),
         ("WAL", "cancer_62day_pct",
          ["2019-04-30", "2019-05-31", "2019-06-30", "2019-07-31"]),
     ],
@@ -651,6 +677,18 @@ def test_england_normal_html_discovery_does_not_call_api(monkeypatch):
     monkeypatch.setattr(england, "get_json", unexpected)
     page = england.LANDING_URLS["ae"]
     assert england._links(page) == [("Monthly data", page + "current.csv")]
+
+
+def test_england_discovery_normalises_old_publication_aliases(monkeypatch):
+    from nhs_data import england
+
+    parent = england.LANDING_URLS["rtt"]
+    canonical = parent + "rtt-data-2014-15/"
+    monkeypatch.setattr(england, "_links", lambda url: [
+        ("2014-15", "https://www.england.nhs.uk/statistics/rtt-data-2014-15/"),
+        ("2014-15", canonical),
+    ])
+    assert england._discover_pages(parent, "rtt-data-", [], 2015, 2015) == [canonical]
 
 
 def test_summary_does_not_compare_welsh_cancer_pathway_definitions(tmp_path):

@@ -182,6 +182,9 @@ def _discover_pages(
     pages = list(candidate_urls)
     for text, href in _links(landing_url):
         if url_token in href and _fy_overlaps(f"{text} {href}", start_year, end_year):
+            slug = urlsplit(href).path.rstrip("/").rsplit("/", 1)[-1]
+            if urlsplit(href).path.rstrip("/") == f"/statistics/{slug}":
+                href = urljoin(landing_url.rstrip("/") + "/", slug + "/")
             pages.append(href)
     return _dedupe(pages)
 

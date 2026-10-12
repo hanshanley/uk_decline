@@ -42,6 +42,7 @@ REQUIRED_INPUTS = {
 # Palette from the shared vizstyle house style; scorecard keeps its own minimal
 # rcParams (it hides the left spine for the small-multiples look).
 from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, GREEN  # noqa: E402
+from nhs_data import metrics as nhs_metrics  # noqa: E402
 
 WORSE, BETTER, NEUTRAL = ACCENT, GREEN, MUTED
 plt.rcParams.update({
@@ -178,7 +179,11 @@ PANELS = [
     ("Listed firms, UK (WDI)", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
      "World Bank/WFE · excludes funds & pure holdings", 2007),
     ("NHS waiting pathways, England", nhs_england, lambda v: f"{v/1e6:.1f}M", -1,
-     "NHS England · reported pathways; excludes missing-provider estimates", 2007, nhs_period),
+     "NHS England · excludes NONC & missing-provider estimates\n"
+     "Scope breaks: Apr 2013, Feb 2024; endpoints not like-for-like",
+     2007, nhs_period,
+     tuple(int(date[:4]) for date, _ in nhs_metrics.series_breaks(
+         "rtt_waiting_list_total", "ENG"))),
     ("Recreation, culture & religion", culture_spending, lambda v: f"£{v:.1f}bn", +1,
      "HM Treasury · financial years, real 2025–26 prices", 2007, financial_period),
     ("England tuition cap (real)", tuition_real, lambda v: f"${v/1e3:.1f}k", -1,
@@ -192,17 +197,24 @@ PANELS = [
 ]
 
 
-def _panel(ax, title, loader, fmt, good_dir, source, start, period_fmt=str):
+def _panel(ax, title, loader, fmt, good_dir, source, start, period_fmt=str, break_years=()):
     xs, ys = loader()
     pts = [(x, y) for x, y in zip(xs, ys) if x >= start]
     if not pts:
         raise ValueError(f"{title}: no observations from {start} onward")
     xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    breaks = [year for year in break_years if xs[0] < year <= xs[-1]]
     change = ys[-1] - ys[0]
     worse = (good_dir == +1 and change < 0) or (good_dir == -1 and change > 0)
-    color = NEUTRAL if good_dir == 0 else (WORSE if worse else BETTER)
+    color = NEUTRAL if good_dir == 0 or breaks else (WORSE if worse else BETTER)
 
-    ax.plot(xs, ys, color=color, linewidth=2.4, solid_capstyle="round")
+    boundaries = [0] + [
+        i for i in range(1, len(xs))
+        if any(xs[i - 1] < year <= xs[i] for year in breaks)
+    ] + [len(xs)]
+    for first, last in zip(boundaries, boundaries[1:]):
+        ax.plot(xs[first:last], ys[first:last], color=color, linewidth=2.4,
+                solid_capstyle="round")
     ax.plot([xs[-1]], [ys[-1]], "o", color=color, markersize=6,
             markeredgecolor="white", markeredgewidth=1.5, zorder=5)
 

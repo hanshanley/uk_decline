@@ -1,7 +1,7 @@
 """Northern Ireland NHS waiting-time statistics from Department of Health files.
 
-The Department of Health (NI) publishes quarterly spreadsheets rather than an
-API.  For the headline ``rtt_waiting_list_total`` this module uses the total
+The Department of Health (NI) publishes quarterly spreadsheets and interactive
+HTML count tables. For the headline ``rtt_waiting_list_total`` this module uses the total
 number of patients waiting for a first consultant-led outpatient appointment:
 NI publishes outpatient and inpatient/day-case waits separately, so the
 outpatient total is the most stable elective-waiting-list headline available
@@ -179,20 +179,6 @@ def _dates(series: pd.Series) -> pd.Series:
         return pd.to_datetime(series, errors="coerce", format="mixed")
     except TypeError:
         return pd.to_datetime(series, errors="coerce")
-
-
-def _month_dates(series: pd.Series) -> pd.Series:
-    values = series.astype(str).str.strip()
-    dates = pd.to_datetime(values, errors="coerce", format="%B %Y")
-    if dates.isna().any():
-        dates = dates.fillna(pd.to_datetime(values, errors="coerce"))
-    return dates + pd.offsets.MonthEnd(0)
-
-
-def _month_code_dates(series: pd.Series) -> pd.Series:
-    values = series.astype(str).str.strip()
-    dates = pd.to_datetime(values, errors="coerce", format="%b-%y")
-    return dates + pd.offsets.MonthEnd(0)
 
 
 def _period_month(date: pd.Timestamp) -> str:

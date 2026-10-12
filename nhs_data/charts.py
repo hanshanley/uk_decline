@@ -9,6 +9,7 @@ written to ``outputs/nhs/``. Because metric definitions differ by nation
 from __future__ import annotations
 
 from pathlib import Path
+import textwrap
 
 import matplotlib
 
@@ -155,14 +156,16 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
     if metric_id == "rtt_waiting_list_per_1000":
         note += POP_SOURCE_NOTE
     if metric_id in metrics.CAVEATS:
-        import textwrap
         note += "\n" + textwrap.fill("Caveat: " + metrics.CAVEATS[metric_id], width=145)
     affected = [
         f"{code}: {', '.join(date[:7] for date, _ in metrics.series_breaks(metric_id, code))}"
         for code in sorted(plotted_codes) if metrics.series_breaks(metric_id, code)
     ]
     if affected:
-        note += "\nKnown definition changes (" + "; ".join(affected) + "); lines do not bridge them."
+        note += "\n" + textwrap.fill(
+            "Definition/recording changes (" + "; ".join(affected)
+            + "); lines do not bridge them.", width=145
+        )
     caption = fig.text(0.01, 0.01, note, ha="left", va="bottom",
                        fontsize=8, color=MUTED, style="italic")
     fig.canvas.draw()

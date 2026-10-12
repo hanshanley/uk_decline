@@ -96,6 +96,33 @@ def test_nhs_annual_snapshot_uses_latest_date_not_input_order(monkeypatch):
     assert scorecard.nhs_period(2025) == "Dec 2025"
 
 
+def test_nhs_scorecard_neither_bridges_scope_changes_nor_labels_them_worse(monkeypatch):
+    monkeypatch.setattr(scorecard, "_rows", lambda path: [
+        {"nation_code": "ENG", "metric": "rtt_waiting_list_total",
+         "date": f"{year}-{month}", "value": value}
+        for year, month, value in [
+            (2007, "12-31", 2_000_000), (2012, "12-31", 3_000_000),
+            (2013, "12-31", 3_100_000), (2023, "12-31", 7_500_000),
+            (2024, "12-31", 7_400_000), (2026, "08-31", 7_158_164),
+        ]
+    ])
+    fig, ax = scorecard.plt.subplots()
+    try:
+        panel = next(p for p in scorecard.PANELS if p[1] is scorecard.nhs_england)
+        scorecard._panel(ax, *panel)
+        assert len(ax.lines) == 4
+        for line in ax.lines:
+            assert line.get_color() == scorecard.NEUTRAL
+            xs = line.get_xdata()
+            assert not any(min(xs) < year <= max(xs) for year in [2013, 2024])
+        assert list(ax.lines[-1].get_ydata()) == [7_158_164]
+        text = " ".join(t.get_text() for t in ax.texts)
+        assert "Aug 2026" in text
+        assert "endpoints not like-for-like" in text
+    finally:
+        scorecard.plt.close(fig)
+
+
 def test_scorecard_discloses_month_financial_and_academic_periods(monkeypatch):
     monkeypatch.setattr(scorecard, "_rows", lambda path: [
         {"nation_code": "ENG", "metric": "rtt_waiting_list_total",

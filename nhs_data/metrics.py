@@ -117,7 +117,9 @@ CAVEATS: dict[str, str] = {
         "waits' by stage of treatment; NI reports outpatient/inpatient/day-case "
         "waits separately (only outpatient waits are used here). These count waits, "
         "not unique people, and are not directly comparable across nations. England "
-        "uses reported totals, excluding estimates for missing providers. NI's "
+        "excludes non-English commissioned (NONC) pathways and estimates for missing "
+        "providers. It excludes sexual-health pathways from April 2013 and "
+        "community-service pathways from February 2024. NI's "
         "encompass rollout from November 2023 introduces a break: the Department "
         "says encompass and legacy figures are not directly comparable."
     ),
@@ -178,6 +180,11 @@ def series_breaks(metric_id: str, nation_code: str) -> tuple[tuple[str, str], ..
         )
     if nation_code == "ENG" and family == "cancer":
         return (("2023-10-01", "cancer standards"),)
+    if nation_code == "ENG" and family == "rtt":
+        return (
+            ("2013-04-01", "sexual-health scope"),
+            ("2024-02-01", "community-service scope"),
+        )
     if nation_code == "WAL" and family == "cancer":
         return (("2019-06-01", "suspected cancer pathway"),)
     return ()

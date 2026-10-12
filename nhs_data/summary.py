@@ -77,7 +77,8 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
                 arrow = "\u2193"
             worse = (delta > 0) != meta.higher_is_better and delta != 0
             tag = " (worse)" if worse else (" (better)" if delta != 0 else "")
-            change = f"{arrow} {_fmt(abs(delta), meta.unit)}{tag}"
+            magnitude = f"{abs(delta):.1f} pp" if meta.unit == "percent" else _fmt(abs(delta), meta.unit)
+            change = f"{arrow} {magnitude}{tag}"
             breaks = {
                 label for date, label in metrics.series_breaks(metric_id, code)
                 if first["date"] < pd.Timestamp(date) <= last["date"]
