@@ -20,6 +20,19 @@ each panel uses the nearest appropriate baseline available from its source.
   <img src="outputs/uk_decline_scorecard.png" width="1200" alt="Eight official indicators showing change in the UK since 2007">
 </p>
 
+The crime panel shows **estimated incidents in England & Wales, excluding fraud and
+computer misuse**, from ONS Crime Survey Table A1a: **11.2 million in the year ending
+March 2007 to 4.3 million in the year ending March 2026**. Lower counts are shown as
+an improvement. This is a long-run survey measure, not all UK crime, a police-recorded
+total, or the percentage of people victimised; it does not cover every offence type.
+See the [crime analysis](crime_data/README.md) for coverage and the separate series
+including fraud and computer misuse.
+
+It replaces a misleadingly labelled "fraud share" panel. That calculation actually
+measured **fraud and computer misuse combined as a share of CSEW headline incidents**,
+not fraud alone or the chance of being a fraud victim. A share can increase simply
+because other crime falls, so it was not a sound standalone worsening indicator.
+
 ## Explore the evidence
 
 **Economy and living standards:** [GDP and incomes](europe_data/README.md),
@@ -65,6 +78,12 @@ Each analysis runs as a module from the repo root, e.g.:
 ```
 
 See each analysis's README for its exact commands and full source citations.
+
+After generating the input CSVs, rebuild the overview image without re-fetching data:
+
+```bash
+./.venv/bin/python scorecard.py
+```
 
 ## Data integrity
 No API keys are required, and no data is fabricated. Downloaded raw data lives under `data/`

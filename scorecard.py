@@ -141,20 +141,17 @@ def food_bank_parcels():
     return ys, [pts[y] for y in ys]
 
 
-def fraud_share():
+def crime_incidents():
+    """CSEW incidents excluding fraud and computer misuse, converted from thousands."""
     r = _rows(DATA / "crime_csew_long.csv")
-    excl_name = "ALL CSEW HEADLINE CRIME EXCLUDING FRAUD AND COMPUTER MISUSE"
-    incl_name = "ALL CSEW HEADLINE CRIME INCLUDING FRAUD AND COMPUTER MISUSE"
-    excl = {
-        int(x["year"]): float(x["value"])
-        for x in r if x["offence_group"] == excl_name and x.get("value")
+    name = "ALL CSEW HEADLINE CRIME EXCLUDING FRAUD AND COMPUTER MISUSE"
+    pts = {
+        int(x["year"]): float(x["value"]) * 1_000
+        for x in sorted(r, key=lambda x: x["date"])
+        if x["offence_group"] == name and x.get("value")
     }
-    incl = {
-        int(x["year"]): float(x["value"])
-        for x in r if x["offence_group"] == incl_name and x.get("value")
-    }
-    ys = sorted(set(excl) & set(incl))
-    return ys, [100 * (incl[y] - excl[y]) / incl[y] for y in ys]
+    ys = sorted(pts)
+    return ys, [pts[y] for y in ys]
 
 
 # title, loader, value formatter, good_direction (+1 up-is-good, -1 down-is-good, 0 neutral),
@@ -175,8 +172,8 @@ PANELS = [
      "OECD / Gallup World Poll via OWID", 2007),
     ("Emergency food parcels", food_bank_parcels, lambda v: f"{v/1e6:.1f}M", -1,
      "Trussell · calendar-year UK totals", 2015),
-    ("Fraud share of headline crime", fraud_share, lambda v: f"{v:.0f}%", -1,
-     "ONS Crime Survey for England & Wales", 2017),
+    ("Crime incidents, England & Wales", crime_incidents, lambda v: f"{v/1e6:.1f}M", -1,
+     "ONS CSEW · excludes fraud & computer misuse", 2007),
 ]
 
 

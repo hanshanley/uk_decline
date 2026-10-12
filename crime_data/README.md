@@ -18,6 +18,12 @@ incomplete: once fraud and computer misuse (measured from 2017) are added, total
 about twice the headline, and specific harms have not all fallen. The charts let the data
 show both sides.
 
+The front-page scorecard uses the **excluding-fraud-and-computer-misuse incident
+count**, starting with the year ending March 2007, so it has a comparable 2007
+baseline. The detailed gap chart retains the combined fraud-and-computer-misuse
+share, but that is a composition measure: it can rise when other crime falls.
+It is neither fraud alone nor the percentage of people experiencing fraud.
+
 ## Data sources & method
 
 Every value is fetched live or parsed **verbatim** from the source; nothing is hand-entered.

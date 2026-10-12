@@ -166,6 +166,33 @@ def test_21st_century_chart_filters_out_earlier_data() -> None:
         assert path.is_file()
 
 
+def test_fraud_gap_labels_combined_fraud_and_computer_misuse(monkeypatch) -> None:
+    df = pd.DataFrame([
+        {
+            "offence_group": group,
+            "date": f"{year}-03-31",
+            "value": value,
+            "source": "Test source",
+        }
+        for year, excl, incl in ((2017, 60, 100), (2026, 45, 100))
+        for group, value in ((charts.TOTAL_EXCL, excl), (charts.TOTAL_INCL, incl))
+    ])
+    captured = {}
+
+    def capture(fig, out_dir, filename):
+        ax = fig.axes[0]
+        captured["title"] = ax.get_title(loc="left")
+        captured["labels"] = [text.get_text() for text in ax.texts]
+        charts.plt.close(fig)
+        return out_dir / filename
+
+    monkeypatch.setattr(charts, "_save", capture)
+    charts.chart_fraud_gap(df, Path("."))
+    assert captured["title"] == "Fraud & computer misuse: 55% of headline crime"
+    assert "Including fraud &\ncomputer misuse  0.1M" in captured["labels"]
+    assert "Excluding fraud &\ncomputer misuse  0.0M" in captured["labels"]
+
+
 def test_nation_homicide_rows_start_in_2000() -> None:
     rows = nations._assemble_rows(
         england_wales_rates={1999: 13.0, 2000: 12.5, 2001: 14.0},

@@ -222,12 +222,12 @@ def chart_fraud_gap(df, out_dir):
     ax.plot(xe, ye, color=BLUE, linewidth=2.25, solid_capstyle="round")
     ax.plot([xi.iloc[-1]], [yi.iloc[-1]], "o", color=ACCENT, markersize=5, zorder=5)
     ax.plot([xe.iloc[-1]], [ye.iloc[-1]], "o", color=BLUE, markersize=5, zorder=5)
-    _end_label(ax, xi.iloc[-1], yi.iloc[-1], f"Including fraud  {yi.iloc[-1]:.1f}M",
+    _end_label(ax, xi.iloc[-1], yi.iloc[-1], f"Including fraud &\ncomputer misuse  {yi.iloc[-1]:.1f}M",
                ACCENT)
-    _end_label(ax, xe.iloc[-1], ye.iloc[-1], f"Excluding fraud  {ye.iloc[-1]:.1f}M",
+    _end_label(ax, xe.iloc[-1], ye.iloc[-1], f"Excluding fraud &\ncomputer misuse  {ye.iloc[-1]:.1f}M",
                BLUE)
 
-    fraud_share = (yi.iloc[-1] - ye.iloc[-1]) / yi.iloc[-1] * 100
+    fraud_and_misuse_share = (yi.iloc[-1] - ye.iloc[-1]) / yi.iloc[-1] * 100
     latest_gap = yi.iloc[-1] - ye.iloc[-1]
     ax.annotate(
         f"{latest_gap:.1f}M fraud &\ncomputer misuse",
@@ -237,7 +237,7 @@ def chart_fraud_gap(df, out_dir):
     )
     _style_incidents_axes(
         ax,
-        f"Fraud now makes up about {fraud_share:.0f}% of headline crime",
+        f"Fraud & computer misuse: {fraud_and_misuse_share:.0f}% of headline crime",
         "England & Wales · CSEW crime including vs excluding fraud and computer misuse",
         max(yi.max(), ye.max()) * 1.12,
     )
