@@ -69,7 +69,9 @@ official series.
   population estimates.
 - **Coverage:** reporting year 2000 to latest available.
 - Reporting periods differ slightly: England & Wales and Scotland use financial years
-  ending in the labelled year, while the PSNI chart uses calendar years.
+  ending in the labelled year, while the PSNI chart uses calendar years. Scotland's
+  denominator is the mid-year population within that financial year (for example,
+  mid-2024 for 2024–25); Northern Ireland uses the same calendar year's population.
 
 *(Not built: `data.police.uk` publishes a key-less police-recorded-crime API, but it is
 street-level and only spans recent years, so it is unsuitable for the long-run trend. It

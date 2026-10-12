@@ -208,16 +208,17 @@ def chart_fraud_gap(df, out_dir):
     if excl.empty:
         return None
 
+    gap = incl.merge(excl, on="date", suffixes=("_incl", "_excl"))
+    if gap.empty:
+        raise ValueError("fraud-gap chart requires matching CSEW survey periods")
+    gap = gap.sort_values("date")
     fig, ax = plt.subplots(figsize=(10.5, 5.8))
     xe, ye = excl["date"], excl["value"] / 1_000.0
     xi, yi = incl["date"], incl["value"] / 1_000.0
-    # Shade the gap between the two totals over their shared periods (the "online" crime).
-    gap = incl.merge(excl, on="date", suffixes=("_incl", "_excl"))
-    if not gap.empty:
-        ax.fill_between(
-            gap["date"], gap["value_incl"] / 1_000.0,
-            gap["value_excl"] / 1_000.0, color=ACCENT, alpha=0.075,
-        )
+    ax.fill_between(
+        gap["date"], gap["value_incl"] / 1_000.0,
+        gap["value_excl"] / 1_000.0, color=ACCENT, alpha=0.075,
+    )
     ax.plot(xi, yi, color=ACCENT, linewidth=2.7, solid_capstyle="round")
     ax.plot(xe, ye, color=BLUE, linewidth=2.25, solid_capstyle="round")
     ax.plot([xi.iloc[-1]], [yi.iloc[-1]], "o", color=ACCENT, markersize=5, zorder=5)
@@ -227,17 +228,21 @@ def chart_fraud_gap(df, out_dir):
     _end_label(ax, xe.iloc[-1], ye.iloc[-1], f"Excluding fraud &\ncomputer misuse  {ye.iloc[-1]:.1f}M",
                BLUE)
 
-    fraud_and_misuse_share = (yi.iloc[-1] - ye.iloc[-1]) / yi.iloc[-1] * 100
-    latest_gap = yi.iloc[-1] - ye.iloc[-1]
+    latest = gap.iloc[-1]
+    fraud_and_misuse_share = (
+        (latest["value_incl"] - latest["value_excl"]) / latest["value_incl"] * 100
+    )
+    latest_gap = (latest["value_incl"] - latest["value_excl"]) / 1_000.0
     ax.annotate(
         f"{latest_gap:.1f}M fraud &\ncomputer misuse",
-        xy=(xi.iloc[-2], (yi.iloc[-2] + ye.iloc[-2]) / 2),
+        xy=(latest["date"], (latest["value_incl"] + latest["value_excl"]) / 2_000.0),
         xytext=(-48, 0), textcoords="offset points", ha="right", va="center",
         fontsize=9, color=MUTED,
     )
     _style_incidents_axes(
         ax,
-        f"Fraud & computer misuse: {fraud_and_misuse_share:.0f}% of headline crime",
+        f"Fraud & computer misuse: {fraud_and_misuse_share:.0f}% of headline crime "
+        f"({latest['date'].year})",
         "England & Wales · CSEW crime including vs excluding fraud and computer misuse",
         max(yi.max(), ye.max()) * 1.12,
     )
@@ -355,6 +360,12 @@ def chart_homicide_nations(df, out_dir):
     ax.yaxis.set_major_locator(mtick.MaxNLocator(nbins=6))
     _style_axes(ax)
     _source_note(fig, sub)
+    fig.text(
+        0.06, 0.052,
+        "Periods: England & Wales and Scotland = financial-year ends; "
+        "Northern Ireland = calendar years.",
+        ha="left", fontsize=7.5, color=MUTED,
+    )
     return _save(fig, out_dir, "crime_homicide_nations.png")
 
 

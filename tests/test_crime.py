@@ -188,9 +188,60 @@ def test_fraud_gap_labels_combined_fraud_and_computer_misuse(monkeypatch) -> Non
 
     monkeypatch.setattr(charts, "_save", capture)
     charts.chart_fraud_gap(df, Path("."))
-    assert captured["title"] == "Fraud & computer misuse: 55% of headline crime"
+    assert captured["title"] == "Fraud & computer misuse: 55% of headline crime (2026)"
     assert "Including fraud &\ncomputer misuse  0.1M" in captured["labels"]
     assert "Excluding fraud &\ncomputer misuse  0.0M" in captured["labels"]
+
+
+def test_fraud_gap_compares_matching_dates_and_handles_one_shared_period(monkeypatch):
+    df = pd.DataFrame([
+        {"offence_group": group, "date": date, "value": value, "source": "Test"}
+        for group, date, value in (
+            (charts.TOTAL_EXCL, "2024-03-31", 40),
+            (charts.TOTAL_INCL, "2024-03-31", 100),
+            (charts.TOTAL_INCL, "2025-03-31", 200),
+        )
+    ])
+    captured = {}
+
+    def capture(fig, out_dir, filename):
+        ax = fig.axes[0]
+        captured["title"] = ax.get_title(loc="left")
+        captured["gap_date"] = next(
+            text.xy[0] for text in ax.texts
+            if "M fraud &" in text.get_text()
+        )
+        charts.plt.close(fig)
+        return out_dir / filename
+
+    monkeypatch.setattr(charts, "_save", capture)
+    charts.chart_fraud_gap(df, Path("."))
+    assert captured["title"] == "Fraud & computer misuse: 60% of headline crime (2024)"
+    assert captured["gap_date"] == pd.Timestamp("2024-03-31")
+
+
+def test_homicide_financial_year_labels_use_end_year():
+    for label, year in (
+        ("1980-81", 1981), ("1999-00", 2000), ("2024/25", 2025),
+        ("2024–25", 2025), ("2024-2025", 2025),
+        ("Year ending March 2025", 2025), ("Mid-2024", 2024),
+    ):
+        assert nations._period_end_year(label) == year
+
+
+def test_scottish_homicide_uses_population_within_financial_year():
+    rows = nations._assemble_rows(
+        england_wales_rates={},
+        scotland_counts={2025: 45},
+        northern_ireland_counts={2024: 12},
+        scotland_population={2024: 5_000_000},
+        northern_ireland_population={2023: 1_000_000, 2024: 2_000_000},
+        start=2000,
+    )
+    by = {row["jurisdiction"]: row for row in rows}
+    assert by[nations.SCOTLAND]["year"] == 2025
+    assert by[nations.SCOTLAND]["value"] == 9.0
+    assert by[nations.NORTHERN_IRELAND]["value"] == 6.0
 
 
 def test_nation_homicide_rows_start_in_2000() -> None:

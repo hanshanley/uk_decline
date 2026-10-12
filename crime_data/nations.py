@@ -108,7 +108,15 @@ def _scotland_download() -> bytes:
 
 
 def _period_end_year(value) -> int | None:
-    years = _YEAR_RE.findall(str(value))
+    text = str(value)
+    financial_year = re.search(r"((?:19|20)\d{2})\s*[-/–]\s*(\d{4}|\d{2})\b", text)
+    if financial_year:
+        start, end = financial_year.groups()
+        if len(end) == 4:
+            return int(end)
+        end_year = int(start) // 100 * 100 + int(end)
+        return end_year if end_year >= int(start) else end_year + 100
+    years = _YEAR_RE.findall(text)
     return int(years[-1]) if years else None
 
 
@@ -280,7 +288,8 @@ def _assemble_rows(
         (NORTHERN_IRELAND, northern_ireland_counts, northern_ireland_population),
     ):
         for year, count in counts.items():
-            population = populations.get(year)
+            population_year = year - 1 if jurisdiction == SCOTLAND else year
+            population = populations.get(population_year)
             if year >= start and population:
                 rows.append({
                     "jurisdiction": jurisdiction,
