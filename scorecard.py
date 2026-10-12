@@ -32,7 +32,6 @@ REQUIRED_INPUTS = {
     DATA / "processed" / "tuition_history.csv": ".venv/bin/python -m tuition.build_history",
     DATA / "trust" / "trust_combined_long.csv": ".venv/bin/python -m trust_data.fetch_trust",
     DATA / "stock_market_size_wide.csv": ".venv/bin/python -m markets_data",
-    DATA / "uk_listed_companies_lse.csv": ".venv/bin/python -m markets_data.lse_factsheets",
     DATA / "austerity_spending.csv": ".venv/bin/python -m austerity_data",
     DATA / "food_bank_calendar_year.csv": ".venv/bin/python -m foodbank_data",
     DATA / "crime_csew_long.csv": ".venv/bin/python -m crime_data",
@@ -68,7 +67,7 @@ def _year(s):
 # ── One loader per panel -> (xs, ys) sorted by x ─────────────────────────────
 def gdp_vs_us():
     r = _rows(DATA / "europe_combined_wide.csv")
-    M = "gdp_per_capita_real_usd"
+    M = "gdp_per_capita_ppp_constant"
     uk = {int(x["year"]): float(x[M]) for x in r if x["country"] == "United Kingdom" and x.get(M)}
     us = {int(x["year"]): float(x[M]) for x in r if x["country"] == "United States" and x.get(M)}
     ys = sorted(set(uk) & set(us))
@@ -78,7 +77,7 @@ def gdp_vs_us():
 def nhs_england():
     r = _rows(OUT / "nhs" / "nhs_waiting_times.csv")
     pts = {}
-    for x in r:
+    for x in sorted(r, key=lambda x: x["date"]):
         if x["nation_code"] == "ENG" and x["metric"] == "rtt_waiting_list_total" and x.get("value"):
             y = _year(x["date"])
             if y:
@@ -105,17 +104,6 @@ def uk_listed_companies():
     r = _rows(DATA / "stock_market_size_wide.csv")
     pts = {int(x["year"]): float(x["listed_domestic_companies"]) for x in r
            if x["region"] == "United Kingdom" and x.get("listed_domestic_companies")}
-    # The World Bank/WFE "listed domestic companies" series ends at 2022; extend it with the
-    # UK-domiciled count (Main Market + AIM) read straight from the LSE factsheets, which joins
-    # the WB series to within <1% at the 2022 overlap (WB 1,606 vs LSE 1,619).
-    lse_path = DATA / "uk_listed_companies_lse.csv"
-    if lse_path.exists() and pts:
-        wb_last = max(pts)
-        for x in _rows(lse_path):
-            if x["metric"] == "lse_companies_uk" and x.get("value"):
-                y = int(x["year"])
-                if y > wb_last:
-                    pts[y] = float(x["value"])
     ys = sorted(pts)
     return ys, [pts[y] for y in ys]
 
@@ -158,20 +146,20 @@ def crime_incidents():
 # source, start year. Baselines vary because the official comparable series do.
 
 PANELS = [
-    ("GDP per capita vs the US", gdp_vs_us, lambda v: f"{v:.0f}%", +1,
-     "World Bank WDI · real US dollars", 2007),
-    ("UK-listed companies", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
-     "WFE / World Bank; LSE factsheets", 2007),
-    ("NHS waiting list, England", nhs_england, lambda v: f"{v/1e6:.1f}M", -1,
-     "NHS England", 2007),
+    ("GDP per capita vs US (PPP)", gdp_vs_us, lambda v: f"{v:.0f}%", +1,
+     "World Bank WDI · constant-price PPP", 2007),
+    ("Listed firms, UK (WDI)", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
+     "World Bank/WFE · excludes funds & pure holdings", 2007),
+    ("NHS waiting pathways, England", nhs_england, lambda v: f"{v/1e6:.1f}M", -1,
+     "NHS England · pathways, not unique patients", 2007),
     ("Culture & recreation spending", culture_spending, lambda v: f"£{v:.1f}bn", +1,
      "HM Treasury · real 2025–26 prices", 2007),
-    ("University tuition (real)", tuition_real, lambda v: f"${v/1e3:.1f}k", -1,
-     "Eurydice / NCES / UK fee cap (constant 2022 US$)", 2006),
+    ("England tuition cap (real)", tuition_real, lambda v: f"${v/1e3:.1f}k", -1,
+     "England fee cap · market FX, constant 2022 US$", 2006),
     ("Trust in national government", trust_govt, lambda v: f"{v:.0f}%", +1,
      "OECD / Gallup World Poll via OWID", 2007),
     ("Emergency food parcels", food_bank_parcels, lambda v: f"{v/1e6:.1f}M", -1,
-     "Trussell · calendar-year UK totals", 2015),
+     "Trussell network · calendar-year parcels, not people", 2015),
     ("Crime incidents, England & Wales", crime_incidents, lambda v: f"{v/1e6:.1f}M", -1,
      "ONS CSEW · excludes fraud & computer misuse", 2007),
 ]
@@ -181,8 +169,7 @@ def _panel(ax, title, loader, fmt, good_dir, source, start):
     xs, ys = loader()
     pts = [(x, y) for x, y in zip(xs, ys) if x >= start]
     if not pts:
-        ax.set_axis_off()
-        return
+        raise ValueError(f"{title}: no observations from {start} onward")
     xs, ys = [p[0] for p in pts], [p[1] for p in pts]
     change = ys[-1] - ys[0]
     worse = (good_dir == +1 and change < 0) or (good_dir == -1 and change > 0)
@@ -239,13 +226,18 @@ def main() -> int:
         return 2
 
     fig, axes = plt.subplots(2, 4, figsize=(17, 9))
-    for ax, panel in zip(axes.flat, PANELS):
-        _panel(ax, *panel)
+    try:
+        for ax, panel in zip(axes.flat, PANELS):
+            _panel(ax, *panel)
+    except ValueError as error:
+        plt.close(fig)
+        print(f"scorecard input error: {error}", file=sys.stderr)
+        return 2
 
     fig.suptitle("UK since 2007",
                  fontsize=22, fontweight="bold", y=0.99)
     fig.text(0.5, 0.935,
-             "Eight official indicators of economic and social change; "
+             "Eight source-backed indicators of economic and social change; "
              "baselines reflect data availability.",
              ha="center", fontsize=11, color=MUTED)
     fig.text(0.5, 0.015,

@@ -1,6 +1,6 @@
 <div align="center">
   <h1>Social, Economic, and Political Change in the United Kingdom</h1>
-  <p><strong>Official data. Reproducible analysis. Long-run context.</strong></p>
+  <p><strong>Source-backed data. Reproducible analysis. Long-run context.</strong></p>
   <p>Comparing the UK with the United States and European peers.</p>
   <p>
     <a href="#uk-since-2007">Overview</a> ·
@@ -13,12 +13,28 @@
 
 ## UK since 2007
 
-The overview combines eight comparable official series. It uses 2007 as the common framing;
-each panel uses the nearest appropriate baseline available from its source.
+The overview combines eight source-backed indicators, including official statistics,
+charity administrative counts and a constructed tuition-fee series. It uses 2007 as
+the common framing; each panel uses its own available baseline and latest year.
+It is not a composite index or an exhaustive measure of UK performance. Colours
+describe the selected direction of change between endpoints, not the latest annual trend.
 
 <p align="center">
-  <img src="outputs/uk_decline_scorecard.png" width="1200" alt="Eight official indicators showing change in the UK since 2007">
+  <img src="outputs/uk_decline_scorecard.png" width="1200" alt="Eight source-backed indicators showing change in the UK since 2007">
 </p>
+
+The GDP comparison uses **constant-price purchasing-power parity (PPP)**, not
+market-exchange-rate dollars, so sterling movements are not mistaken for relative
+changes in economic output. The tuition panel is an **England undergraduate fee-cap
+series**, converted at annual market exchange rates and deflated with US CPI to
+2022 dollars—not average UK tuition or a domestic UK purchasing-power measure.
+NHS waiting counts are **treatment
+pathways**, not unique patients, and Trussell figures count **parcels distributed by
+its network**, not unique recipients or all UK food-bank provision. The listed-firm
+panel retains the **World Bank/WFE series only**, including domestic companies and
+foreign companies listed exclusively on those exchanges, but excluding funds and
+pure holding companies. It ends earlier than other panels: the newer LSE
+UK-domiciled counts have a different definition and are no longer spliced onto it.
 
 The crime panel shows **estimated incidents in England & Wales, excluding fraud and
 computer misuse**, from ONS Crime Survey Table A1a: **11.2 million in the year ending
@@ -86,6 +102,10 @@ After generating the input CSVs, rebuild the overview image without re-fetching 
 ```
 
 ## Data integrity
-No API keys are required, and no data is fabricated. Downloaded raw data lives under `data/`
-(git-ignored, regenerable); the curated, citation-bearing figures under `outputs/` are the
-committed showcase. Values have been spot-checked against the live official APIs.
+No API keys are required, and source observations are not fabricated. Derived measures,
+source-published estimates, method breaks and coverage limitations are documented in
+each analysis. Downloaded/intermediate data generally lives under `data/`
+(git-ignored, regenerable); cited historical input snapshots are tracked where needed.
+The curated figures under `outputs/` are the committed showcase. Targeted observations
+have been checked against primary sources; this is not independent verification of
+every observation in every dataset.

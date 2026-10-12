@@ -363,7 +363,7 @@ def chart_homicide_nations(df, out_dir):
     fig.text(
         0.06, 0.052,
         "Periods: England & Wales and Scotland = financial-year ends; "
-        "Northern Ireland = calendar years.",
+        "Northern Ireland = calendar years. NI counts are chart-derived.",
         ha="left", fontsize=7.5, color=MUTED,
     )
     return _save(fig, out_dir, "crime_homicide_nations.png")

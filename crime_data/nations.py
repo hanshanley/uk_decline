@@ -163,7 +163,7 @@ def _extract_population(workbook: bytes, sheet_name: str) -> dict[int, int]:
 
 
 def _extract_psni_counts(report: bytes) -> dict[int, int]:
-    """Recover the exact integer series from the bars in PSNI's official PDF chart."""
+    """Reconstruct rounded integer counts from PSNI's published vector-chart bars."""
     try:
         import fitz
     except ImportError as exc:  # pragma: no cover - dependency error is environment-specific

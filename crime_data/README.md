@@ -66,7 +66,9 @@ official series.
 - **Scotland:** Scottish Government *Homicide in Scotland*, divided by ONS mid-year
   population estimates.
 - **Northern Ireland:** PSNI *Trends in Police Recorded Crime*, divided by ONS mid-year
-  population estimates.
+  population estimates. Counts are reconstructed from the PDF's vector-bar heights
+  and rounded to integers, not read from a machine-readable table. Treat this as
+  chart-derived data, with potential extraction/rounding error.
 - **Coverage:** reporting year 2000 to latest available.
 - Reporting periods differ slightly: England & Wales and Scotland use financial years
   ending in the labelled year, while the PSNI chart uses calendar years. Scotland's
