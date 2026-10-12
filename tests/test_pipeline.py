@@ -67,12 +67,10 @@ def test_maddison_metric_in_wide_order() -> None:
     assert "2011" in maddison.UNIT and "real" in maddison.UNIT.lower()
 
 
-def test_headline_gdp_is_real_usd_cpi_deflated() -> None:
-    # Headline GDP metric must be the real, CPI-deflated constant-US$ series (NON-PPP),
-    # i.e. current US$ (NY.GDP.PCAP.CD) deflated by US CPI (FP.CPI.TOTL) to constant 2015 US$.
+def test_headline_gdp_is_national_accounts_volume_and_legacy_cpi_is_retained() -> None:
     from europe_data import plot_uk_decline
     from europe_data import combine, worldbank
-    assert plot_uk_decline.GDP_METRIC == "gdp_per_capita_real_usd"
+    assert plot_uk_decline.GDP_METRIC == "gdp_per_capita_constant_usd"
     assert "PPP" not in plot_uk_decline.GDP_METRIC.upper()
     assert "gdp_per_capita_real_usd" in combine.METRIC_ORDER
     # The deflation helper produces a real, constant-2015-US$ series from nominal + US CPI.
@@ -83,6 +81,64 @@ def test_headline_gdp_is_real_usd_cpi_deflated() -> None:
     assert real and real[0]["metric"] == "gdp_per_capita_real_usd"
     assert abs(real[0]["value"] - 125.0) < 1e-9  # 100 * (100/80)
     assert "2015 US$" in real[0]["unit"]
+
+
+def test_gdp_figures_plot_distinct_volume_and_nominal_series(monkeypatch, tmp_path):
+    import pandas as pd
+    import pytest
+    from europe_data import plot_uk_decline as plots
+
+    rows = []
+    for country, volumes, nominal in [
+        ("United Kingdom", [40_000, 44_000], [50_000, 100_000]),
+        ("United States", [80_000, 96_000], [60_000, 120_000]),
+    ]:
+        for i, year in enumerate([2007, 2025]):
+            row = {metric: None for metric in combine.METRIC_ORDER}
+            row.update(country=country, year=year,
+                       gdp_per_capita_constant_usd=volumes[i],
+                       gdp_per_capita_nominal_usd=nominal[i],
+                       gdp_per_capita_real_usd=999_000 + i)
+            rows.append(row)
+    data = pd.DataFrame(rows)
+    monkeypatch.setattr(plots.pd, "read_csv", lambda _: data)
+    captured = {}
+    def save(path, **kwargs):
+        captured[Path(path).name] = plots.plt.gcf()
+    monkeypatch.setattr(plots.plt, "savefig", save)
+    assert plots.main(["--out", str(tmp_path)]) == 0
+    real = captured["gdp_per_capita_real_over_time.png"].axes[0]
+    nominal = captured["gdp_per_capita_nominal_over_time.png"].axes[0]
+    assert list(real.lines[0].get_ydata()) == pytest.approx([40, 44])
+    assert list(nominal.lines[0].get_ydata()) == pytest.approx([50, 100])
+    ratio = captured["uk_gdp_relative_to_peers.png"].axes[0]
+    assert list(ratio.lines[0].get_ydata()) == pytest.approx([120, 120])
+    assert "2007\u20132025" in ratio.get_title()
+    assert "2025" in " ".join(t.get_text() for t in ratio.texts)
+
+
+def test_nominal_gdp_ratio_uses_only_shared_years_and_dates_each_peer(monkeypatch, tmp_path):
+    import pandas as pd
+    from europe_data import plot_uk_decline as plots
+
+    data = pd.DataFrame([
+        {"country": "United Kingdom", "year": y, plots.NOMINAL_GDP_METRIC: 50_000}
+        for y in [2023, 2025]
+    ] + [
+        {"country": "United States", "year": 2024, plots.NOMINAL_GDP_METRIC: 90_000},
+        {"country": "United States", "year": 2025, plots.NOMINAL_GDP_METRIC: 100_000},
+        {"country": "Poland", "year": 2023, plots.NOMINAL_GDP_METRIC: 25_000},
+    ])
+    captured = []
+    monkeypatch.setattr(plots.plt, "savefig", lambda *args, **kwargs:
+                        captured.append(plots.plt.gcf()))
+    plots.fig_uk_relative(data, tmp_path)
+    ax = captured[0].axes[0]
+    assert list(ax.lines[0].get_xdata()) == [2025]
+    assert list(ax.lines[1].get_xdata()) == [2023]
+    text = " ".join(t.get_text() for t in ax.texts)
+    assert "United States (2025)" in text and "Poland (2023)" in text
+    assert "2023\u20132025" in ax.get_title()
 
 
 def test_eurostat_decoder() -> None:

@@ -1,8 +1,6 @@
 """Canonical PPP metric registry, units, vintages, and per-metric caveats.
 
-The central idea encoded here is that **a PPP series is only valid for one kind of
-comparison at a time**, and mixing them up is the single easiest way to draw a wrong
-conclusion:
+Constant and current PPPs answer different questions; neither is universally invalid:
 
 ``over_time``
     Safe to plot as a **level, across years**. Requires a constant-price series, i.e. one
@@ -13,9 +11,9 @@ conclusion:
 ``cross_section``
     Safe to use for a **same-year, cross-country ratio**. Here the *current* series is the
     better choice: it converts each year's output at that year's price levels. The
-    constant-price series is benchmarked on the ICP 2021 round and extrapolated away from
-    it with each country's *own* GDP deflator, so its cross-country ratios drift as you
-    move away from 2021.
+    constant-price series is also usable for benchmark-valued output comparisons and
+    relative volume growth, but is not an annually repriced cross-country comparison.
+    Its levels depend on the chosen benchmark. The OECD publishes both types.
 
 Both flags are enforced by :func:`require_over_time` / :func:`require_cross_section`, which
 the chart module calls before plotting, so a future edit cannot silently pick the wrong
@@ -47,27 +45,9 @@ SOURCE = "World Bank WDI"
 # comparable and must never be spliced.
 ICP_VINTAGE = "ICP 2021"
 
-# PPPs are *surveyed*, not observed continuously — and only in some years.
-#
-# The ICP runs benchmark price surveys periodically (2011, 2017, 2021). For OECD and EU
-# countries the World Bank additionally incorporates **annual** PPPs from the Eurostat-OECD
-# PPP Programme, which runs a rolling price survey; where those are unavailable it
-# extrapolates from the nearest benchmark by the country's GDP deflator relative to the US
-# (World Bank Data Help Desk, "How do you extrapolate the PPP conversion factors...").
-#
-# Every country plotted here is an OECD member, so from the mid-1990s their annual PPPs carry
-# real survey information. Before that they are pure extrapolation and contain no independent
-# price observation at all.
-#
-# This boundary was established empirically, not assumed: for each country-year we tested
-# whether the year-on-year move in PA.NUS.PPP equals the relative GDP-deflator move (i.e. the
-# extrapolation formula exactly reproduces it). 1991-1994 are extrapolated in *every* country
-# and 1995 in every country but Poland; from 1996 on, the series deviates from the formula in
-# 25-29 of 30 years, which can only come from new survey data.
-#
-# Consequence: a PPP comparison anchored before this year is a projection, not a measurement,
-# and should not be quoted as an observed starting point.
-SURVEY_FIRST_YEAR = 1996
+# A retained reporting window, not a certification of country-year survey provenance.
+# Matching or deviating from a deflator formula cannot establish whether a PPP was surveyed.
+PEER_COMPARISON_START_YEAR = 1996
 
 # The year the UK/US decomposition is anchored on: the UK's high-water mark against the US and
 # the baseline the rest of the repository measures from. Defined here rather than in `charts`
@@ -81,14 +61,14 @@ METRICS: dict[str, Metric] = {
         "constant 2021 international $",
         "NY.GDP.PCAP.PP.KD",
         over_time=True,
-        cross_section=False,
+        cross_section=True,
         vintage=ICP_VINTAGE,
         description=(
             "GDP per capita converted at purchasing power parity and held at constant 2021 "
             "prices. Inflation is removed, so levels are comparable across years — this is "
-            "the PPP analogue of the headline constant-US$ series. Cross-country ratios are "
-            "extrapolated from the 2021 benchmark using each country's own GDP deflator, so "
-            "use the current-price series for same-year comparisons."
+            "a benchmark-valued volume measure. Cross-country ratios measure relative "
+            "volume growth on that benchmark, not each year's repriced purchasing-power "
+            "levels. Use current PPPs for the latter."
         ),
     ),
     "gdp_per_capita_ppp_current": Metric(
@@ -108,18 +88,32 @@ METRICS: dict[str, Metric] = {
     ),
     "gdp_per_capita_real_usd": Metric(
         "gdp_per_capita_real_usd",
-        "Real GDP per capita at market exchange rates",
+        "GDP per capita dollar valuation (US-CPI adjusted)",
         "constant 2015 US$",
         None,  # derived: NY.GDP.PCAP.CD deflated by US CPI (europe_data.worldbank)
         over_time=True,
         cross_section=True,
         vintage="US CPI 2015 base",
         description=(
-            "The repository's headline measure, reproduced here as the comparator: GDP per "
+            "A retained legacy valuation, not a real-output volume measure: GDP per "
             "capita in current US$ (NY.GDP.PCAP.CD) deflated by US CPI to constant 2015 US$. "
             "Market exchange rates are preserved, so sterling's moves are visible. Because a "
             "country-vs-country ratio cancels the common deflator, its cross-section ratios "
             "equal those of the underlying current-US$ series."
+        ),
+    ),
+    "gdp_per_capita_constant_usd": Metric(
+        "gdp_per_capita_constant_usd",
+        "Real GDP per capita (national accounts)",
+        "real, constant 2015 US$",
+        "NY.GDP.PCAP.KD",
+        over_time=True,
+        cross_section=False,
+        vintage="2015 fixed-base dollar conversion",
+        description=(
+            "National-accounts real GDP per capita, converted to fixed-base US dollars. "
+            "Used to cross-check constant-PPP growth independently; not a PPP comparison "
+            "of domestic purchasing-power levels."
         ),
     ),
     "gdp_per_capita_nominal_usd": Metric(
@@ -247,16 +241,19 @@ CAVEATS: dict[str, str] = {
         "the further you move from it. World Bank coverage begins in 1990."
     ),
     "gdp_per_capita_ppp_current": (
-        "Current international dollars: correct for same-year cross-country ratios, wrong "
-        "for trends, because it carries worldwide inflation. Never plotted as a level."
+        "Current international dollars: use for annually repriced cross-country ratios, "
+        "not real-growth rates. Nominal levels carry price changes."
+    ),
+    "gdp_per_capita_constant_usd": (
+        "National-accounts volumes at fixed-base dollar conversion. Growth is independent "
+        "of annual market exchange rates; cross-country dollar levels are not PPP-adjusted."
     ),
     "gdp_per_capita_real_usd": (
-        "Market exchange rates, so it moves with sterling as well as with output. This is "
-        "the point of the comparison, not a defect: it measures what UK output buys on "
-        "world markets."
+        "Legacy US-CPI-adjusted dollar valuation. It retains annual market FX and domestic "
+        "GDP-price effects; it is not real output or a measure of the goods bought abroad."
     ),
     "gdp_per_capita_nominal_usd": (
-        "Not inflation-adjusted. Retained only as the left-hand side of the PPP identity."
+        "Not inflation-adjusted. Dollar valuations include GDP prices and annual market FX."
     ),
     "ppp_conversion_factor": (
         "Re-benchmarked with each ICP round (2011, 2017, 2021); the World Bank revises the "
@@ -303,9 +300,8 @@ def require_cross_section(metric_id: str) -> Metric:
     metric = METRICS[metric_id]
     if not metric.cross_section:
         raise ValueError(
-            f"{metric_id!r} is a constant-price series extrapolated from its benchmark "
-            "year, so same-year cross-country ratios are unreliable. Use a current-price "
-            f"metric ({', '.join(sorted(CROSS_SECTION_SAFE))})."
+            f"{metric_id!r} is not registered for cross-country level ratios. "
+            f"Use an appropriate comparison metric ({', '.join(sorted(CROSS_SECTION_SAFE))})."
         )
     return metric
 

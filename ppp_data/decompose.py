@@ -18,9 +18,10 @@ PPP price structure. Reading a change in ``R_ppp`` as a change in real output un
 real divergence roughly four-fold. So the production caller
 (:func:`ppp_data.charts.uk_us_decomposition`) does not use the identity as written: it feeds
 the **constant-price volume ratio** as the real factor and derives the second factor as the
-residual ``R_fx / R_real``, which therefore carries ICP re-benchmarking drift as well as
-prices and the exchange rate. That is why the chart labels the second bar "prices, exchange
-rate and re-benchmarking" rather than "price level", and why
+residual ``R_fx / R_real``. Within a consistent vintage, its movement reflects relative GDP
+prices and exchange rates, not annually changing benchmark parities: a fixed rescaling of
+the volume ratio cancels from growth and from both symmetric contributions. The residual is
+not the current-PPP price level index or a causal currency estimate. The wiring check
 :func:`ppp_data.validate.check_decomposition_real_component_is_volume` recomputes the real
 component from each country's own growth rates on every run.
 
@@ -103,8 +104,10 @@ def decompose_ratio_change(
         ("ppp_ratio_start", ppp_ratio_start), ("ppp_ratio_end", ppp_ratio_end),
         ("pli_ratio_start", pli_ratio_start), ("pli_ratio_end", pli_ratio_end),
     ):
-        if value <= 0:
-            raise ValueError(f"{name} must be positive, got {value!r}")
+        if not math.isfinite(value) or value <= 0:
+            raise ValueError(f"{name} must be positive and finite, got {value!r}")
+    if end_year <= start_year:
+        raise ValueError("end_year must be later than start_year")
 
     fx_start = ppp_ratio_start * pli_ratio_start
     fx_end = ppp_ratio_end * pli_ratio_end

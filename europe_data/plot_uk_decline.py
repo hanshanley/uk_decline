@@ -7,8 +7,9 @@ the pre1870_reapportionment_package figures (warm tan background, serif fonts, m
 palette, italic source note, no top/right spines).
 
 Figures:
-  - gdp_per_capita_real_over_time.png  UK vs peers, real GDP/capita at market FX
-  - uk_gdp_relative_to_peers.png       UK GDP/capita as a share of the EU average and the US
+  - gdp_per_capita_real_over_time.png  National-accounts volumes, fixed-base dollars
+  - gdp_per_capita_nominal_over_time.png  Nominal valuations at annual market FX
+  - uk_gdp_relative_to_peers.png       Peer nominal GDP/capita as a share of the UK
   - median_disposable_income_pps.png   Median income (Eurostat PPS), UK ends ~2018
   - median_income_pip.png              PIP median income (2021 PPP $/day), UK to ~2021
 
@@ -20,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import pathlib
+import textwrap
 
 import matplotlib
 
@@ -55,14 +57,19 @@ PEERS = [
 EU_WB = ("European Union", SUBSTACK_BLUE, "--", 2.0)                    # World Bank EU aggregate, for GDP
 EU_EUROSTAT = ("European Union (27, 2020)", SUBSTACK_MUTED, "--", 1.6)  # Eurostat, income
 
-# GDP per capita is shown in REAL, constant 2015 US$ (inflation-adjusted, market exchange
-# rates — NOT PPP). Current-dollar NY.GDP.PCAP.CD is deflated by US CPI; it is not
-# the national-accounts volume series NY.GDP.PCAP.KD.
-GDP_METRIC = "gdp_per_capita_real_usd"
+# Volume growth and current-dollar valuation are separate questions.
+GDP_METRIC = "gdp_per_capita_constant_usd"
+NOMINAL_GDP_METRIC = "gdp_per_capita_nominal_usd"
 
 SOURCE_GDP = ("Data: World Bank Group, World Development Indicators \u2014 GDP per capita in "
-              "current US$ (NY.GDP.PCAP.CD) deflated by US CPI (FP.CPI.TOTL) to constant 2015 US$ "
-              "(inflation-adjusted, market exchange rates).")
+              "constant 2015 US$ (NY.GDP.PCAP.KD), national-accounts volume measure. "
+              "Fixed-base dollar conversion, not annual market FX or PPP; compare growth, "
+              "not domestic purchasing-power levels.")
+SOURCE_NOMINAL_GDP = (
+    "Data: World Bank WDI \u2014 GDP per capita, current US$ (NY.GDP.PCAP.CD), "
+    "at annual market exchange rates. Not inflation-adjusted: changes include output, "
+    "GDP prices and exchange rates. GDP is not household income."
+)
 SOURCE_EUROSTAT = ("Data: Eurostat (European Commission), EU-SILC \u2014 median equivalised net "
                    "income, PPS (ilc_di03). UK series ends ~2018 (post-Brexit).")
 SOURCE_PIP = ("Data: World Bank Group, Poverty and Inequality Platform \u2014 median "
@@ -77,7 +84,8 @@ def _series(df: pd.DataFrame, country: str, metric: str) -> pd.DataFrame:
 
 def _source_note(fig, text: str, ha: str = "left") -> None:
     x = 0.01 if ha == "left" else 0.99
-    fig.text(x, 0.01, text, ha=ha, fontsize=8, color=SUBSTACK_MUTED, style="italic")
+    fig.text(x, 0.01, textwrap.fill(text, width=150), ha=ha,
+             fontsize=8, color=SUBSTACK_MUTED, style="italic")
 
 
 def _end_label(ax, xs, ys, text: str, color: str) -> None:
@@ -96,8 +104,7 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
     """Draw a UK-vs-peers line chart for one metric and save it to ``out/filename``.
 
     ``eu_agg``/``eu_label`` optionally add an EU reference series (Eurostat
-    ``EU_EUROSTAT`` for income). It is omitted for the GDP charts because the World
-    Bank constant-US$ series has no EU aggregate here and we never synthesize one.
+    ``EU_EUROSTAT`` for income). GDP charts show the named country peers, not an aggregate.
     ``scale``
     divides the values (e.g. 1000 to show GDP in 000s).
     """
@@ -127,22 +134,20 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
         ax.legend(loc="upper left", frameon=False, labelcolor="linecolor", fontsize=10)
     _source_note(fig, source, ha=source_ha)
     plt.tight_layout(pad=0.5)
-    plt.subplots_adjust(bottom=0.12)
+    plt.subplots_adjust(bottom=0.15)
     plt.savefig(out / filename, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
 
 def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
-    metric = GDP_METRIC  # real constant-US$ series (a country-vs-country ratio is inflation-invariant)
-    # Start at 1990: the 1970s/80s market-FX swings are jagged noise; 1990 on is the clean
-    # story (US overtakes the UK, Poland catches up) and covers Poland's full series.
+    metric = NOMINAL_GDP_METRIC
+    # Match the coverage of the companion World Bank PPP comparison.
     start = 1990
     uk = _series(df, "United Kingdom", metric).set_index("year")[metric]
     uk = uk[uk.index >= start]
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
-    # Each peer's GDP per capita as a % of the UK (UK = 100). Higher line = richer than the
-    # UK; a rising line = catching up with / overtaking the UK.
+    # These are dollar-valued GDP ratios, not household-income or real-growth ratios.
     refs = [
         ("United States", SUBSTACK_TEXT, "-", 2.8, "United States"),
         ("Germany", SUBSTACK_BLUE, "-", 2.0, "Germany"),
@@ -150,13 +155,18 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
         ("European Union", SUBSTACK_MUTED, "--", 2.0, "EU average"),
         ("Poland", SUBSTACK_GREEN, "-", 2.0, "Poland"),
     ]
+    plotted_years = []
     for country, color, ls, lw, label in refs:
         ref = _series(df, country, metric).set_index("year")[metric]
         ratio = (ref / uk).dropna() * 100.0  # peer as % of the UK
         if ratio.empty:
             continue
+        plotted_years.extend(ratio.index)
         ax.plot(ratio.index, ratio.values, color=color, linewidth=lw, linestyle=ls)
-        _end_label(ax, ratio.index, ratio.values, label, color)
+        _end_label(ax, ratio.index, ratio.values, f"{label} ({ratio.index[-1]})", color)
+    if not plotted_years:
+        plt.close(fig)
+        raise ValueError("no overlapping nominal GDP observations from 1990 onward")
 
     ax.axhline(100, color=SUBSTACK_ACCENT, linewidth=1.4, linestyle="-")
     ax.text(ax.get_xlim()[0], 102, "United Kingdom = 100", fontsize=9.5,
@@ -170,24 +180,25 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}%"))
     # Centered title + centered subtitle (the subtitle carries the two turning-point facts,
     # so it stays aligned under the headline instead of drifting to a corner).
-    ax.set_title("GDP per capita relative to the UK, 1990\u20132024",
+    ax.set_title(f"Nominal GDP per capita relative to the UK, "
+                 f"{min(plotted_years)}\u2013{max(plotted_years)}",
                  fontweight="bold", pad=30)
     facts = []
     if not us.empty:
-        facts.append(f"The US reached {us.iloc[-1]:.0f}% of the UK")
+        facts.append(f"US: {us.iloc[-1]:.0f}% of the UK in {us.index[-1]}")
     if not pl.empty:
-        facts.append(f"Poland climbed from {pl.iloc[0]:.0f}% to {pl.iloc[-1]:.0f}%")
+        facts.append(f"Poland: {pl.iloc[-1]:.0f}% in {pl.index[-1]}")
     if facts:
-        ax.text(0.5, 1.015, ", while ".join(facts),
+        ax.text(0.5, 1.015, "; ".join(facts),
                 transform=ax.transAxes, ha="center", va="bottom",
                 fontsize=12, color=SUBSTACK_MUTED)
     ax.grid(axis="y", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)
     ax.tick_params(axis="both", pad=2)
     ax.margins(x=0.04)
-    _source_note(fig, SOURCE_GDP)
+    _source_note(fig, SOURCE_NOMINAL_GDP)
     plt.tight_layout(pad=0.5)
-    plt.subplots_adjust(bottom=0.12)
+    plt.subplots_adjust(bottom=0.15)
     plt.savefig(out / "uk_gdp_relative_to_peers.png", dpi=200, bbox_inches="tight")
     plt.close(fig)
 
@@ -205,11 +216,19 @@ def main(argv: list[str] | None = None) -> int:
 
     _line_chart(
         df, GDP_METRIC,
-        "GDP per capita at market exchange rates (US-CPI deflated)",
-        "GDP per capita (000s, constant 2015 US$ at each year's FX)",
+        "Real GDP per capita (national-accounts volumes)",
+        "GDP per capita (000s, constant 2015 US$, fixed-base conversion)",
         lambda v, _: f"${v:.0f}k", SOURCE_GDP,
         "gdp_per_capita_real_over_time.png", out,
         eu_agg=EU_WB, eu_label="EU average", scale=1000.0, source_ha="left",
+    )
+    _line_chart(
+        df, NOMINAL_GDP_METRIC,
+        "Nominal GDP per capita at market exchange rates",
+        "GDP per capita (000s, current US$)",
+        lambda v, _: f"${v:.0f}k", SOURCE_NOMINAL_GDP,
+        "gdp_per_capita_nominal_over_time.png", out,
+        eu_agg=EU_WB, eu_label="EU average", scale=1000.0,
     )
     fig_uk_relative(df, out)
     _line_chart(

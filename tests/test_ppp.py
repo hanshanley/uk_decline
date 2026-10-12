@@ -15,6 +15,8 @@ import math
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from ppp_data import (  # noqa: E402
@@ -49,6 +51,7 @@ def _consistent_rows() -> list[dict]:
                 _row(iso3, year, "market_exchange_rate", fx),
                 _row(iso3, year, "gdp_per_capita_ppp_current", gdp_ppp),
                 _row(iso3, year, "gdp_per_capita_ppp_constant", gdp_ppp),
+                _row(iso3, year, "gdp_per_capita_constant_usd", gdp_ppp * 0.8),
                 _row(iso3, year, "gdp_per_capita_nominal_usd", gdp_ppp * pli),
             ]
     rows += worldbank.derive_price_level_index(rows)
@@ -71,17 +74,18 @@ def test_current_price_ppp_is_never_a_trend() -> None:
         raise AssertionError("require_over_time must reject a current-price series")
 
 
-def test_constant_price_ppp_is_never_a_cross_section() -> None:
-    # Constant-price PPP is extrapolated from the benchmark with each country's own
-    # deflator, so same-year cross-country ratios drift away from the benchmark year.
+def test_constant_price_ppp_can_compare_benchmark_valued_volumes() -> None:
     assert metrics.METRICS["gdp_per_capita_ppp_constant"].over_time
-    assert not metrics.METRICS["gdp_per_capita_ppp_constant"].cross_section
-    try:
-        metrics.require_cross_section("gdp_per_capita_ppp_constant")
-    except ValueError as exc:
-        assert "cross-country ratios are unreliable" in str(exc)
-    else:
-        raise AssertionError("require_cross_section must reject a constant-price series")
+    metrics.require_cross_section("gdp_per_capita_ppp_constant")
+    rows = _consistent_rows()
+    for row in rows:
+        if row["iso3"] == "GBR" and row["year"] == 2024:
+            if row["metric"] == "gdp_per_capita_ppp_constant":
+                row["value"] *= 0.8
+    volume = series.ratio(rows, "gdp_per_capita_ppp_constant", "GBR", "USA")
+    repriced = series.ratio(rows, "gdp_per_capita_ppp_current", "GBR", "USA")
+    assert volume[2024] / volume[2007] == pytest.approx(0.8)
+    assert repriced[2024] / repriced[2007] == pytest.approx(1)
 
 
 def test_every_metric_has_a_unit_vintage_and_caveat() -> None:
@@ -231,13 +235,12 @@ def test_decomposition_rejects_non_positive_ratios() -> None:
 def test_ratio_refuses_an_invalid_cross_section_metric() -> None:
     rows = _consistent_rows()
     try:
-        series.ratio(rows, "gdp_per_capita_ppp_constant", "GBR", "USA")
+        series.ratio(rows, "price_level_index_direct", "GBR", "USA")
     except ValueError as exc:
-        assert "cross-country ratios are unreliable" in str(exc)
+        assert "not registered for cross-country level ratios" in str(exc)
     else:
         raise AssertionError("series.ratio must enforce the cross-section guard")
-    # ...but allows it when the caller explicitly opts out (validation does this).
-    assert series.ratio(rows, "gdp_per_capita_ppp_constant", "GBR", "USA", check=False)
+    assert series.ratio(rows, "gdp_per_capita_ppp_constant", "GBR", "USA")
 
 
 def test_ratio_only_covers_overlapping_years() -> None:
@@ -279,7 +282,7 @@ def test_inverted_price_level_index_is_caught() -> None:
             rows.append(_row(iso3, year, "price_level_index", inverted))
     failed = {c.name for c in validate.failures(validate.run_all(rows))}
     assert "price_level_agreement" in failed
-    assert "relative_price_levels" in failed
+    assert "price_level_identity" in failed
 
 
 def test_misaligned_years_are_caught() -> None:
@@ -428,7 +431,8 @@ def test_uk_above_us_price_levels_is_caught() -> None:
         if row["metric"] == "price_level_index" and row["iso3"] in ("GBR", "POL"):
             row["value"] *= 2.0
     check = validate.check_relative_price_levels(rows)
-    assert not check.ok and "above US price levels" in check.detail
+    assert not check.ok and check.level == validate.WARN
+    assert "price ordering changed" in check.detail
 
 
 def test_worldbank_paging_is_bounded() -> None:
@@ -505,7 +509,7 @@ def test_headline_gdp_chart_is_still_not_ppp() -> None:
     # market-exchange-rate, CPI-deflated series.
     from europe_data import plot_uk_decline
 
-    assert plot_uk_decline.GDP_METRIC == "gdp_per_capita_real_usd"
+    assert plot_uk_decline.GDP_METRIC == "gdp_per_capita_constant_usd"
     assert "PPP" not in plot_uk_decline.GDP_METRIC.upper()
 
 
@@ -683,36 +687,28 @@ def test_tuition_cpi_does_not_depend_on_row_order() -> None:
             assert abs(recovered[year] - want) < 1e-9, f"seed {seed}, year {year}"
 
 
-# ── PPP survey coverage (PPPs are surveyed, not observed every year) ─────────
-def test_survey_first_year_is_documented() -> None:
-    # PPPs come from price surveys. For these OECD countries the Eurostat-OECD rolling
-    # survey supplies annual PPPs from the mid-1990s; earlier years are extrapolated.
-    assert metrics.SURVEY_FIRST_YEAR == 1996
-    assert metrics.SURVEY_FIRST_YEAR > 1990, "the plotted range starts before the survey era"
-
-
-def test_headline_anchor_in_the_extrapolated_era_fails_the_run() -> None:
-    # The decomposition baseline must rest on measured, not projected, PPPs.
+# ── Observed coverage is not survey certification ───────────────────────────
+def test_headline_requires_overlapping_volume_and_nominal_observations(monkeypatch) -> None:
     rows = _consistent_rows()
-    assert validate.check_survey_backed_headline_years(rows).ok
-
-    original = validate.DECOMPOSITION_BASELINE_YEAR
-    validate.DECOMPOSITION_BASELINE_YEAR = 1992
-    try:
-        check = validate.check_survey_backed_headline_years(rows)
-    finally:
-        validate.DECOMPOSITION_BASELINE_YEAR = original
-    assert not check.ok and "extrapolated" in check.detail
-    assert check.level == validate.ERROR, "an extrapolated anchor must stop the pipeline"
+    assert validate.check_headline_year_coverage(rows).ok
+    rows = [r for r in rows if not (r["iso3"] == "USA" and r["year"] == 2007
+                                   and r["metric"] == "gdp_per_capita_ppp_constant")]
+    assert not validate.check_headline_year_coverage(rows).ok
+    monkeypatch.setattr(validate, "DECOMPOSITION_BASELINE_YEAR", 1992)
+    check = validate.check_headline_year_coverage(_consistent_rows())
+    assert not check.ok and "not covered" in check.detail
+    assert check.level == validate.ERROR
 
 
 def test_extrapolated_years_are_reported_not_hidden() -> None:
     rows = _consistent_rows() + [
         _row("GBR", 1992, "gdp_per_capita_ppp_current", 30_000.0),
     ]
-    check = validate.check_extrapolated_era_is_flagged(rows)
-    assert check.ok and check.level == validate.WARN  # legitimate to plot, must be declared
+    check = validate.check_ppp_estimate_provenance(rows)
+    assert check.ok and check.level == validate.WARN
     assert "1992" in check.detail and "extrapolated" in check.detail
+    assert "cannot certify" in check.detail
+    assert "survey-backed" not in check.detail
 
 
 def test_decomposition_real_component_equals_real_divergence() -> None:
@@ -746,6 +742,132 @@ def test_decomposition_real_component_equals_real_divergence() -> None:
     assert abs(expected + 20.0) < 0.05, "fixture should show a 20% real divergence"
 
 
+def test_volume_growth_check_uses_independent_national_accounts() -> None:
+    rows = _consistent_rows()
+    for row in rows:
+        if row["iso3"] == "GBR":
+            if row["metric"] == "gdp_per_capita_ppp_constant":
+                row["value"] = {2007: 40_000, 2021: 44_000, 2024: 48_000}[row["year"]]
+            elif row["metric"] == "gdp_per_capita_constant_usd":
+                row["value"] = {2007: 25_000, 2021: 27_500, 2024: 30_000}[row["year"]]
+    assert validate.check_constant_ppp_growth(rows).ok
+    for row in rows:
+        if (row["iso3"], row["year"], row["metric"]) == (
+                "GBR", 2024, "gdp_per_capita_constant_usd"):
+            row["value"] *= 1.02
+    check = validate.check_constant_ppp_growth(rows)
+    assert not check.ok and "GBR" in check.detail
+    assert check.level == validate.ERROR
+
+
+def test_volume_growth_check_rejects_missing_reference_series() -> None:
+    rows = [r for r in _consistent_rows() if r["metric"] != "gdp_per_capita_constant_usd"]
+    check = validate.check_constant_ppp_growth(rows)
+    assert not check.ok and "re-fetch" in check.detail
+
+
+def test_growth_chart_plots_country_growth_not_levels_or_current_prices(monkeypatch, tmp_path):
+    from ppp_data import charts
+
+    rows = [
+        _row("GBR", 2007, "gdp_per_capita_ppp_constant", 40_000),
+        _row("GBR", 2025, "gdp_per_capita_ppp_constant", 44_000),
+        _row("USA", 2007, "gdp_per_capita_ppp_constant", 80_000),
+        _row("USA", 2025, "gdp_per_capita_ppp_constant", 100_000),
+        _row("GBR", 2025, "gdp_per_capita_ppp_current", 70_000),
+        _row("POL", 2025, "gdp_per_capita_ppp_constant", 50_000),
+    ]
+    captured = []
+    def save(fig, path, **kwargs):
+        captured.append(fig)
+        charts._plt().close(fig)
+        return path
+    monkeypatch.setattr(charts, "save_fig", save)
+    assert charts.chart_volume_growth(rows, tmp_path).name == "ppp_gdp_per_capita_growth.png"
+    ax = captured[0].axes[0]
+    assert list(ax.lines[0].get_ydata()) == pytest.approx([100, 110])
+    assert list(ax.lines[1].get_ydata()) == pytest.approx([100, 125])
+    # Poland has no baseline, so it cannot silently get a different one.
+    assert not any("Poland" in t.get_text() for t in ax.texts)
+
+
+def test_decomposition_is_invariant_to_fixed_benchmark_rescaling() -> None:
+    from ppp_data import charts
+
+    rows = _consistent_rows()
+    for row in rows:
+        if row["iso3"] == "GBR" and row["year"] == 2024:
+            if row["metric"] == "gdp_per_capita_ppp_constant":
+                row["value"] *= 0.8
+            elif row["metric"] == "gdp_per_capita_nominal_usd":
+                row["value"] *= 0.6
+    before = charts.uk_us_decomposition(rows, 2007)
+    for row in rows:
+        if row["iso3"] == "GBR" and row["metric"] == "gdp_per_capita_ppp_constant":
+            row["value"] *= 1.7
+    after = charts.uk_us_decomposition(rows, 2007)
+    for field in ("real_effect", "price_effect", "total_change", "log_real", "log_price"):
+        assert getattr(after, field) == pytest.approx(getattr(before, field))
+
+
+@pytest.mark.parametrize("bad", [float("nan"), float("inf"), -1.0, 0.0])
+def test_decomposition_rejects_invalid_volume_inputs(bad):
+    with pytest.raises(ValueError, match="positive and finite"):
+        decompose.decompose_ratio_change(
+            start_year=2007, end_year=2025, ppp_ratio_start=bad, ppp_ratio_end=0.7,
+            pli_ratio_start=1.4, pli_ratio_end=0.8)
+
+
+@pytest.mark.parametrize("end_year", [2007, 2000])
+def test_decomposition_rejects_nonchronological_endpoints(end_year):
+    with pytest.raises(ValueError, match="later"):
+        decompose.decompose_ratio_change(
+            start_year=2007, end_year=end_year, ppp_ratio_start=0.8, ppp_ratio_end=0.7,
+            pli_ratio_start=1.4, pli_ratio_end=0.8)
+
+
+@pytest.mark.parametrize("nominal_growth,volume_growth", [(1.2, 1.1), (1.0, 1.2), (0.8, 1.2)])
+def test_decomposition_chart_handles_positive_mixed_and_zero_changes(
+        monkeypatch, tmp_path, nominal_growth, volume_growth):
+    from ppp_data import charts
+
+    rows = _consistent_rows()
+    for row in rows:
+        if row["iso3"] == "GBR" and row["year"] == 2024:
+            if row["metric"] == "gdp_per_capita_nominal_usd":
+                row["value"] *= nominal_growth
+            elif row["metric"] == "gdp_per_capita_ppp_constant":
+                row["value"] *= volume_growth
+    captured = []
+    def save(fig, path, **kwargs):
+        captured.append(fig)
+        charts._plt().close(fig)
+        return path
+    monkeypatch.setattr(charts, "save_fig", save)
+    charts.chart_decomposition(rows, tmp_path)
+    ax = captured[0].axes[0]
+    lo, hi = ax.get_xlim()
+    assert all(lo < bar.get_width() < hi for bar in ax.patches)
+    text = " ".join(t.get_text() for t in ax.texts)
+    assert "change" in text and "fall" not in text
+    if nominal_growth == 1:
+        assert "% of the net change" not in text
+
+
+def test_historical_price_ordering_is_not_a_publication_invariant():
+    rows = _consistent_rows()
+    for row in rows:
+        if row["iso3"] == "GBR" and row["metric"] == "price_level_index":
+            row["value"] = 1.2
+    check = validate.check_relative_price_levels(rows)
+    assert not check.ok and check.level == validate.WARN
+    assert not validate.failures([check])
+
+
+def test_price_ordering_compares_the_latest_shared_year():
+    rows = _consistent_rows() + [_row("POL", 2025, "price_level_index", 1.8)]
+    check = validate.check_relative_price_levels(rows)
+    assert check.ok and "2024" in check.detail and "2025" not in check.detail
 def test_validation_catches_a_non_volume_real_component() -> None:
     # The guard must fire if the decomposition is ever pointed back at a non-volume series.
     # The fixture needs a genuine real divergence, otherwise understating it is undetectable.
@@ -865,8 +987,7 @@ def test_long_run_chart_survives_a_degenerate_year_window() -> None:
 
 def test_decomposition_baseline_year_has_one_source_of_truth() -> None:
     # The figure is drawn from charts.DECOMPOSITION_START_YEAR while the validation gate
-    # checks validate.DECOMPOSITION_BASELINE_YEAR; if they can drift, the "no headline claim
-    # anchored pre-1996" invariant is bypassable by editing one constant.
+    # checks validate.DECOMPOSITION_BASELINE_YEAR; a drift would check the wrong coverage.
     from ppp_data import charts, metrics, validate
 
     assert (charts.DECOMPOSITION_START_YEAR

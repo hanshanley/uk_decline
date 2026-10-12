@@ -100,9 +100,11 @@ def us_cpi(start: int, end: int) -> dict[int, float]:
 
 
 def deflate_to_real_usd(rows: list[dict], cpi: dict[int, float], base_year: int = 2015) -> list[dict]:
-    """Add a ``gdp_per_capita_real_usd`` metric: current-US$ GDP per capita expressed in
-    constant ``base_year`` US$ by deflating with US CPI (market exchange rates preserved,
-    inflation removed). This is the series in which the UK eclipsed the US in 2007.
+    """Retain the legacy ``gdp_per_capita_real_usd`` dollar-valuation metric.
+
+    US CPI removes US consumer-price inflation, not each country's GDP-price changes
+    or exchange-rate effects. This is not a national-accounts real-output series;
+    use NY.GDP.PCAP.KD or NY.GDP.PCAP.PP.KD for volume growth.
     """
     base = cpi.get(base_year)
     if not base:

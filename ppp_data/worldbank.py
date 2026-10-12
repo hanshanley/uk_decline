@@ -37,6 +37,7 @@ GDP_INDICATORS: tuple[str, ...] = (
     "NY.GDP.PCAP.PP.KD",  # -> gdp_per_capita_ppp_constant
     "NY.GDP.PCAP.PP.CD",  # -> gdp_per_capita_ppp_current
     "NY.GDP.PCAP.CD",     # -> gdp_per_capita_nominal_usd
+    "NY.GDP.PCAP.KD",     # -> national-accounts volumes, independent growth cross-check
 )
 
 # Conversion factors, fetched for countries only: a multi-currency aggregate such as the

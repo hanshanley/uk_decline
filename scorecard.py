@@ -146,8 +146,8 @@ def crime_incidents():
 # source, start year. Baselines vary because the official comparable series do.
 
 PANELS = [
-    ("GDP per capita vs US (PPP)", gdp_vs_us, lambda v: f"{v:.0f}%", +1,
-     "World Bank WDI · constant-price PPP", 2007),
+    ("Real GDP per head vs US", gdp_vs_us, lambda v: f"{v:.0f}%", +1,
+     "World Bank WDI · volume ratio, 2021 PPP benchmark", 2007),
     ("Listed firms, UK (WDI)", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
      "World Bank/WFE · excludes funds & pure holdings", 2007),
     ("NHS waiting pathways, England", nhs_england, lambda v: f"{v/1e6:.1f}M", -1,

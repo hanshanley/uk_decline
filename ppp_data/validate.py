@@ -60,9 +60,7 @@ BENCHMARK_TOLERANCE = 0.02  # 2%
 # upstream), but high enough that a truncated conversion-factor fetch cannot slip through.
 CROSS_CHECK_COVERAGE_FLOOR = 0.60
 
-# The year the decomposition is anchored on; kept here so the survey-coverage check can
-# confirm the headline claim rests on measured rather than projected PPPs. Defined once in
-# `metrics` so the chart and the check that guards it can never drift apart.
+# The chart and its coverage check must use the same baseline.
 DECOMPOSITION_BASELINE_YEAR = metrics.DECOMPOSITION_BASELINE_YEAR
 
 # How far the decomposition's real component may sit from the divergence recomputed straight
@@ -202,42 +200,31 @@ def check_plausible_ranges(rows: list[dict]) -> Check:
 
 
 def check_relative_price_levels(rows: list[dict]) -> Check:
-    """Poland must be cheaper than the UK, and the UK cheaper than the United States today.
-
-    Two directional checks that would fail immediately if the price level index were
-    accidentally inverted (market FX divided by the PPP factor rather than the reverse).
-    A missing index is an ERROR, not a warning: the charts need it, and a WARN here would
-    let the run proceed to crash in :func:`ppp_data.charts.chart_price_level_index`.
-    """
-    latest: dict[str, tuple[int, float]] = {}
-    for iso3 in ("GBR", "POL"):
-        pli = series.series(rows, "price_level_index", iso3)
-        if pli:
-            year = max(pli)
-            latest[iso3] = (year, pli[year])
-    missing = {"GBR", "POL"} - set(latest)
+    """Flag a change in historical price ordering without requiring it to persist."""
+    uk_values = series.series(rows, "price_level_index", "GBR")
+    pl_values = series.series(rows, "price_level_index", "POL")
+    missing = {iso3 for iso3, data in (("GBR", uk_values), ("POL", pl_values)) if not data}
     if missing:
         return Check("relative_price_levels", False, ERROR,
                      f"no price level index for {sorted(missing)}")
-    (uk_year, uk), (pl_year, pl) = latest["GBR"], latest["POL"]
+    shared = uk_values.keys() & pl_values.keys()
+    if not shared:
+        return Check("relative_price_levels", False, ERROR,
+                     "no shared Poland/UK price-level year")
+    year = max(shared)
+    uk, pl = uk_values[year], pl_values[year]
     cheaper_than_uk = pl < uk
-    uk_below_us = uk < 1.0  # the US is the numeraire at 1.00; the UK is below it today
+    uk_below_us = uk < 1.0
     ok = cheaper_than_uk and uk_below_us
-    detail = (f"price level index: Poland {pl:.2f} ({pl_year}) vs the UK {uk:.2f} "
-              f"({uk_year}), against the US at 1.00")
-    if not cheaper_than_uk:
-        detail += " — Poland should be the cheaper country; the index may be inverted"
-    if not uk_below_us:
-        detail += " — the UK is above US price levels, which last held before 2015"
-    return Check("relative_price_levels", ok, ERROR, detail)
+    detail = (f"price level index in {year}: Poland {pl:.2f} vs the UK {uk:.2f}, "
+              "against the US at 1.00")
+    if not ok:
+        detail += " — historical price ordering changed; inspect sources, not a mathematical error"
+    return Check("relative_price_levels", ok, WARN, detail)
 
 
 def check_ppp_beats_market_fx_for_poland(rows: list[dict]) -> Check:
-    """Poland must look richer relative to the UK at PPP than at market rates.
-
-    This is the substantive reason the PPP view exists, so if it does not hold the two
-    conversion bases have almost certainly been swapped somewhere.
-    """
+    """Flag changed price ordering; GDP ratios need not obey a historical ranking."""
     ppp = series.ratio(rows, "gdp_per_capita_ppp_current", "POL", "GBR")
     fx = series.ratio(rows, "gdp_per_capita_nominal_usd", "POL", "GBR")
     shared = sorted(ppp.keys() & fx.keys())
@@ -247,66 +234,70 @@ def check_ppp_beats_market_fx_for_poland(rows: list[dict]) -> Check:
     year = shared[-1]
     ok = ppp[year] > fx[year]
     return Check(
-        "ppp_beats_market_fx_for_poland", ok, ERROR,
+        "ppp_beats_market_fx_for_poland", ok, WARN,
         f"Poland as a share of the UK in {year}: {ppp[year]:.1%} at PPP vs "
         f"{fx[year]:.1%} at market rates"
-        + ("" if ok else " — PPP should raise a lower-price country, not lower it"),
+        + ("" if ok else " — price ordering changed; not a mathematical failure"),
     )
 
 
-def check_survey_backed_headline_years(rows: list[dict]) -> Check:
-    """The years the headline claims are anchored on must carry real survey data.
-
-    PPPs are surveyed, not observed continuously. Before
-    :data:`ppp_data.metrics.SURVEY_FIRST_YEAR` the World Bank's annual PPPs for these
-    countries are pure extrapolation from a later benchmark, so a comparison anchored there
-    is a projection rather than a measurement. This check fails if the decomposition's
-    baseline — the number the whole analysis turns on — drifts into the extrapolated era.
-    """
-
-    anchors = {"decomposition baseline": DECOMPOSITION_BASELINE_YEAR}
-    ppp = series.series(rows, "gdp_per_capita_ppp_current", peers.UK)
-    if ppp:
-        anchors["latest plotted year"] = max(ppp)
-    extrapolated = {name: year for name, year in anchors.items()
-                    if year < metrics.SURVEY_FIRST_YEAR}
-    detail = (
-        f"headline anchors {sorted(anchors.values())} are at or after "
-        f"{metrics.SURVEY_FIRST_YEAR}, the first year these countries' PPPs carry "
-        "Eurostat-OECD survey data"
+def check_headline_year_coverage(rows: list[dict]) -> Check:
+    """Require actual overlapping observations, not an inferred survey-era cutoff."""
+    real = series.ratio(rows, "gdp_per_capita_ppp_constant", peers.UK, peers.US)
+    nominal = series.ratio(rows, "gdp_per_capita_nominal_usd", peers.UK, peers.US)
+    shared = sorted(real.keys() & nominal.keys())
+    baseline = DECOMPOSITION_BASELINE_YEAR
+    ok = baseline in shared and bool(shared) and shared[-1] > baseline
+    return Check(
+        "headline_year_coverage", ok, ERROR,
+        f"nominal and volume UK/US ratios cover baseline {baseline} through {shared[-1]}"
+        if ok else f"baseline {baseline} and a later shared year are not covered by "
+        "both nominal and volume UK/US ratios",
     )
-    if extrapolated:
-        detail = ("anchored on extrapolated PPPs: "
-                  + "; ".join(f"{n} = {y}" for n, y in extrapolated.items())
-                  + f" (before {metrics.SURVEY_FIRST_YEAR} the PPPs are projected from a "
-                    "later benchmark, not surveyed)")
-    return Check("survey_backed_headline_years", not extrapolated, ERROR, detail)
 
 
-def check_extrapolated_era_is_flagged(rows: list[dict]) -> Check:
-    """Pre-survey years may be plotted, but the package must know they are extrapolated.
-
-    A WARN, not an ERROR: showing the extrapolated era is legitimate — it is the only way to
-    reach back to 1990 — provided the caveat is recorded somewhere the reader will meet it.
-    The figures no longer shade the era; the caveat lives in ``ppp_data/README.md`` and in
-    this line of the validation output, and ``check_survey_backed_headline_years`` is what
-    actually prevents a headline claim from resting on it.
-    """
-
+def check_ppp_estimate_provenance(rows: list[dict]) -> Check:
+    """Disclose the limits of provenance inferred from numerical series alone."""
     years = [r["year"] for r in rows if r["metric"] == "gdp_per_capita_ppp_current"]
     if not years:
-        return Check("extrapolated_era_is_flagged", False, WARN,
-                     "no PPP GDP rows to classify")
-    early = sorted({y for y in years if y < metrics.SURVEY_FIRST_YEAR})
-    if not early:
-        return Check("extrapolated_era_is_flagged", True, WARN,
-                     "every plotted year is survey-backed")
+        return Check("ppp_estimate_provenance", False, WARN, "no PPP GDP rows")
     return Check(
-        "extrapolated_era_is_flagged", True, WARN,
-        f"{len(early)} plotted year(s) ({early[0]}-{early[-1]}) predate "
-        f"{metrics.SURVEY_FIRST_YEAR} and are extrapolated rather than surveyed; no headline "
-        "claim is anchored on them (see survey_backed_headline_years)",
+        "ppp_estimate_provenance", True, WARN,
+        f"PPP estimates cover {min(years)}-{max(years)}; WDI combines rolling surveys "
+        "and extrapolation. These values alone cannot certify country-year survey "
+        "provenance; recent observations may be provisional or extrapolated.",
     )
+
+
+def check_constant_ppp_growth(rows: list[dict]) -> Check:
+    """Cross-check PPP volume growth against separately fetched national accounts."""
+    values = series.index(rows)
+    compared = 0
+    missing = []
+    broken = []
+    for iso3 in peers.COUNTRY_ISO3:
+        ppp = series.series(rows, "gdp_per_capita_ppp_constant", iso3)
+        years = sorted(ppp)
+        for a, b in zip(years, years[1:]):
+            national_a = values.get(("gdp_per_capita_constant_usd", iso3, a))
+            national_b = values.get(("gdp_per_capita_constant_usd", iso3, b))
+            if national_a is None or national_b is None:
+                missing.append(f"{iso3} {a}-{b}")
+                continue
+            if min(ppp[a], ppp[b], national_a, national_b) <= 0:
+                broken.append(f"{iso3} {a}-{b}: non-positive volume")
+                continue
+            compared += 1
+            gap = abs(ppp[b] / ppp[a] - national_b / national_a)
+            if not math.isfinite(gap) or gap > 0.002:
+                broken.append(f"{iso3} {a}-{b}: growth differs by {gap * 100:.3f} pp")
+    ok = compared > 0 and not missing and not broken
+    detail = f"compared {compared} constant-PPP growth intervals with NY.GDP.PCAP.KD"
+    if missing:
+        detail += f"; {len(missing)} missing national-account intervals; re-fetch WDI"
+    if broken:
+        detail += "; " + "; ".join(broken[:5])
+    return Check("constant_ppp_growth", ok, ERROR, detail)
 
 
 def check_decomposition_real_component_is_volume(rows: list[dict]) -> Check:
@@ -478,9 +469,10 @@ def check_sources_present(rows: list[dict]) -> Check:
 CHECKS: tuple[Callable[[list[dict]], Check], ...] = (
     check_no_duplicates,
     check_coverage,
-    check_survey_backed_headline_years,
+    check_headline_year_coverage,
+    check_constant_ppp_growth,
     check_decomposition_real_component_is_volume,
-    check_extrapolated_era_is_flagged,
+    check_ppp_estimate_provenance,
     check_sources_present,
     check_us_is_numeraire,
     check_price_level_identity,
