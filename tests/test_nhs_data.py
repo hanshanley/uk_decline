@@ -311,6 +311,33 @@ def test_indexed_plot_starts_at_shared_baseline(monkeypatch, tmp_path) -> None:
         assert list(line.get_ydata()) == [100]
 
 
+@pytest.mark.parametrize(
+    "metric_id,nation_codes,expected",
+    [
+        ("diagnostics_8week_breach_pct", ["WAL"], "Sources: StatsWales."),
+        (
+            "rtt_median_wait_weeks", ["ENG", "WAL", "NIR"],
+            "Sources: NHS England, StatsWales, DoH Northern Ireland.",
+        ),
+    ],
+)
+def test_chart_sources_include_only_plotted_nations(
+    monkeypatch, tmp_path, metric_id, nation_codes, expected
+):
+    rows = [
+        metrics.make_row(nations.name_for_code(code), code, "2024-03", "2024-03-31",
+                         metric_id, 10, "x")
+        for code in nation_codes
+    ]
+    notes = []
+    monkeypatch.setattr(
+        charts.plt.Figure, "savefig",
+        lambda fig, *args, **kwargs: notes.extend(t.get_text() for t in fig.texts),
+    )
+    charts.chart_metric(combine.to_frame(rows), metric_id, tmp_path)
+    assert notes[0].split("\n", 1)[0] == expected
+
+
 def test_summary_does_not_infer_improvement_across_ni_encompass_break(tmp_path):
     rows = [
         metrics.make_row("Northern Ireland", "NIR", date[:7], date,

@@ -32,7 +32,12 @@ NATION_COLOURS = {
     "NIR": GOLD,
 }
 
-SOURCE_NOTE = "Sources: NHS England, Public Health Scotland, StatsWales, DoH Northern Ireland."
+NATION_SOURCES = {
+    "ENG": "NHS England",
+    "SCO": "Public Health Scotland",
+    "WAL": "StatsWales",
+    "NIR": "DoH Northern Ireland",
+}
 POP_SOURCE_NOTE = " Population: ONS/NRS/NISRA mid-year estimates (via Nomis)."
 
 
@@ -75,6 +80,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
         base_year = pd.Timestamp(base_date).year
 
     fig, ax = plt.subplots(figsize=(11, 6))
+    plotted_codes = set()
     for code, g in sub.groupby("nation_code"):
         g = g.sort_values("date")
         if indexed:
@@ -100,6 +106,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
             label=label,
             color=NATION_COLOURS.get(code),
         )
+        plotted_codes.add(code)
 
     direction = "higher = better" if meta.higher_is_better else "lower = better"
     if indexed:
@@ -127,7 +134,11 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
     ax.tick_params(axis="both", pad=2)
     ax.legend(title="Nation", loc="best", frameon=False, labelcolor=TEXT)
     fig.autofmt_xdate()
-    note = SOURCE_NOTE + (POP_SOURCE_NOTE if metric_id == "rtt_waiting_list_per_1000" else "")
+    note = "Sources: " + ", ".join(
+        source for code, source in NATION_SOURCES.items() if code in plotted_codes
+    ) + "."
+    if metric_id == "rtt_waiting_list_per_1000":
+        note += POP_SOURCE_NOTE
     if metric_id in metrics.CAVEATS:
         import textwrap
         note += "\n" + textwrap.fill("Caveat: " + metrics.CAVEATS[metric_id], width=145)
