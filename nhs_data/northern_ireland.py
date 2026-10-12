@@ -14,7 +14,7 @@ minus ``0 - 6 weeks``) for ``diagnostics_6week_breach_pct``.
 from __future__ import annotations
 
 import html
-import io
+import json
 import math
 import re
 import time
@@ -48,8 +48,10 @@ DIAGNOSTICS_PUBLICATION_PAGE = (
     "northern-ireland-waiting-time-statistics-diagnostic-waiting-times-"
     "june-2026"
 )
-EMERGENCY_OPEN_DATA_URL = (
-    "https://admin.opendatani.gov.uk/en/dataset/emergency-care-waiting-times"
+EMERGENCY_PUBLICATION_PAGE = (
+    "https://www.health-ni.gov.uk/publications/"
+    "northern-ireland-waiting-time-statistics-emergency-care-waiting-times-"
+    "april-june-2026"
 )
 CANCER_62DAY_PAGE = (
     "https://www.health-ni.gov.uk/publications/"
@@ -132,7 +134,9 @@ def _attachment_urls(page_url: str) -> list[str]:
 
 def _current_publication(metric: str, pinned: str) -> str:
     try:
-        slug = "diagnostic" if metric == "diagnostics" else metric
+        slug = {"diagnostics": "diagnostic", "emergency": "emergency-care"}.get(
+            metric, metric
+        )
         pages = _publication_pages(
             ARTICLE_URLS[metric], f"waiting-time-statistics-{slug}-waiting-times"
         )
@@ -281,35 +285,111 @@ def _fetch_outpatient_waiting_list() -> list[dict]:
     ]
 
 
-def _fetch_emergency_4hr() -> list[dict]:
-    url = next(
-        (
-            candidate
-            for candidate in _attachment_urls(EMERGENCY_OPEN_DATA_URL)
-            if "ecwt" in candidate.lower() and candidate.lower().endswith(".csv")
-        ),
-        None,
-    )
-    if url is None:
-        raise RuntimeError("no emergency care CSV attachment found")
-    _polite_pause(url)
-    csv_bytes = _http.get_bytes(url)
-    df = pd.read_csv(io.BytesIO(csv_bytes))
-    required = {"MthAndYrCode", "FourAndUnder_sum", "Total_sum"}
-    if not required.issubset(df.columns):
-        raise RuntimeError("emergency CSV missing expected columns")
+def _emergency_frame(document: str) -> pd.DataFrame:
+    """Read the underlying count table in DoH's interactive HTML publication."""
+    required = {
+        "Date", "Trust", "Dept", "Type", "Under4hrs", "Between4to12hrs",
+        "Over12hrs", "TotalAttendances", "PercentUnder4hrs",
+    }
+    frames = []
+    for attrs, body in re.findall(
+        r"<script\b([^>]*)>(.*?)</script>", document, re.IGNORECASE | re.DOTALL
+    ):
+        if not re.search(r"type=[\"']application/json[\"']", attrs, re.IGNORECASE):
+            continue
+        payload = json.loads(body)
+        if not isinstance(payload, dict) or not isinstance(payload.get("x"), dict):
+            continue
+        widget = payload["x"]
+        options = widget.get("options")
+        if not isinstance(options, dict):
+            continue
+        definitions = options.get("columnDefs")
+        if not isinstance(definitions, list):
+            continue
+        named = [
+            spec for spec in definitions
+            if isinstance(spec, dict) and isinstance(spec.get("name"), str)
+            and "targets" in spec
+        ]
+        positions = {
+            spec["name"]: spec["targets"] for spec in named
+        }
+        if not required <= positions.keys():
+            continue
+        data = widget.get("data")
+        if len(positions) != len(named) or not isinstance(data, list) or any(
+            not isinstance(positions[name], int)
+            or not 0 <= positions[name] < len(data)
+            or not isinstance(data[positions[name]], list)
+            for name in required
+        ):
+            raise ValueError("invalid emergency-care count-table columns")
+        if len({positions[name] for name in required}) != len(required):
+            raise ValueError("duplicate emergency-care count-table positions")
+        columns = {name: data[positions[name]] for name in sorted(required)}
+        if len({len(values) for values in columns.values()}) != 1:
+            raise ValueError("unequal emergency-care count-table column lengths")
+        frames.append(pd.DataFrame(columns))
+    if len(frames) != 1:
+        raise ValueError("expected one emergency-care count table in publication")
+    return frames[0]
 
-    df["date"] = _month_code_dates(df["MthAndYrCode"])
-    df["within_4hr"] = _number_series(df["FourAndUnder_sum"])
-    df["total"] = _number_series(df["Total_sum"])
+
+def _fetch_emergency_4hr() -> list[dict]:
+    page = _current_publication("emergency", EMERGENCY_PUBLICATION_PAGE)
+    urls = list(dict.fromkeys(
+        urljoin(page, href)
+        for href, _label in LINK_RE.findall(_html(page))
+        if "ni-emergency-care-waiting-times-data-" in href and ".html" in href
+    ))
+    if len(urls) != 1:
+        raise ValueError("no unique interactive emergency-care data publication")
+    df = _emergency_frame(_http.get_bytes(urls[0]).decode("utf-8"))
+    df["date"] = _dates(df["Date"]) + pd.offsets.MonthEnd(0)
+    if df["date"].isna().any():
+        raise ValueError("invalid emergency-care observation date")
+    if not set(df["Trust"]) <= CORE_HSC_TRUSTS:
+        raise ValueError("unrecognised emergency-care trust")
+    if not df["Dept"].map(lambda name: isinstance(name, str) and bool(name.strip())).all():
+        raise ValueError("missing emergency-care department identifier")
+    if not set(df["Type"]) <= {"Type 1", "Type 2", "Type 3"}:
+        raise ValueError("unrecognised emergency-department type")
+    if df.duplicated(["date", "Trust", "Dept", "Type"]).any():
+        raise ValueError("duplicate emergency-care month/department observations")
+    count_cols = ["Under4hrs", "Between4to12hrs", "Over12hrs", "TotalAttendances"]
+    df[count_cols] = df[count_cols].apply(_number_series)
+    missing_dates = set(df.loc[df[count_cols].isna().any(axis=1), "date"])
+    df = df.dropna(subset=count_cols)
+    if any(
+        (~df[col].map(math.isfinite) | (df[col] < 0) | (df[col] % 1 != 0)).any()
+        for col in count_cols
+    ):
+        raise ValueError("invalid emergency-care counts")
+    df["classified_waits"] = df[count_cols[:3]].sum(axis=1)
+    if (df["classified_waits"] > df["TotalAttendances"]).any():
+        raise ValueError("emergency-care time bands exceed attendances")
+    positive = df["classified_waits"] > 0
+    published = _number_series(df.loc[positive, "PercentUnder4hrs"])
+    calculated = df.loc[positive, "Under4hrs"] / df.loc[positive, "classified_waits"] * 100
+    if published.isna().any() or ((calculated - published).abs() > 0.051).any():
+        raise ValueError("emergency-care rates disagree with published percentages")
+    complete = _complete_quarters(df, "Trust") - missing_dates
+    omitted = (set(df["date"]) - complete) | missing_dates
+    if omitted:
+        _warn("ae_4hr_pct", ValueError(
+            f"omitting {len(omitted)} months with incomplete department/trust data"
+        ))
+    df = df[df["date"].isin(complete) & df["Trust"].isin(CORE_HSC_TRUSTS)]
     grouped = (
-        df.dropna(subset=["date", "within_4hr", "total"])
-        .groupby("date", as_index=False)[["within_4hr", "total"]]
+        df.groupby("date", as_index=False)[["Under4hrs", "classified_waits"]]
         .sum()
         .sort_values("date")
     )
-    grouped = grouped[grouped["total"] > 0]
-    grouped["value"] = grouped["within_4hr"] / grouped["total"] * 100
+    grouped = grouped[grouped["classified_waits"] > 0]
+    if grouped.empty:
+        raise ValueError("no complete emergency-care months parsed")
+    grouped["value"] = grouped["Under4hrs"] / grouped["classified_waits"] * 100
     return [
         _make_metric_row(row.date, "ae_4hr_pct", row.value)
         for row in grouped.itertuples(index=False)

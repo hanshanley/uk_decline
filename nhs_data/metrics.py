@@ -135,7 +135,12 @@ CAVEATS: dict[str, str] = {
     ),
     "ae_4hr_pct": (
         "A&E 4-hour scope differs (all types vs major/Type-1 only) and reporting "
-        "cadence varies (weekly/monthly) between nations."
+        "cadence varies (weekly/monthly) between nations. NI includes Types 1–3 "
+        "(including urgent care centres); service mix changes over time. Its "
+        "rate uses classified waiting-time bands, which can cover fewer records "
+        "than total attendances. Its "
+        "encompass recording changes are conservatively segmented, and the "
+        "affected statistics are in development."
     ),
     "cancer_62day_pct": (
         "62-day cancer pathway definitions and standards were revised at different "
@@ -162,9 +167,9 @@ CAVEATS: dict[str, str] = {
 
 
 def series_breaks(metric_id: str, nation_code: str) -> tuple[tuple[str, str], ...]:
-    """Known definition changes, shared by charts and endpoint summaries."""
+    """Definition/recording changes, shared by charts and endpoint summaries."""
     family = METRICS[metric_id].family
-    if nation_code == "NIR" and family in {"rtt", "diagnostics", "cancer"}:
+    if nation_code == "NIR" and family in {"rtt", "diagnostics", "cancer", "ae"}:
         return (
             ("2023-11-09", "encompass"),
             ("2024-06-06", "encompass"),

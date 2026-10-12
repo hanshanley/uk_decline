@@ -67,7 +67,7 @@ def test_metrics_have_caveats() -> None:
 
 @pytest.mark.parametrize("kind,slug", [
     ("cancer", "cancer"), ("outpatient", "outpatient"),
-    ("diagnostics", "diagnostic"),
+    ("diagnostics", "diagnostic"), ("emergency", "emergency-care"),
 ])
 def test_ni_discovers_current_publication_before_pinned(monkeypatch, kind, slug) -> None:
     from nhs_data import northern_ireland as ni
@@ -148,6 +148,69 @@ def test_ni_cancer_summary_does_not_compare_across_encompass(tmp_path) -> None:
     text = path.read_text()
     assert "encompass" in text
     assert "worse" not in text
+
+
+def test_ni_emergency_reads_complete_count_table_not_rounded_rates(monkeypatch, capsys):
+    import json
+    from nhs_data import northern_ireland as ni
+
+    records = [
+        {"Date": month, "Trust": trust, "Dept": trust + " hospital", "Type": "Type 1",
+         "Under4hrs": within, "Between4to12hrs": total - within, "Over12hrs": 0,
+         "TotalAttendances": total + 10, "PercentUnder4hrs": within / total * 100}
+        for month in ["2026-05-01", "2026-06-01"]
+        for trust, within, total in [
+            ("Belfast", 10, 100), ("Northern", 20, 50),
+            ("South Eastern", 5, 10), ("Southern", 5, 10), ("Western", 10, 30),
+        ]
+    ]
+    records[0]["Under4hrs"] = None
+    # Another Belfast department must not conceal the missing hospital's counts.
+    records.append({
+        **records[0], "Dept": "Belfast minor injuries", "Type": "Type 3",
+        "Under4hrs": 1, "Between4to12hrs": 0, "Over12hrs": 0,
+        "TotalAttendances": 1, "PercentUnder4hrs": 100,
+    })
+
+    def document(rows):
+        names = list(rows[0])
+        payload = {"x": {
+            "options": {"columnDefs": [
+                {"name": name, "targets": i} for i, name in enumerate(names)
+            ]},
+            "data": [[row[name] for row in rows] for name in names],
+        }}
+        return ('<script type="application/json">' + json.dumps(payload) + '</script>').encode()
+
+    monkeypatch.setattr(ni, "_current_publication", lambda *args: "current-page")
+    monkeypatch.setattr(ni, "_html", lambda url:
+        '<a href="https://datavis.nisra.gov.uk/health/'
+        'ni-emergency-care-waiting-times-data-apr-jun-26.html">Interactive data</a>')
+    monkeypatch.setattr(ni._http, "get_bytes", lambda url: document(records))
+    rows = ni._fetch_emergency_4hr()
+    assert [(row["period"], row["value"]) for row in rows] == [("2026-06", 25)]
+    assert "omitting 1 months" in capsys.readouterr().err
+
+    for field, value, message in [
+        ("TotalAttendances", 1, "bands exceed"),
+        ("PercentUnder4hrs", 1, "disagree"),
+        ("Under4hrs", -1, "invalid"),
+        ("TotalAttendances", 30.5, "invalid"),
+        ("Trust", "Unknown", "unrecognised"),
+        ("Dept", "", "identifier"),
+    ]:
+        invalid = [row.copy() for row in records]
+        invalid[-2][field] = value
+        monkeypatch.setattr(ni._http, "get_bytes", lambda url: document(invalid))
+        with pytest.raises(ValueError, match=message):
+            ni._fetch_emergency_4hr()
+
+    duplicate = records + [records[-2]]
+    monkeypatch.setattr(ni._http, "get_bytes", lambda url: document(duplicate))
+    with pytest.raises(ValueError, match="duplicate"):
+        ni._fetch_emergency_4hr()
+    with pytest.raises(ValueError, match="expected one"):
+        ni._emergency_frame("<html>No underlying count table</html>")
 
 
 def test_to_frame_column_order_and_sort() -> None:
@@ -294,6 +357,25 @@ def test_scottish_stage_medians_are_not_a_pooled_median(monkeypatch) -> None:
     assert [(r["metric"], r["value"]) for r in rows] == [
         ("rtt_waiting_list_total", 200)
     ]
+
+
+def test_england_rtt_excludes_non_english_commissioned_paths_from_count_and_median(monkeypatch):
+    from nhs_data import england
+
+    text = (
+        "RTT Part Type,Treatment Function Name,Commissioner Org Code,Total All,"
+        "Gt 00 To 01 Weeks SUM 1,Gt 10 To 11 Weeks SUM 1\n"
+        "Part_2,Total,01A,100,100,0\n"
+        "Part_2,Total, nonc ,900,0,900\n"
+        "Part_2,Cardiology,01A,100,100,0\n"
+        "Part_1A,Total,01A,500,0,500\n"
+    )
+    monkeypatch.setattr(england, "_csv_text_from_zip", lambda url: text)
+    rows = england._rtt_rows_from_zip("fixture", 2026, 8)
+    assert {row["metric"]: row["value"] for row in rows} == {
+        "rtt_waiting_list_total": 100,
+        "rtt_median_wait_weeks": 0.5,
+    }
 
 
 def test_scottish_diagnostics_do_not_double_count_total_or_drop_open_band(monkeypatch) -> None:
@@ -444,6 +526,9 @@ def test_summary_does_not_infer_improvement_across_ni_encompass_break(tmp_path):
         ("NIR", "cancer_62day_pct",
          ["2023-10-31", "2023-11-30", "2024-05-31", "2024-07-31",
           "2024-10-31", "2024-11-30", "2025-04-30", "2025-05-31"]),
+        ("NIR", "ae_4hr_pct",
+         ["2023-10-31", "2023-11-30", "2024-05-31", "2024-07-31",
+          "2024-10-31", "2024-11-30", "2025-04-30", "2025-05-31"]),
         ("ENG", "cancer_62day_pct",
          ["2023-08-31", "2023-09-30", "2023-10-31", "2023-11-30"]),
         ("WAL", "cancer_62day_pct",
@@ -517,10 +602,55 @@ def test_empty_nhs_landing_page_is_not_successful_discovery(monkeypatch, capsys)
     from nhs_data import england
 
     monkeypatch.setattr(england, "get_bytes", lambda url: b"")
-    with pytest.raises(ValueError, match="empty NHS publication page"):
+    monkeypatch.setattr(england, "get_json", lambda *args, **kwargs: [])
+    with pytest.raises(ValueError, match="no unique NHS publication API match"):
         england._links(england.LANDING_URLS["rtt"])
     assert england._cancer_workbooks() == england.CANDIDATE_URLS["cancer_timeseries"]
     assert "using pinned workbook" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("body", [
+    b"", b"<html><h1>JavaScript is disabled</h1></html>",
+])
+def test_england_discovers_downloads_via_official_api(monkeypatch, body):
+    from nhs_data import england
+
+    page = england.LANDING_URLS["rtt"]
+    monkeypatch.setattr(england, "get_bytes", lambda url: body)
+    calls = []
+
+    def api(url, params):
+        calls.append((url, params))
+        return [{"link": page, "content": {"rendered":
+            '<a href="rtt-data-2026-27/">2026–27 data</a>'}}]
+
+    monkeypatch.setattr(england, "get_json", api)
+    assert england._links(page) == [("2026–27 data", page + "rtt-data-2026-27/")]
+    assert calls == [(
+        "https://www.england.nhs.uk/statistics/wp-json/wp/v2/pages",
+        {"slug": "rtt-waiting-times", "_fields": "link,content.rendered"},
+    )]
+
+    monkeypatch.setattr(england, "get_json", lambda *args, **kwargs: [
+        {"link": page + "rtt-data-2025-26/", "content": {"rendered":
+            '<a href="old.zip">Outdated data</a>'}},
+    ])
+    with pytest.raises(ValueError, match="no unique"):
+        england._links(page)
+
+
+def test_england_normal_html_discovery_does_not_call_api(monkeypatch):
+    from nhs_data import england
+
+    monkeypatch.setattr(england, "get_bytes", lambda url:
+        b'<a href="current.csv">Monthly data</a>')
+
+    def unexpected(*args, **kwargs):
+        raise AssertionError("API should not be called for a usable HTML page")
+
+    monkeypatch.setattr(england, "get_json", unexpected)
+    page = england.LANDING_URLS["ae"]
+    assert england._links(page) == [("Monthly data", page + "current.csv")]
 
 
 def test_summary_does_not_compare_welsh_cancer_pathway_definitions(tmp_path):

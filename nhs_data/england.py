@@ -14,11 +14,11 @@ import re
 import zipfile
 from datetime import date
 from html.parser import HTMLParser
-from urllib.parse import unquote, urljoin
+from urllib.parse import unquote, urljoin, urlsplit
 
 import pandas as pd
 
-from ._http import get_bytes, get_csv, get_excel
+from ._http import get_bytes, get_csv, get_excel, get_json
 from . import _util
 from .metrics import make_row
 
@@ -47,7 +47,7 @@ CANDIDATE_URLS = {
         "https://www.england.nhs.uk/statistics/statistical-work-areas/ae-waiting-times-and-activity/ae-attendances-and-emergency-admissions-2024-25/",
     ],
     "cancer_timeseries": [
-        "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2026/06/CWT-CRS-National-Time-Series-Oct-2009-Apr-2026-with-Revisions.xlsx",
+        "https://www.england.nhs.uk/statistics/wp-content/uploads/sites/2/2026/10/CWT-CRS-National-Time-Series-Oct-2009-Aug-2026-with-Revisions.xlsx",
     ],
     "diagnostics_pages": [
         "https://www.england.nhs.uk/statistics/statistical-work-areas/diagnostics-waiting-times-and-activity/monthly-diagnostics-waiting-times-and-activity/monthly-diagnostics-data-2025-26/",
@@ -113,10 +113,33 @@ def _warn(metric: str, exc: Exception) -> None:
 
 def _links(page_url: str) -> list[tuple[str, str]]:
     payload = get_bytes(page_url)
-    if not payload.strip():
-        raise ValueError(f"empty NHS publication page: {page_url}")
     parser = _LinkParser()
     parser.feed(payload.decode("utf-8", "replace"))
+    if not parser.links:
+        # The public HTML endpoint can return an empty browser challenge while
+        # the same publication remains available through its official REST API.
+        pages = get_json(
+            urljoin(page_url, "/statistics/wp-json/wp/v2/pages"),
+            params={
+                "slug": urlsplit(page_url).path.rstrip("/").rsplit("/", 1)[-1],
+                "_fields": "link,content.rendered",
+            },
+        )
+        if not isinstance(pages, list):
+            raise ValueError(f"invalid NHS publication API response: {page_url}")
+        matching = [
+            page for page in pages
+            if isinstance(page, dict)
+            and str(page.get("link", "")).rstrip("/") == page_url.rstrip("/")
+        ]
+        if len(matching) != 1:
+            raise ValueError(f"no unique NHS publication API match: {page_url}")
+        content = matching[0].get("content")
+        if not isinstance(content, dict) or not isinstance(content.get("rendered"), str):
+            raise ValueError(f"missing NHS publication API content: {page_url}")
+        parser.feed(content["rendered"])
+    if not parser.links:
+        raise ValueError(f"no NHS publication links: {page_url}")
     return [(text, urljoin(page_url, href)) for text, href in parser.links if href]
 
 
@@ -303,12 +326,16 @@ def _rtt_rows_from_zip(url: str, year: int, month: int) -> list[dict]:
     columns = _header_columns(lines, header_idx)
     part_col = next(c for c in columns if c.lower() in {"rtt part type", "rtt part name"})
     function_col = next(c for c in columns if c.lower() == "treatment function name")
+    commissioner_col = next(c for c in columns if c.lower() == "commissioner org code")
     total_col = next(c for c in columns if c.lower() == "total all")
     week_cols = [c for c in columns if _rtt_week_lower(c) is not None]
-    df = _read_csv_lines(lines, header_idx, [part_col, function_col, total_col, *week_cols])
+    df = _read_csv_lines(
+        lines, header_idx, [part_col, function_col, commissioner_col, total_col, *week_cols]
+    )
     mask = (
         df[part_col].astype(str).str.strip().str.upper().eq("PART_2")
         & df[function_col].astype(str).str.strip().str.lower().eq("total")
+        & ~df[commissioner_col].astype(str).str.strip().str.upper().eq("NONC")
     )
     subset = df.loc[mask]
     if subset.empty:
