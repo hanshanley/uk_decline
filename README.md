@@ -18,6 +18,8 @@ charity administrative counts and a constructed tuition-fee series. It uses 2007
 the common framing; each panel uses its own available baseline and latest year.
 It is not a composite index or an exhaustive measure of UK performance. Colours
 describe the selected direction of change between endpoints, not the latest annual trend.
+Monthly NHS observations, financial years, academic years and CSEW year-ending
+periods are labelled separately; they are not interchangeable annual observations.
 
 <p align="center">
   <img src="outputs/uk_decline_scorecard.png" width="1200" alt="Eight source-backed indicators showing change in the UK since 2007">
@@ -115,3 +117,50 @@ each analysis. Downloaded/intermediate data generally lives under `data/`
 The curated figures under `outputs/` are the committed showcase. Targeted observations
 have been checked against primary sources; this is not independent verification of
 every observation in every dataset.
+
+### Final audit — 12 October 2026
+
+The audit traced published charts to their loaders and source definitions, rechecked
+overview endpoints against WDI, ONS, Treasury, OWID and Trussell, and reproduced live
+OECD tax, WDI trade and age pipelines in an isolated staging tree. Confirmed fixes
+include NHS lines/indexes crossing definition changes, superseded NI cancer counts,
+incomplete age profiles being normalised into plausible medians, rail smoothers
+drawing through missing quarters,
+ambiguous overview periods and stale source-splice/fallback documentation. Historical
+tuition was rebuilt to include annual fee/FX/CPI observations between policy changes.
+
+Alternative-baseline checks use observed 2010 and 2019 values where available, not
+invented missing observations. For example, the real UK/US GDP ratio fell **14.0%**
+from 2007, **12.0%** from 2010 and **9.1%** from 2019; recreation/culture/religion
+spending fell **20.9%**, **22.6%** and **3.8%** respectively. Magnitudes depend on the
+baseline. Food-parcel counts fell **11.7% from 2024 to 2025** despite remaining above
+2015/2019 levels. The real market-dollar tuition cap rose **37.6% from 2006**
+but fell **18.4% from 2019**; it is not a measure of domestic purchasing power.
+The selected panels are not evidence that every measure worsened,
+and no chart by itself establishes a policy cause.
+
+Remaining limitations are explicit: the EU tuition compilation contains approximate
+secondary-source values and mixed definitions; population-age distributions from
+WPP 2024 contain projection assumptions from 2024 onward; country medians are
+unweighted, not medians of people; survey crime/trust estimates carry uncertainty;
+and endpoint dates differ across sources. WDI still has no US CPI observation for
+2025, so the real-dollar tuition history ends in 2024 rather than borrowing another
+year's deflator. NI cancer/outpatient/diagnostic source discovery was repaired and
+those series refreshed through June 2026. NI's October 2026 cancer release revises
+historical waits after a calculation error; the refreshed dataset uses those
+revisions, omits months without all five trusts, and splits the encompass breaks.
+NHS England landing pages return empty responses/browser challenges in this audit
+environment. Cached June 2026 RTT and pinned April 2026 cancer coverage is explicitly
+not current: the official cancer index lists at least July 2026 data. These older
+endpoints remain dated rather than being presented as the latest publication.
+The rail reconstruction was independently compared with official Table 3113 over
+28 overlapping quarters: maximum discrepancies are **0.51 percentage points for
+London and South East** and **0.18 points for Great Britain**. These approximate
+series are not exact official sector aggregates.
+
+Verification: **303 regression tests passed**, as did all **16 GDP/PPP validation
+checks**. All **2,970 live country-year age profiles** passed the complete-profile
+checks; the opt-in age snapshot also passed. Affected NHS, age, rail, tuition,
+spending and overview figures were rebuilt, with representative published figures
+visually inspected. Tests validate the implemented methods, not the truth of every
+source observation or causal interpretation.

@@ -19,7 +19,7 @@ The broad public-spending total barely fell across the 2010s, but that headline 
 large redistribution:
 
 - real spending on **housing and community amenities** fell by roughly one-third at its trough;
-- **culture and recreation**, **public order and safety**, and **defence** also sustained
+- **recreation, culture and religion**, **public order and safety**, and **defence** also sustained
   substantial real cuts;
 - **health** was protected and rose over the decade;
 - **public sector net investment** fell from 2.5% of GDP in 2010–11 to 1.5% in 2013–14.

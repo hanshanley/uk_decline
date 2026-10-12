@@ -63,7 +63,7 @@ def test_crime_panel_shows_counts_and_marks_falling_crime_as_improvement(monkeyp
         assert list(ax.lines[0].get_ydata()) == [11_182_000, 4_333_000]
         assert ax.lines[0].get_color() == scorecard.BETTER
         text = " ".join(t.get_text() for t in ax.texts)
-        assert "11.2M in 2007  to  4.3M in 2026" in text
+        assert "11.2M in YE Mar 2007  to  4.3M in YE Mar 2026" in text
         assert "excludes fraud & computer misuse" in text
     finally:
         scorecard.plt.close(fig)
@@ -93,6 +93,24 @@ def test_nhs_annual_snapshot_uses_latest_date_not_input_order(monkeypatch):
         )
     ])
     assert scorecard.nhs_england() == ([2025], [7_000_000])
+    assert scorecard.nhs_period(2025) == "Dec 2025"
+
+
+def test_scorecard_discloses_month_financial_and_academic_periods(monkeypatch):
+    monkeypatch.setattr(scorecard, "_rows", lambda path: [
+        {"nation_code": "ENG", "metric": "rtt_waiting_list_total",
+         "date": "2026-06-30", "value": "7000000"},
+    ])
+    assert scorecard.nhs_period(2026) == "Jun 2026"
+    fig, ax = scorecard.plt.subplots()
+    try:
+        scorecard._panel(ax, "Spending", lambda: ([2007, 2025], [19.1, 15.1]),
+                         str, 1, "Source", 2007, scorecard.financial_period)
+        assert any("2007–08" in t.get_text() and "2025–26" in t.get_text() for t in ax.texts)
+        assert [t.get_text() for t in ax.get_xticklabels()] == ["2007–08", "2025–26"]
+        assert scorecard.academic_period(2024) == "2024/25"
+    finally:
+        scorecard.plt.close(fig)
 
 
 def test_gdp_comparison_uses_constant_ppp_and_shared_years(monkeypatch):

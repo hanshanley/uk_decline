@@ -51,9 +51,10 @@ are never spliced or interpolated. Full per-metric citations are in
 > funds, unit trusts and pure holding/investment companies. Domicile-based LSE totals alone
 > do not apply those filters, so the close overlap does not validate a seamless splice.
 > Regenerate with `python -m markets_data.lse_factsheets` (writes the cited
-> `data/uk_listed_companies_lse.csv`). The scorecard's "UK-listed companies" panel uses the WB
-> series through 2022 and the LSE UK-domiciled count for 2023+ (**1,538 / 1,413 / 1,306** for
-> 2023–2025), with the source switch noted. Every value is read straight from the LSE
+> `data/uk_listed_companies_lse.csv`). The scorecard's listed-company panel uses
+> **only the comparable World Bank/WFE series through 2022**. The LSE UK-domiciled
+> counts (**1,538 / 1,413 / 1,306** for 2023–2025) remain a separate dataset;
+> they are not appended to the scorecard. Every LSE value is read straight from the
 > factsheet; none are estimated or interpolated.
 
 ## Usage

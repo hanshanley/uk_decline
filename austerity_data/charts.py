@@ -20,7 +20,7 @@ START_YEAR = "2000-01"
 
 SERIES = {
     "housing_community": ("Housing", ACCENT, 3.2),
-    "recreation_culture": ("Culture & recreation", GOLD, 2.6),
+    "recreation_culture": ("Recreation, culture & religion", GOLD, 2.6),
     "public_order_safety": ("Public safety", BLUE, 2.6),
     "health": ("Health", GREEN, 2.8),
 }
@@ -162,7 +162,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     panel_titles = {
         "housing_community": "Housing & community",
         "public_order_safety": "Public safety",
-        "recreation_culture": "Culture & recreation",
+        "recreation_culture": "Recreation, culture & religion",
         "health": "Health",
     }
     for ax, category in zip(service_axes, panel_order):

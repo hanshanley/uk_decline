@@ -76,13 +76,13 @@ def plot(out_path: str) -> None:
                     markeredgecolor=theme.BG, markeredgewidth=0.8, label=label)
 
     ax.set_ylabel("Annual domestic tuition (constant 2022 USD)")
-    ax.set_xlabel("Year")
+    ax.set_xlabel("Academic start year")
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
     all_years = [y for pts in data.values() for y, _ in pts]
     span = f"{min(all_years)}\u2013{max(all_years)}" if all_years else ""
     ax.set_title(
-        f"The rise of UK tuition, {span} (real 2022 dollars)\n"
-        "From free to more expensive than US public college",
+        f"Tuition fees, {span} (constant 2022 US dollars)\n"
+        "England statutory cap versus US public in-state average",
         fontweight="bold", pad=14,
     )
     ax.grid(axis="y", linestyle="-", linewidth=0.5)

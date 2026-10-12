@@ -10,6 +10,7 @@ Usage:  python scorecard.py
 from __future__ import annotations
 
 import csv
+from datetime import date
 import pathlib
 import re
 import sys
@@ -74,16 +75,33 @@ def gdp_vs_us():
     return ys, [100 * uk[y] / us[y] for y in ys]
 
 
-def nhs_england():
+def _nhs_observations():
     r = _rows(OUT / "nhs" / "nhs_waiting_times.csv")
     pts = {}
     for x in sorted(r, key=lambda x: x["date"]):
         if x["nation_code"] == "ENG" and x["metric"] == "rtt_waiting_list_total" and x.get("value"):
             y = _year(x["date"])
             if y:
-                pts[y] = float(x["value"])  # keep last (latest month) per year
+                pts[y] = x  # keep last (latest month) per year
+    return pts
+
+
+def nhs_england():
+    pts = _nhs_observations()
     ys = sorted(pts)
-    return ys, [pts[y] for y in ys]
+    return ys, [float(pts[y]["value"]) for y in ys]
+
+
+def nhs_period(year):
+    return date.fromisoformat(_nhs_observations()[year]["date"]).strftime("%b %Y")
+
+
+def financial_period(year):
+    return f"{year}–{str(year + 1)[-2:]}"
+
+
+def academic_period(year):
+    return f"{year}/{str(year + 1)[-2:]}"
 
 
 def tuition_real():
@@ -129,17 +147,26 @@ def food_bank_parcels():
     return ys, [pts[y] for y in ys]
 
 
-def crime_incidents():
-    """CSEW incidents excluding fraud and computer misuse, converted from thousands."""
+def _crime_observations():
     r = _rows(DATA / "crime_csew_long.csv")
     name = "ALL CSEW HEADLINE CRIME EXCLUDING FRAUD AND COMPUTER MISUSE"
     pts = {
-        int(x["year"]): float(x["value"]) * 1_000
+        int(x["year"]): x
         for x in sorted(r, key=lambda x: x["date"])
         if x["offence_group"] == name and x.get("value")
     }
+    return pts
+
+
+def crime_incidents():
+    """CSEW incidents excluding fraud and computer misuse, converted from thousands."""
+    pts = _crime_observations()
     ys = sorted(pts)
-    return ys, [pts[y] for y in ys]
+    return ys, [float(pts[y]["value"]) * 1_000 for y in ys]
+
+
+def crime_period(year):
+    return date.fromisoformat(_crime_observations()[year]["date"]).strftime("YE %b %Y")
 
 
 # title, loader, value formatter, good_direction (+1 up-is-good, -1 down-is-good, 0 neutral),
@@ -151,21 +178,21 @@ PANELS = [
     ("Listed firms, UK (WDI)", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
      "World Bank/WFE · excludes funds & pure holdings", 2007),
     ("NHS waiting pathways, England", nhs_england, lambda v: f"{v/1e6:.1f}M", -1,
-     "NHS England · pathways, not unique patients", 2007),
-    ("Culture & recreation spending", culture_spending, lambda v: f"£{v:.1f}bn", +1,
-     "HM Treasury · real 2025–26 prices", 2007),
+     "NHS England · reported pathways; excludes missing-provider estimates", 2007, nhs_period),
+    ("Recreation, culture & religion", culture_spending, lambda v: f"£{v:.1f}bn", +1,
+     "HM Treasury · financial years, real 2025–26 prices", 2007, financial_period),
     ("England tuition cap (real)", tuition_real, lambda v: f"${v/1e3:.1f}k", -1,
-     "England fee cap · market FX, constant 2022 US$", 2006),
+     "England fee cap · academic years; FX, constant 2022 US$", 2006, academic_period),
     ("Trust in national government", trust_govt, lambda v: f"{v:.0f}%", +1,
      "OECD / Gallup World Poll via OWID", 2007),
     ("Emergency food parcels", food_bank_parcels, lambda v: f"{v/1e6:.1f}M", -1,
      "Trussell network · calendar-year parcels, not people", 2015),
     ("Crime incidents, England & Wales", crime_incidents, lambda v: f"{v/1e6:.1f}M", -1,
-     "ONS CSEW · excludes fraud & computer misuse", 2007),
+     "ONS CSEW · excludes fraud & computer misuse", 2007, crime_period),
 ]
 
 
-def _panel(ax, title, loader, fmt, good_dir, source, start):
+def _panel(ax, title, loader, fmt, good_dir, source, start, period_fmt=str):
     xs, ys = loader()
     pts = [(x, y) for x, y in zip(xs, ys) if x >= start]
     if not pts:
@@ -184,7 +211,7 @@ def _panel(ax, title, loader, fmt, good_dir, source, start):
     ax.annotate(fmt(ys[-1]), xy=(1, 1), xycoords="axes fraction", xytext=(0, 18),
                 textcoords="offset points", fontsize=14, fontweight="bold", color=color,
                 ha="right", va="bottom")
-    ax.annotate(f"{fmt(ys[0])} in {xs[0]}  to  {fmt(ys[-1])} in {xs[-1]}",
+    ax.annotate(f"{fmt(ys[0])} in {period_fmt(xs[0])}  to  {fmt(ys[-1])} in {period_fmt(xs[-1])}",
                 xy=(0, 1), xycoords="axes fraction", xytext=(0, 3), textcoords="offset points",
                 fontsize=8, color=MUTED, ha="left", va="bottom")
 
@@ -196,7 +223,7 @@ def _panel(ax, title, loader, fmt, good_dir, source, start):
     ax.set_axisbelow(True)
 
     ax.set_xticks([xs[0], xs[-1]])
-    ax.set_xticklabels([str(xs[0]), str(xs[-1])], fontsize=8.5, color=MUTED)
+    ax.set_xticklabels([period_fmt(xs[0]), period_fmt(xs[-1])], fontsize=8.5, color=MUTED)
     # Give each panel at least a minimum span relative to its own magnitude, so a
     # genuinely small move (e.g. tax burden 33->34%, median age 39->41) is not
     # magnified to fill the panel and overstate the change.

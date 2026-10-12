@@ -82,8 +82,10 @@ For offline reproducibility (and CI), the pipeline can fall back to
 `data/raw/manual_tax.csv`. **This file is not hand-typed data** — it is a verifiable
 **snapshot of the live OECD data** (latest year, all 27 countries, the headline variants),
 regenerated from `data/tax_combined_long.csv`. Every row keeps its OECD `source` + `year`,
-so it traces back to the same API. The fallback is used **only** when the live fetch returns
-nothing, and each source only ever contributes its own metrics (no cross-source mixing).
+so it traces back to the same API. The fallback requires
+**`--allow-snapshot-fallback`**, is used only when the live fetch returns nothing,
+and each source contributes only its own metrics. Incomplete live responses are
+rejected, not silently combined with the snapshot.
 
 ## A note on inflation adjustment
 
@@ -95,11 +97,13 @@ in this analysis is a **ratio / percentage**, not a monetary amount:
 - `net_personal_avg_tax_rate_pct` = taxes ÷ gross wage (same year → price level cancels).
 
 Because numerator and denominator are in the **same year's currency**, these ratios are
-inherently **inflation-neutral and directly comparable across years and countries**. There
+**dimensionless and do not require CPI deflation**. This does not make them immune
+to inflation: frozen thresholds (fiscal drag), wage composition and different growth in
+tax receipts and GDP can change the ratios. There
 are **no nominal currency (£/$/€) values** anywhere in the outputs, so there is nothing to
 deflate. (Had we reported, say, tax **paid in pounds**, we would deflate by CPI — but that
 is deliberately not a metric here.) Cross-country comparability is instead handled by the
-OECD's own harmonised definitions; where a level isn't strictly apples-to-apples, the
+OECD's harmonised definitions and matching household/year scenarios; where a level isn't strictly apples-to-apples, the
 `tax_manifest.json` `caveats` block documents it.
 
 ## Run
