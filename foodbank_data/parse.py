@@ -75,8 +75,8 @@ def _parse(
         if year is None or metric_name is None:
             continue
         value = pd.to_numeric(uk_row[(top, metric)], errors="coerce")
-        if pd.isna(value):
-            raise ValueError(f"missing UK value for {year} {metric_name}")
+        if pd.isna(value) or value < 0 or value == float("inf") or value % 1:
+            raise ValueError(f"invalid UK count for {year} {metric_name}: {value!r}")
         records.setdefault(year, {})[metric_name] = int(value)
 
     rows = []
@@ -133,8 +133,9 @@ def validate(frame: pd.DataFrame) -> pd.DataFrame:
     if frame["year"].duplicated().any():
         raise ValueError("duplicate period years")
     numeric = frame[["adults", "children", "total", "locations"]]
-    if numeric.isna().any().any() or (numeric < 0).any().any():
-        raise ValueError("parcel values must be non-negative numbers")
+    if (numeric.isna().any().any() or (numeric < 0).any().any()
+            or (numeric == float("inf")).any().any() or (numeric % 1 != 0).any().any()):
+        raise ValueError("parcel values must be finite non-negative integers")
     mismatch = frame["adults"] + frame["children"] != frame["total"]
     if mismatch.any():
         bad_years = frame.loc[mismatch, "year"].tolist()

@@ -14,6 +14,8 @@ extrapolate.
 
 from __future__ import annotations
 
+import math
+
 from ._http import get_json
 
 NOMIS_DATASET = "https://www.nomisweb.co.uk/api/v01/dataset/NM_2002_1.data.json"
@@ -64,5 +66,6 @@ def fetch(
             parsed = float(value)
         except (TypeError, ValueError):
             continue
-        out[(nation, year)] = parsed
+        if math.isfinite(parsed) and parsed > 0:
+            out[(nation, year)] = parsed
     return out

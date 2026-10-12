@@ -13,12 +13,13 @@ levels** (see caveats below).
 
 | Metric id | Meaning | Unit |
 |---|---|---|
-| `rtt_waiting_list_total` | Patients waiting to start elective treatment (the "waiting list") | patients |
-| `rtt_waiting_list_per_1000` | Waiting list per 1,000 residents (derived; real ONS population) | per 1,000 people |
-| `rtt_median_wait_weeks` | Median wait of those still waiting | weeks |
-| `ae_4hr_pct` | A&E attendances seen within 4 hours | percent |
+| `rtt_waiting_list_total` | Recorded elective pathways / ongoing waits, not unique people | pathways / waits |
+| `rtt_waiting_list_per_1000` | Pathways / waits per 1,000 residents, not the share of residents waiting | waits per 1,000 residents |
+| `rtt_median_wait_weeks` | England's band-midpoint estimate and Wales's reported median; no Scottish pooled median | weeks |
+| `ae_4hr_pct` | A&E attendances admitted, transferred or discharged within 4 hours | percent |
 | `cancer_62day_pct` | Cancer treatments started within 62 days of urgent referral | percent |
-| `diagnostics_6week_breach_pct` | Diagnostic-test list waiting 6+ weeks | percent |
+| `diagnostics_6week_breach_pct` | Diagnostic-test six-week threshold; Welsh detailed bands start August 2024 | percent |
+| `diagnostics_8week_breach_pct` | Welsh pathways waiting over 8 weeks; separate from six-week measures | percent |
 
 ## Data sources
 
@@ -26,14 +27,18 @@ levels** (see caveats below).
 |---|---|---|
 | England | NHS England statistical work areas | CSV/Excel bulk downloads (no API) |
 | Scotland | Public Health Scotland `opendata.nhs.scot` | CKAN JSON API |
-| Wales | StatsWales `statswales.gov.wales` | OData JSON API |
+| Wales | StatsWales `stats.gov.wales` | Paginated `api.stats.gov.wales/v1` JSON API |
 | Northern Ireland | Department of Health (NI) | Excel/ODS downloads (no API) |
 | Population | ONS/NRS/NISRA mid-year estimates via **Nomis** (`NM_2002_1`) | JSON API |
 
-Every value is fetched from these official sources — nothing is synthesised or
-interpolated. The one derived series, `rtt_waiting_list_per_1000`, is computed as
+Counts come from official sources, including NHS England's historical overview
+with official estimates for missing data. England's median is approximated from
+weekly count bands; a weighted average of Scottish stage medians is **not** a pooled
+median, so Scotland is omitted from that metric. The derived `rtt_waiting_list_per_1000` is computed as
 `waiting_list ÷ real ONS mid-year population × 1,000`, and is only produced for
 years that have a published ONS estimate (no projection/extrapolation).
+It is **not** the proportion of unique residents waiting: a person can have more
+than one pathway, and Scotland's total includes two stages of treatment.
 
 ### Citations
 
@@ -118,7 +123,13 @@ Metric definitions differ by nation. Key differences (full text in
 - **RTT waiting list:** England/Wales report "incomplete pathways"; Scotland
   reports "ongoing waits" by stage of treatment; NI reports outpatient /
   inpatient / day-case separately (we map the **outpatient** total). Absolute
-  counts are **not** directly comparable across nations.
+  counts are **not** directly comparable across nations and are **not unique people**.
+  [PHS explicitly warns](https://publichealthscotland.scot/publications/stage-of-treatment-waiting-times/stage-of-treatment-waiting-times-new-outpatients-inpatients-and-day-cases-28-april-2026/)
+  against interpreting summed waits as the proportion of the population waiting.
+  NI's **encompass rollout from November 2023** creates a series break:
+  [DoH says the new and legacy figures are not directly comparable](https://www.health-ni.gov.uk/news/publication-quarterly-northern-ireland-outpatient-inpatient-and-day-case-and-diagnostic-waiting-times-statistics-position-31-march-2026).
+  Full five-trust coverage does not repair this definition break, so the summary
+  does not label a change across it as better or worse.
 - **A&E 4-hour:** scope differs (all A&E types vs major/Type-1 only) and cadence
   varies (weekly/monthly). **Northern Ireland:** only the machine-readable
   OpenDataNI Emergency Care extract is ingested; DoH NI's most recent Emergency
@@ -127,8 +138,12 @@ Metric definitions differ by nation. Key differences (full text in
 - **Cancer 62-day:** pathway definitions and standards were revised at different
   times per nation — watch for series breaks.
 - **Diagnostics:** each nation covers a different set of tests. England/Scotland/
-  NI measure the 6-week standard; **Wales's target is 8 weeks**, so the Welsh
-  series counts 8+ week waits and understates the 6-week breach share.
+  NI have six-week measures here (NI's current official target is **9 weeks**,
+  and its encompass figures are not comparable to legacy figures);
+  **Wales's target is 8 weeks**. Welsh detailed
+  weekly bands allow a separate six-week series from August 2024. Older grouped
+  over-eight-week observations are kept under `diagnostics_8week_breach_pct`,
+  never spliced into the six-week series.
 
 ## Tests
 

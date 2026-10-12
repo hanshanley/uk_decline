@@ -12,10 +12,13 @@ seasonal rail statistics):
 | Metric | What it is | Trend |
 |---|---|---|
 | **CaSL** (`casl_pct`) | % of trains **cancelled or significantly late** — the disruption measure | Roughly **doubled**: ~2.4% (2007) → ~5% (2025); Q1 2026 was 4.6%. Now back near the early-2000s (post-Hatfield) crisis level. |
-| **PPM** (`ppm_pct`) | Public Performance Measure — % of trains **"on time"** (within 5 min) — the lenient headline | Broadly **flat** (~90% → ~87%). |
+| **PPM** (`ppm_pct`) | Public Performance Measure — % arriving at final destination within 5 min (10 min for long-distance services in the GB comparator) | Broadly **flat** (~90% → ~87%). |
 
-The headline "on time" figure hides the deterioration: serious disruption
-(cancellations and significant lateness) has roughly doubled while PPM barely moved.
+CaSL includes full/part cancellations and arrivals at the final destination more
+than 30 minutes late. Neither measure is a count of delayed passengers or all
+station stops. The GB comparator includes different PPM thresholds.
+The plotted smoother is an arithmetic mean of **four consecutive quarters**, not
+ORR's trains-weighted annual moving average; it is omitted across missing quarters.
 
 ## Data source & method
 
@@ -33,6 +36,9 @@ The headline "on time" figure hides the deterioration: serious disruption
 - The operator → sector membership (`LONDON_SE_FRANCHISES`) is grouped by *franchise
   title*, so operator renames (Connex South Eastern → South Eastern Trains →
   Southeastern) fold into one continuous series.
+- `quarter` uses calendar quarters, consistent with `year` and the quarter-end
+  `date` (Jan–Mar is Q1). Positional weighting rejects mismatched operator/period
+  layouts; blank/non-finite cells are not valid observations.
 - **Validation:** on the 2019+ quarters where ORR *does* publish a "London and South
   East" sector figure (Table 3113), this reconstruction matches to within **~0.2
   percentage points**, confirming both the membership set and the weighting. The same

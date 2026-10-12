@@ -2,16 +2,16 @@
 
 Formal citation for the dataset used, identified by the **organization that collected /
 published** it. Access date reflects when the data was retrieved for this analysis
-(15 August 2026).
+(12 October 2026).
 
 ---
 
 ## Primary source
 
 ### United Kingdom — regional GDP by ITL region (London vs UK)
-**Office for National Statistics (ONS).** (2025). *Regional economic activity by gross
-domestic product, UK: 1998 to 2023* — dataset “Regional gross domestic product (GDP): all
-ITL regions.” Newport, Wales: Office for National Statistics. Retrieved 15 August 2026, from
+**Office for National Statistics (ONS).** (2026). *Regional economic activity by gross
+domestic product, UK: 1998 to 2024* — dataset “Regional gross domestic product (GDP): all
+ITL regions.” Newport, Wales: Office for National Statistics. Retrieved 12 October 2026, from
 <https://www.ons.gov.uk/economy/grossdomesticproductgdp/datasets/regionalgrossdomesticproductallnutslevelregions>
 
 *Tables used:*
@@ -27,7 +27,13 @@ that replaced the EU NUTS system.
 *Derived measures* (computed in `ons.py`, not published directly by ONS):
 - `share_of_uk_gdp_pct` = London GDP ÷ UK GDP × 100 (from Table 5).
 - `gdp_per_head_index_uk100` = London GDP per head ÷ UK GDP per head × 100 (from Table 7).
-Both are same-year ratios of current-price figures, so no inflation adjustment applies.
+Both are same-year nominal ratios. A common deflator cancels, but regional relative
+prices can affect their trends. ONS cautions that GDP per head is affected by commuting;
+it is not a measure of residents' incomes or output per worker.
+
+Availability checked 12 October 2026: the 1998–2024 edition was published on
+23 September 2026. ONS's geography-conversion notice states that ITL1 countries and
+regions, including London, are unaffected by the lower-level suppressions.
 
 *Supports:* `outputs/london/london_share_of_uk_gdp.png`,
 `outputs/london/london_gdp_per_head_vs_uk.png`, and `data/london_gdp.csv`.

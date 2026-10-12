@@ -133,3 +133,37 @@ def test_release_and_workbook_link_parsing() -> None:
 def test_invalid_fiscal_year_rejected() -> None:
     with pytest.raises(ValueError):
         treasury.fiscal_start("2010")
+
+
+def test_investment_annotation_uses_actual_austerity_trough(monkeypatch):
+    from matplotlib.axes import Axes
+
+    frame = _frame()
+    frame = pd.concat([frame, pd.DataFrame([
+        treasury._row("2012-13", "public_sector_net_investment_pct_gdp",
+                      "United Kingdom", 1.0, "percent of GDP"),
+        treasury._row("2024-25", "public_sector_net_investment_pct_gdp",
+                      "United Kingdom", 0.1, "percent of GDP"),
+    ])], ignore_index=True)
+    labels = []
+    original = Axes.annotate
+
+    def capture(self, text, *args, **kwargs):
+        labels.append(text)
+        return original(self, text, *args, **kwargs)
+
+    monkeypatch.setattr(Axes, "annotate", capture)
+    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda *a, **k: None)
+    charts.make_chart(frame)
+    assert "2012-13 low\n1.0% of GDP" in labels
+    assert all("2024-25 low" not in label for label in labels)
+
+
+def test_summary_cannot_substitute_earlier_endpoint(tmp_path):
+    from austerity_data import summary
+
+    frame = _frame()
+    frame = frame[~((frame["category"] == "housing_community")
+                    & (frame["financial_year"] == charts.END_YEAR))]
+    with pytest.raises(ValueError, match="endpoint"):
+        summary.build_summary(frame, tmp_path / "summary.md")

@@ -356,6 +356,8 @@ def _rtt_history_rows(start_year: int, end_year: int) -> list[dict]:
             value = float(value_cell)
         except (TypeError, ValueError):
             continue  # "-" placeholder for months before collection began
+        if pd.isna(value):
+            continue
         d = pd.to_datetime(month_cell)
         if d.year < start_year or d.year > end_year:
             continue
@@ -434,7 +436,12 @@ def _fetch_ae(start_year: int, end_year: int) -> list[dict]:
                 and "over 4" not in c.lower()
                 and "admission" not in c.lower()
             ]
-            over_cols = [c for c in subset.columns if "over 4" in c.lower()]
+            over_cols = [
+                c for c in subset.columns
+                if "over 4" in c.lower() and "admission" not in c.lower()
+            ]
+            if not attendance_cols or not over_cols:
+                raise ValueError("A&E attendance or four-hour breach columns missing")
             attendances = (
                 float(subset[attendance_cols].apply(_to_numeric).sum().sum())
                 if attendance_cols
@@ -562,6 +569,8 @@ def _diagnostics_rows_from_zip(url: str, year: int, month: int) -> list[dict]:
         for c in columns
         if (lower := _diagnostic_week_lower(c)) is not None and lower >= 6
     ]
+    if not breach_cols:
+        raise ValueError("diagnostic six-week breach columns missing")
     df = _read_csv_lines(lines, header_idx, [test_col, total_col, *breach_cols])
     subset = df.loc[df[test_col].astype(str).str.strip().str.upper().eq("TOTAL")]
     if subset.empty:

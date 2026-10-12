@@ -60,6 +60,28 @@ def test_build_rows_share_and_index_math():
     assert by[("London", 2001, "gdp_per_head_gbp")] == 36000.0
 
 
+def test_parser_does_not_treat_non_year_numeric_columns_as_years():
+    sheet = _fake_sheet([2000, 1, 2001.5, 2001], [
+        ("UK", "UK", "United Kingdom", [1000, 99, 88, 1100]),
+    ])
+    assert ons._row_by_code(sheet, "UK") == ([2000, 2001], [1000, 1100])
+    sheet.iloc[1, -1] = 2000
+    with pytest.raises(ValueError, match="duplicate year"):
+        ons._row_by_code(sheet, "UK")
+
+
+def test_chart_endpoint_wording_does_not_assert_increases(monkeypatch):
+    from london_data import charts
+
+    subtitles = []
+    def capture(df, metric, title, subtitle_fn, *args, **kwargs):
+        subtitles.append(subtitle_fn(200, 150, 2000, 2001))
+    monkeypatch.setattr(charts, "_line_chart", capture)
+    charts._chart_share(None, None)
+    charts._chart_per_head(None, None)
+    assert all("rose" not in text and "widened" not in text for text in subtitles)
+
+
 def test_build_rows_units_and_regions():
     rows = ons.build_rows(_fake_workbook())
     units = {r["metric"]: r["unit"] for r in rows}
@@ -143,6 +165,16 @@ def test_edition_links_and_latest_year(monkeypatch):
 
     monkeypatch.setattr(ons, "_get", lambda url, timeout=60: _Resp())
     assert ons.latest_published_year() == 2024
+
+
+def test_encoded_edition_link_resolves_newest_workbook(monkeypatch):
+    latest = "/file?uri=%2Fx%2F1998to2024%2Fb.xlsx"
+    class Response:
+        text = (f'<a href="{latest}">2024</a>'
+                '<a href="/file?uri=/x/1998to2023/a.xlsx">2023</a>')
+
+    monkeypatch.setattr(ons, "_get", lambda *a, **k: Response())
+    assert ons.resolve_xlsx_url() == "https://www.ons.gov.uk" + latest
 
 
 def test_availability_status_uses_release_calendar(monkeypatch):

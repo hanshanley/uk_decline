@@ -36,24 +36,26 @@ class Metric(NamedTuple):
 METRICS: dict[str, Metric] = {
     "rtt_waiting_list_total": Metric(
         "rtt_waiting_list_total",
-        "RTT waiting list (patients waiting to start treatment)",
-        "patients",
+        "Elective waiting list (pathways / ongoing waits)",
+        "pathways / waits",
         "rtt",
         higher_is_better=False,
         description=(
-            "Total number of patients on the elective referral-to-treatment "
-            "waiting list (incomplete pathways / ongoing waits)."
+            "Recorded elective pathways / ongoing waits, not unique people. "
+            "Scotland sums outpatient and inpatient/day-case waits; NI covers "
+            "first outpatient appointments only, not a complete RTT pathway."
         ),
     ),
     "rtt_waiting_list_per_1000": Metric(
         "rtt_waiting_list_per_1000",
-        "RTT waiting list per 1,000 people",
-        "per 1,000 people",
+        "Elective pathways / waits per 1,000 residents",
+        "waits per 1,000 residents",
         "rtt",
         higher_is_better=False,
         description=(
-            "Elective waiting list expressed per 1,000 residents, using real ONS "
-            "mid-year population estimates, so growth is not just population growth."
+            "Recorded elective pathways / ongoing waits per 1,000 residents, "
+            "using published mid-year population estimates. This is not the "
+            "number or proportion of unique residents waiting."
         ),
     ),
     "rtt_median_wait_weeks": Metric(
@@ -66,7 +68,7 @@ METRICS: dict[str, Metric] = {
     ),
     "ae_4hr_pct": Metric(
         "ae_4hr_pct",
-        "A&E seen within 4 hours",
+        "A&E admitted, transferred or discharged within 4 hours",
         "percent",
         "ae",
         higher_is_better=True,
@@ -88,7 +90,7 @@ METRICS: dict[str, Metric] = {
     ),
     "diagnostics_6week_breach_pct": Metric(
         "diagnostics_6week_breach_pct",
-        "Diagnostics: waiting 6+ weeks",
+        "Diagnostics: six-week threshold",
         "percent",
         "diagnostics",
         higher_is_better=False,
@@ -96,6 +98,14 @@ METRICS: dict[str, Metric] = {
             "Share of patients on the diagnostic-test waiting list who have been "
             "waiting 6 weeks or more (breach of the 6-week standard)."
         ),
+    ),
+    "diagnostics_8week_breach_pct": Metric(
+        "diagnostics_8week_breach_pct",
+        "Wales diagnostics: waiting over 8 weeks",
+        "percent",
+        "diagnostics",
+        higher_is_better=False,
+        description="Share of Welsh diagnostic pathways waiting over 8 weeks.",
     ),
 }
 
@@ -105,17 +115,22 @@ CAVEATS: dict[str, str] = {
     "rtt_waiting_list_total": (
         "England/Wales report RTT 'incomplete pathways'; Scotland reports 'ongoing "
         "waits' by stage of treatment; NI reports outpatient/inpatient/day-case "
-        "waits separately. Absolute counts are not directly comparable across nations."
+        "waits separately (only outpatient waits are used here). These count waits, "
+        "not unique people, and are not directly comparable across nations. NI's "
+        "encompass rollout from November 2023 introduces a break: the Department "
+        "says encompass and legacy figures are not directly comparable."
     ),
     "rtt_waiting_list_per_1000": (
         "Derived: RTT waiting list \u00f7 real ONS mid-year population estimate "
         "\u00d7 1,000. Population comes from ONS/NRS/NISRA via Nomis; only years "
         "with a published estimate are shown (no projection/extrapolation). "
-        "Inherits the per-nation RTT definitional differences below."
+        "Not the proportion of residents waiting: people can have multiple waits. "
+        "Inherits the per-nation RTT definitional differences."
     ),
     "rtt_median_wait_weeks": (
-        "Median wait is computed on different population definitions per nation; "
-        "compare trends, not exact levels."
+        "England is estimated from weekly count bands (midpoint of the median "
+        "band); Wales reports its median. Scotland's stage medians cannot be "
+        "combined into a pooled median and are not included."
     ),
     "ae_4hr_pct": (
         "A&E 4-hour scope differs (all types vs major/Type-1 only) and reporting "
@@ -127,9 +142,15 @@ CAVEATS: dict[str, str] = {
     ),
     "diagnostics_6week_breach_pct": (
         "Diagnostic test lists (DM01 in England) cover different test sets per "
-        "nation. England/Scotland/NI measure the 6-week standard; Wales's target "
-        "is 8 weeks, so the Welsh series counts 8+ week waits and understates the "
-        "6-week breach share \u2014 compare the Welsh trend, not its exact level."
+        "nation. NI's current target is 9 weeks, not the 6-week threshold shown "
+        "here; its encompass rollout from November 2023 breaks comparability "
+        "with legacy figures. Welsh six-week values use detailed bands available from August "
+        "2024 only; the historical over-eight-week series is a separate metric, "
+        "not a substitute or a continuation of this series."
+    ),
+    "diagnostics_8week_breach_pct": (
+        "Wales's diagnostic target is 8 weeks. This series must not be compared "
+        "as if it used the six-week threshold of the other nations."
     ),
 }
 

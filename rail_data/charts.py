@@ -36,10 +36,15 @@ def _load(source) -> pd.DataFrame:
 
 
 def _maa(df: pd.DataFrame, region: str, metric: str) -> pd.DataFrame:
-    """4-quarter moving average for one region/metric, indexed by mid-quarter date."""
+    """Mean of four consecutive calendar quarters, dated at quarter end."""
     sub = df[(df["region"] == region) & (df["metric"] == metric)].copy()
     sub["date"] = pd.to_datetime(sub["date"])
     sub = sub.sort_values("date")
+    if sub.empty:
+        return sub.assign(maa=pd.Series(dtype=float))
+    sub = sub.set_index("date").reindex(
+        pd.date_range(sub["date"].min(), sub["date"].max(), freq="QE")
+    ).rename_axis("date").reset_index()
     sub["maa"] = sub["value"].rolling(4, min_periods=4).mean()
     return sub.dropna(subset=["maa"])
 

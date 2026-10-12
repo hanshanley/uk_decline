@@ -125,7 +125,7 @@ def _tidy_row(day: date, metric: str, value: float) -> dict:
 
 
 def _fetch_rtt() -> list[dict]:
-    """Total on the RTT list + weighted-median wait, from a single datastore pass.
+    """Total ongoing waits across the two reported stages of treatment.
 
     Public Health Scotland's ongoing-waits resource splits the list into two
     patient types ("New Outpatient" and "Inpatient/Day case"). Some months report
@@ -140,12 +140,9 @@ def _fetch_rtt() -> list[dict]:
         "PatientType",
         "Specialty",
         "NumberWaiting",
-        "Median",
     )
     required_types = {"New Outpatient", "Inpatient/Day case"}
     totals: dict[date, float] = defaultdict(float)
-    weighted_days: dict[date, float] = defaultdict(float)
-    weights: dict[date, float] = defaultdict(float)
     reported_types: dict[date, set[str]] = defaultdict(set)
     for row in _datastore_records(
         RTT_ONGOING_RESOURCE,
@@ -153,16 +150,14 @@ def _fetch_rtt() -> list[dict]:
         required_fields=required,
         sort="MonthEnding",
     ):
+        if row.get("PatientType") not in required_types:
+            continue
         day = _month_end(row["MonthEnding"])
         number_waiting = _num(row.get("NumberWaiting"))
         if number_waiting is None:
             continue
         reported_types[day].add(str(row.get("PatientType")))
         totals[day] += number_waiting
-        median_days = _num(row.get("Median"))
-        if median_days is not None and number_waiting > 0:
-            weighted_days[day] += median_days * number_waiting
-            weights[day] += number_waiting
 
     def _complete(day: date) -> bool:
         return required_types <= reported_types[day]
@@ -172,11 +167,8 @@ def _fetch_rtt() -> list[dict]:
         for day in sorted(totals)
         if _complete(day)
     ]
-    rows += [
-        _tidy_row(day, "rtt_median_wait_weeks", weighted_days[day] / weights[day] / 7)
-        for day in sorted(weighted_days)
-        if weights[day] and _complete(day)
-    ]
+    # Stage medians cannot be averaged to recover the pooled median. The source
+    # does not provide the combined wait distribution, so no median is emitted.
     return rows
 
 
@@ -257,9 +249,7 @@ def _is_all_diagnostic_type(row: dict) -> bool:
 
 
 def _is_six_week_breach_band(waiting_time: str) -> bool:
-    if waiting_time == "365 days and over":
-        return True
-    match = re.match(r"(\d+)-", waiting_time)
+    match = re.match(r"(\d+)(?:-| days and over$)", waiting_time)
     return bool(match and int(match.group(1)) >= 43)
 
 
@@ -271,11 +261,15 @@ def _fetch_diagnostics_current() -> dict[date, tuple[float, float]]:
         "WaitingTime",
         "NumberOnList",
     )
-    totals: dict[date, float] = defaultdict(float)
-    breaches: dict[date, float] = defaultdict(float)
+    totals_by_group: dict[tuple[date, str], float] = {}
+    bands_by_group: dict[tuple[date, str], float] = defaultdict(float)
+    breaches_by_group: dict[tuple[date, str], float] = defaultdict(float)
     for row in _datastore_records(
         DIAGNOSTICS_CURRENT_RESOURCE,
-        filters={"Country": SCOTLAND},
+        filters={
+            "Country": SCOTLAND,
+            "DiagnosticTestDescription": ["All Imaging", "All Endoscopy"],
+        },
         required_fields=required,
         sort="MonthEnding",
     ):
@@ -285,9 +279,22 @@ def _fetch_diagnostics_current() -> dict[date, tuple[float, float]]:
         value = _num(row.get("NumberOnList"))
         if value is None:
             continue
-        totals[day] += value
-        if _is_six_week_breach_band(str(row.get("WaitingTime") or "")):
-            breaches[day] += value
+        band = str(row.get("WaitingTime") or "")
+        key = (day, str(row["DiagnosticTestDescription"]))
+        if band == "Total Number Waiting":
+            totals_by_group[key] = value
+        elif re.match(r"^\d+(?:-| days and over$)", band):
+            bands_by_group[key] += value
+            if _is_six_week_breach_band(band):
+                breaches_by_group[key] += value
+    totals: dict[date, float] = defaultdict(float)
+    breaches: dict[date, float] = defaultdict(float)
+    # Early quarters include a total row alongside bands; later months contain
+    # only the exhaustive disjoint bands. Never count both in the denominator.
+    for key, band_total in bands_by_group.items():
+        day, _test = key
+        totals[day] += totals_by_group.get(key, band_total)
+        breaches[day] += breaches_by_group[key]
     return {day: (totals[day], breaches[day]) for day in totals}
 
 

@@ -50,11 +50,12 @@ financial-year series reaches **{archive_latest['total']:,} in 2017/18**. A sepa
 modern Trussell fiscal table covers 2018/19–2023/24 and ends at
 **{latest_fiscal['total']:,} parcels in {latest_fiscal['period_label']}**.
 
-These source vintages are coloured separately. Trussell's 2023/24 methodology says
+Grey historical bars lack an age breakdown; adult/child colours do not identify
+source vintages. Trussell's 2023/24 methodology says
 its modern financial-year figures are comparable from 2017/18, notes revisions to
 earlier releases, and says that releases from April 2020 combine three-day and
-seven-day parcels. The fiscal history is not joined to the separate calendar-year
-series.
+seven-day parcels. The datasets remain separate; the chart shows the latest calendar-year bar after
+a visual separator and does not calculate a change across the reporting-basis break.
 
 ## Headline
 

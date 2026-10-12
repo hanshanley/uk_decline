@@ -22,7 +22,9 @@ import pandas as pd
 import vizstyle as vs
 
 _SOURCE = ("Data: Office for National Statistics (ONS), Regional economic activity by GDP, "
-           "UK \u2014 GDP at current market prices, all ITL regions. London = ITL1 region.")
+           "UK \u2014 current market prices. London = ITL1 region.\n"
+           "GDP per head is affected by commuting; it is not residents' income "
+           "or output per worker. Nominal shares can reflect relative prices.")
 
 
 def _load(source) -> pd.DataFrame:
@@ -82,7 +84,7 @@ def _chart_share(df, out_dir):
         df, "share_of_uk_gdp_pct",
         "London's share of UK GDP",
         lambda y0, y1, yr0, yr1:
-            f"The capital's slice of national output rose from {y0:.1f}% to {y1:.1f}% "
+            f"The capital's share of nominal UK GDP: {y0:.1f}% to {y1:.1f}% "
             f"({yr0}\u2013{yr1})",
         "London GDP as % of UK GDP",
         "london_share_of_uk_gdp.png", out_dir,
@@ -103,7 +105,7 @@ def _chart_per_head(df, out_dir):
         df, "gdp_per_head_index_uk100",
         "London GDP per head vs the UK average",
         lambda y0, y1, yr0, yr1:
-            f"London output per person widened from {y0/100:.2f}\u00d7 to {y1/100:.2f}\u00d7 "
+            f"London GDP per resident: {y0/100:.2f}\u00d7 to {y1/100:.2f}\u00d7 "
             f"the UK average ({yr0}\u2013{yr1})",
         "GDP per head (index, UK = 100)",
         "london_gdp_per_head_vs_uk.png", out_dir,

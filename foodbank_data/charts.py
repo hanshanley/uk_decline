@@ -50,7 +50,7 @@ def foodbank_chart(
     historical["x"] = historical["end_year"].astype(float)
     latest_row = pd.DataFrame(
         [{
-            "period_label": "2025",
+            "period_label": str(int(latest["year"])),
             "x": float(latest["year"]),
             "total": float(latest["total"]),
             "adults": float(latest["adults"]),
@@ -147,7 +147,7 @@ def foodbank_chart(
     ax.text(
         latest["year"],
         latest["adults"] + latest["children"] / 2,
-        f"{latest['children'] / 1_000:.0f}k\nchildren",
+        f"{latest['children'] / 1_000:.0f}k parcels\nfor children",
         ha="center",
         va="center",
         fontsize=8.5,
@@ -155,8 +155,11 @@ def foodbank_chart(
         fontweight="bold",
     )
 
-    ax.set_xlim(1999.7, 2026.0)
-    ax.set_ylim(0, 3_500_000)
+    ax.axvline(float(latest["year"]) - 0.5, linestyle="--", color=MUTED, linewidth=1)
+    ax.text(latest["year"], 0.98, "Calendar year", transform=ax.get_xaxis_transform(),
+            ha="center", va="top", fontsize=9, color=MUTED)
+    ax.set_xlim(1999.7, max(float(historical["x"].max()), latest["year"]) + 1)
+    ax.set_ylim(0, max(float(historical["total"].max()), latest["total"]) * 1.14)
     ax.set_xticks([2000, 2005, 2010, 2015, 2020, 2025])
     ax.set_xticklabels(["2000", "2005", "2010", "2015", "2020", "2025"])
     ax.yaxis.set_major_locator(mtick.MultipleLocator(500_000))
@@ -196,8 +199,9 @@ def foodbank_chart(
     source_note(
         fig,
         "Sources: Trussell archived reports and official 2023/24 fiscal dataset; "
-        f"2025 calendar-year workbook. Accessed {ACCESSED_DATE}.\n"
-        "2005/06–2023/24 are financial years; the final bar is calendar-year 2025. "
+        f"{int(latest['year'])} calendar-year workbook. Accessed {ACCESSED_DATE}.\n"
+        f"{historical.iloc[0]['period_label']}–{historical.iloc[-1]['period_label']} "
+        f"are financial years; the separated final bar is calendar-year {int(latest['year'])}. "
         "Counts are distribution instances, not unique people.",
         x=0.075,
         y=0.022,

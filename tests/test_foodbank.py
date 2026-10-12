@@ -96,6 +96,31 @@ def test_validate_rejects_total_mismatch() -> None:
         parse.validate(frame)
 
 
+def test_parser_rejects_fractional_counts_instead_of_truncating():
+    payload = _workbook_bytes([(2025, (10.5, 5.5, 15.9, 1))])
+    with pytest.raises(ValueError, match="invalid UK count"):
+        parse.parse_calendar_years(io.BytesIO(payload))
+
+
+def test_chart_does_not_label_parcels_as_unique_children(monkeypatch):
+    annual = parse.parse_calendar_years(CALENDAR_SOURCE.path(RAW_DIR))
+    fiscal = history.build_fiscal_history(FISCAL_ARCHIVE, FISCAL_SLIDES_SOURCE.path(RAW_DIR))
+    original = charts.plt.subplots
+    captured = []
+
+    def capture(*args, **kwargs):
+        fig, ax = original(*args, **kwargs)
+        captured.append(ax)
+        return fig, ax
+
+    monkeypatch.setattr(charts.plt, "subplots", capture)
+    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda *a, **k: None)
+    charts.foodbank_chart(fiscal, annual)
+    labels = [text.get_text() for text in captured[0].texts]
+    assert "912k parcels\nfor children" in labels
+    assert "Calendar year" in labels
+
+
 def test_official_workbooks_match_headlines() -> None:
     annual = parse.parse_calendar_years(CALENDAR_SOURCE.path(RAW_DIR))
     midyear = parse.parse_midyear(MIDYEAR_SOURCE.path(RAW_DIR))

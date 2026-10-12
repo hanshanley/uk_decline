@@ -234,7 +234,7 @@ def _diagnostics_pct_from_rows(
             NATION_CODE,
             period,
             dates[period],
-            "diagnostics_6week_breach_pct",
+            "diagnostics_8week_breach_pct" if grouped_over8 else "diagnostics_6week_breach_pct",
             breach / total * 100.0,
             SOURCE,
         )
@@ -252,7 +252,6 @@ def _fetch_diagnostics_6week_breach_pct() -> Iterator[dict]:
             "Weeks waiting",
         )
     )
-    exact_periods = {row["period"] for row in exact_rows}
     yield from exact_rows
 
     grouped_rows = _diagnostics_pct_from_rows(
@@ -260,9 +259,7 @@ def _fetch_diagnostics_6week_breach_pct() -> Iterator[dict]:
         "Grouped weeks waiting",
         grouped_over8=True,
     )
-    for row in grouped_rows:
-        if row["period"] not in exact_periods:
-            yield row
+    yield from grouped_rows
 
 
 FETCHERS = (

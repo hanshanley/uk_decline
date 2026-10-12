@@ -191,7 +191,8 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         )
         ax.text(
             0.02, 0.83,
-            f"2000–01: {first['index']:.0f}\n2025–26: {last['index']:.0f}",
+            f"{first['financial_year']}: {first['index']:.0f}\n"
+            f"{last['financial_year']}: {last['index']:.0f}",
             transform=ax.transAxes,
             fontsize=9.2,
             color=color,
@@ -249,7 +250,9 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         markeredgecolor=BG,
         markeredgewidth=0.8,
     )
-    austerity_investment = investment[investment["financial_year"] >= BASE_YEAR]
+    austerity_investment = investment[
+        investment["financial_year"].between(BASE_YEAR, END_YEAR)
+    ]
     trough = austerity_investment.loc[austerity_investment["value"].idxmin()]
     start = investment[investment["financial_year"] == BASE_YEAR].iloc[0]
     ax_invest.scatter([start["year"], trough["year"]],
@@ -268,7 +271,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         arrowprops={"arrowstyle": "-", "color": TEXT, "linewidth": 0.8},
     )
     ax_invest.annotate(
-        f"2013–14 low\n{trough['value']:.1f}% of GDP",
+        f"{trough['financial_year']} low\n{trough['value']:.1f}% of GDP",
         xy=(trough["year"], trough["value"]),
         xytext=(0, -30),
         textcoords="offset points",

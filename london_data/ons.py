@@ -12,13 +12,11 @@ From these we derive, for **London** (ITL1, ONS code ``TLI``) against the **UK**
   - ``share_of_uk_gdp_pct``      — London GDP / UK GDP x 100 (the concentration measure).
   - ``gdp_per_head_index_uk100`` — London GDP/head / UK GDP/head x 100 (UK = 100).
 
-Both are **same-year ratios**: numerator and denominator share the same (current) price
-base, so no inflation adjustment applies — deflation cancels top and bottom. The raw £
-levels are also emitted for transparency.
-
-Data vintage: the ONS annual ITL release currently ends at **2023** (regional annual GDP
-lags ~18 months; there is no 2024 edition yet, and the timelier quarterly product excludes
-Scotland/NI and is index-only, so it cannot extend these UK-wide, £-level metrics).
+Both are same-year current-price ratios measuring nominal concentration. A common
+deflator would cancel, but region-specific price changes need not. These are not
+shares of real output or measures of residents' incomes. Raw £ levels are also emitted.
+The resolver selects the newest published workbook; the pinned 2023 edition is
+only a fallback, not a statement of current availability.
 """
 
 from __future__ import annotations
@@ -26,7 +24,7 @@ from __future__ import annotations
 import io
 import math
 import re
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 import pandas as pd
 import requests
@@ -36,7 +34,7 @@ DATASET_PAGE = (
     "https://www.ons.gov.uk/economy/grossdomesticproductgdp/datasets/"
     "regionalgrossdomesticproductallnutslevelregions"
 )
-# Pinned latest edition (used if the dataset page can't be scraped). The resolver below
+# Pinned fallback edition (used if the dataset page can't be scraped). The resolver below
 # prefers the newest edition actually listed on the page.
 PINNED_XLSX = (
     "https://www.ons.gov.uk/file?uri=/economy/grossdomesticproductgdp/datasets/"
@@ -68,7 +66,7 @@ def _edition_links(html: str) -> list[tuple[int, str]]:
     links: list[tuple[int, str]] = []
     hrefs = re.findall(r'href="(/file\?uri=[^"]+\.xlsx)"', html, flags=re.I)
     for href in hrefs:
-        m = re.search(r"/1998to(\d{4})/", href)
+        m = re.search(r"/1998to(\d{4})/", unquote(href))
         if m is not None:
             links.append((int(m.group(1)), href))
     return links
@@ -185,9 +183,14 @@ def _row_by_code(sheet: pd.DataFrame, code: str) -> tuple[list[int], list[float]
     header cell is a numeric year), so a blank/merged header cell can't misalign them.
     """
     header = sheet.iloc[_HEADER_ROW]
-    year_cols = [j for j in range(_FIRST_YEAR_COL, sheet.shape[1])
-                 if _to_float(header.iloc[j]) is not None]
+    year_cols = [
+        j for j in range(_FIRST_YEAR_COL, sheet.shape[1])
+        if (value := _to_float(header.iloc[j])) is not None
+        and value.is_integer() and 1900 <= value <= 2100
+    ]
     years = [int(_to_float(header.iloc[j])) for j in year_cols]
+    if not years or len(set(years)) != len(years):
+        raise ValueError("missing or duplicate year columns in ONS table")
     for i in range(_HEADER_ROW + 1, sheet.shape[0]):
         if str(sheet.iloc[i, _CODE_COL]).strip() == code:
             vals = [_to_float(sheet.iloc[i, j]) for j in year_cols]

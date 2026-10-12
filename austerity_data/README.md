@@ -7,7 +7,9 @@ into a reproducible chart using current official UK outturn data.
 The chart now runs from **2000–01 through 2025–26**. HM Treasury's current functional table begins
 in 2003–04, so the first three observations come from the official PESA 2012
 historical table. Both vintages are indexed independently to 2010–11 = 100; at
-their 2003–04 overlap they differ by no more than one index point.
+their 2003–04 overlap the plotted functions differ by up to 3 index points
+(and up to 7 across the full overlap). This vintage seam is not a measured
+year-to-year spending change.
 
 ![Austerity spending and investment](../outputs/austerity/uk_austerity_spending_investment.png)
 
@@ -38,7 +40,9 @@ Historical extension: **HM Treasury, Public Expenditure Statistical Analyses 201
 Table 4.3**, which publishes the same high-level functional classification back to
 1988–89. Only 2000–01 to 2002–03 is used to extend the current chart.
 
-Real values are in **2025–26 prices**, deflated by HM Treasury using the ONS GDP deflator.
+Current-release real values are in **2025–26 prices**, deflated by HM Treasury using
+the ONS GDP deflator. Historical PESA 2012 levels retain **2011–12 prices**; only their
+independently rebased indices, not cash levels, are joined to the chart.
 The pipeline resolves the latest July PSS release and its Chapter 4 workbook from GOV.UK.
 
 Education is intentionally omitted from the comparison chart because HM Treasury warns that

@@ -19,7 +19,7 @@ def _load(source):
 
 
 def _fmt(value: float, unit: str) -> str:
-    if unit == "patients":
+    if unit == "pathways / waits":
         if value >= 1e6:
             return f"{value/1e6:.2f}M"
         return f"{value/1e3:.0f}k"
@@ -27,7 +27,7 @@ def _fmt(value: float, unit: str) -> str:
         return f"{value:.1f}%"
     if unit == "weeks":
         return f"{value:.1f} wks"
-    if unit == "per 1,000 people":
+    if unit == "waits per 1,000 residents":
         return f"{value:.1f}/1k"
     return f"{value:g}"
 
@@ -77,11 +77,15 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
                 arrow = "\u2193"
             worse = (delta > 0) != meta.higher_is_better and delta != 0
             tag = " (worse)" if worse else (" (better)" if delta != 0 else "")
+            change = f"{arrow} {_fmt(abs(delta), meta.unit)}{tag}"
+            if (code == "NIR" and meta.family in {"rtt", "diagnostics"}
+                    and first["date"] < pd.Timestamp("2023-11-01") <= last["date"]):
+                change = "Not like-for-like (encompass break)"
             lines.append(
                 f"| {nations.name_for_code(code)} "
                 f"| {_fmt(first['value'], meta.unit)} ({first['date']:%b %Y}) "
                 f"| {_fmt(last['value'], meta.unit)} ({last['date']:%b %Y}) "
-                f"| {arrow} {_fmt(abs(delta), meta.unit)}{tag} |"
+                f"| {change} |"
             )
         caveat = metrics.CAVEATS.get(metric_id)
         if caveat:

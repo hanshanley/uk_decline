@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pandas as pd  # noqa: E402
+import pytest
 
 from nhs_data import charts, combine, metrics, nations, population, summary  # noqa: E402
 
@@ -27,6 +28,7 @@ def _synthetic_rows() -> list[dict]:
         "ae_4hr_pct": 92.0,
         "cancer_62day_pct": 82.0,
         "diagnostics_6week_breach_pct": 4.0,
+        "diagnostics_8week_breach_pct": 4.0,
     }
     for code in nations.codes():
         name = nations.name_for_code(code)
@@ -47,7 +49,7 @@ def test_make_row_valid_and_invalid() -> None:
     r = metrics.make_row("England", "ENG", "2024-03", "2024-03-31",
                          "rtt_waiting_list_total", 7_600_000, "NHS England")
     assert tuple(r) == metrics.ROW_FIELDS
-    assert r["unit"] == "patients"
+    assert r["unit"] == "pathways / waits"
     assert isinstance(r["value"], float)
     try:
         metrics.make_row("England", "ENG", "2024-03", "2024-03-31", "not_a_metric", 1, "x")
@@ -187,6 +189,138 @@ def test_population_fetch_skips_blank_observations(monkeypatch) -> None:
     }
     monkeypatch.setattr(population, "get_json", lambda *a, **k: payload)
     assert population.fetch() == {("ENG", 2024): 57_000_000.0}
+
+
+def test_scottish_stage_medians_are_not_a_pooled_median(monkeypatch) -> None:
+    from nhs_data import scotland
+
+    records = [
+        {"MonthEnding": "20240331", "PatientType": "New Outpatient",
+         "NumberWaiting": 100, "Median": 7},
+        {"MonthEnding": "20240331", "PatientType": "Inpatient/Day case",
+         "NumberWaiting": 100, "Median": 700},
+        {"MonthEnding": "20240331", "PatientType": "Other",
+         "NumberWaiting": 900, "Median": 1},
+        {"MonthEnding": "20240430", "PatientType": "New Outpatient",
+         "NumberWaiting": 100, "Median": 7},
+    ]
+    monkeypatch.setattr(scotland, "_datastore_records", lambda *a, **k: iter(records))
+    rows = scotland._fetch_rtt()
+    assert [(r["metric"], r["value"]) for r in rows] == [
+        ("rtt_waiting_list_total", 200)
+    ]
+
+
+def test_scottish_diagnostics_do_not_double_count_total_or_drop_open_band(monkeypatch) -> None:
+    from nhs_data import scotland
+
+    records = [
+        {"MonthEnding": "20240331", "DiagnosticTestDescription": "All Imaging",
+         "WaitingTime": band, "NumberOnList": count}
+        for band, count in [
+            ("Total Number Waiting", 100), ("0-7 days", 60),
+            ("43-49 days", 20), ("92 days and over", 20)
+        ]
+    ]
+    records += [
+        {"MonthEnding": "20240430", "DiagnosticTestDescription": "All Imaging",
+         "WaitingTime": band, "NumberOnList": count}
+        for band, count in [
+            ("0-7 days", 60), ("43-49 days", 20), ("92-182 days", 20)
+        ]
+    ]
+    monkeypatch.setattr(scotland, "_datastore_records", lambda *a, **k: iter(records))
+    assert scotland._fetch_diagnostics_current() == {
+        scotland._month_end("20240331"): (100, 40),
+        scotland._month_end("20240430"): (100, 40),
+    }
+    assert scotland._is_six_week_breach_band("365 days and over")
+    assert not scotland._is_six_week_breach_band("36-42 days")
+
+
+def test_welsh_diagnostic_thresholds_remain_separate(monkeypatch) -> None:
+    from nhs_data import wales
+
+    def records(dataset, filters):
+        if dataset == wales.DATASETS["diagnostics_current"]:
+            return iter([
+                {"Date": "Aug-2024", "Weeks waiting": band, "Data values": value}
+                for band, value in [
+                    ("Total Waiting", 100), ("Over 6 weeks and up to 7 weeks", 20),
+                    ("Over 8 Weeks", 10), ("Forty weeks and over", 10)
+                ]
+            ])
+        return iter([
+            {"Date": "Jul-2024", "Grouped weeks waiting": band, "Data values": value}
+            for band, value in [("Total Waiting", 100), ("Over 8 Weeks", 10)]
+        ])
+
+    monkeypatch.setattr(wales, "_view_rows", records)
+    rows = list(wales._fetch_diagnostics_6week_breach_pct())
+    assert [(r["period"], r["metric"], r["value"]) for r in rows] == [
+        ("2024-08", "diagnostics_6week_breach_pct", 30),
+        ("2024-07", "diagnostics_8week_breach_pct", 10),
+    ]
+
+
+def test_english_ae_excludes_decision_to_admission_delays(monkeypatch) -> None:
+    from nhs_data import england
+
+    monkeypatch.setattr(england, "_discover_pages", lambda *a: [])
+    monkeypatch.setattr(england, "_select_month_links", lambda *a: [(2024, 1, "x")])
+    monkeypatch.setattr(england, "get_csv", lambda *a: pd.DataFrame({
+        "Org Code": ["TOTAL"],
+        "A&E attendances Type 1": [100],
+        "A&E attendances over 4 hours Type 1": [20],
+        "Emergency admissions over 4 hours from decision to admission": [10],
+    }))
+    assert england._fetch_ae(2024, 2024)[0]["value"] == 80
+
+
+def test_diagnostic_schema_change_cannot_become_zero_breaches(monkeypatch) -> None:
+    from nhs_data import england
+
+    monkeypatch.setattr(england, "_csv_text_from_zip",
+                        lambda *a: "Diagnostic Tests,Total WL\nTOTAL,100")
+    with pytest.raises(ValueError, match="breach columns"):
+        england._diagnostics_rows_from_zip("x", 2024, 1)
+
+
+def test_indexed_plot_starts_at_shared_baseline(monkeypatch, tmp_path) -> None:
+    rows = [
+        metrics.make_row(name, code, date[:7], date, "rtt_waiting_list_total", value, "x")
+        for name, code, date, value in [
+            ("England", "ENG", "2020-01-31", 10),
+            ("England", "ENG", "2020-03-31", 20),
+            ("Scotland", "SCO", "2020-03-31", 30),
+        ]
+    ]
+    captured = []
+    original = charts.plt.subplots
+
+    def capture(*args, **kwargs):
+        fig, ax = original(*args, **kwargs)
+        captured.append(ax)
+        return fig, ax
+
+    monkeypatch.setattr(charts.plt, "subplots", capture)
+    charts.chart_metric(combine.to_frame(rows), "rtt_waiting_list_total",
+                        tmp_path, indexed=True)
+    for line in captured[0].lines[:2]:
+        assert pd.Timestamp(min(line.get_xdata())) == pd.Timestamp("2020-03-31")
+        assert list(line.get_ydata()) == [100]
+
+
+def test_summary_does_not_infer_improvement_across_ni_encompass_break(tmp_path):
+    rows = [
+        metrics.make_row("Northern Ireland", "NIR", date[:7], date,
+                         "rtt_waiting_list_total", value, "DoH")
+        for date, value in [("2020-03-31", 100), ("2024-03-31", 200)]
+    ]
+    path = summary.build_summary(combine.to_frame(rows), tmp_path / "summary.md")
+    text = path.read_text()
+    assert "Not like-for-like (encompass break)" in text
+    assert "(worse)" not in text
 
 
 def _run() -> int:

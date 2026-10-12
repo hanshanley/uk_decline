@@ -25,8 +25,9 @@ There are three deliberately separate statistical series in the data:
    its modern figures are comparable from 2017/18 and notes revisions to older data.
    From April 2020, three-day and seven-day parcels are combined.
 3. **Calendar years, 2015–2025.** Trussell changed its headline reporting basis to
-   calendar years for the 2025 release. This series is never appended to the fiscal
-   series.
+   calendar years for the 2025 release. It remains a separate dataset; the chart displays
+   the latest calendar-year bar after a visual separator, not as a comparable next
+   financial year, and computes no change across that reporting-basis break.
 
 ## Headline
 

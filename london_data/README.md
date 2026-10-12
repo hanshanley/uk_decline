@@ -6,22 +6,22 @@ story, using the authoritative **Office for National Statistics (ONS)** regional
 
 ## The story
 
-| Measure | What it is | Trend (1998 → 2023) |
+| Measure | What it is | Trend (1998 → 2024) |
 |---|---|---|
-| **Share of UK GDP** (`share_of_uk_gdp_pct`) | London's GDP ÷ UK GDP | **Risen: 19.6% → 22.7%.** Nearly a quarter of all UK output is now produced in London (~13% of the population). |
+| **Share of UK GDP** (`share_of_uk_gdp_pct`) | London's GDP ÷ UK GDP | **Risen: 19.6% → 22.8%.** Nearly a quarter of all UK output is produced in London. |
 | **GDP per head vs UK** (`gdp_per_head_index_uk100`) | London GDP/head ÷ UK GDP/head (UK = 100) | **Widened: 162 → 173** — i.e. from ~1.62× to ~1.73× the UK average. |
 
-Both point the same way: economic activity has become **more**, not less, concentrated in
-London over the past quarter-century — one of the widest capital-vs-nation gaps of any large
-advanced economy.
+These figures and regenerated charts use the 1998–2024 edition, retrieved 12 October 2026.
+GDP per head is GDP divided by residents, not income per resident or productivity per worker:
+commuters contribute to London's output but are counted as residents elsewhere.
 
 ## Why nominal (current-price) figures are correct here
 
 Both headline measures are **same-year ratios** (London ÷ UK, in the same year). The
-numerator and denominator share the same price base, so **inflation cancels** — there is no
-nominal-vs-real distortion, and deflating would change nothing. Current-price £ levels are
-therefore the correct, standard input. (The raw £ levels are also emitted in the CSV for
-transparency.)
+figures measure **nominal concentration**. Applying the same national deflator to both
+would cancel, but region-specific price movements need not cancel. Changes in these
+ratios can reflect relative prices as well as real activity: they are not measures of
+real-output concentration. Raw £ levels are emitted in the CSV for transparency.
 
 ## Data source
 
@@ -35,17 +35,11 @@ transparency.)
   back to a pinned URL), so re-running picks up future ONS revisions.
 - Full citation: [`CITATIONS.md`](CITATIONS.md).
 
-**Data vintage:** the ONS annual ITL series currently ends at **2023** (edition released
-2025-04-17). Regional *annual* GDP requires the full annual UK supply-use balancing, so it
-lags ~1.5 years: per the ONS release calendar, the **1998→2024** edition is scheduled for
-**23 September 2026** (the prior editions landed 1998→2022 in Apr 2024 and 1998→2023 in Apr
-2025). No 2024 outturn exists anywhere before then — verified across the annual regional GDP
-dataset, the regional GVA(balanced) dataset (also ends 2023), the ONS CMD data API
-(`regional-gdp-by-year`, stale at 2021), and direct-guessed `1998to2024` URLs (404). The
-quarterly regional product can't substitute (ONS discontinued it — an "update on reinstating
-quarterly regional GDP estimates" is due 2026-07-31 — and it excludes Scotland & NI and is an
-index, not £ levels, so no UK-wide share can be formed). 1998–2023 is therefore the maximum
-defensible range; no later values are estimated, nowcast, or fabricated.
+**Availability checked 12 October 2026:** ONS published the **1998–2024** edition on
+**23 September 2026**. Its notice suppresses some ITL2 and lower-level estimates while
+correcting geography conversion, but explicitly says **ITL1 countries and regions are
+unaffected**, including London. The resolver uses the latest dated edition; the pinned
+1998–2023 workbook is only a network-failure fallback. No values are nowcast or fabricated.
 
 ## Run
 
@@ -64,7 +58,7 @@ defensible range; no later values are estimated, nowcast, or fabricated.
 ```
 
 The resolver selects the highest `1998toYYYY` edition linked by ONS, so no code change is
-needed when the September 2026 release appears. `--require-year` turns stale data into an
+needed for new editions. `--require-year` turns stale data into an
 explicit failure rather than silently rebuilding a chart that still ends in 2023.
 
 ## Outputs

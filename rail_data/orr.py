@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import datetime as dt
 import io
+import math
 import re
 from urllib.parse import urlsplit
 
@@ -73,7 +74,7 @@ _FIRST_DATA_ROW = 4
 
 _QUARTER_END = {"Apr to Jun": (6, 30), "Jul to Sep": (9, 30),
                 "Oct to Dec": (12, 31), "Jan to Mar": (3, 31)}
-_QUARTER_INDEX = {"Apr to Jun": 1, "Jul to Sep": 2, "Oct to Dec": 3, "Jan to Mar": 4}
+_QUARTER_INDEX = {"Apr to Jun": 2, "Jul to Sep": 3, "Oct to Dec": 4, "Jan to Mar": 1}
 
 
 def _ensure_orr_host(url: str) -> None:
@@ -94,9 +95,10 @@ def download_workbook(url: str = ORR_TABLE_3103_URL, timeout: int = 120) -> dict
 
 def _to_float(value) -> float | None:
     try:
-        return float(value)
+        parsed = float(value)
     except (TypeError, ValueError):
         return None  # ORR shorthand like "[z]" / "[x]" for not-applicable / suppressed
+    return parsed if math.isfinite(parsed) else None
 
 
 def _parse_period(label: str) -> tuple[str, int, int, str] | None:
@@ -112,6 +114,13 @@ def _parse_period(label: str) -> tuple[str, int, int, str] | None:
 def _weighted_series(trains: pd.DataFrame, values: pd.DataFrame,
                      franchises: frozenset | None) -> list[tuple[str, float]]:
     """Trains-weighted mean of ``values`` per period, over ``franchises`` (all if None)."""
+    if trains.shape != values.shape:
+        raise ValueError("ORR trains and metric table shapes differ")
+    # Positional weighting is safe only when the operator and period axes agree.
+    if not trains.iloc[_HEADER_ROW:, :4].equals(values.iloc[_HEADER_ROW:, :4]):
+        raise ValueError("ORR operator rows differ between trains and metric tables")
+    if not trains.iloc[_HEADER_ROW, 4:].equals(values.iloc[_HEADER_ROW, 4:]):
+        raise ValueError("ORR period columns differ between trains and metric tables")
     periods = {j: str(trains.iloc[_HEADER_ROW, j]) for j in range(_FIRST_DATA_ROW, trains.shape[1])
                if str(trains.iloc[_HEADER_ROW, j]) != "nan"}
     out: list[tuple[str, float]] = []
@@ -122,7 +131,7 @@ def _weighted_series(trains: pd.DataFrame, values: pd.DataFrame,
                 continue
             t = _to_float(trains.iloc[i, j])
             v = _to_float(values.iloc[i, j])
-            if t is not None and v is not None:
+            if t is not None and t > 0 and v is not None:
                 weight_sum += t
                 weighted += t * v
         if weight_sum:

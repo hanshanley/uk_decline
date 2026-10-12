@@ -53,8 +53,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
     """Render a single metric's per-nation trend chart. Returns the output path or None.
 
     When ``indexed`` is True, each nation's series is rebased to 100 at its first
-    observation, so nations of very different absolute size (e.g. England ~7M vs
-    Wales ~0.7M) can be compared on a single growth scale.
+    shared observation date, so growth uses a common baseline.
     """
     import pandas as pd
 
@@ -78,6 +77,8 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
     fig, ax = plt.subplots(figsize=(11, 6))
     for code, g in sub.groupby("nation_code"):
         g = g.sort_values("date")
+        if indexed:
+            g = g[g["date"] >= base_date]
         yvals = g["value"]
         if indexed:
             at_base = g[g["date"] == base_date]
@@ -117,7 +118,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
         pad = max((hi - lo) * 0.10, 2.0)
         ax.set_ylim(max(0.0, lo - pad), min(100.0, hi + pad))
         ax.yaxis.set_major_formatter(mticker.PercentFormatter())
-    if not indexed and meta.unit == "patients":
+    if not indexed and meta.unit == "pathways / waits":
         ax.yaxis.set_major_formatter(
             mticker.FuncFormatter(lambda v, _p: f"{v/1e6:.1f}M" if v >= 1e6 else f"{v/1e3:.0f}k")
         )
@@ -127,13 +128,11 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
     ax.legend(title="Nation", loc="best", frameon=False, labelcolor=TEXT)
     fig.autofmt_xdate()
     note = SOURCE_NOTE + (POP_SOURCE_NOTE if metric_id == "rtt_waiting_list_per_1000" else "")
-    if metric_id == "diagnostics_6week_breach_pct":
-        note += (
-            "\nCaveat: Wales reports 8+ week waits; England, Scotland and Northern "
-            "Ireland use a 6-week threshold. Compare Wales's trend, not its level."
-        )
+    if metric_id in metrics.CAVEATS:
+        import textwrap
+        note += "\n" + textwrap.fill("Caveat: " + metrics.CAVEATS[metric_id], width=145)
     fig.text(0.01, 0.01, note, ha="left", fontsize=8, color=MUTED, style="italic")
-    fig.tight_layout(rect=[0, 0.03, 1, 1])
+    fig.tight_layout(rect=[0, 0.11, 1, 1])
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -154,7 +153,7 @@ def make_charts(source=None, out_dir: Path | str = CHART_DIR) -> list[Path]:
             written.append(path)
         # For absolute head-count metrics, also emit an indexed (growth) view so nations
         # of very different size are comparable.
-        if metrics.METRICS[metric_id].unit == "patients":
+        if metrics.METRICS[metric_id].unit == "pathways / waits":
             ipath = chart_metric(df, metric_id, out_dir, indexed=True)
             if ipath is not None:
                 written.append(ipath)
