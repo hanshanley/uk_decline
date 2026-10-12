@@ -66,10 +66,11 @@ def test_age_source_batches_preserve_country_order():
 # --- median-age derivation (hand-verified) ----------------------------------
 
 def _band_rows(iso3, year, shares_by_band):
-    """Build pop_band_share_pct rows (single sex) from {band_label: percent}."""
+    """Build a complete two-sex profile, splitting each band equally by sex."""
     return [
-        combine.make_row(iso3, year, "pop_band_share_pct", pct, "s", age_band=band, sex="male")
-        for band, pct in shares_by_band.items()
+        combine.make_row(iso3, year, "pop_band_share_pct",
+                         shares_by_band.get(band, 0.0) / 2, "s", age_band=band, sex=sex)
+        for band in config.BAND_ORDER for sex in config.SEXES.values()
     ]
 
 
@@ -94,15 +95,33 @@ def test_median_age_mid_distribution():
 
 def test_median_age_sums_over_sex():
     # Two sexes each contribute; derive sums them before computing.
-    rows = (
-        [combine.make_row("GBR", 2024, "pop_band_share_pct", 30.0, "s", "0-4", "male"),
-         combine.make_row("GBR", 2024, "pop_band_share_pct", 30.0, "s", "0-4", "female"),
-         combine.make_row("GBR", 2024, "pop_band_share_pct", 20.0, "s", "5-9", "male"),
-         combine.make_row("GBR", 2024, "pop_band_share_pct", 20.0, "s", "5-9", "female")]
-    )
+    rows = _band_rows("GBR", 2024, {"0-4": 60.0, "5-9": 40.0})
     (m,) = median_age.derive(rows)
     # 60% in 0-4 -> same as the first-band case: 4.1667.
     assert m["value"] == pytest.approx(4.17, abs=0.01)
+
+
+@pytest.mark.parametrize("defect", ["missing", "duplicate", "negative", "nan", "total"])
+def test_median_age_rejects_invalid_profiles(defect):
+    rows = _band_rows("GBR", 2024, {"0-4": 60.0, "5-9": 40.0})
+    if defect == "missing":
+        rows.pop()
+    elif defect == "duplicate":
+        rows.append(dict(rows[0]))
+    elif defect == "negative":
+        rows[0]["value"] = -1
+    elif defect == "nan":
+        rows[0]["value"] = float("nan")
+    else:
+        rows[0]["value"] += 10
+    with pytest.raises(ValueError):
+        median_age.derive(rows)
+
+
+def test_median_age_does_not_invent_a_width_for_the_open_ended_band():
+    rows = _band_rows("GBR", 2024, {"80+": 100.0})
+    with pytest.raises(ValueError, match="open-ended"):
+        median_age.derive(rows)
 
 
 # --- pyramids share computation ---------------------------------------------

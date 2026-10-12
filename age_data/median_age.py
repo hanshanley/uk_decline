@@ -9,12 +9,14 @@ population distribution within the band that contains the 50th percentile):
 
 where, for the band containing the median, ``L`` is its lower age bound, ``CF_below`` is
 the cumulative population percentage below ``L``, ``f_band`` is the band's percentage of
-the population, and ``width`` is 5 years (the open-ended 80+ band is treated as 80-85).
+the population, and ``width`` is 5 years. This assumes a uniform distribution within
+the median band. A median in the open-ended 80+ band cannot be interpolated.
 It is fully reproducible from the same published band counts.
 """
 
 from __future__ import annotations
 
+import math
 from typing import Iterable, Optional
 
 from . import config
@@ -41,6 +43,8 @@ def _median_from_band_shares(band_pct: dict[str, float]) -> Optional[float]:
     for label, lower in _ORDERED_BANDS:
         f_band = band_pct.get(label, 0.0) * scale
         if cumulative + f_band >= 50.0:
+            if label == "80+":
+                raise ValueError("cannot interpolate a median in the open-ended 80+ band")
             if f_band <= 0:
                 return lower
             return lower + ((50.0 - cumulative) / f_band) * config.BAND_WIDTH_YEARS
@@ -49,22 +53,36 @@ def _median_from_band_shares(band_pct: dict[str, float]) -> Optional[float]:
 
 
 def derive(band_share_rows: Iterable[dict]) -> list[dict]:
-    """Derive ``median_age_years`` rows from ``pop_band_share_pct`` rows (any sex).
+    """Derive medians from complete, unique age-band profiles for both sexes.
 
     Band shares are summed across sexes per country-year, then the grouped-median formula
     is applied. Input rows for other metrics are ignored.
     """
-    # (iso3, year) -> {band_label: summed percent over sexes}
-    grouped: dict[tuple[str, int], dict[str, float]] = {}
+    grouped: dict[tuple[str, int], dict[tuple[str, str], float]] = {}
+    expected = {(band, sex) for band in config.BAND_ORDER for sex in config.SEXES.values()}
     for r in band_share_rows:
         if r["metric"] != "pop_band_share_pct":
             continue
         key = (r["iso3"], r["year"])
-        grouped.setdefault(key, {})
-        grouped[key][r["age_band"]] = grouped[key].get(r["age_band"], 0.0) + r["value"]
+        cells = grouped.setdefault(key, {})
+        cell = (r["age_band"], r["sex"])
+        if cell not in expected or cell in cells:
+            raise ValueError(f"{key}: unknown or duplicate age/sex cell {cell}")
+        value = float(r["value"])
+        if not math.isfinite(value) or value < 0:
+            raise ValueError(f"{key}: invalid age-band share {value}")
+        cells[cell] = value
 
     out: list[dict] = []
-    for (iso3, year), band_pct in grouped.items():
+    for (iso3, year), cells in grouped.items():
+        if set(cells) != expected:
+            raise ValueError(f"{iso3} {year}: incomplete age/sex profile")
+        if not math.isclose(sum(cells.values()), 100.0, abs_tol=0.01):
+            raise ValueError(f"{iso3} {year}: age-band shares do not sum to 100%")
+        band_pct = {
+            band: sum(cells[(band, sex)] for sex in config.SEXES.values())
+            for band in config.BAND_ORDER
+        }
         median = _median_from_band_shares(band_pct)
         if median is None:
             continue

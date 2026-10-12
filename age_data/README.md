@@ -37,11 +37,16 @@ Full per-country, per-year data: `data/age_combined_long.csv` (tidy) and
 
 ## Data sources — who actually collected the data
 
-**All data is real and directly traceable.** The age-structure figures are **collected by
-the United Nations Population Division** and **redistributed by the World Bank**; both are
+**All data is source-published and directly traceable.** The age-structure figures are
+**estimated/projected by the United Nations Population Division** and **redistributed by the World Bank**; both are
 credited in full below, in `data/age_manifest.json` (`citations` block), and in every
 figure's source note. The pipeline fetches live from the free, key-less World Bank API;
 every output row carries a `source` field.
+
+WPP 2024 distinguishes estimates for **1950–2023** from projections for **2024–2100**.
+The 2024/2025 age distributions therefore contain projection assumptions, not newly
+observed census counts. World Bank age-band counts combine those distributions with its
+total-population estimates. The figures disclose this distinction.
 
 **Primary source (data collector):**
 
@@ -70,7 +75,8 @@ curl -s "https://api.worldbank.org/v2/country/GBR/indicator/SP.POP.65UP.TO.ZS?fo
 ### Median age — a transparent derivation (not a published figure)
 
 The World Bank does **not** publish median age, so it is **computed transparently from the
-published 5-year age-band counts** — it is **not fabricated or modelled**. The method is the
+published 5-year age-band counts**. It is a **grouped approximation**, assuming a uniform
+age distribution within the median band, not an exact person-level median. The method is the
 standard *grouped median* (linear interpolation of the cumulative population distribution
 within the band containing the 50th percentile):
 
@@ -80,15 +86,19 @@ median_age = L + ((50 − CF_below) / f_band) × 5
 
 where `L` is the lower age bound of the median band, `CF_below` is the cumulative
 population % below `L`, `f_band` is the band's % of the population, and 5 is the band width
-(the open-ended 80+ band is treated as 80–85). Every derived row is tagged
+(a median in the open-ended 80+ band is rejected because its width is unknown).
+Derivation requires all 17 bands for both sexes, unique finite non-negative shares,
+and a total within rounding tolerance of 100%. Every derived row is tagged
 `source = "World Bank WDI (derived: median from 5-year age bands)"` so it is never confused
 with a published value, and it is fully reproducible from the same band counts. (See
 `age_data/median_age.py`; a hand-verified derivation is covered in `tests/test_age.py`.)
 
 ### Offline fallback (`data/raw/manual_age.csv`)
 
-For offline reproducibility, the pipeline falls back to `data/raw/manual_age.csv` **only**
-when the live fetch returns nothing. **It is not hand-typed** — it is a verifiable
+For offline reproducibility, `--allow-snapshot-fallback` explicitly permits
+`data/raw/manual_age.csv` when the live fetch returns nothing; it is never automatic.
+A partial live response is rejected rather than supplemented silently.
+**It is not hand-typed** — it is a verifiable
 **snapshot of the live World Bank data** (2024 broad structure + derived median age
 for all countries, plus the UK pyramid bands for 1960 and 2024), each row keeping its World
 Bank `source` + `year`.
@@ -97,8 +107,8 @@ Bank `source` + `year`.
 
 **Not applicable.** Every metric here is a **share, ratio, or age (in years)** — there are
 **no monetary (£/$/€) values anywhere**, so there is nothing to deflate, and inflation
-adjustment would be meaningless. Age shares and dependency ratios are already comparable
-across years and countries by construction.
+adjustment would be meaningless. The definitions permit demographic comparisons,
+but revisions, projection assumptions and differences in source quality still matter.
 
 ## Run
 
