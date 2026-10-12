@@ -18,7 +18,7 @@ All output lands in [`../outputs/ppp/`](../outputs/ppp). Run it with:
 
 ## Headline results
 
-### Most of the UK's fall against the US is currency, not lost output
+### Separating volume growth from non-volume factors
 ![Decomposition of the UK/US gap](../outputs/ppp/ppp_gap_decomposition_uk_us.png)
 
 At market exchange rates the UK fell from **105% of US GDP per head in 2007 to 64% in 2025** —
@@ -31,10 +31,14 @@ that 41-point fall:
 | Prices, exchange rate and ICP re-benchmarking | **−28.8** |
 | **Total** | **−41.4** |
 
-**Roughly 70% of the measured decline against the US is prices and the exchange rate rather
+**Roughly 70% of the measured decline against the US is non-volume factors rather
 than lost production** — but the remaining 30% is real, and it is not small: UK real output
 per head grew **0.42% a year** from 2007 to 2025 against the US's **1.27%**, so the UK fell
 **14%** behind in real volume terms.
+
+The residual is an accounting factor, not an identified currency effect: it includes
+relative GDP-price changes and exchange rates, and depends on benchmark levels. The
+percentage-point contributions must not be read as percentage changes in real output.
 
 The real component is measured from the **constant-price** PPP series, whose movement is pure
 volume. The current-price series satisfies a tidier identity but its year-to-year movement
@@ -48,7 +52,8 @@ This is a genuine qualification of the headline story, and it is reported as suc
 ### The three views side by side
 ![UK vs US at market rates, at PPP and in real volume](../outputs/ppp/ppp_vs_market_fx_uk_us.png)
 
-The shaded gap between the market-rate and PPP-level lines *is* the currency effect. The UK's
+The shaded gap between the market-rate and PPP-level lines reflects relative price
+levels **and** exchange rates, not currency alone. The UK's
 2007 "parity with the US" was substantially a strong-pound artefact: in the same year, at PPP,
 the UK was only 74% of the US.
 
@@ -64,8 +69,8 @@ thing.
 
 The price level index (how expensive a country is relative to the US, which is 1.00) is the
 whole difference between the two views. UK prices peaked at **1.42× US levels in 2007** and
-sit at **0.89× today** — sterling went from markedly over-valued to modestly under-valued
-against PPP. (Conceptually this is the PPP conversion factor over the market exchange rate;
+sit at **0.89× in 2025**. This is a GDP-wide price-level comparison, not proof that
+sterling was economically over- or undervalued. (Conceptually this is the PPP conversion factor over the market exchange rate;
 for why it is *computed* a different way, see [below](#deriving-the-price-level-index).)
 
 ### The peer comparison changes character

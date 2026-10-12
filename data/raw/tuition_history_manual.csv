@@ -1,7 +1,19 @@
 country,iso3,region,year,annual_tuition_local,currency,source,source_url
 United Kingdom,GBR,UK,1971,0,GBP,No tuition fees for home undergraduates before 1998 (means-tested grants),https://commonslibrary.parliament.uk/research-briefings/cbp-8151/
 United Kingdom,GBR,UK,1998,1000,GBP,Teaching and Higher Education Act 1998 (fees introduced 1998/99),https://www.legislation.gov.uk/ukpga/1998/30
+United Kingdom,GBR,UK,1999,1025,GBP,Hansard 1 March 2013 maximum tuition fee for new entrants 1999/2000,https://publications.parliament.uk/pa/cm201213/cmhansrd/chan122.pdf
+United Kingdom,GBR,UK,2000,1050,GBP,Hansard 1 March 2013 maximum tuition fee for new entrants 2000/01,https://publications.parliament.uk/pa/cm201213/cmhansrd/chan122.pdf
+United Kingdom,GBR,UK,2001,1075,GBP,Hansard 1 March 2013 maximum tuition fee for new entrants 2001/02,https://publications.parliament.uk/pa/cm201213/cmhansrd/chan122.pdf
+United Kingdom,GBR,UK,2002,1100,GBP,Hansard 1 March 2013 maximum tuition fee for new entrants 2002/03,https://publications.parliament.uk/pa/cm201213/cmhansrd/chan122.pdf
+United Kingdom,GBR,UK,2003,1125,GBP,Hansard 1 March 2013 maximum tuition fee for new entrants 2003/04,https://publications.parliament.uk/pa/cm201213/cmhansrd/chan122.pdf
+United Kingdom,GBR,UK,2004,1150,GBP,Hansard 1 March 2013 maximum tuition fee for new entrants 2004/05,https://publications.parliament.uk/pa/cm201213/cmhansrd/chan122.pdf
+United Kingdom,GBR,UK,2005,1175,GBP,Hansard 1 March 2013 maximum tuition fee for new entrants 2005/06,https://publications.parliament.uk/pa/cm201213/cmhansrd/chan122.pdf
 United Kingdom,GBR,UK,2006,3000,GBP,Higher Education Act 2004 (variable fees up to GBP 3000 from 2006/07),https://www.legislation.gov.uk/ukpga/2004/8
+United Kingdom,GBR,UK,2007,3070,GBP,Hansard 1 March 2013 maximum tuition fee for new entrants 2007/08,https://publications.parliament.uk/pa/cm201213/cmhansrd/chan122.pdf
+United Kingdom,GBR,UK,2008,3145,GBP,Hansard 1 March 2013 maximum tuition fee for new entrants 2008/09,https://publications.parliament.uk/pa/cm201213/cmhansrd/chan122.pdf
+United Kingdom,GBR,UK,2009,3225,GBP,Hansard 1 March 2013 maximum tuition fee for new entrants 2009/10,https://publications.parliament.uk/pa/cm201213/cmhansrd/chan122.pdf
+United Kingdom,GBR,UK,2010,3290,GBP,Hansard 1 March 2013 maximum tuition fee for new entrants 2010/11,https://publications.parliament.uk/pa/cm201213/cmhansrd/chan122.pdf
+United Kingdom,GBR,UK,2011,3375,GBP,Hansard 1 March 2013 maximum tuition fee for new entrants 2011/12,https://publications.parliament.uk/pa/cm201213/cmhansrd/chan122.pdf
 United Kingdom,GBR,UK,2012,9000,GBP,Higher Education (Higher Amount) (England) Regulations 2010 (from 2012/13),https://www.legislation.gov.uk/uksi/2010/3021
 United Kingdom,GBR,UK,2017,9250,GBP,Higher Education (Basic Amount and Higher Amount) (England) Regulations 2016 (from 2017/18),https://www.legislation.gov.uk/uksi/2016/1206
 United Kingdom,GBR,UK,2022,9250,GBP,England fee cap frozen at GBP 9250,https://commonslibrary.parliament.uk/research-briefings/cbp-8151/

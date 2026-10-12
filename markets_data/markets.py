@@ -80,8 +80,9 @@ METRICS: dict[str, Metric] = {
         "companies",
         "CM.MKT.LDOM.NO",
         description=(
-            "Number of domestically incorporated companies listed on the country's "
-            "stock exchanges at year end (excludes investment funds and foreign firms)."
+            "Number of domestic companies and foreign companies exclusively listed on "
+            "the country's stock exchanges at year end. Investment funds, unit trusts "
+            "and pure holding/investment companies are excluded."
         ),
     ),
 }
@@ -111,11 +112,13 @@ CAVEATS: dict[str, str] = {
     ),
     "market_cap_pct_gdp": (
         "The more comparable 'size relative to the economy' measure, but sensitive to "
-        "the denominator: countries with many large foreign-listed firms (e.g. the UK) "
-        "can look large relative to domestic GDP."
+        "the denominator: listed companies may earn much of their revenue abroad. "
+        "Foreign companies exclusively listed on the exchange are included; other "
+        "foreign listings and investment funds are excluded."
     ),
     "listed_domestic_companies": (
-        "Counts domestic listings only; delistings, M&A, and take-private activity "
+        "Counts domestic and exclusively listed foreign firms, excluding funds and "
+        "pure holding/investment companies; delistings, M&A, and take-private activity "
         "reduce the count even as market value rises. Compare trends, not raw counts, "
         "across exchanges with different listing rules."
     ),
@@ -295,4 +298,5 @@ def deflate_to_real(
                 source=f"{SOURCE} + {CPI_SOURCE}",
             )
         )
+        real_rows[-1]["unit"] = f"constant {base_year} US$"
     return real_rows, base_year

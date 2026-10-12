@@ -85,6 +85,7 @@ def test_deflate_to_real() -> None:
     by_key = {(r["region_code"], r["year"]): r for r in real}
     assert all(r["metric"] == "market_cap_usd_real" for r in real)
     assert all("US CPI" in r["source"] for r in real)
+    assert all(r["unit"] == "constant 2020 US$" for r in real)
     # 2020 is the base year -> real == nominal.
     assert by_key[("USA", 2020)]["value"] == 40e12
     # 2010 dollars scaled up by 200/100 = 2x.
@@ -133,6 +134,30 @@ def test_chart_series_breaks_across_missing_years() -> None:
     assert list(continuous.index) == list(range(2014, 2022))
     assert pd.isna(continuous.loc[2015])
     assert pd.isna(continuous.loc[2020])
+
+
+def test_filtered_market_history_keeps_original_constant_dollar_base(tmp_path, monkeypatch):
+    import pandas as pd
+    from markets_data import summary
+
+    nominal = [
+        markets.make_row("United States", "USA", 2010, "market_cap_usd", 10e12),
+        markets.make_row("United States", "USA", 2020, "market_cap_usd", 40e12),
+    ]
+    real, _ = markets.deflate_to_real(nominal, {2010: 100, 2020: 200})
+    subset = pd.DataFrame(real).query("year == 2010")
+    result = summary.build_summary(subset, tmp_path / "summary.md").read_text()
+    assert "constant 2020 US$" in result
+    assert "constant 2010 US$" not in result
+    units = []
+
+    def save(fig, out_dir, name):
+        units.append(fig.axes[0].get_ylabel())
+        return tmp_path / name
+
+    monkeypatch.setattr(charts, "_save", save)
+    charts.chart_metric(subset, "market_cap_usd_real", tmp_path)
+    assert units == ["constant 2020 US$"]
 
 
 def _run() -> int:

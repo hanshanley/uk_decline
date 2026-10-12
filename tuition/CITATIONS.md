@@ -38,6 +38,13 @@ education tuition fees in England* (Research Briefing CBP-8151).
 <https://commonslibrary.parliament.uk/research-briefings/cbp-8151/>
 *Supports:* UK line in `tuition_history_real_usd.png`; `data/raw/tuition_history_manual.csv`.
 
+**House of Commons Hansard**, 1 March 2013, column 748W, *Students: Per Capita Costs*,
+written answer by David Willetts to Chris Ruane (question 145020).
+<https://publications.parliament.uk/pa/cm201213/cmhansrd/cm130301/text/130301w0003.htm#13030166000152>
+The table gives each academic year's maximum fee for new entrants, including annual
+upratings from £1,000 to £1,175 (1998–2005) and £3,000 to £3,375 (2006–2011).
+*Supports:* corrected annual caps in `data/raw/tuition_history_manual.csv`.
+
 ### Inflation and exchange rates
 **The World Bank Group.** (2024). *World Development Indicators.* Washington, DC: The World
 Bank. Retrieved via the World Bank API on 15 August 2026.
@@ -47,7 +54,9 @@ Bank. Retrieved via the World Bank API on 15 August 2026.
 *Original data compiler for both indicators:* **International Monetary Fund (IMF),
 *International Financial Statistics*** (and national statistical offices), redistributed by
 the World Bank.
-*Supports:* GBP→USD conversion and constant-2022 deflation of UK/EU figures.
+*Supports:* GBP→USD conversion and common calendar-2022 deflation of US/England
+tuition history and eligible snapshot figures. NCES's academic-year constant-dollar
+column is retained as raw source data but not mixed with the calendar-year series.
 
 ---
 
@@ -76,6 +85,8 @@ Eurydice report above.
 
 ---
 
-*Note on provenance:* the historical US/UK/Germany series is built entirely from the
-**primary sources** above (NCES, UK legislation, World Bank/IMF). The EU-27 cross-sectional
+*Note on provenance:* the historical US/England series uses the **primary sources**
+above (NCES, UK legislation/Hansard, World Bank/IMF). Germany's sparse zero-fee reference
+points use secondary sources and do not imply uninterrupted fee-free education.
+The EU-27 cross-sectional
 snapshot rests on the **Eurydice** summary and College Board (secondary), as noted.

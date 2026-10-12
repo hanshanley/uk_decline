@@ -84,9 +84,9 @@ def test_convert_usd_base_currency_and_no_deflator():
         "include_primary": "1", "source": "s", "notes": "n",
     }]
     rates = {"USA": {"currency": "USD", "fx_lcu_per_usd": 1.0, "fx_year": 2024}}
-    out = build_dataset.convert(rows, rates)[0]  # no deflator -> factor 1.0
+    out = build_dataset.convert(rows, rates)[0]
     assert out["annual_tuition_usd"] == 11610.0
-    assert out["annual_tuition_usd_real2022"] == 11610.0
+    assert out["annual_tuition_usd_real2022"] is None
 
 
 def test_convert_prefers_source_year_rate_key():
@@ -266,11 +266,80 @@ def test_zero_fee_country_is_not_requested_from_fx_api(monkeypatch):
     assert next(row for row in out if row["iso3"] == "DEU")["real_2022_usd"] == 0
 
 
-def test_future_snapshot_uses_nearest_published_cpi(monkeypatch):
+def test_future_snapshot_does_not_substitute_nearest_published_cpi(monkeypatch):
     monkeypatch.setattr(
         build_dataset,
         "fetch_series",
         lambda *a, **k: {"USA": {2022: 100.0, 2025: 110.0}},
     )
     got = build_dataset._us_cpi_deflator({2026})
-    assert got == {2026: 100.0 / 110.0}
+    assert got == {}
+
+
+def test_snapshot_cpi_request_includes_exact_base_year(monkeypatch):
+    calls = []
+
+    def fetch(indicator, iso3s, start, end):
+        calls.append(start)
+        return {"USA": {2022: 100.0, 2025: 110.0}}
+
+    monkeypatch.setattr(build_dataset, "fetch_series", fetch)
+    assert build_dataset._us_cpi_deflator({2025}) == {2025: 100 / 110}
+    assert calls == [2022]
+
+
+def test_zero_snapshot_fee_needs_no_fx_or_cpi():
+    rows = [{
+        "country": "Germany", "iso3": "DEU", "region": "EU",
+        "annual_tuition_local": "0", "currency": "EUR", "year": "2024",
+    }]
+    out = build_dataset.convert(rows, {})[0]
+    assert out["annual_tuition_usd"] == out["annual_tuition_usd_real2022"] == 0
+
+
+def test_snapshot_currency_mismatch_is_not_converted():
+    import pytest
+
+    rows = [{
+        "country": "Croatia", "iso3": "HRV", "region": "EU",
+        "annual_tuition_local": "1000", "currency": "HRK", "year": "2022",
+    }]
+    with pytest.raises(ValueError, match="currencies do not match"):
+        build_dataset.convert(rows, {"HRV": {
+            "currency": "EUR", "fx_lcu_per_usd": 0.9, "fx_year": 2024,
+        }}, {2022: 1})
+
+
+def test_history_preserves_free_uk_anchor_and_annual_upratings():
+    uk = [r for r in build_history.expand_uk_fee_schedule(build_history.load_manual())
+          if r["iso3"] == "GBR"]
+    values = {int(r["year"]): float(r["annual_tuition_local"]) for r in uk}
+    assert values[1971] == 0
+    assert values[2005] == 1175
+    assert values[2011] == 3375
+    assert values[2016] == 9000
+
+
+def test_nces_history_uses_same_calendar_cpi_basis(tmp_path, monkeypatch):
+    csv = tmp_path / "nces.csv"
+    csv.write_text(
+        "year,tuition_current_usd,tuition_constant2022_usd,source,source_url\n"
+        "2020,1000,1250,NCES,https://nces.ed.gov\n"
+        "2022,1100,1100,NCES,https://nces.ed.gov\n"
+    )
+    monkeypatch.setattr(config, "NCES_CSV", csv)
+    out = build_history.load_nces({2020: 100, 2022: 110})
+    assert [r["real_2022_usd"] for r in out] == [1100, 1100]
+
+
+def test_history_missing_exact_base_cpi_is_not_substituted(monkeypatch):
+    import pytest
+
+    monkeypatch.setattr(build_history, "fetch_series",
+                        lambda *a, **k: {"USA": {2021: 100, 2023: 110}})
+    with pytest.raises(RuntimeError, match="CPI"):
+        build_history.deflate_manual([{
+            "country": "United Kingdom", "iso3": "GBR", "region": "UK",
+            "year": "2022", "annual_tuition_local": "9250", "currency": "GBP",
+            "source": "cap", "source_url": "https://example.com",
+        }])

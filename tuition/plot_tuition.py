@@ -22,12 +22,13 @@ from tuition import config, theme
 from tuition.dataset import load_primary
 from tuition.stats import aggregate_by_region
 
-REGION_LABELS = config.REGION_LABELS
+REGION_LABELS = {**config.REGION_LABELS, config.UK: "England (fee cap)"}
 REGION_COLOR = {config.UK: theme.ACCENT, config.EU: theme.BLUE, config.US: theme.GOLD}
 SOURCE_NOTE = (
     "Sources: Eurydice National Student Fee 2023/24 (EU-27); College Board Trends in "
     "College Pricing 2024 (US, in-state public); UK 2026/27 fee cap. "
-    "The UK cap uses the latest available 2025 World Bank FX/CPI; source years differ."
+    "Source years differ. FX may use a nearby published year (recorded in the CSV); "
+    "constant-dollar values require same-year US CPI. Missing real values are omitted."
 )
 
 
@@ -35,9 +36,9 @@ def _money(v: float) -> str:
     return f"${v:,.0f}"
 
 
-def _finalize(fig, out_path: str, bottom: float) -> None:
+def _finalize(fig, out_path: str, bottom: float, missing_note: str = "") -> None:
     """Common figure tail: source note, layout, and high-DPI save (shared style)."""
-    theme.source_note(fig, SOURCE_NOTE)
+    theme.source_note(fig, SOURCE_NOTE + missing_note)
     plt.tight_layout()
     plt.subplots_adjust(bottom=bottom)
     fig.savefig(out_path, dpi=200, bbox_inches="tight")
@@ -48,10 +49,17 @@ def _finalize(fig, out_path: str, bottom: float) -> None:
 DEGREE_YEARS = {config.UK: 3, config.US: 4, config.EU: 3}  # typical bachelor's length by region
 
 
+def _missing_note(rows: list[dict], value_key: str) -> str:
+    missing = [
+        f"{r['country']} ({r['year']})"
+        for r in rows if r.get(value_key) is None
+    ]
+    return f" Not plotted: {', '.join(missing)} — conversion data unavailable." if missing else ""
+
+
 def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path: str) -> None:
     agg = aggregate_by_region(rows, value_key)
-    # Typical (median) annual fee per region; UK and US are ~single values so mean≈median,
-    # and the EU median (~free) is the honest "typical" student experience.
+    # EU statistics weight countries equally, not students.
     order = [r for r in (config.EU, config.US, config.UK) if r in agg]  # low -> high (barh)
     region_year = {}
     for region in order:
@@ -100,7 +108,7 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
                  fontweight="bold", pad=14)
     ax.grid(axis="x", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)
-    _finalize(fig, out_path, bottom=0.16)
+    _finalize(fig, out_path, bottom=0.16, missing_note=_missing_note(rows, value_key))
 
 
 def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) -> None:
@@ -136,7 +144,7 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
     handles = [plt.Rectangle((0, 0), 1, 1, color=REGION_COLOR[r]) for r in (config.UK, config.EU, config.US)]
     ax.legend(handles, [REGION_LABELS[r] for r in (config.UK, config.EU, config.US)],
               loc="lower right", frameon=False)
-    _finalize(fig, out_path, bottom=0.08)
+    _finalize(fig, out_path, bottom=0.08, missing_note=_missing_note(rows, value_key))
 
 
 def main() -> None:

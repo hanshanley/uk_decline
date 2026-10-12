@@ -1,7 +1,7 @@
 """World Bank PIP (Poverty and Inequality Platform) client: median income.
 
 Endpoint: https://api.worldbank.org/pip/v1/pip
-Returns the median daily household per-capita income/consumption in 2017 PPP $.
+Returns the median daily household per-capita income/consumption in 2021 PPP $.
 
 This is globally comparable and, crucially, covers the UK through ~2021 -- filling the
 gap left by Eurostat (which loses the UK after ~2018). Values are per person per day;
@@ -18,7 +18,8 @@ from ._http import get_json
 BASE = "https://api.worldbank.org/pip/v1/pip"
 AUX_COUNTRIES = "https://api.worldbank.org/pip/v1/aux?table=countries&format=json"
 SOURCE = "World Bank PIP"
-UNIT = "2017 PPP $ per day"
+PPP_VERSION = 2021
+UNIT = f"{PPP_VERSION} PPP $ per day"
 METRIC = "median_income_pip"
 
 # When a country reports both, prefer income over consumption for European comparisons.
@@ -59,6 +60,7 @@ def fetch(
             "year": "all",
             "fill_gaps": "false",
             "format": "json",
+            "ppp_version": PPP_VERSION,
         },
     )
     if not isinstance(payload, list):

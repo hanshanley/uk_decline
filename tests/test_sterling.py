@@ -51,7 +51,7 @@ def test_cross_rate_math_and_ytd_status() -> None:
     # JPY/GBP: 200 and 220 -> 210.
     assert by[(2000, "JPY")].value == pytest.approx(210)
     assert by[(2000, "CHF")].value == pytest.approx(3.1)
-    assert by[(2000, "USD")].period_status == "full_year"
+    assert by[(2000, "USD")].period_status == "incomplete_year"
     assert by[(2001, "USD")].period_status == "year_to_date"
     assert by[(2001, "USD")].months == 1
 
@@ -69,7 +69,13 @@ def test_untrusted_host_rejected() -> None:
 
 
 def test_chart_renders(tmp_path) -> None:
-    frame = ecb.build_annual(_monthly())
+    monthly = _monthly()
+    for month in range(3, 13):
+        extra = monthly[monthly["date"] == pd.Timestamp("2000-01")].copy()
+        extra["date"] = pd.Timestamp(2000, month, 1)
+        monthly = pd.concat([monthly, extra])
+    frame = ecb.build_annual(monthly)
+    assert set(frame.loc[frame["year"] == 2000, "period_status"]) == {"full_year"}
     output = charts.make_chart(frame, tmp_path / "sterling.png")
     assert output.exists()
     assert output.stat().st_size > 20_000

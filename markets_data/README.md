@@ -45,9 +45,12 @@ are never spliced or interpolated. Full per-metric citations are in
 > counts monthly as machine-readable factsheets on its documents host (e.g.
 > `docs.londonstockexchange.com/.../Main%20Market%20factsheet%20December%202024.xlsx` and the
 > `AIM factsheet`). `lse_factsheets.py` reads the December factsheets and sums Main Market +
-> AIM to a **UK-domiciled** count, which matches the WB/WFE "listed domestic companies" figure
-> to within **<1%** at the 2022 overlap (WB 1,606 vs LSE 1,619) — so it continues that series
-> almost seamlessly. Regenerate with `python -m markets_data.lse_factsheets` (writes the cited
+> AIM to a **UK-domiciled** count, which is numerically close to the WB/WFE figure
+> at the 2022 overlap (WB 1,606 vs LSE 1,619). **This is not an identical definition**:
+> WDI includes foreign firms exclusively listed on the exchange and excludes investment
+> funds, unit trusts and pure holding/investment companies. Domicile-based LSE totals alone
+> do not apply those filters, so the close overlap does not validate a seamless splice.
+> Regenerate with `python -m markets_data.lse_factsheets` (writes the cited
 > `data/uk_listed_companies_lse.csv`). The scorecard's "UK-listed companies" panel uses the WB
 > series through 2022 and the LSE UK-domiciled count for 2023+ (**1,538 / 1,413 / 1,306** for
 > 2023–2025), with the source switch noted. Every value is read straight from the LSE

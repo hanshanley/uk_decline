@@ -10,7 +10,7 @@ Figures:
   - gdp_per_capita_real_over_time.png  UK vs peers, real GDP/capita at market FX
   - uk_gdp_relative_to_peers.png       UK GDP/capita as a share of the EU average and the US
   - median_disposable_income_pps.png   Median income (Eurostat PPS), UK ends ~2018
-  - median_income_pip.png              PIP median income (2017 PPP $/day), UK to ~2021
+  - median_income_pip.png              PIP median income (2021 PPP $/day), UK to ~2021
 
 Usage:
     python plot_uk_decline.py [--data data/europe_combined_wide.csv] [--out outputs]
@@ -29,6 +29,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 import matplotlib.ticker as mtick
 import pandas as pd
+from europe_data import pip
 
 # ── Professional house style (shared vizstyle house style) ───────────────────
 from vizstyle import (  # noqa: E402
@@ -55,8 +56,8 @@ EU_WB = ("European Union", SUBSTACK_BLUE, "--", 2.0)                    # World 
 EU_EUROSTAT = ("European Union (27, 2020)", SUBSTACK_MUTED, "--", 1.6)  # Eurostat, income
 
 # GDP per capita is shown in REAL, constant 2015 US$ (inflation-adjusted, market exchange
-# rates — NOT PPP). World Bank series NY.GDP.PCAP.KD, which covers 1960+ so it reaches the
-# 1970s. (PPP/Maddison series remain in the dataset but are not plotted.)
+# rates — NOT PPP). Current-dollar NY.GDP.PCAP.CD is deflated by US CPI; it is not
+# the national-accounts volume series NY.GDP.PCAP.KD.
 GDP_METRIC = "gdp_per_capita_real_usd"
 
 SOURCE_GDP = ("Data: World Bank Group, World Development Indicators \u2014 GDP per capita in "
@@ -64,8 +65,8 @@ SOURCE_GDP = ("Data: World Bank Group, World Development Indicators \u2014 GDP p
               "(inflation-adjusted, market exchange rates).")
 SOURCE_EUROSTAT = ("Data: Eurostat (European Commission), EU-SILC \u2014 median equivalised net "
                    "income, PPS (ilc_di03). UK series ends ~2018 (post-Brexit).")
-SOURCE_PIP = ("Data: World Bank Group, Poverty and Inequality Platform \u2014 median income, "
-              "real 2017 PPP $ per day. Multiply by 365 for an annual figure.")
+SOURCE_PIP = ("Data: World Bank Group, Poverty and Inequality Platform \u2014 median "
+              f"per-capita income/consumption, {pip.UNIT}. Multiply by 365 for an annual figure.")
 
 
 def _series(df: pd.DataFrame, country: str, metric: str) -> pd.DataFrame:
@@ -204,8 +205,8 @@ def main(argv: list[str] | None = None) -> int:
 
     _line_chart(
         df, GDP_METRIC,
-        "Real GDP per capita: the UK drew level with the US in 2007,\nthen fell behind \u2014 1970\u20132024",
-        "Real GDP per capita (000s, constant 2015 US$)",
+        "GDP per capita at market exchange rates (US-CPI deflated)",
+        "GDP per capita (000s, constant 2015 US$ at each year's FX)",
         lambda v, _: f"${v:.0f}k", SOURCE_GDP,
         "gdp_per_capita_real_over_time.png", out,
         eu_agg=EU_WB, eu_label="EU average", scale=1000.0, source_ha="left",
@@ -221,8 +222,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     _line_chart(
         df, "median_income_pip",
-        "Median income (World Bank PIP, 2017 PPP $/day): UK vs peers",
-        "Median income (2017 PPP $ per day)",
+        f"Median income/consumption (World Bank PIP, {pip.PPP_VERSION} PPP $/day): UK vs peers",
+        f"Median income/consumption ({pip.UNIT})",
         lambda v, _: f"${v:.0f}", SOURCE_PIP,
         "median_income_pip.png", out,
         eu_agg=EU_EUROSTAT, eu_label="EU-27", source_ha="right",

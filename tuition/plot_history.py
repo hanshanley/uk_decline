@@ -21,13 +21,14 @@ from tuition import config, theme
 SERIES = {
     config.US: ("US — public 4-year, in-state (NCES)", theme.GOLD, "line"),
     config.UK: ("UK — England fee cap (statutory)", theme.ACCENT, "line"),
-    config.EU: ("Germany — public (representative EU)", theme.BLUE, "step"),
+    config.EU: ("Germany — zero-fee reference years only", theme.BLUE, "points"),
 }
 SOURCE_NOTE = (
     "Real 2022 USD (inflation-adjusted). Sources: US — NCES Digest 2023 Table 330.10 "
-    "(constant 2022-23 $, BLS CPI); UK — England statutory fee caps (legislation.gov.uk / "
+    "(current dollars); UK — England statutory fee caps (legislation.gov.uk / "
     "GOV.UK), converted at market exchange rates and deflated by US CPI (World Bank); "
-    "Germany — Eurydice / HE fee history."
+    "Both US and UK deflated with calendar-year US CPI; fee years are academic start years. "
+    "Germany: zero-fee reference points only; some states charged fees in 2006–14."
 )
 
 
@@ -54,7 +55,10 @@ def plot(out_path: str) -> None:
             continue
         xs = [y for y, _ in pts]
         ys = [v for _, v in pts]
-        if style == "step":
+        if style == "points":
+            ax.plot(xs, ys, "o", color=color, markersize=5,
+                    markeredgecolor=theme.BG, markeredgewidth=0.8, label=label)
+        elif style == "step":
             ax.step(xs, ys, where="post", color=color, linewidth=2.4, label=label)
             ax.plot(xs, ys, "o", color=color, markersize=5, markeredgecolor=theme.BG, markeredgewidth=0.8)
         else:

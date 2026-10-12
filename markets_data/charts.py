@@ -158,8 +158,6 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ax.set_title(meta.label, fontweight="bold", pad=14)
     ax.set_xlabel("Year", labelpad=2)
     plotted_unit = str(sub["unit"].dropna().iloc[0]) if sub["unit"].notna().any() else meta.unit
-    if metric_id == "market_cap_usd_real":
-        plotted_unit = f"constant {int(sub['year'].max())} US$"
     ax.set_ylabel(plotted_unit, labelpad=2)
     if "US$" in meta.unit:
         ax.get_yaxis().set_major_formatter(

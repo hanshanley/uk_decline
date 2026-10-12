@@ -4,10 +4,12 @@ Part of the `uk_decline` study. Determines the **median** and **average** cost o
 four-year bachelor's degree across the **UK**, the **EU-27**, and the **US**, to test the
 claim that *the UK has a higher average cost of degrees*.
 
-> **Short answer: yes.** On **domestic, tuition-only** figures, the UK's average annual
-> tuition (~**$12,890**, England's published £9,790 cap for 2026/27) is **higher than both**
+> **On this mixed-definition snapshot**, England's maximum annual
+> tuition (~**$12,890**, the published £9,790 cap for 2026/27, converted at nearby-year FX) is **higher than both**
 > the EU-27 average (~**$425/yr**, median **$0**) and the US average published **in-state public** tuition
-> (~**$11,610/yr**). See caveats — the picture flips for US *private* colleges.
+> (~**$11,610/yr**). This compares a statutory maximum with a US institutional average
+> and an unweighted EU country compilation, not like-for-like student averages.
+> England's cap is not a UK-wide average; rules differ in Scotland, Wales and Northern Ireland.
 
 ## Scope
 
@@ -30,7 +32,9 @@ Latest run (nominal USD, annual domestic tuition, one figure per country):
 | **EU-27** | 27 | $425 | $0 | $1,701 | $0 |
 | **US** | 1 | $11,610 | $11,610 | $46,440 | $46,440 |
 
-Constant 2022 USD (CPI-adjusted) tells the same story (UK ~$12,026/yr, EU-27 ~$408/yr, US ~$10,832/yr).
+Constant-2022-USD values require the tuition source year's US CPI. The published 2026/27
+England cap has no same-year CPI yet, so its real value is blank rather than silently
+using the 2025 CPI or publishing nominal dollars under a real-dollar label.
 *(PPP conversion was intentionally dropped — PPP baskets distort tuition comparisons; we use
 market-FX nominal plus CPI-deflated constant dollars.)*
 
@@ -48,26 +52,29 @@ Region summary: `data/processed/summary.csv`.
 
 ## Historical trend — real (inflation-adjusted) tuition back to the 1970s
 
-The snapshot above is a nominal cross-section. The **fully primary-sourced, inflation-
+The snapshot above is a nominal cross-section. The **US/England primary-sourced, inflation-
 adjusted** view is the historical series in **constant 2022 USD** (`../outputs/tuition/tuition_history_real_usd.png`):
 
-England's source file records statutory change points. The pipeline carries each legally
+England's source file records statutory change points, including annual upratings before
+2012 ([Hansard, 1 March 2013](https://publications.parliament.uk/pa/cm201213/cmhansrd/cm130301/text/130301w0003.htm)).
+The pipeline carries each legally
 fixed **nominal** cap through the years in which it applies, then recalculates the market
 exchange-rate and inflation-adjusted value annually; real-dollar values are not held flat.
 
 | Year | UK (England cap) | US (public in-state) | Germany |
 |---|---:|---:|---:|
-| 1971 | $0 (free) | $3,115 | $0 |
-| 1998 | $2,973 | ~$5,880 | $0 |
-| 2012 | **$18,122** | $10,454 | $0 |
+| 1971 | $0 (free) | $3,093 | $0 |
+| 1998 | $2,973 | ~$5,797 | $0 |
+| 2012 | **$18,122** | $10,287 | $0 |
 | 2022 | $11,401 | $9,750 | $0 |
 | 2024 | $11,030 | — | — |
 
 **Key finding:** in real terms the UK went from **free (until 1998)** to **overtaking US
-public college in 2012** ($18,122 vs $10,454). The cap stayed at £9,250 from 2017 through
+public college in 2012** ($18,122 vs $10,287). The cap stayed at £9,250 from 2017 through
 2024/25, then rose to £9,535 in 2025/26. Higher caps are published for 2025/26 and
 2026/27, but the real-dollar history does not plot them until same-year FX and CPI exist. Germany
-(representative EU) has stayed free throughout.
+has zero-fee reference observations plotted as points, not an uninterrupted free series:
+some German states charged general tuition during 2006–14. Germany is not an EU average.
 
 Historical data: `data/processed/tuition_history.csv`.
 
@@ -83,7 +90,7 @@ verification in-row).
 | Series | Source | Access | Provenance |
 |---|---|---|---|
 | US tuition history + snapshot | **NCES** Digest 2023, Table 330.10 (Public 4-year, in-district) — current & **constant 2022-23 $** (BLS CPI) | `fetch_nces.py` downloads & parses the real table ([link](https://nces.ed.gov/programs/digest/d23/tables/dt23_330.10.asp)); raw HTML cached in `data/raw/sources/` | **primary** |
-| UK fee-cap history | England statutory caps — Acts / SIs on **legislation.gov.uk** (1998, 2004, 2010, 2016) + House of Commons Library CBP-8151 | `data/raw/tuition_history_manual.csv` (per-row `source_url`) | **primary** (statutory) |
+| UK fee-cap history | England statutory caps — Acts / SIs on **legislation.gov.uk** (1998, 2004, 2010, 2016), Hansard 1 March 2013 annual maxima, and House of Commons Library CBP-8151 | `data/raw/tuition_history_manual.csv` (per-row `source_url`) | **primary** (statutory / parliamentary answer) |
 | Inflation & FX | **World Bank** CPI `FP.CPI.TOTL`, exchange rate `PA.NUS.FCRF` (keyless API) | `tuition/rates.py` (`fetch_series`) | **primary** |
 | EU-27 snapshot fees | **Eurydice** *National Student Fee & Support Systems 2023/24* | `data/raw/manual_tuition.csv` | **secondary** (summary; a few rows flagged `APPROXIMATE`) |
 | Germany history | German HE fee history / Eurydice | `data/raw/tuition_history_manual.csv` | secondary |
@@ -91,8 +98,10 @@ verification in-row).
 > **Honesty note:** the EU-27 snapshot fees come from a published *summary* of the Eurydice
 > report, not the primary PDF; three rows that could not be pinned to an exact primary
 > figure (Bulgaria, Spain, and Belgium's blended communities) are marked `APPROXIMATE` in
-> their `notes`. The **historical US/UK/Germany series is fully primary-sourced and
-> inflation-adjusted**, and is the most defensible basis for the UK-vs-US comparison.
+> their `notes`. US nominal fees and England caps are primary-sourced and deflated with
+> the **same calendar-year World Bank US CPI**, not mixed with NCES's academic-year
+> constant-2022–23 column. Academic-year fees are indexed by their starting calendar year.
+> Germany's secondary-source points do not establish a continuous national fee history.
 
 ## How it works (hybrid data pipeline)
 
@@ -178,6 +187,7 @@ tests/test_tuition.py
   zeros are legitimate data points and are kept, which is why the EU **median is $0**.
 - **3-vs-4-year programmes.** The results table's ×4 total is a normalized comparison;
   the region chart separately annotates typical 3-year UK/EU and 4-year US degrees.
-- **Reference years differ** (EU 2023/24, US 2024/25, UK 2026/27); nominal figures use the latest
-  World Bank year available per country; these are recorded per row in the outputs.
+- **Reference years differ** (EU 2023/24, US 2024/25, England 2026/27); nominal figures prefer
+  source-year FX, falling back to a nearby published year within three years; the actual
+  FX year is recorded per row. Real values require exact source-year CPI.
 - Figures are **most-common statutory fees**, not enrollment-weighted averages.

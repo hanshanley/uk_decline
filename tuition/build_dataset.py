@@ -65,8 +65,8 @@ def convert(rows: list[dict], rates: dict[str, dict], us_deflator: dict[int, flo
     """Convert local tuition to nominal USD (market FX) and constant-2022 USD.
 
     ``us_deflator`` maps a reference year -> (US CPI_2022 / US CPI_year); the nominal-USD
-    figure is multiplied by it to get constant-2022 USD. If empty (e.g. offline), the
-    real figure falls back to the nominal USD undeflated.
+    figure is multiplied by it to get constant-2022 USD. Missing deflators leave the
+    real value blank: nominal dollars must not be labelled constant-2022 dollars.
     """
     us_deflator = us_deflator or {}
     out: list[dict] = []
@@ -77,8 +77,8 @@ def convert(rows: list[dict], rates: dict[str, dict], us_deflator: dict[int, flo
         local = float(row["annual_tuition_local"])
         cur = row["currency"]
         cfg = config.BY_ISO3.get(iso3)
-        if cfg and cur != cfg.currency:
-            print(f"[build] WARN {row['country']}: currency {cur} != config {cfg.currency}")
+        if rate and cur != rate.get("currency", cfg.currency if cfg else cur):
+            raise ValueError(f"{row['country']}: tuition and FX currencies do not match")
 
         usd = usd_real = None
         fx = fx_year = None
@@ -86,8 +86,11 @@ def convert(rows: list[dict], rates: dict[str, dict], us_deflator: dict[int, flo
             fx, fx_year = rate["fx_lcu_per_usd"], rate["fx_year"]
             if fx:
                 usd = round(local / fx, 2)
-                deflator = us_deflator.get(source_year, 1.0)
-                usd_real = round(usd * deflator, 2)
+                deflator = us_deflator.get(source_year)
+                if deflator is not None:
+                    usd_real = round(usd * deflator, 2)
+        if local == 0:
+            usd = usd_real = 0.0
 
         out.append({
             "country": row["country"],
@@ -108,13 +111,13 @@ def convert(rows: list[dict], rates: dict[str, dict], us_deflator: dict[int, flo
 
 
 def _us_cpi_deflator(years: set[int] | None = None) -> dict[int, float]:
-    """Return requested-year deflators, using the nearest published US CPI observation."""
+    """Return only exact requested-year US CPI deflators."""
     years = years or set(range(2010, config.REAL_BASE_YEAR + 4))
     latest_complete_year = dt.date.today().year - 1
     series = fetch_series(
         config.WB_CPI_INDICATOR,
         ["USA"],
-        min(years) - 3,
+        min(min(years), config.REAL_BASE_YEAR),
         min(max(years) + 3, latest_complete_year),
     ).get("USA", {})
     base = series.get(config.REAL_BASE_YEAR)
@@ -122,11 +125,8 @@ def _us_cpi_deflator(years: set[int] | None = None) -> dict[int, float]:
         return {}
     out: dict[int, float] = {}
     for year in years:
-        if not series:
-            continue
-        nearest = min(series, key=lambda available: (abs(available - year), -available))
-        if abs(nearest - year) <= 3 and series[nearest]:
-            out[year] = base / series[nearest]
+        if series.get(year):
+            out[year] = base / series[year]
     return out
 
 
@@ -158,9 +158,7 @@ def main() -> None:
             requested_years - set(deflator)
         )
         if missing_cpi:
-            raise RuntimeError(
-                f"World Bank returned no US CPI deflator for years {missing_cpi}"
-            )
+            print(f"[build] no same-year US CPI for {missing_cpi}; real values left blank")
         fetched = sum(1 for rec in rates.values() if rec["fx_lcu_per_usd"] is not None)
         print(f"[build] fetched {fetched} source-year World Bank FX observations + US CPI deflator")
 

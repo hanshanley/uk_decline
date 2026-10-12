@@ -11,8 +11,9 @@ Each **Main Market** factsheet's "Summary" sheet gives that year's company count
 International; each **AIM** factsheet's "AIM since launch" sheet gives the full annual history
 (UK / International / Total). We read the December factsheet for each requested year and sum
 Main Market + AIM to get total companies on the LSE, and (separately) the **UK-domiciled**
-count -- which matches the World Bank/WFE "listed domestic companies" figure to within <1% at
-the 2022 overlap (WB 1,606 vs LSE 1,619), so it is a near-seamless continuation of that series.
+count. This is not definitionally identical to the World Bank/WFE series: WDI includes
+exclusively listed foreign firms and excludes investment funds and pure holding companies.
+The close 2022 overlap (WB 1,606 vs LSE 1,619) does not establish a consistent continuation.
 
 All figures are read straight from the LSE factsheets; nothing is hand-entered.
 """

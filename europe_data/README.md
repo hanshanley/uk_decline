@@ -4,18 +4,20 @@ Reproducible pipeline documenting the **UK's relative economic performance** vs.
 European peers, using **only real, publicly-sourced data** (every value is fetched live
 from an official API — nothing is hand-entered, mocked, interpolated, or synthesized).
 
-The headline GDP measure is **real GDP per capita in constant 2015 US$** — GDP per capita in
+The headline GDP measure is **GDP per capita at each year's market exchange rate,
+deflated by US CPI to constant 2015 US$** — GDP per capita in
 current US$ (World Bank `NY.GDP.PCAP.CD`) **deflated by US CPI** (`FP.CPI.TOTL`) to constant
 2015 dollars. It is inflation-adjusted and at **market exchange rates** (not PPP), so it
-reflects the actual dollar value of output each year with inflation removed. (PPP and the
+reflects dollar valuation, including exchange-rate and relative domestic-price changes.
+It is **not a real-output volume measure**. (PPP and the
 World Bank fixed-exchange-rate series are also kept in the dataset for reference.)
 
 ## Headline results (figures in [`../outputs/`](../outputs))
 
-### Real GDP per capita, 1970–2024 (constant 2015 US$)
+### Market-FX GDP per capita, 1970–2024 (US-CPI deflated)
 ![Real GDP per capita, UK vs peers, 1970–2024](../outputs/gdp_income/gdp_per_capita_real_over_time.png)
 
-The UK's real GDP per capita rose to **draw level with the US in 2007** (UK ≈ $57.9k vs US
+The UK's market-FX GDP per capita rose to **draw level with the US in 2007** (UK ≈ $57.9k vs US
 ≈ $54.9k, constant 2015 US$) — then **collapsed relative to the US**, falling to ~$40k by 2024
 while the US climbed to ~$65k.
 *Source: World Bank WDI `NY.GDP.PCAP.CD` deflated by US CPI (`FP.CPI.TOTL`) to constant 2015 US$
@@ -38,7 +40,7 @@ economy converged.
 >
 > **See the PPP twin of these charts:** [`../ppp_data/`](../ppp_data/README.md) plots this
 > same comparison at purchasing power parity and decomposes the difference. It finds that
-> **~70% of the UK's fall against the US since 2007 is prices and the exchange rate rather
+> **~70% of the UK's fall against the US since 2007 is non-volume factors rather
 > than lost real output** — a genuine qualification of the chart above, though the remaining
 > ~30% is a real divergence in output per head. Both views are published side by side rather
 > than one being chosen.
@@ -48,7 +50,9 @@ economy converged.
 ![Median income, World Bank PIP](../outputs/gdp_income/median_income_pip.png)
 
 *Sources: Eurostat `ilc_di03` (median equivalised net income, PPS; UK ends ~2018 post-Brexit);
-World Bank Poverty & Inequality Platform (real median income, 2017 PPP $/day; UK to ~2021).*
+World Bank Poverty & Inequality Platform (median per-capita income/consumption,
+2021 PPP $/day; UK to ~2021). These welfare definitions and equivalisation conventions
+are different; they are not interchangeable household-income measures.*
 
 ## Data sources (all free, no API key — verified live)
 
@@ -61,11 +65,11 @@ World Bank Poverty & Inequality Platform (real median income, 2017 PPP $/day; UK
 | `gdp_per_capita_ppp_current` | **World Bank WDI** `NY.GDP.PCAP.PP.CD` | (same) | Nominal — current international $ (PPP); reference only |
 | `gdp_per_capita_ppp_constant` | **World Bank WDI** `NY.GDP.PCAP.PP.KD` | (same) | Real — constant 2021 international $ (PPP); reference only |
 | `median_disposable_income` / `mean_disposable_income` | **Eurostat** `ilc_di03` (`MED_EI`/`MEAN_EI`, `unit=PPS`) | `ec.europa.eu/eurostat/api/dissemination/…/ilc_di03` | Current PPS (cross-country comparable; **not** deflated over time) |
-| `median_income_pip` | **World Bank PIP** (Poverty & Inequality Platform) | `api.worldbank.org/pip/v1/pip` | **Real** — constant 2017 PPP $ per day |
+| `median_income_pip` | **World Bank PIP** (Poverty & Inequality Platform), pinned `ppp_version=2021` | `api.worldbank.org/pip/v1/pip` | **Real** — constant 2021 PPP $ per day |
 
 
 **Why constant US$ (not PPP)?** The headline series is World Bank `NY.GDP.PCAP.CD` deflated
-with US CPI — real GDP per capita in **constant 2015 US$**, which is inflation-adjusted and
+with US CPI — market-FX GDP per capita in **constant 2015 US$**, which is CPI-adjusted and
 preserves each year's market exchange rate
 (not PPP), and covers **1960+**, so it reaches the 1970s directly. PPP series (Maddison; World
 Bank PP.*) remain in the dataset for reference but can distort cross-country levels.
@@ -84,7 +88,7 @@ Full citations for the organizations that collected/compiled each dataset (data 
   national-accounts data and OECD National Accounts data files.
   <https://data.worldbank.org/indicator/NY.GDP.PCAP.KD>
 - **World Bank** (2026). *Poverty and Inequality Platform (PIP)* — median income/consumption
-  per capita (2017 PPP). Washington, DC: World Bank Group. Compiled from national household
+  per capita (2021 PPP). Washington, DC: World Bank Group. Compiled from national household
   surveys. <https://pip.worldbank.org>
 - **Eurostat (European Commission)** (2026). *Mean and median income by age and sex*
   (`ilc_di03`), EU Statistics on Income and Living Conditions (EU-SILC). Luxembourg: Eurostat.

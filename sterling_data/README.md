@@ -25,7 +25,8 @@ interpolation:
 - CHF/GBP = CHF/EUR ÷ GBP/EUR
 
 Annual values average the twelve monthly pound cross-rates. Partial years are excluded,
-so the current chart ends in **2025**.
+so the current chart ends in **2025**. Historical partial years are marked
+`incomplete_year`, not `full_year`; a partial latest year is `year_to_date`.
 
 ## Run
 

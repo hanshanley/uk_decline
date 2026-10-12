@@ -16,6 +16,26 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from europe_data import combine, countries, eurostat  # noqa: E402
 
 
+def test_pip_request_pins_ppp_vintage_and_labels_it(monkeypatch):
+    from europe_data import pip
+
+    calls = []
+
+    def get_json(url, params=None, timeout=None):
+        calls.append(params)
+        return [{
+            "country_code": "GBR",
+            "reporting_level": "national", "welfare_type": "income",
+            "reporting_year": 2021, "median": 54.5535,
+        }]
+
+    monkeypatch.setattr(pip, "get_json", get_json)
+    monkeypatch.setattr(pip, "_valid_codes", {"GBR"})
+    rows = pip.fetch(2021, 2021, iso3s=["GBR"])
+    assert calls[0]["ppp_version"] == 2021
+    assert rows[0]["unit"] == "2021 PPP $ per day"
+
+
 def test_country_mappings() -> None:
     # Eurostat quirks: Greece is EL (not GR), UK is UK (not GB).
     assert countries.BY_ISO3["GRC"].eurostat == "EL"

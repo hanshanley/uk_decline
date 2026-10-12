@@ -111,7 +111,11 @@ def build_annual(monthly: pd.DataFrame | None = None) -> pd.DataFrame:
     rows: list[dict] = []
     for year, values in annual_values.iterrows():
         months = int(month_counts.loc[year])
-        status = "year_to_date" if int(year) == latest_year and months < 12 else "full_year"
+        status = (
+            "full_year" if months == 12
+            else "year_to_date" if int(year) == latest_year
+            else "incomplete_year"
+        )
         for currency in ("USD", "EUR", "JPY", "CHF"):
             rows.append(
                 {

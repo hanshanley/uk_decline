@@ -61,7 +61,7 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
     ylo, yhi = int(df["year"].min()), int(df["year"].max())
     accessed = _dt.date.today().isoformat()
     real = df[df["metric"] == "market_cap_usd_real"]
-    base_year = int(real["year"].max()) if not real.empty else None
+    real_unit = str(real["unit"].iloc[0]) if not real.empty else None
     lines.append(
         f"Coverage: **{ylo}\u2013{yhi}** across {df['region_code'].nunique()} regions. "
         "Data collected by the World Federation of Exchanges (WFE) and the IMF, "
@@ -69,9 +69,9 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
         "The comparison is anchored on the UK vs the US; World / EU / Japan / China are "
         "shown for context. See full citations at the end."
     )
-    if base_year is not None:
+    if real_unit is not None:
         lines.append(
-            f"Real (inflation-adjusted) figures are in **constant {base_year} US$**, the "
+            f"Real (inflation-adjusted) figures are in **{real_unit}**, the "
             f"nominal series deflated by US CPI ({markets.CPI_INDICATOR}).\n"
         )
     else:
@@ -81,7 +81,8 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
         sub = df[df["metric"] == metric_id]
         if sub.empty:
             continue
-        lines.append(f"\n## {meta.label} ({meta.unit})\n")
+        unit = str(sub["unit"].iloc[0])
+        lines.append(f"\n## {meta.label} ({unit})\n")
         lines.append(f"{meta.description}\n")
 
         lines.append("| Region | First | Latest |")

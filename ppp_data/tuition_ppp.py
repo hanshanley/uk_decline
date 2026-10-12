@@ -1,9 +1,9 @@
-"""Tuition converted at PPP, and tuition measured against income.
+"""Tuition converted at GDP PPP, and tuition measured against output per capita.
 
 The ``tuition`` package converts fees at **market exchange rates** and deflates by US CPI,
 which answers "how does a UK degree compare with a US one, in dollars?". This module asks
-the domestic-burden question instead: **how much of a British household's own purchasing
-power does a UK degree consume, compared with an American one?**
+fees relative to economy-wide purchasing power. GDP per capita is not household income,
+and the GDP PPP basket is not a tuition-specific or household-consumption basket.
 
 Two figures come out of it:
 
@@ -16,8 +16,8 @@ Two figures come out of it:
     Annual fees as a percentage of GDP per capita. This is unit-free: the currency cancels,
     so it is identical whether you compute it at market rates or at PPP, and it is immune
     both to the exchange rate and to the choice of PPP basket. It is the most robust
-    affordability comparison available, and the module checks that the two routes to it
-    really do agree.
+    output-relative comparison, not a measure of students' disposable-income burden.
+    The module checks that the two conversion routes agree.
 
 Nothing in ``tuition/`` is modified; this reads its published output.
 """
@@ -140,7 +140,8 @@ def expand_uk_fee_schedule(history: list[dict], years: set[int]) -> list[dict]:
         row = dict(applicable[-1])
         row["year"] = year
         expanded.append(row)
-    return other + expanded
+    earlier = [row for row in uk_changes if int(row["year"]) < first_fee_year]
+    return other + earlier + expanded
 
 
 def build(rows: list[dict], history: list[dict] | None = None,
@@ -315,9 +316,9 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
         "\u2014 NCES Digest 2023 Table 330.10. UK fees converted at the World Bank PPP "
         f"factor (PA.NUS.PPP, {ICP_VINTAGE}) and at the market rate, both deflated by US CPI "
         f"to constant {BASE_YEAR} dollars. The US is the PPP numeraire, so the conversion "
-        "leaves its fees unchanged; its line is deflated by World Bank CPI here rather than "
-        "by the NCES series' own BLS deflator, so it differs from the market-rate tuition "
-        "chart by up to about 3%. PPP factors start in 1990; earlier fee years are omitted."))
+        "leaves its nominal fees unchanged. Both this chart and the market-rate tuition "
+        "history use the same calendar-year World Bank US CPI deflator. Fee years are "
+        "academic start years. PPP factors start in 1990; earlier fee years are omitted."))
     return save_fig(fig, out_dir / "ppp_tuition_history.png", bottom=0.18)
 
 

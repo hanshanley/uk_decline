@@ -269,7 +269,7 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path | None:
     ax.set_title("How expensive is Britain? Price levels relative to the United States",
                  fontweight="bold", pad=30)
     _subtitle(ax, f"UK prices peaked at {uk[peak_year]:.2f}\u00d7 US levels in {peak_year} "
-                  f"and are {uk[uk_years[-1]]:.2f}\u00d7 today \u2014 the whole difference "
+                  f"and are {uk[uk_years[-1]]:.2f}\u00d7 in {uk_years[-1]} \u2014 the whole difference "
                   "between the market-FX and PPP views")
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.2f}"))
     _tidy(ax, ylabel=meta.unit)
@@ -371,11 +371,11 @@ def chart_decomposition(rows: list[dict], out_dir: Path,
     widest = min(value for _, value, _ in bars)
     ax.set_xlim(widest * 1.28, abs(widest) * 0.03)
 
-    ax.set_title(f"Most of the UK's fall against the US since {d.start_year} is "
-                 "currency, not lost output", fontweight="bold", pad=30)
+    ax.set_title(f"UK/US GDP-per-head change since {d.start_year}: "
+                 "volume growth and non-volume factors", fontweight="bold", pad=30)
     _subtitle(ax, f"UK GDP per head went from {d.start_ratio:.0f}% of the US in "
                   f"{d.start_year} to {d.end_ratio:.0f}% in {d.end_year}. Splitting that "
-                  f"{abs(d.total_change):.0f}-point fall into its two causes:")
+                  f"{abs(d.total_change):.0f}-point fall into two accounting contributions:")
     ax.xaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}"))
     ax.set_xlabel("Contribution to the change in UK GDP per capita vs the US "
                   "(percentage points)", labelpad=6)
@@ -388,10 +388,10 @@ def chart_decomposition(rows: list[dict], out_dir: Path,
         f"{_WB} \u2014 NY.GDP.PCAP.CD and NY.GDP.PCAP.PP.KD [{metrics.ICP_VINTAGE} "
         "benchmark]. Symmetric (Shapley) decomposition of UK/US = (real volume ratio) "
         "\u00d7 (residual); the two contributions sum exactly to the total. The real "
-        "component uses the constant-price series, so it equals the actual divergence in "
+        "component uses the constant-price series to measure the divergence in "
         "real output per head.",
-        "A weaker pound does make imports dearer, so this is not a clean bill of health "
-        "\u2014 it relocates the story from lost output to lost purchasing power abroad."))
+        "The residual combines relative GDP-price changes, exchange rates and benchmark "
+        "levels; this accounting split does not identify a causal currency contribution."))
     return save_fig(fig, out_dir / "ppp_gap_decomposition_uk_us.png", bottom=0.20)
 
 
