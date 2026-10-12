@@ -12,8 +12,10 @@ below (full list in [`../outputs/migration/SOURCES.md`](../outputs/migration/SOU
 The ONS-only series shows the long-run rise without relying on the World Bank's modelled net
 migration series: annual long-term immigration was roughly **200k in the 1960s–70s**, reached
 about **600k by the mid-2000s**, and peaked at **1.44M in 2023** before falling to **813k in
-2025**. The chart uses a clean method handoff: IPS through 2011 and administrative estimates
-from 2012, with the methodology change noted below the chart.
+2025**. The chart shows separate segments: IPS through 2011 and revised/admin-based
+estimates from 2012, with a visible method-break marker and no line connecting the
+two methods. ONS warns that these methods are not directly comparable; the jump
+between segments must not be read as a measured year-on-year increase.
 
 | File | Shows |
 |---|---|
@@ -23,7 +25,7 @@ from 2012, with the methodology change noted below the chart.
 | `immigration_by_origin.png` / `net_migration_by_origin.png` | Flows by citizenship/origin. |
 | `visas_by_category.png` | Entry-clearance visas by category (Home Office). |
 | `asylum_applications.png` | Asylum applications over time. |
-| `irregular_arrivals.png` / `legal_vs_irregular.png` | Irregular arrivals (incl. small boats) vs legal routes. |
+| `irregular_arrivals.png` / `legal_vs_irregular.png` | Detected irregular arrivals (incl. small boats), and a separate comparison with total ONS long-term immigration—not a legal/illegal split. |
 
 ## Data sources & citations
 
@@ -35,7 +37,14 @@ from 2012, with the methodology change noted below the chart.
   dataset for reference but is not plotted in the headline charts.
 
 `*_per_1000_pop` / per-capita series are **derived** (flow ÷ World Bank population × 1000).
-Migration figures are headcounts, so no CPI/inflation adjustment applies. Full citations
+Home Office annual series omit categories with incomplete quarterly coverage. An
+all-method irregular total is published only if every method observed that year has
+four quarters; complete small-boat figures cannot disguise partial air-arrival data.
+Detected arrivals are not the entire irregular population. Total ONS immigration has
+a different long-term residence definition and is not a legal-only count: these
+measures are not a mutually exclusive legal/illegal partition.
+
+Migration figures are counts, so no CPI/inflation adjustment applies. Full citations
 with URLs: [`../outputs/migration/SOURCES.md`](../outputs/migration/SOURCES.md).
 
 ## Usage

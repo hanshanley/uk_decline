@@ -174,6 +174,23 @@ def test_irregular_parse_splits_methods_and_totals():
     assert all(r["flow_type"] == schema.COUNT for r in out)
 
 
+def test_irregular_partial_method_does_not_become_complete_all_methods_total():
+    rows = [
+        _pad("title", width=8),
+        _pad("Year", "Quarter", "Method", "Nat", "Reg", "Sex", "Age", "Count", width=8),
+    ]
+    rows.extend(
+        _pad(2024, f"2024 Q{q}", "Small boat arrivals", "N", "R", "S", "A", 100, width=8)
+        for q in (1, 2, 3, 4)
+    )
+    rows.extend(
+        _pad(2024, f"2024 Q{q}", "Inadequately documented air arrivals", "N", "R", "S", "A", 10, width=8)
+        for q in (1, 2)
+    )
+    out = irregular.parse(iter(rows))
+    assert [(r["category"], r["value"]) for r in out] == [("small_boat", 400.0)]
+
+
 def test_normalize_per_capita_is_exact_ratio_of_real_series():
     rows = [
         schema.row(1974, "uk_population", 56_229_974, unit="people",
@@ -235,10 +252,47 @@ def test_ons_method_segments_have_clean_2012_handoff():
         ips, admin = charts._plot_ons_methods(
             ax, df, "immigration_by_origin", "immigration"
         )
+        plotted_years = [line.get_xdata().tolist() for line in ax.lines]
     finally:
         charts.plt.close(fig)
     assert ips["period"].tolist() == [2011]
     assert admin["period"].tolist() == [2012, 2013]
+    assert plotted_years == [[2011], [2012, 2013]]
+
+
+@pytest.mark.parametrize("chart", [
+    charts.chart_immigration_by_origin,
+    charts.chart_net_migration_by_origin,
+    charts.chart_net_migration_per_capita,
+])
+def test_migration_method_break_is_preserved_in_other_views(chart, monkeypatch):
+    rows = [
+        schema.row(
+            year, metric, value, unit="people", legality=schema.TOTAL,
+            flow_type=schema.NET, source="ONS",
+        )
+        for year, value, suffix in ((2010, 100, "_by_origin"), (2011, 110, "_by_origin"),
+                                    (2012, 200, ""), (2013, 210, ""))
+        for metric in (
+            f"immigration{suffix}", f"net_migration{suffix}",
+            f"net_migration{suffix}_per_1000_pop",
+        )
+    ]
+    captured = {}
+
+    def save(fig, name, source):
+        ax = fig.axes[0]
+        captured["years"] = [list(line.get_xdata()) for line in ax.lines]
+        captured["labels"] = [text.get_text() for text in ax.texts]
+        charts.plt.close(fig)
+        return name
+
+    monkeypatch.setattr(charts, "_save", save)
+    chart(pd.DataFrame(rows))
+    assert [2010, 2011] in captured["years"]
+    assert [2012, 2013] in captured["years"]
+    assert [2010, 2011, 2012, 2013] not in captured["years"]
+    assert "2012 method break" in captured["labels"]
 
 
 def test_ons_ips_history_parse_by_origin_in_thousands():

@@ -50,22 +50,33 @@ def _make_row(year: int, value: float, category: str) -> dict:
 
 def parse(rows) -> list[dict]:
     """Aggregate irregular-arrival rows into annual per-method rows plus an ``all`` total."""
+    observed_methods: dict[int, set[str]] = {}
+
+    def category_of(row: tuple) -> str | None:
+        category = _category(row)
+        if category is not None:
+            observed_methods.setdefault(int(row[_YEAR]), set()).add(category)
+        return category
+
     aggregated = aggregate_by_year(
         rows,
         header_rows=2,
         year_idx=_YEAR,
         quarter_idx=_QUARTER,
         value_idx=_DETECTIONS,
-        category_of=_category,
+        category_of=category_of,
     )
 
     totals: dict[int, float] = {}
+    complete_methods: dict[int, set[str]] = {}
     out: list[dict] = []
     for year, category, value in aggregated:
         totals[year] = totals.get(year, 0.0) + value
+        complete_methods.setdefault(year, set()).add(category)
         out.append(_make_row(year, value, category))
     for year in sorted(totals):
-        out.append(_make_row(year, totals[year], "all"))
+        if complete_methods[year] == observed_methods[year]:
+            out.append(_make_row(year, totals[year], "all"))
     return out
 
 

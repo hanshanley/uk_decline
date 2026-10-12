@@ -88,18 +88,32 @@ def _plot_ons_methods(
     admin_metric: str,
     *,
     color: str = SUBSTACK_BLUE,
+    category: str = "all",
+    linewidth: float = 2.6,
+    label: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Plot one visual line with a clean 2012 methodology handoff and no overlap."""
-    ips = _series(df, ips_metric)
+    """Plot separate method segments; never draw a trend across the 2012 break."""
+    ips = _series(df, ips_metric, category)
     ips = ips[ips["period"] < METHOD_BREAK_YEAR]
-    admin = _series(df, admin_metric)
+    admin = _series(df, admin_metric, category)
     admin = admin[admin["period"] >= METHOD_BREAK_YEAR]
-    combined = pd.concat([ips, admin]).sort_values("period")
-    if not combined.empty:
-        ax.plot(
-            combined["period"], combined["value"], color=color, linewidth=2.6,
-        )
+    for segment in (ips, admin):
+        if not segment.empty:
+            ax.plot(
+                segment["period"], segment["value"], color=color,
+                linewidth=linewidth, label=label,
+            )
+            label = None
     return ips, admin
+
+
+def _mark_method_break(ax) -> None:
+    ax.axvline(METHOD_BREAK_YEAR, color=SUBSTACK_MUTED, linestyle=":", linewidth=1)
+    ax.annotate(
+        "2012 method break", xy=(METHOD_BREAK_YEAR, 0.98),
+        xycoords=ax.get_xaxis_transform(), xytext=(4, 0), textcoords="offset points",
+        rotation=90, va="top", fontsize=8, color=SUBSTACK_MUTED,
+    )
 
 
 def _annotate_peak_and_latest(ax, data: pd.DataFrame) -> None:
@@ -131,6 +145,7 @@ def chart_immigration(df: pd.DataFrame) -> Path:
     _ips, admin = _plot_ons_methods(
         ax, df, "immigration_by_origin", "immigration"
     )
+    _mark_method_break(ax)
     _annotate_peak_and_latest(ax, admin)
     _style_title(ax, "UK long-term immigration over time")
     ax.set_xlabel("Year")
@@ -144,6 +159,7 @@ def chart_net_migration(df: pd.DataFrame) -> Path:
     _ips, admin = _plot_ons_methods(
         ax, df, "net_migration_by_origin", "net_migration"
     )
+    _mark_method_break(ax)
     _annotate_peak_and_latest(ax, admin)
     ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
     _style_title(ax, "UK net long-term migration over time")
@@ -224,16 +240,11 @@ def chart_legal_vs_irregular(df: pd.DataFrame) -> Path:
 
 
 def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
-    ips = _series(df, "net_migration_by_origin_per_1000_pop")
-    ips = ips[ips["period"] < METHOD_BREAK_YEAR]
-    ons = _series(df, "net_migration_per_1000_pop")
-    ons = ons[ons["period"] >= METHOD_BREAK_YEAR]
-    combined = pd.concat([ips, ons]).sort_values("period")
     fig, ax = plt.subplots(figsize=(11, 6))
-    if not combined.empty:
-        ax.plot(
-            combined["period"], combined["value"], color=SUBSTACK_BLUE, linewidth=2.6,
-        )
+    _plot_ons_methods(
+        ax, df, "net_migration_by_origin_per_1000_pop", "net_migration_per_1000_pop",
+    )
+    _mark_method_break(ax)
     ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
     _style_title(ax, "UK net migration per 1,000 population")
     ax.set_xlabel("Year")
@@ -242,8 +253,8 @@ def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
     return _save(
         fig, "net_migration_per_capita.png",
         f"{SOURCE_ONS_IPS}; {SOURCE_ONS}; {SOURCE_WB} (population denominator only)\n"
-        "Note: methodology changes at 2012; IPS is shown through 2011 and administrative "
-        "estimates from 2012.",
+        "Note: IPS through 2011; revised/admin-based estimates from 2012. "
+        "Different methods are not directly comparable.",
     )
 
 
@@ -256,8 +267,8 @@ _ORIGIN_GROUPS = [
 
 _SOURCE_BY_ORIGIN = (
     f"{SOURCE_ONS_IPS}; {SOURCE_ONS} (admin-based, 2012+)\n"
-    "Note: methodology changes at 2012; IPS is shown through 2011 and administrative "
-    "estimates from 2012."
+    "Note: IPS through 2011; revised/admin-based estimates from 2012. "
+    "Different methods are not directly comparable."
 )
 
 
@@ -265,16 +276,11 @@ def _chart_by_origin(df: pd.DataFrame, ips_metric: str, admin_metric: str,
                      title: str, ylabel: str, name: str, zero_line: bool) -> Path:
     fig, ax = plt.subplots(figsize=(11, 6))
     for cat, color, label in _ORIGIN_GROUPS:
-        ips = _series(df, ips_metric, cat)
-        ips = ips[ips["period"] < METHOD_BREAK_YEAR]
-        admin = _series(df, admin_metric, cat)
-        admin = admin[admin["period"] >= METHOD_BREAK_YEAR]
-        combined = pd.concat([ips, admin]).sort_values("period")
-        if not combined.empty:
-            ax.plot(
-                combined["period"], combined["value"], color=color, linewidth=2.0,
-                label=label,
-            )
+        _plot_ons_methods(
+            ax, df, ips_metric, admin_metric, category=cat,
+            color=color, linewidth=2.0, label=label,
+        )
+    _mark_method_break(ax)
     if zero_line:
         ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
     _style_title(ax, title)
@@ -288,7 +294,7 @@ def _chart_by_origin(df: pd.DataFrame, ips_metric: str, admin_metric: str,
 def chart_immigration_by_origin(df: pd.DataFrame) -> Path:
     return _chart_by_origin(
         df, "immigration_by_origin", "immigration",
-        "UK immigration by citizenship group (1964\u20132025)",
+        "UK immigration by citizenship group",
         "Immigration per year", "immigration_by_origin.png", zero_line=False,
     )
 
@@ -296,7 +302,7 @@ def chart_immigration_by_origin(df: pd.DataFrame) -> Path:
 def chart_net_migration_by_origin(df: pd.DataFrame) -> Path:
     return _chart_by_origin(
         df, "net_migration_by_origin", "net_migration",
-        "UK net migration by citizenship group (1964\u20132025)",
+        "UK net migration by citizenship group",
         "Net migration per year", "net_migration_by_origin.png", zero_line=True,
     )
 
