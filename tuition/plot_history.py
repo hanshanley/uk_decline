@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import csv
 import os
+import textwrap
 
 import matplotlib.pyplot as plt
 
@@ -89,9 +90,9 @@ def plot(out_path: str) -> None:
     ax.margins(x=0.02)
     ax.legend(loc="upper left", frameon=False)
 
-    theme.source_note(fig, SOURCE_NOTE)
+    theme.source_note(fig, textwrap.fill(SOURCE_NOTE, width=150))
     plt.tight_layout()
-    plt.subplots_adjust(bottom=0.12)
+    plt.subplots_adjust(bottom=0.18)
     fig.savefig(out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {out_path}")
