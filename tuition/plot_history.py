@@ -28,6 +28,7 @@ SOURCE_NOTE = (
     "(current dollars); UK — England statutory fee caps (legislation.gov.uk / "
     "GOV.UK), converted at market exchange rates and deflated by US CPI (World Bank); "
     "Both US and UK deflated with calendar-year US CPI; fee years are academic start years. "
+    "UK zero-fee anchors shown separately, without interpolation to fee introduction. "
     "Germany: zero-fee reference points only; some states charged fees in 2006–14."
 )
 
@@ -55,7 +56,15 @@ def plot(out_path: str) -> None:
             continue
         xs = [y for y, _ in pts]
         ys = [v for _, v in pts]
-        if style == "points":
+        if region == config.UK:
+            ax.plot(xs, [v if v > 0 else float("nan") for v in ys],
+                    color=color, linewidth=2.4, marker="o", markersize=4,
+                    markeredgecolor=theme.BG, markeredgewidth=0.8, label=label)
+            zero_years = [y for y, v in pts if v == 0]
+            ax.plot(zero_years, [0] * len(zero_years), "o", color=color,
+                    markersize=7, markerfacecolor="none", markeredgecolor=color,
+                    markeredgewidth=1.2, zorder=3)
+        elif style == "points":
             ax.plot(xs, ys, "o", color=color, markersize=5,
                     markeredgecolor=theme.BG, markeredgewidth=0.8, label=label)
         elif style == "step":

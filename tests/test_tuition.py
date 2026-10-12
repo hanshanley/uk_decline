@@ -320,6 +320,31 @@ def test_history_preserves_free_uk_anchor_and_annual_upratings():
     assert values[2016] == 9000
 
 
+def test_history_plot_does_not_connect_free_uk_anchor_to_fee_introduction(tmp_path, monkeypatch):
+    import math
+    from tuition import plot_history
+
+    monkeypatch.setattr(plot_history, "load_history",
+                        lambda: {config.UK: [(1971, 0), (1998, 2973), (1999, 3000)]})
+    figures = []
+    close = plot_history.plt.close
+    monkeypatch.setattr(plot_history.plt, "close", figures.append)
+    out = tmp_path / "tuition_history.png"
+    plot_history.plot(str(out))
+    fig = figures[-1]
+    try:
+        fee_line, zero_anchors = fig.axes[0].lines
+        assert list(fee_line.get_xdata()) == [1971, 1998, 1999]
+        assert math.isnan(fee_line.get_ydata()[0])
+        assert list(fee_line.get_ydata()[1:]) == [2973, 3000]
+        assert list(zero_anchors.get_xdata()) == [1971]
+        assert list(zero_anchors.get_ydata()) == [0]
+        assert zero_anchors.get_linestyle() == "None"
+        assert out.stat().st_size > 0
+    finally:
+        close(fig)
+
+
 def test_nces_history_uses_same_calendar_cpi_basis(tmp_path, monkeypatch):
     csv = tmp_path / "nces.csv"
     csv.write_text(
