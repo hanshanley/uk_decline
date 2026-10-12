@@ -46,7 +46,10 @@ def _maa(df: pd.DataFrame, region: str, metric: str) -> pd.DataFrame:
         pd.date_range(sub["date"].min(), sub["date"].max(), freq="QE")
     ).rename_axis("date").reset_index()
     sub["maa"] = sub["value"].rolling(4, min_periods=4).mean()
-    return sub.dropna(subset=["maa"])
+    valid = sub.index[sub["maa"].notna()]
+    if valid.empty:
+        return sub.iloc[:0]
+    return sub.loc[valid[0]:valid[-1]]
 
 
 def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
@@ -92,7 +95,8 @@ def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
     source_note(
         fig,
         "Source: Office of Rail and Road (ORR), Data Portal Table 3103. "
-        "London & South East is a trains-weighted sector aggregate.",
+        "Approximate trains-weighted aggregates; four-quarter arithmetic means, "
+        "not official moving annual averages.",
     )
     fig.tight_layout(rect=[0, 0.055, 1, 1], pad=0.7)
     out_dir = pathlib.Path(out_dir)
@@ -109,7 +113,7 @@ def make_charts(source, out_dir="outputs/rail") -> list[pathlib.Path]:
     p = _chart(
         df, "casl_pct",
         "Rail disruption \u2014 London & South East",
-        "Cancelled or significantly late trains, 4-quarter moving average",
+        "Cancelled or significantly late trains, 4-quarter arithmetic mean",
         "Share of trains (%)\n(higher = worse)",
         "rail_london_casl.png", out_dir,
     )
@@ -118,7 +122,7 @@ def make_charts(source, out_dir="outputs/rail") -> list[pathlib.Path]:
     p = _chart(
         df, "ppm_pct",
         "Rail punctuality \u2014 London & South East",
-        "Public Performance Measure (PPM), 4-quarter moving average",
+        "Public Performance Measure (PPM), 4-quarter arithmetic mean",
         "Trains meeting PPM (%)",
         "rail_london_ppm.png", out_dir,
     )

@@ -8,9 +8,10 @@ weighted by the number of trains it planned that quarter:
 
     sector_value = sum(operator_value * trains_planned) / sum(trains_planned)
 
-The operator -> sector membership below reproduces ORR's official "London and South East"
-sector to within ~0.2 percentage points on the 2019+ quarters where ORR *does* publish a
-sector figure (Table 3113), which validates both the membership set and the weighting.
+The operator -> sector membership below is an approximation, not ORR's official sector
+aggregate. Across 28 overlapping quarters (Apr-Jun 2019 to Jan-Mar 2026), it differs
+from Table 3113 by up to 0.51 percentage points; the reconstructed GB total differs
+by up to 0.19 points. Neither reconstruction should be described as exact.
 
 Two metrics are produced:
   - ``ppm_pct``  — Public Performance Measure: % of trains "on time" (arriving within
@@ -40,7 +41,7 @@ SOURCE = ("Office of Rail and Road (ORR) Data Portal, Table 3103 "
 # Franchise titles (Table 3103 column "Franchise title") that make up the ORR
 # "London and South East" sector. Grouping by franchise title folds operator renames
 # (e.g. Connex South Eastern -> South Eastern Trains -> Southeastern) into one series.
-# Validated against ORR's official sector figure (Table 3113), 2019+, to within ~0.2pp.
+# Approximate membership; see the independent Table 3113 comparison above.
 LONDON_SE_FRANCHISES = frozenset({
     "Chiltern Railways",
     "Crossrail",                                          # TfL Rail / Elizabeth line
@@ -131,6 +132,11 @@ def _weighted_series(trains: pd.DataFrame, values: pd.DataFrame,
                 continue
             t = _to_float(trains.iloc[i, j])
             v = _to_float(values.iloc[i, j])
+            if t is not None and t > 0 and v is None:
+                raise ValueError(
+                    f"ORR metric missing for positive planned trains: "
+                    f"{trains.iloc[i, _FRANCHISE_COL]}, {label}"
+                )
             if t is not None and t > 0 and v is not None:
                 weight_sum += t
                 weighted += t * v

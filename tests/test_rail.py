@@ -39,6 +39,15 @@ def test_orr_weighting_rejects_misaligned_operator_axes():
         orr._weighted_series(trains, values, orr.LONDON_SE_FRANCHISES)
 
 
+def test_orr_does_not_reweight_around_missing_positive_weight_metric():
+    trains, values = _sheets()
+    values.iloc[5, 4] = float("nan")
+    with pytest.raises(ValueError, match="metric missing for positive planned trains"):
+        orr._weighted_series(trains, values, orr.LONDON_SE_FRANCHISES)
+    trains.iloc[5, 4] = 0
+    assert orr._weighted_series(trains, values, orr.LONDON_SE_FRANCHISES)[0][1] == 80
+
+
 def test_rolling_mean_does_not_bridge_missing_quarters():
     df = pd.DataFrame({
         "region": [charts.LONDON] * 5,
@@ -51,3 +60,18 @@ def test_rolling_mean_does_not_bridge_missing_quarters():
     result = charts._maa(df, charts.LONDON, "ppm_pct")
     assert result["date"].tolist() == [pd.Timestamp("2021-09-30")]
     assert result["maa"].tolist() == [80]
+
+
+def test_rolling_series_retains_internal_gaps_for_plotting(monkeypatch, tmp_path):
+    dates = pd.date_range("2020-03-31", periods=10, freq="QE")
+    df = pd.DataFrame([
+        {"region": region, "metric": "ppm_pct", "date": date, "value": 80}
+        for region in (charts.LONDON, charts.GB)
+        for date in dates if date != dates[4]
+    ])
+    captured = []
+    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    charts._chart(df, "ppm_pct", "Title", "Subtitle", "Percent", "test.png", tmp_path)
+    for line in captured[0].axes[0].lines:
+        assert pd.isna(line.get_ydata()).sum() == 4
+        assert list(pd.to_datetime(line.get_xdata())) == list(dates[3:])

@@ -39,11 +39,17 @@ ORR's trains-weighted annual moving average; it is omitted across missing quarte
 - `quarter` uses calendar quarters, consistent with `year` and the quarter-end
   `date` (Jan–Mar is Q1). Positional weighting rejects mismatched operator/period
   layouts; blank/non-finite cells are not valid observations.
-- **Validation:** on the 2019+ quarters where ORR *does* publish a "London and South
-  East" sector figure (Table 3113), this reconstruction matches to within **~0.2
-  percentage points**, confirming both the membership set and the weighting. The same
-  method reproduces ORR's official **Great Britain** PPM exactly (e.g. Jan–Mar 2020 =
-  85.8%).
+  An operator with positive planned trains but a missing metric causes an explicit
+  error, rather than silently reweighting the remaining operators.
+- **Independent comparison, 12 October 2026:** across **28 quarters, April–June
+  2019 to January–March 2026**, the maximum absolute difference from official
+  Table 3113 PPM is **0.51 percentage points for London and South East** and
+  **0.19 points for Great Britain**. The earlier claims of 0.2-point sector
+  agreement and exact GB reproduction were unsupported. These are approximate,
+  consistently reconstructed operator aggregates, not the official sector series.
+- Charts smooth each reconstructed percentage with an **arithmetic mean of four
+  consecutive quarters**, not ORR's trains-weighted moving annual average.
+  Missing quarters invalidate the window and remain gaps in plotted lines.
 
 ## Run
 
