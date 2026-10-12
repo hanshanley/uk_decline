@@ -1,49 +1,54 @@
 # europe_data — UK GDP per capita & median income (real)
 
 Reproducible pipeline documenting the **UK's relative economic performance** vs. the US and
-European peers, using **only real, publicly-sourced data** (every value is fetched live
-from an official API — nothing is hand-entered, mocked, interpolated, or synthesized).
+European peers, using public source observations and explicitly labelled derived measures.
+Upstream national accounts and PPPs are estimates, and recent observations can be revised.
 
-The headline GDP measure is **GDP per capita at each year's market exchange rate,
-deflated by US CPI to constant 2015 US$** — GDP per capita in
-current US$ (World Bank `NY.GDP.PCAP.CD`) **deflated by US CPI** (`FP.CPI.TOTL`) to constant
-2015 dollars. It is inflation-adjusted and at **market exchange rates** (not PPP), so it
-reflects dollar valuation, including exchange-rate and relative domestic-price changes.
-It is **not a real-output volume measure**. (PPP and the
-World Bank fixed-exchange-rate series are also kept in the dataset for reference.)
+Three GDP questions are kept separate:
+
+- **Real output growth:** World Bank `NY.GDP.PCAP.KD`, national-accounts volumes at
+  constant 2015 US dollars with fixed-base conversion. Annual exchange-rate movements
+  do not drive this series. Cross-country dollar levels are not PPP-adjusted.
+- **Nominal dollar valuation:** `NY.GDP.PCAP.CD`, at current prices and each year's
+  market exchange rate. It includes GDP prices and exchange-rate movements, not just growth.
+- **PPP output comparisons:** the [PPP analysis](../ppp_data/README.md) distinguishes
+  current-PPP levels from constant-2021-PPP volumes. The overview uses the latter.
+
+The legacy `gdp_per_capita_real_usd` column remains available for compatibility:
+nominal dollars divided by US CPI. **It is not national-accounts real GDP** and is no
+longer the headline real-output chart. Its arithmetic is retained for tuition conversion.
 
 ## Headline results (figures in [`../outputs/`](../outputs))
 
-### Market-FX GDP per capita, 1970–2024 (US-CPI deflated)
-![Real GDP per capita, UK vs peers, 1970–2024](../outputs/gdp_income/gdp_per_capita_real_over_time.png)
+### Real GDP per capita, 1970–2025 (national-accounts volumes)
+![Real GDP per capita, fixed-base dollar conversion](../outputs/gdp_income/gdp_per_capita_real_over_time.png)
 
-The UK's market-FX GDP per capita rose to **draw level with the US in 2007** (UK ≈ $57.9k vs US
-≈ $54.9k, constant 2015 US$) — then **collapsed relative to the US**, falling to ~$40k by 2024
-while the US climbed to ~$65k.
-*Source: World Bank WDI `NY.GDP.PCAP.CD` deflated by US CPI (`FP.CPI.TOTL`) to constant 2015 US$
-(inflation-adjusted, market exchange rates).*
+From 2007 to 2025, UK real output per head increased **7.9%**, against **25.5%** in
+the US. This is slower growth, not an absolute loss of output over the entire interval.
+The six individual countries' growth agrees with the constant-PPP volume series within
+the validation tolerance; the EU aggregate is excluded because its valuation weights
+differ. Fixed conversion factors change country-level units, not growth rates.
+
+### Nominal GDP per capita, 1970–2025 (annual market FX)
+![Nominal GDP per capita at market exchange rates](../outputs/gdp_income/gdp_per_capita_nominal_over_time.png)
+
+The UK was **105% of US dollar-valued GDP per head in 2007**, versus **64% in 2025**.
+That much larger relative change includes GDP-price and exchange-rate effects.
+These current-dollar levels are explicitly not inflation-adjusted.
 
 ### UK relative to its peers (US, Germany, France, EU average, Poland)
-![UK GDP per capita as a % of each peer](../outputs/gdp_income/uk_gdp_relative_to_peers.png)
+![Peer nominal GDP per capita as a share of the UK](../outputs/gdp_income/uk_gdp_relative_to_peers.png)
 
-On a log scale (ratios span 45%→1100%): the UK **overtook the US in 2007 (105%)** then fell to
-**62% by 2024**; it is roughly at parity with Germany (~95%) and above France; and it is being
-**caught by Poland** — the UK went from ~11× Poland's GDP per capita to ~2× as Poland's
-economy converged.
+The linear percentage axis shows **peer / UK**, with the UK fixed at 100, not UK / peer.
+In 2025 the US is **156%** of the UK and Poland **49%**, at market exchange rates.
+Every ratio uses observations from the same year; endpoint labels state each peer's year.
+These are dollar GDP valuations, not measures of household income or domestic purchasing
+power. Deflating both countries by the same US CPI would leave each ratio unchanged.
 
-> **Which "constant US$"?** Two constructions exist: (a) *current US$ deflated by US CPI*
-> (used here — preserves each year's actual exchange rate, so the strong 2007 pound shows up),
-> and (b) World Bank `NY.GDP.PCAP.KD` (fixes the exchange rate at 2015, which erases the 2007
-> crossover). We use (a) because it reflects the dollar value the UK economy actually reached.
-> Note: in **PPP** terms Poland is ~85% of the UK (its lower price level makes market-FX
-> understate it) — that series is in the dataset (`gdp_per_capita_ppp_*`).
->
-> **See the PPP twin of these charts:** [`../ppp_data/`](../ppp_data/README.md) plots this
-> same comparison at purchasing power parity and decomposes the difference. It finds that
-> **~70% of the UK's fall against the US since 2007 is non-volume factors rather
-> than lost real output** — a genuine qualification of the chart above, though the remaining
-> ~30% is a real divergence in output per head. Both views are published side by side rather
-> than one being chosen.
+The [PPP decomposition](../ppp_data/README.md) separates the nominal UK/US ratio change
+into relative volume growth and a GDP-price/exchange-rate residual. Approximately 70%
+of the 41-point change is attributed to non-volume factors by that accounting split;
+it does **not** identify a causal currency effect or establish a loss of household welfare.
 
 ### Median disposable income (a "typical household" measure)
 ![Median disposable income, PPS](../outputs/gdp_income/median_disposable_income_pps.png)
@@ -58,29 +63,30 @@ are different; they are not interchangeable household-income measures.*
 
 | Metric (column) | Source & citation | Endpoint | Inflation basis |
 |---|---|---|---|
-| `gdp_per_capita_real_usd` | **World Bank WDI** `NY.GDP.PCAP.CD` deflated by US CPI `FP.CPI.TOTL` (**headline / plotted**) | `api.worldbank.org/v2/country/{iso3}/indicator/{id}` | **Real** — constant 2015 US$ using each year's market exchange rate |
-| `gdp_per_capita_constant_usd` | **World Bank WDI** `NY.GDP.PCAP.KD` (reference) | `api.worldbank.org/v2/country/{iso3}/indicator/{id}` | **Real** — constant 2015 US$ using the World Bank's fixed-base conversion |
-| `gdp_per_capita_nominal_usd` | **World Bank WDI** `NY.GDP.PCAP.CD` | (same) | Nominal — current US$ (reference: shows the exchange-rate driven 2007–08 UK≈US) |
+| `gdp_per_capita_real_usd` | **World Bank WDI** `NY.GDP.PCAP.CD` deflated by US CPI `FP.CPI.TOTL` (legacy) | `api.worldbank.org/v2/country/{iso3}/indicator/{id}` | US-CPI-adjusted dollar valuation, **not real output** |
+| `gdp_per_capita_constant_usd` | **World Bank WDI** `NY.GDP.PCAP.KD` (real-output chart) | (same) | **Real** — constant 2015 US$ using fixed-base conversion |
+| `gdp_per_capita_nominal_usd` | **World Bank WDI** `NY.GDP.PCAP.CD` (nominal chart and peer ratios) | (same) | Current prices and annual market FX |
 | `gdp_per_capita_real_maddison` | **Maddison Project Database 2023** (Bolt & van Zanden), via Our World in Data | `ourworldindata.org/grapher/gdp-per-capita-maddison.csv?csvType=full` | Real — constant 2011 international $ (**PPP**); reference only |
 | `gdp_per_capita_ppp_current` | **World Bank WDI** `NY.GDP.PCAP.PP.CD` | (same) | Nominal — current international $ (PPP); reference only |
-| `gdp_per_capita_ppp_constant` | **World Bank WDI** `NY.GDP.PCAP.PP.KD` | (same) | Real — constant 2021 international $ (PPP); reference only |
+| `gdp_per_capita_ppp_constant` | **World Bank WDI** `NY.GDP.PCAP.PP.KD` | (same) | Real — constant 2021 international $; overview and PPP growth charts |
 | `median_disposable_income` / `mean_disposable_income` | **Eurostat** `ilc_di03` (`MED_EI`/`MEAN_EI`, `unit=PPS`) | `ec.europa.eu/eurostat/api/dissemination/…/ilc_di03` | Current PPS (cross-country comparable; **not** deflated over time) |
 | `median_income_pip` | **World Bank PIP** (Poverty & Inequality Platform), pinned `ppp_version=2021` | `api.worldbank.org/pip/v1/pip` | **Real** — constant 2021 PPP $ per day |
 
 
-**Why constant US$ (not PPP)?** The headline series is World Bank `NY.GDP.PCAP.CD` deflated
-with US CPI — market-FX GDP per capita in **constant 2015 US$**, which is CPI-adjusted and
-preserves each year's market exchange rate
-(not PPP), and covers **1960+**, so it reaches the 1970s directly. PPP series (Maddison; World
-Bank PP.*) remain in the dataset for reference but can distort cross-country levels.
+**Why publish multiple bases?** No single GDP series answers every question. National
+accounts volumes measure growth; annual market dollars measure dollar valuations;
+PPP conversion supports output-volume comparisons across economies. GDP per capita is
+not median household income, and GDP PPPs are not household consumption PPPs.
 
 **Countries plotted:** United Kingdom (focus), **United States**, Germany, France, Italy.
-(Spain is still fetched into the dataset but is not plotted.)
+GDP charts also include the World Bank EU aggregate; the nominal peer-ratio chart includes
+Poland. Spain is fetched but not plotted.
 
 ## Citations
 
-Full citations for the organizations that collected/compiled each dataset (data accessed
-**15 August 2026**):
+GDP endpoints and shared Europe/PPP inputs were rechecked **12 October 2026**, against
+the WDI release updated **8 October 2026**. Other source citations retain their earlier
+**15 August 2026** access date.
 
 - **World Bank** (2026). *World Development Indicators* — GDP per capita, constant 2015 US$
   (`NY.GDP.PCAP.KD`); GDP per capita, current US$ (`NY.GDP.PCAP.CD`); GDP per capita, PPP
@@ -105,20 +111,26 @@ Full citations for the organizations that collected/compiled each dataset (data 
 python3 -m venv .venv && ./.venv/bin/pip install -r ../requirements.txt
 
 # Fetch all sources (default 1970..current) into ../data/ :
-./.venv/bin/python -m europe_data.fetch_data --start 1970 --end 2024
+./.venv/bin/python -m europe_data.fetch_data --start 1970 --end 2025
 
 # Render the figures into ../outputs/ :
 ./.venv/bin/python -m europe_data.plot_uk_decline
 ```
 
 Outputs: per-source CSVs, `europe_combined_long.csv`, `europe_combined_wide.csv`, and
-`manifest.json` in `../data/` (raw data git-ignored); four PNGs in `../outputs/`.
+`manifest.json` in `../data/` (raw data git-ignored); five PNGs in `../outputs/gdp_income/`.
 
 ## Data integrity
 Every plotted value traces to an official API. Spot-checked live (all exact matches): UK 2024
 WDI constant-US$ & PPP GDP/cap, DE 2023 Eurostat median PPS, UK 2021 PIP median, and UK 1970
 Maddison ($17,162). PIP is fetched with `fill_gaps=false` (real survey observations only); no
-source performs interpolation or gap-filling.
+pipeline performs interpolation or gap-filling. That does not mean upstream GDP or PPP
+estimates are free of modelling or extrapolation.
+
+The [methodology review](../ppp_data/README.md#methodology-and-contemporary-research)
+compares the approach with World Bank guidance, the Eurostat-OECD PPP manual, and ONS's
+August 2026 national-accounts analysis. Regression tests inspect the actual plotted
+values and dates with deliberately different nominal and volume paths.
 
 ## Modules
 `countries.py` (curated countries + US peer + aggregates) · `worldbank.py` · `maddison.py` ·

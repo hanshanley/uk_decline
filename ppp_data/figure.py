@@ -62,7 +62,7 @@ def labelled_ends(ax, items: list[tuple[float, str, str]], *, min_gap: float,
 
     ``items`` is ``(y_value, text, colour)``. Each label is placed at its true y where
     possible; where two series end within ``min_gap`` of each other, the lower label is
-    pushed down just far enough to clear the one above.
+    pushed down just far enough to clear the one above, with a connector to the true value.
     """
     placed: list[float] = []
     for value, text, colour in sorted(items, key=lambda item: -item[0]):
@@ -70,5 +70,12 @@ def labelled_ends(ax, items: list[tuple[float, str, str]], *, min_gap: float,
         if placed and placed[-1] - y < min_gap:
             y = placed[-1] - min_gap
         placed.append(y)
-        ax.text(x, y, f"  {text}", fontsize=fontsize, fontweight="bold", color=colour,
+        label_x = x
+        if y != value:
+            label_x += 0.4
+            ax.annotate("", xy=(x, value), xytext=(label_x, y),
+                        arrowprops={"arrowstyle": "-", "color": colour, "lw": 0.8,
+                                    "shrinkA": 0, "shrinkB": 0},
+                        annotation_clip=False)
+        ax.text(label_x, y, f"  {text}", fontsize=fontsize, fontweight="bold", color=colour,
                 va="center", ha="left", path_effects=white_stroke())

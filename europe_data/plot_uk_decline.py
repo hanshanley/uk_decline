@@ -28,10 +28,10 @@ import matplotlib
 matplotlib.use("Agg")  # headless: no display required
 
 import matplotlib.pyplot as plt
-import matplotlib.patheffects as pe
 import matplotlib.ticker as mtick
 import pandas as pd
 from europe_data import pip
+from ppp_data.figure import labelled_ends
 
 # ── Professional house style (shared vizstyle house style) ───────────────────
 from vizstyle import (  # noqa: E402
@@ -42,8 +42,6 @@ from vizstyle import (  # noqa: E402
 )
 
 house_style()
-
-LABEL_STROKE = [pe.withStroke(linewidth=3.5, foreground="white")]
 
 # UK is always the warm accent; peers use the cooler/earthy palette. The US (a key
 # non-European peer) is near-black. Spain removed per request; US added.
@@ -88,15 +86,6 @@ def _source_note(fig, text: str, ha: str = "left") -> None:
              fontsize=8, color=SUBSTACK_MUTED, style="italic")
 
 
-def _end_label(ax, xs, ys, text: str, color: str) -> None:
-    """Label a line at its final point (right side). Accepts any array-like."""
-    xs, ys = list(xs), list(ys)
-    if not xs:
-        return
-    ax.text(xs[-1] + 0.4, ys[-1], text, fontsize=10, fontweight="bold",
-            color=color, va="center", ha="left", path_effects=LABEL_STROKE)
-
-
 def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
                 source: str, filename: str, out: pathlib.Path, *,
                 eu_agg: tuple | None = None, eu_label: str | None = None,
@@ -104,7 +93,7 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
     """Draw a UK-vs-peers line chart for one metric and save it to ``out/filename``.
 
     ``eu_agg``/``eu_label`` optionally add an EU reference series (Eurostat
-    ``EU_EUROSTAT`` for income). GDP charts show the named country peers, not an aggregate.
+    ``EU_EUROSTAT`` for income, ``EU_WB`` for GDP). No aggregate is synthesized.
     ``scale``
     divides the values (e.g. 1000 to show GDP in 000s).
     """
@@ -156,6 +145,7 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
         ("Poland", SUBSTACK_GREEN, "-", 2.0, "Poland"),
     ]
     plotted_years = []
+    labels = []
     for country, color, ls, lw, label in refs:
         ref = _series(df, country, metric).set_index("year")[metric]
         ratio = (ref / uk).dropna() * 100.0  # peer as % of the UK
@@ -163,10 +153,11 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
             continue
         plotted_years.extend(ratio.index)
         ax.plot(ratio.index, ratio.values, color=color, linewidth=lw, linestyle=ls)
-        _end_label(ax, ratio.index, ratio.values, f"{label} ({ratio.index[-1]})", color)
+        labels.append((ratio.iloc[-1], f"{label} ({ratio.index[-1]})", color))
     if not plotted_years:
         plt.close(fig)
         raise ValueError("no overlapping nominal GDP observations from 1990 onward")
+    labelled_ends(ax, labels, min_gap=5.0, x=max(plotted_years), fontsize=10)
 
     ax.axhline(100, color=SUBSTACK_ACCENT, linewidth=1.4, linestyle="-")
     ax.text(ax.get_xlim()[0], 102, "United Kingdom = 100", fontsize=9.5,
@@ -217,7 +208,7 @@ def main(argv: list[str] | None = None) -> int:
     _line_chart(
         df, GDP_METRIC,
         "Real GDP per capita (national-accounts volumes)",
-        "GDP per capita (000s, constant 2015 US$, fixed-base conversion)",
+        "GDP per capita (000s, constant 2015 US$)",
         lambda v, _: f"${v:.0f}k", SOURCE_GDP,
         "gdp_per_capita_real_over_time.png", out,
         eu_agg=EU_WB, eu_label="EU average", scale=1000.0, source_ha="left",

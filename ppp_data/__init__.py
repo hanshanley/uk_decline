@@ -1,17 +1,13 @@
 """Purchasing-power-parity (PPP) view of the UK's relative decline.
 
-A **parallel** set of figures to the repository's headline, market-exchange-rate charts.
-The headline analyses (``europe_data``, ``markets_data``, ``tuition``) deliberately use
-**real constant US$ at market exchange rates**, because that is what UK output actually
-buys on world markets. This package asks the complementary question — **what does UK
-output buy at home?** — by converting at purchasing power parity instead.
+A companion to the repository's separate real-volume and nominal-dollar GDP charts.
+Current PPPs compare GDP at each year's price structure; constant PPPs compare volumes
+valued at the 2021 benchmark. The overview uses constant PPPs, whose growth is independently
+checked against national-accounts constant-dollar GDP.
 
-Neither view is "the truth". They answer different questions, and the gap between them is
-itself informative: it is precisely the sterling exchange-rate / relative-price-level
-effect, which this package isolates and charts explicitly.
-
-Nothing here modifies the headline analyses. Every figure is additive and lives in
-``outputs/ppp/``.
+GDP is not median household income, and the gap between nominal-dollar and volume growth
+is an accounting price/exchange-rate residual, not an identified currency effect.
+Figures live in ``outputs/ppp/``.
 
 Run it::
 

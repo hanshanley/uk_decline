@@ -1,8 +1,7 @@
 """World Bank WDI client for the PPP analysis.
 
-Pulls the five World Bank series the PPP view needs — GDP per capita at PPP (constant and
-current international $), GDP per capita at market exchange rates (current US$), the PPP
-conversion factor, and the market exchange rate — and derives three more locally:
+Pulls four GDP series (current/constant PPP and current/constant US$), plus the PPP
+conversion factor and market exchange rate, and derives three more locally:
 
 * ``price_level_index``        = ``NY.GDP.PCAP.CD / NY.GDP.PCAP.PP.CD``. Algebraically this
   is the PPP conversion factor over the market exchange rate, but computed this way the
@@ -13,9 +12,9 @@ conversion factor, and the market exchange rate — and derives three more local
   basis for euro-area countries before 1999.
 * ``gdp_per_capita_real_usd``  = current US$ GDP per capita deflated by US CPI.
 
-The deflation is delegated to :func:`europe_data.worldbank.deflate_to_real_usd`, the exact
-function behind the repository's headline chart, so the market-FX comparator plotted here
-is arithmetically identical to the headline series rather than a re-implementation of it.
+Legacy CPI deflation is delegated to :func:`europe_data.worldbank.deflate_to_real_usd`
+for compatibility and tuition conversion. It is not national-accounts real output and
+is no longer the headline GDP metric.
 
 No API key is required. Results are paged; only non-null observations are emitted, and
 nothing is interpolated, forward-filled, or spliced.
@@ -166,7 +165,7 @@ def _derive_ratio(rows: Iterable[dict], *, numerator: str, denominator: str,
 
 
 def derive_real_usd(rows: Iterable[dict], start: int, end: int) -> list[dict]:
-    """Derive constant-2015-US$ GDP per capita, reusing the headline chart's deflator.
+    """Retain the legacy CPI-adjusted dollar valuation using the shared deflator.
 
     Delegates the arithmetic to :func:`europe_data.worldbank.deflate_to_real_usd` so this
     comparator series is identical to the one in ``outputs/gdp_income/``, then normalises

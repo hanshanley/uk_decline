@@ -6,7 +6,7 @@ Constant and current PPPs answer different questions; neither is universally inv
     Safe to plot as a **level, across years**. Requires a constant-price series, i.e. one
     where general inflation has been removed (``NY.GDP.PCAP.PP.KD``, constant 2021
     international $). A *current* international-$ series is **not** safe here, because it
-    embeds worldwide inflation — a rising line would partly be rising prices.
+    embeds price changes — a rising line would partly be rising prices.
 
 ``cross_section``
     Safe to use for a **same-year, cross-country ratio**. Here the *current* series is the
@@ -83,7 +83,7 @@ METRICS: dict[str, Metric] = {
             "GDP per capita converted at each year's PPP, in that year's prices. The correct "
             "basis for a same-year cross-country ratio, and the series that satisfies the "
             "exact identity GDPpc(current US$) = GDPpc(current int'l $) x price level index. "
-            "It embeds worldwide inflation, so it must never be plotted as a level over time."
+            "It embeds price changes, so it must not be plotted as a real-output trend."
         ),
     ),
     "gdp_per_capita_real_usd": Metric(
@@ -126,8 +126,8 @@ METRICS: dict[str, Metric] = {
         vintage="current prices",
         description=(
             "GDP per capita converted at the year's market exchange rate, in that year's "
-            "prices. Kept because it is the left-hand side of the PPP identity; not plotted "
-            "as a level over time because it is not inflation-adjusted."
+            "prices. It is the left-hand side of the PPP identity and supports explicitly "
+            "nominal valuation charts, not real-growth measurement."
         ),
     ),
     "ppp_conversion_factor": Metric(

@@ -1,13 +1,14 @@
 """The PPP figures — the parallel, purchasing-power view of the UK's relative position.
 
-Six charts, all written to ``outputs/ppp/`` in the shared house style:
+Seven charts, all written to ``outputs/ppp/`` in the shared house style:
 
 1. ``ppp_gdp_per_capita_over_time``   levels at PPP, constant 2021 international $
 2. ``ppp_gdp_relative_to_peers``      peers as a share of the UK, at PPP
 3. ``ppp_vs_market_fx_uk_us``         the UK vs the US on both bases at once
-4. ``price_level_index``              the sterling/price-level effect on its own
-5. ``ppp_gap_decomposition_uk_us``    how much of the fall vs the US is real vs currency
+4. ``price_level_index``             GDP-wide relative prices, not consumer cost of living
+5. ``ppp_gap_decomposition_uk_us``    relative volumes and a price/exchange-rate residual
 6. ``ppp_gdp_long_run_maddison``      the long run, on the Maddison 2011 benchmark
+7. ``ppp_gdp_per_capita_growth``     real growth since 2007, each country starts at 100
 
 Every figure states its PPP vintage in the source note, and every figure that could be read
 as "the real number" carries a one-line reminder that market exchange rates and PPP answer
@@ -100,7 +101,7 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
         "Constant PPPs measure volume growth on a fixed benchmark. Cross-country levels "
         "are benchmark-sensitive, not annually repriced PPP comparisons. GDP per head "
         "is not median household income."))
-    return save_fig(fig, out_dir / "ppp_gdp_per_capita_over_time.png")
+    return save_fig(fig, out_dir / "ppp_gdp_per_capita_over_time.png", bottom=0.17)
 
 
 def chart_volume_growth(rows: list[dict], out_dir: Path,
@@ -109,7 +110,8 @@ def chart_volume_growth(rows: list[dict], out_dir: Path,
     metric = "gdp_per_capita_ppp_constant"
     metrics.require_over_time(metric)
     plotted = {}
-    for peer in peers.PEERS:
+    growth_peers = list({p.iso3: p for p in [*peers.PEERS, *peers.PRICE_LEVEL_PEERS]}.values())
+    for peer in growth_peers:
         data = series.series(rows, metric, peer.iso3)
         if start_year in data and data[start_year] > 0:
             xs, ys = series.xy(data, start_year)
@@ -119,7 +121,7 @@ def chart_volume_growth(rows: list[dict], out_dir: Path,
     plt = _plt()
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
     labels = []
-    for peer in peers.PEERS:
+    for peer in growth_peers:
         if peer.iso3 not in plotted:
             continue
         xs, ys = plotted[peer.iso3]
@@ -131,7 +133,7 @@ def chart_volume_growth(rows: list[dict], out_dir: Path,
                   x=max(xs[-1] for xs, _ in plotted.values()), fontsize=10)
     ax.set_title(f"Real GDP per head growth since {start_year}",
                  fontweight="bold", pad=30)
-    _subtitle(ax, "Each country starts at 100; this compares growth, not income levels")
+    _subtitle(ax, "Each country starts at 100; this compares growth, not starting GDP levels")
     _tidy(ax, ylabel=f"Real GDP per capita index ({start_year} = 100)")
     ax.margins(x=0.14)
     source_note(fig, _note(
@@ -252,11 +254,11 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
     # Every line on this axis is "UK as % of the US", so state all three the same way — as
     # levels on that axis, not as a mix of levels and percentage changes.
     real_then = real[peak_year] * 100
-    ax.set_title("How much of the UK's fall against the US is real?",
+    ax.set_title("UK GDP per head relative to the US: three measures",
                  fontweight="bold", pad=30)
-    _subtitle(ax, f"At market rates the UK fell from {peak_pct:.0f}% of the US in "
-                  f"{peak_year} to {fx_pct[-1]:.0f}%; in real output per head it slipped "
-                  f"from {real_then:.0f}% to {real_pct[-1]:.0f}%")
+    _subtitle(ax, f"Market-FX ratio: {peak_pct:.0f}% in {peak_year} to "
+                  f"{fx_pct[-1]:.0f}% in {years[-1]}; volume ratio over those years: "
+                  f"{real_then:.0f}% to {real_pct[-1]:.0f}%")
 
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}%"))
     _tidy(ax, ylabel="UK GDP per capita as % of the US")
@@ -268,7 +270,7 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
         "line compares GDP at each year's PPPs; the constant-price line tracks relative "
         "volume growth on the 2021 benchmark. The market-rate peak is not proof of a peak "
         "in sterling itself.", _FRAMING))
-    return save_fig(fig, out_dir / "ppp_vs_market_fx_uk_us.png")
+    return save_fig(fig, out_dir / "ppp_vs_market_fx_uk_us.png", bottom=0.17)
 
 
 # ── 4. The price level index ─────────────────────────────────────────────────
@@ -322,7 +324,7 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path | None:
         "Computing it this way cancels local-currency units, so it is unaffected by the "
         "euro changeover. This is a GDP-wide price index, not a consumer cost-of-living "
         "index or a test of currency misvaluation."))
-    return save_fig(fig, out_dir / "price_level_index.png")
+    return save_fig(fig, out_dir / "price_level_index.png", bottom=0.17)
 
 
 # ── 5. The decomposition ─────────────────────────────────────────────────────

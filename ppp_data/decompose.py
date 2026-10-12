@@ -1,4 +1,4 @@
-"""Splitting a market-exchange-rate comparison into a real part and a currency part.
+"""Splitting a nominal-dollar comparison into volume and price/exchange-rate factors.
 
 For any country ``c`` in any year, GDP per capita converted at the market exchange rate and
 GDP per capita converted at PPP differ by exactly one factor — the price level index::
@@ -14,8 +14,8 @@ so any change in how the UK compares to the US at market rates is the product of
 
 One caveat the identity above quietly hides: ``R_ppp`` here is the *current-price* PPP ratio,
 and its year-to-year movement is **not** pure volume growth — it also carries shifts in the
-PPP price structure. Reading a change in ``R_ppp`` as a change in real output understates the
-real divergence roughly four-fold. So the production caller
+PPP price structure. Reading a change in ``R_ppp`` as a change in real output can misstate
+the real divergence. So the production caller
 (:func:`ppp_data.charts.uk_us_decomposition`) does not use the identity as written: it feeds
 the **constant-price volume ratio** as the real factor and derives the second factor as the
 residual ``R_fx / R_real``. Within a consistent vintage, its movement reflects relative GDP

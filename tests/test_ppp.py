@@ -61,7 +61,7 @@ def _consistent_rows() -> list[dict]:
 
 # ── The metric registry and its guard rails ──────────────────────────────────
 def test_current_price_ppp_is_never_a_trend() -> None:
-    # Current international dollars carry worldwide inflation, so plotting them as a level
+    # Current international dollars carry price changes, so plotting them as a real trend
     # over time would show rising prices as rising prosperity.
     assert not metrics.METRICS["gdp_per_capita_ppp_current"].over_time
     assert "gdp_per_capita_ppp_current" not in metrics.TIME_SERIES_SAFE
@@ -479,10 +479,14 @@ def test_worldbank_paging_stops_on_a_malformed_page_count() -> None:
 # ── Figure helpers ───────────────────────────────────────────────────────────
 def test_end_labels_are_pushed_apart_when_they_collide() -> None:
     placed: list[tuple[float, str]] = []
+    connectors = []
 
     class _Ax:
         def text(self, x, y, s, **kw):
             placed.append((y, s.strip()))
+
+        def annotate(self, text, *, xy, xytext, **kw):
+            connectors.append((xy, xytext))
 
     figure.labelled_ends(_Ax(), [(100.0, "a", "#000"), (99.5, "b", "#000"),
                                  (50.0, "c", "#000")], min_gap=4.0, x=2024)
@@ -490,6 +494,7 @@ def test_end_labels_are_pushed_apart_when_they_collide() -> None:
     assert ys[0] == 100.0            # the highest label keeps its true position
     assert abs(ys[1] - 96.0) < 1e-9  # the colliding one is pushed down by min_gap
     assert ys[2] == 50.0             # a well-separated label is untouched
+    assert connectors == [((2024, 99.5), (2024.4, 96.0))]
 
 
 def test_source_notes_are_wrapped() -> None:
@@ -789,6 +794,36 @@ def test_growth_chart_plots_country_growth_not_levels_or_current_prices(monkeypa
     assert list(ax.lines[1].get_ydata()) == pytest.approx([100, 125])
     # Poland has no baseline, so it cannot silently get a different one.
     assert not any("Poland" in t.get_text() for t in ax.texts)
+    rows.append(_row("POL", 2007, "gdp_per_capita_ppp_constant", 25_000))
+    charts.chart_volume_growth(rows, tmp_path)
+    ax = captured[-1].axes[0]
+    assert list(ax.lines[2].get_ydata()) == pytest.approx([100, 200])
+    assert any("Poland (2025)" in t.get_text() for t in ax.texts)
+
+
+@pytest.mark.parametrize("chart_name", [
+    "chart_gdp_per_capita", "chart_price_level_index", "chart_ppp_vs_market_fx",
+])
+def test_gdp_source_footers_do_not_overlap_year_label(monkeypatch, tmp_path, chart_name):
+    from ppp_data import charts
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    captured = []
+    original_save = charts.save_fig
+
+    def save(fig, path, **kwargs):
+        captured.append(fig)
+        return original_save(fig, path, **kwargs)
+
+    monkeypatch.setattr(charts, "save_fig", save)
+    getattr(charts, chart_name)(_consistent_rows(), tmp_path)
+    fig = captured[0]
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    footer_top = max(text.get_window_extent(renderer).y1 for text in fig.texts)
+    xlabel_bottom = fig.axes[0].xaxis.label.get_window_extent(renderer).y0
+    assert footer_top < xlabel_bottom
 
 
 def test_decomposition_is_invariant_to_fixed_benchmark_rescaling() -> None:

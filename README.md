@@ -36,6 +36,12 @@ foreign companies listed exclusively on those exchanges, but excluding funds and
 pure holding companies. It ends earlier than other panels: the newer LSE
 UK-domiciled counts have a different definition and are no longer spliced onto it.
 
+The GDP ratio represents **real output volumes valued at the 2021 PPP benchmark**,
+not median household income or annually repriced purchasing power. The
+[GDP analysis](europe_data/README.md) now separates genuine national-accounts real
+growth from nominal dollar valuations; the [PPP analysis](ppp_data/README.md) adds a
+2007 = 100 growth chart and documents the methodological research and validation.
+
 The crime panel shows **estimated incidents in England & Wales, excluding fraud and
 computer misuse**, from ONS Crime Survey Table A1a: **11.2 million in the year ending
 March 2007 to 4.3 million in the year ending March 2026**. Lower counts are shown as
