@@ -326,3 +326,45 @@ def test_charts_render_all_writes_pngs(tmp_path):
     written = charts.render_all(rows, str(tmp_path))
     assert len(written) == 3
     assert all(os.path.exists(p) and os.path.getsize(p) > 0 for p in written)
+
+
+def test_tax_wedge_bars_use_actual_shared_year_not_independent_latest(monkeypatch, tmp_path):
+    from tax import charts
+
+    rows = [
+        combine.make_row(
+            iso3, 2023, "tax_wedge_pct", value, "s", "single_nokids", aw,
+        )
+        for iso3 in ("GBR", "USA", "FRA")
+        for aw, value in (("67aw", 20), ("100aw", 30), ("167aw", 40))
+    ]
+    rows.extend([
+        combine.make_row("GBR", 2025, "tax_wedge_pct", 99, "s", "single_nokids", "67aw"),
+        combine.make_row("GBR", 2024, "tax_wedge_pct", 98, "s", "single_nokids", "100aw"),
+        combine.make_row("GBR", 2024, "tax_wedge_pct", 97, "s", "single_nokids", "167aw"),
+    ])
+    captured = {}
+
+    def finish(fig, ax, out_path):
+        captured["title"] = ax.get_title()
+        captured["heights"] = [patch.get_height() for patch in ax.patches]
+        charts.plt.close(fig)
+        return out_path
+
+    monkeypatch.setattr(charts, "_finish", finish)
+    charts.tax_wedge_by_earnings(rows, str(tmp_path / "wedge.png"))
+    assert captured["title"].endswith("2023")
+    assert captured["heights"][:3] == [20, 30, 40]
+
+
+def test_tax_chart_rejects_disjoint_years_instead_of_mislabeling(tmp_path):
+    from tax import charts
+
+    rows = [
+        combine.make_row(
+            "GBR", year, "tax_wedge_pct", 30, "s", "single_nokids", aw,
+        )
+        for aw, year in (("67aw", 2023), ("100aw", 2024), ("167aw", 2025))
+    ]
+    with pytest.raises(ValueError, match="no common comparison year"):
+        charts.tax_wedge_by_earnings(rows, str(tmp_path / "wedge.png"))

@@ -57,18 +57,27 @@ def _region_values(recs: list[dict]) -> dict[str, Optional[float]]:
     }
 
 
-def _latest_year(recs: list[dict]) -> Optional[int]:
-    """Latest year with UK (then US) data; global max only if neither is present.
-
-    Mirrors ``tax.stats._target_year`` so charts and the printed summary pin the same
-    comparison year instead of a ragged latest OECD vintage that blanks the UK/US.
-    """
-    for iso3 in (config.UK_COUNTRY.iso3, config.US_COUNTRY.iso3):
-        years = [r["year"] for r in recs if r["iso3"] == iso3]
-        if years:
-            return max(years)
-    years = [r["year"] for r in recs]
-    return max(years) if years else None
+def _comparison_year(groups: list[list[dict]], year: Optional[int]) -> Optional[int]:
+    """Latest year shared by the plotted variants, preferring UK coverage in each."""
+    if year is not None:
+        return year
+    year_sets = []
+    for recs in groups:
+        if not recs:
+            continue
+        for iso3 in (config.UK_COUNTRY.iso3, config.US_COUNTRY.iso3):
+            years = {r["year"] for r in recs if r["iso3"] == iso3}
+            if years:
+                break
+        else:
+            years = {r["year"] for r in recs}
+        year_sets.append(years)
+    if not year_sets:
+        return None
+    common = set.intersection(*year_sets)
+    if not common:
+        raise ValueError("tax chart variants have no common comparison year; specify year explicitly")
+    return max(common)
 
 
 # --- charts -----------------------------------------------------------------
@@ -95,10 +104,7 @@ def headline_bars(rows: list[dict], out_path: str, year: Optional[int] = None) -
         (_variant_rows(rows, metric, hh, aw), label)
         for metric, hh, aw, label in variants
     ]
-    if year is None:
-        latest = [_latest_year(recs) for recs, _label in variant_rows]
-        latest = [value for value in latest if value is not None]
-        year = min(latest) if latest else None
+    year = _comparison_year([recs for recs, _label in variant_rows], year)
     labels: list[str] = []
     series: dict[str, list[float]] = {"uk": [], "europe_median": [], "us": []}
     for recs, label in variant_rows:
@@ -185,19 +191,20 @@ def tax_to_gdp_over_time(rows: list[dict], out_path: str) -> Optional[str]:
 def tax_wedge_by_earnings(rows: list[dict], out_path: str, year: Optional[int] = None) -> Optional[str]:
     """Grouped bars: single-worker tax wedge at 67/100/167% of the average wage."""
     order = [("67aw", "67% of\navg wage"), ("100aw", "100% of\navg wage"), ("167aw", "167% of\navg wage")]
+    variant_rows = [
+        (_variant_rows(rows, "tax_wedge_pct", "single_nokids", aw), label)
+        for aw, label in order
+    ]
+    year = _comparison_year([recs for recs, _label in variant_rows], year)
     labels: list[str] = []
     series: dict[str, list[float]] = {"uk": [], "europe_median": [], "us": []}
-    used_year: Optional[int] = None
-    for aw, label in order:
-        recs = _variant_rows(rows, "tax_wedge_pct", "single_nokids", aw)
-        target = year if year is not None else _latest_year(recs)
-        if target is None:
+    for recs, label in variant_rows:
+        if year is None:
             continue
-        vals = _region_values([r for r in recs if r["year"] == target])
+        vals = _region_values([r for r in recs if r["year"] == year])
         if all(v is None for v in vals.values()):
             continue
         labels.append(label)
-        used_year = used_year or target
         for k in series:
             series[k].append(vals[k])
     if not labels:
@@ -234,7 +241,7 @@ def tax_wedge_by_earnings(rows: list[dict], out_path: str, year: Optional[int] =
     ax.yaxis.set_major_formatter(mtick.PercentFormatter())
     ax.set_ylabel("Labour tax wedge")
     ax.set_title(
-        f"Labour tax wedge by earnings level, {used_year}", fontweight="bold", pad=14
+        f"Labour tax wedge by earnings level, {year}", fontweight="bold", pad=14
     )
     ax.legend(loc="upper left", frameon=False)
     return _finish(fig, ax, out_path)

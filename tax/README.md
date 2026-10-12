@@ -1,11 +1,11 @@
-# Tax-burden sub-analysis — average & median tax burden: UK vs Europe vs US
+# Tax-burden comparison — UK vs European OECD countries vs US
 
-Part of the `uk_decline` study. Measures the **average** and **median** tax burden on
-people in the **UK**, benchmarked against the **US** and **European countries**, using
-two complementary lenses.
+Part of the `uk_decline` study. Compares the UK's **aggregate tax revenue** and
+**modelled taxes for specified household types** with the US and European OECD
+countries. European means and medians are across countries, not across individual people.
 
-> **Short answer:** the UK's tax burden sits **clearly below the European median/average
-> on every measure, and roughly level with the US.** In 2024 the UK's total tax take was
+> **Short answer:** the UK is below the European median on the headline measures shown
+> here, but the comparison with the US depends on the metric. In 2024 the UK's total tax take was
 > **34.4% of GDP** (Europe median **38.0%**, US **25.6%**), and the labour tax wedge on an
 > average-wage single worker was **32.4% in 2025** (Europe median **41.1%**, US **30.0%**).
 
@@ -17,9 +17,9 @@ two complementary lenses.
 | **Individual** | `tax_wedge_pct` | Income tax + employee **and employer** SSC − cash benefits, as a share of **total labour cost** | OECD *Taxing Wages* |
 | **Individual** | `net_personal_avg_tax_rate_pct` | Income tax + employee SSC − cash benefits, as a share of **gross wage** ("what the worker feels") | OECD *Taxing Wages* |
 
-"**Median**" is answered two ways: (a) the **cross-country median** of each metric — UK vs
-the median European country vs US, computed in `tax/stats.py`; and (b) the **average-wage
-tax wedge** as the standard proxy for the typical/median worker. The individual metrics are
+"**Median**" means the **cross-country median** of each metric — UK vs the median
+European country vs US, computed in `tax/stats.py`. The average wage is not the median
+wage, and an average-wage tax wedge is not the median person's tax burden. Individual metrics are
 reported at **67% / 100% / 167% of the average wage** (a single person, no children) plus a
 **one-earner married couple with 2 children** at 100% AW.
 
@@ -155,14 +155,15 @@ tests/test_tax.py
   payroll, VAT, corporate, property). The tax wedge / net personal rate are **modelled for a
   stylised worker** — they do **not** include VAT/consumption taxes. They answer different
   questions; read them together.
-- **"Median worker" proxy.** OECD does not publish a per-country **median-earner** wedge, so
-  the **average-wage** worker is used as the standard proxy. The 67% / 167% AW rows bracket
-  lower- and higher-paid workers.
+- **Stylised households, not median people.** The OECD average-wage worker is a modelled
+  household scenario, not a measured median earner. The 67% / 167% AW rows show
+  lower- and higher-paid scenarios; none is an estimate of median tax paid.
 - **European scope.** 25 European OECD members are included (see `tax/config.py`).
   Transcontinental Turkey is excluded, matching the geographic-Europe scope of the sibling
   `europe_data` package. The "Europe median/mean" is unweighted across these countries.
 - **Reporting vintages differ.** OECD releases arrive at different times per country; the
-  summary/charts pin the latest year for which the **UK (then US)** has data so the headline
-  is never blanked by a single country reporting one year ahead.
+  summary uses the latest UK (then US) year per variant. Grouped bar charts instead use
+  the latest year actually shared by their metric/earnings variants. They reject disjoint
+  histories unless a year is explicitly requested; missing comparators are labelled N/A.
 - **Comparability.** OECD harmonises these series, but definitions still differ at the
   margin; per-metric caveats are recorded in `data/tax_manifest.json`.
