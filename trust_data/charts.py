@@ -56,9 +56,9 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         med, q1, q3 = g.median(), g.quantile(0.25), g.quantile(0.75)
         eu_color = GROUP_STYLE[countries.EU]["color"]
         ax.fill_between(med.index, q1.values, q3.values, color=eu_color, alpha=0.15,
-                        zorder=2, label="EU-27 (middle 50%)")
+                        zorder=2, label="EU-27 reporters (middle 50%)")
         ax.plot(med.index, med.values, color=eu_color, linewidth=2.0, linestyle="--",
-                zorder=3, label="EU-27 median")
+                zorder=3, label="EU-27 reporters median")
         plotted_vals += list(q1.values) + list(q3.values)
 
     for grp, lab in ((countries.US, "United States"), (countries.UK, "United Kingdom")):
@@ -97,8 +97,15 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     cites = "; ".join(citations.short_citation(s) for s in sources)
     year_lo, year_hi = int(sub["year"].min()), int(sub["year"].max())
     caption = f"Source: {cites}. Data: {year_lo}\u2013{year_hi}."
+    if not eu.empty:
+        counts = eu.groupby("year")["iso3"].nunique()
+        coverage = str(counts.min()) if counts.min() == counts.max() else f"{counts.min()}\u2013{counts.max()}"
+        caption += (
+            f"\nEU: unweighted reporting-country median/IQR "
+            f"(n={coverage} of 27; {counts.index.max()}: n={counts.iloc[-1]})."
+        )
     fig.text(0.01, 0.01, caption, fontsize=7, color="#6B6B6B", ha="left", va="bottom")
-    fig.tight_layout(rect=(0, 0.035, 0.84, 1))
+    fig.tight_layout(rect=(0, 0.065, 0.84, 1))
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

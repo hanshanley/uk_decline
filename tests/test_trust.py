@@ -7,6 +7,7 @@ Or with pytest: pytest tests/test_trust.py -q
 from __future__ import annotations
 
 import csv
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -126,6 +127,35 @@ def test_showcase_uses_actual_relative_chart_path(tmp_path) -> None:
     )
     text = Path(output).read_text()
     assert "../../outputs/trust/trust_national_govt_pct.png" in text
+    assert "charts/*.png" not in text
+    for target in ("fetch_trust.py", "README.md"):
+        expected = Path(report.__file__).parent / target
+        assert os.path.relpath(expected, data_dir) in text
+
+
+def test_trust_chart_discloses_changing_eu_reporting_coverage(monkeypatch):
+    import pandas as pd
+    import matplotlib.figure
+    from trust_data import charts
+
+    df = pd.DataFrame([
+        metrics.make_row(iso3, countries.name_for_iso3(iso3), year, "trust_national_govt_pct", value, "OECD")
+        for year, iso3, value in (
+            (2023, "GBR", 30), (2024, "GBR", 35),
+            (2023, "FRA", 40), (2024, "FRA", 45), (2024, "DEU", 55),
+        )
+    ])
+    captured = {}
+
+    def save(fig, path, **kwargs):
+        captured["caption"] = "\n".join(text.get_text() for text in fig.texts)
+        captured["labels"] = fig.axes[0].get_legend_handles_labels()[1]
+
+    monkeypatch.setattr(matplotlib.figure.Figure, "savefig", save)
+    with tempfile.TemporaryDirectory() as out_dir:
+        charts.chart_metric(df, "trust_national_govt_pct", out_dir)
+    assert "n=1\u20132 of 27; 2024: n=2" in captured["caption"]
+    assert "EU-27 reporters median" in captured["labels"]
 
 
 def test_worldbank_parser(monkeypatch) -> None:  # type: ignore[no-untyped-def]

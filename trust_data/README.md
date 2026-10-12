@@ -6,12 +6,12 @@ comparators. Two complementary angles (different scales — read each on its own
 | Angle | Metric(s) | What it is |
 |---|---|---|
 | **Survey (subjective)** | `trust_national_govt_pct` | Share of people who say they trust the national government (%) |
-| **Governance quality (objective proxy)** | `wgi_voice_accountability`, `wgi_government_effectiveness`, `wgi_rule_of_law`, `wgi_control_of_corruption` | World Bank Worldwide Governance Indicators, estimate ≈ −2.5…+2.5 |
+| **Governance quality (perceptions-based composite)** | `wgi_voice_accountability`, `wgi_government_effectiveness`, `wgi_rule_of_law`, `wgi_control_of_corruption` | World Bank Worldwide Governance Indicators, estimate ≈ −2.5…+2.5; not a direct public-trust measure |
 
 ## Headline finding (UK)
 
-- **Survey trust in national government:** 42.5% (2007) → **34.5% (2024)** — a falling trend,
-  ~9.6 pts below the EU-27 mean (44.1%).
+- **Survey trust in national government:** 42.5% (2007) → **34.5% (2024)** — lower at
+  these endpoints, ~9.6 pts below the reporting EU countries' mean (44.1%).
 - **WGI governance quality:** all four indicators are lower in 2024 than at the 1996 series
   start; Control of Corruption and Government Effectiveness fell most.
 
@@ -20,7 +20,8 @@ comparators. Two complementary angles (different scales — read each on its own
 ## Data sources & citations
 
 Every value in this pipeline is fetched from, or traceable to, the sources below, **credited
-to the organisation that collected the data**. **Nothing is hand-authored or estimated.** The
+to the organisation that collected the data**. **The tooling does not fabricate source
+observations**; WGI itself consists of source-published estimates. The
 `source` column on every tidy row records which one it came from; each chart prints a short
 citation caption; and `trust_data/citations.py` is the single source of truth for the full
 citations reproduced here.
@@ -98,8 +99,11 @@ Outputs (written to `data/trust/`):
 
 ## Figures
 
-`trust_data/charts.py` renders one PNG per metric (`make_charts()`): a line per country with
-the **UK bold/red**, EU-27 faded, US green. Each figure prints a **source caption** taken
+`trust_data/charts.py` renders one PNG per metric (`make_charts()`): the **UK bold/red**,
+US green, and an unweighted median plus interquartile band for reporting EU-27 countries.
+This is not a population-weighted EU aggregate; coverage can vary by year, and the
+caption states the number of reporting countries. The summary uses a reporting-country
+mean instead, so its comparator is not the chart's median. Each figure prints a **source caption** taken
 directly from the plotted rows' `source` column plus the covered year range — so a figure can
 never claim a source the underlying data didn't carry.
 

@@ -14,7 +14,7 @@ migration series: annual long-term immigration was roughly **200k in the 1960sâ€
 about **600k by the mid-2000s**, and peaked at **1.44M in 2023** before falling to **813k in
 2025**. The chart shows separate segments: IPS through 2011 and revised/admin-based
 estimates from 2012, with a visible method-break marker and no line connecting the
-two methods. ONS warns that these methods are not directly comparable; the jump
+two methods. These methods are not directly comparable; the jump
 between segments must not be read as a measured year-on-year increase.
 
 | File | Shows |

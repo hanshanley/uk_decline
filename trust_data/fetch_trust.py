@@ -4,14 +4,14 @@
 Pulls two complementary, free, key-less series and writes tidy long + wide CSVs (plus an
 optional set of trend charts and a UK-focused summary) into the output directory:
 
-  * OECD survey trust in national government (with a vendored manual-seed fallback)
+  * OECD historical survey trust in national government, fetched live via OWID
   * World Bank Worldwide Governance Indicators (WGI)
 
 Examples:
-    python fetch_trust.py                          # all sources, 2006-current
-    python fetch_trust.py --start 2010 --end 2023
-    python fetch_trust.py --sources worldbank
-    python fetch_trust.py --charts --summary
+    python -m trust_data.fetch_trust               # all sources, 1974-current
+    python -m trust_data.fetch_trust --start 2010 --end 2023
+    python -m trust_data.fetch_trust --sources worldbank
+    python -m trust_data.fetch_trust --charts --summary
 """
 
 from __future__ import annotations
