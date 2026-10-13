@@ -2,8 +2,8 @@
 
 Adapted from ``europe_data/combine.py``. Rows follow
 :data:`trust_data.metrics.ROW_FIELDS`. When two sources report the same
-``(iso3, year, metric)`` the first row wins - callers pass direct OECD SDMX rows before the
-live OWID/OECD historical series (see :func:`dedupe`).
+``(iso3, year, metric)`` the first row wins (see :func:`dedupe`). Distinct survey
+instruments must not be spliced merely because they share a metric name.
 """
 
 from __future__ import annotations

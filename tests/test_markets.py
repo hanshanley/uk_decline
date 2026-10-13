@@ -149,6 +149,8 @@ def test_filtered_market_history_keeps_original_constant_dollar_base(tmp_path, m
     result = summary.build_summary(subset, tmp_path / "summary.md").read_text()
     assert "constant 2020 US$" in result
     assert "constant 2010 US$" not in result
+    assert "accessed" not in result
+    assert "accessed" not in charts._source_note("market_cap_usd_real")
     units = []
 
     def save(fig, out_dir, name):
@@ -161,37 +163,9 @@ def test_filtered_market_history_keeps_original_constant_dollar_base(tmp_path, m
 
 
 def _run() -> int:
-    # Minimal monkeypatch shim so the file also runs without pytest.
-    class _MP:
-        def __init__(self) -> None:
-            self._undo: list = []
+    import pytest
 
-        def setattr(self, obj, name, value) -> None:
-            self._undo.append((obj, name, getattr(obj, name)))
-            setattr(obj, name, value)
-
-        def undo(self) -> None:
-            for obj, name, old in reversed(self._undo):
-                setattr(obj, name, old)
-            self._undo.clear()
-
-    tests = [(k, v) for k, v in sorted(globals().items()) if k.startswith("test_")]
-    failed = 0
-    for name, t in tests:
-        mp = _MP()
-        try:
-            if "monkeypatch" in t.__code__.co_varnames[: t.__code__.co_argcount]:
-                t(mp)
-            else:
-                t()
-            print(f"ok   {name}")
-        except AssertionError as e:
-            failed += 1
-            print(f"FAIL {name}: {e}")
-        finally:
-            mp.undo()
-    print(f"\n{len(tests) - failed}/{len(tests)} passed")
-    return 1 if failed else 0
+    return pytest.main([str(Path(__file__).resolve()), "-q"])
 
 
 if __name__ == "__main__":

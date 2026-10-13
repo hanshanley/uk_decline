@@ -38,7 +38,7 @@ from vizstyle import (  # noqa: E402
     BG as SUBSTACK_BG, CARD as SUBSTACK_CARD, TEXT as SUBSTACK_TEXT,
     MUTED as SUBSTACK_MUTED, ACCENT as SUBSTACK_ACCENT, BLUE as SUBSTACK_BLUE,
     GOLD as SUBSTACK_GOLD, GREEN as SUBSTACK_GREEN, GRID as SUBSTACK_GRID,
-    house_style,
+    house_style, with_year_gaps,
 )
 
 house_style()
@@ -68,16 +68,23 @@ SOURCE_NOMINAL_GDP = (
     "at annual market exchange rates. Not inflation-adjusted: changes include output, "
     "GDP prices and exchange rates. GDP is not household income."
 )
-SOURCE_EUROSTAT = ("Data: Eurostat (European Commission), EU-SILC \u2014 median equivalised net "
-                   "income, PPS (ilc_di03). UK series ends ~2018 (post-Brexit).")
+SOURCE_EUROSTAT = ("Data: Eurostat (European Commission), ECHP/EU-SILC \u2014 median equivalised "
+                   "net income, current PPS (ilc_di03). Survey year; income usually refers "
+                   "to the preceding year, with country exceptions including the UK. "
+                   "Missing years and flagged method breaks are not connected. UK ends 2018.")
 SOURCE_PIP = ("Data: World Bank Group, Poverty and Inequality Platform \u2014 median "
-              f"per-capita income/consumption, {pip.UNIT}. Multiply by 365 for an annual figure.")
+              f"per-capita income/consumption, {pip.UNIT}. Survey observations only; "
+              "missing years are not connected. Multiply by 365 for an annual figure.")
 
 
 def _series(df: pd.DataFrame, country: str, metric: str) -> pd.DataFrame:
     """Non-null (year, value) rows for one country/metric, sorted by year."""
     sub = df[(df["country"] == country) & df[metric].notna()]
-    return sub[["year", metric]].sort_values("year")
+    columns = ["year", metric]
+    status_column = f"{metric}__status"
+    if status_column in sub.columns:
+        columns.append(status_column)
+    return sub[columns].sort_values("year")
 
 
 def _source_note(fig, text: str, ha: str = "left") -> None:
@@ -105,13 +112,20 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
         if s.empty:
             continue
         plotted = True
-        xs, ys = s["year"], s[metric] / scale
+        status_column = f"{metric}__status"
+        breaks = (
+            s.loc[s[status_column].fillna("").astype(str).str.contains("b", regex=False), "year"]
+            if status_column in s.columns else ()
+        )
+        annual = with_year_gaps(s.set_index("year")[metric] / scale, breaks=breaks)
+        is_uk = country == "United Kingdom"
         label = eu_label if country.startswith("European Union") else country
-        ax.plot(xs, ys, color=color, linestyle=ls, linewidth=lw, label=label,
-                marker="o" if country == "United Kingdom" else None,
-                markersize=5, markeredgecolor="white", markeredgewidth=1.0)
+        ax.plot(annual.index, annual.values, color=color, linestyle=ls, linewidth=lw,
+                label=label, marker="o" if is_uk or metric.startswith("median") else None,
+                markersize=5 if is_uk else 2.5,
+                markeredgecolor="white", markeredgewidth=1.0 if is_uk else 0)
 
-    ax.set_xlabel("Year", labelpad=2)
+    ax.set_xlabel("Survey year" if metric == "median_disposable_income" else "Year", labelpad=2)
     ax.set_ylabel(ylabel, labelpad=2)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(yfmt))
     ax.set_title(title, fontweight="bold", pad=14)
@@ -123,7 +137,7 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
         ax.legend(loc="upper left", frameon=False, labelcolor="linecolor", fontsize=10)
     _source_note(fig, source, ha=source_ha)
     plt.tight_layout(pad=0.5)
-    plt.subplots_adjust(bottom=0.15)
+    plt.subplots_adjust(bottom=0.18 if metric == "median_disposable_income" else 0.15)
     plt.savefig(out / filename, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
@@ -152,7 +166,9 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
         if ratio.empty:
             continue
         plotted_years.extend(ratio.index)
-        ax.plot(ratio.index, ratio.values, color=color, linewidth=lw, linestyle=ls)
+        annual = with_year_gaps(ratio)
+        ax.plot(annual.index, annual.values, color=color, linewidth=lw, linestyle=ls,
+                marker="o", markersize=2.5)
         labels.append((ratio.iloc[-1], f"{label} ({ratio.index[-1]})", color))
     if not plotted_years:
         plt.close(fig)

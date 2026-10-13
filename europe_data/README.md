@@ -54,10 +54,18 @@ it does **not** identify a causal currency effect or establish a loss of househo
 ![Median disposable income, PPS](../outputs/gdp_income/median_disposable_income_pps.png)
 ![Median income, World Bank PIP](../outputs/gdp_income/median_income_pip.png)
 
-*Sources: Eurostat `ilc_di03` (median equivalised net income, PPS; UK ends ~2018 post-Brexit);
+*Sources: Eurostat `ilc_di03` (ECHP/EU-SILC, median equivalised net income, current PPS;
+UK ends 2018);
 World Bank Poverty & Inequality Platform (median per-capita income/consumption,
 2021 PPP $/day; UK to ~2021). These welfare definitions and equivalisation conventions
 are different; they are not interchangeable household-income measures.*
+
+Eurostat observations are labelled by **survey year**. Income usually refers to the
+preceding calendar year, with exceptions including the UK. The ECHP-to-EU-SILC
+transition and later national survey changes introduce method breaks. Source status
+flags are retained in the data; charts do not connect observations across a flagged
+break or a missing year. PIP's sparse early surveys are shown as points, not an
+interpolated annual history.
 
 ## Data sources (all free, no API key)
 
@@ -84,9 +92,9 @@ Poland. Spain is fetched but not plotted.
 
 ## Citations
 
-GDP endpoints and shared Europe/PPP inputs were rechecked **12 October 2026**, against
-the WDI release updated **8 October 2026**. Other source citations retain their earlier
-**15 August 2026** access date.
+GDP inputs: WDI release updated **8 October 2026**, accessed **12 October 2026**.
+Eurostat income data: accessed **13 October 2026**. PIP and Maddison sources:
+accessed **15 August 2026**.
 
 - **World Bank** (2026). *World Development Indicators* — GDP per capita, constant 2015 US$
   (`NY.GDP.PCAP.KD`); GDP per capita, current US$ (`NY.GDP.PCAP.CD`); GDP per capita, PPP
@@ -97,8 +105,10 @@ the WDI release updated **8 October 2026**. Other source citations retain their 
   per capita (2021 PPP). Washington, DC: World Bank Group. Compiled from national household
   surveys. <https://pip.worldbank.org>
 - **Eurostat (European Commission)** (2026). *Mean and median income by age and sex*
-  (`ilc_di03`), EU Statistics on Income and Living Conditions (EU-SILC). Luxembourg: Eurostat.
+  (`ilc_di03`), ECHP and EU Statistics on Income and Living Conditions (EU-SILC).
+  Luxembourg: Eurostat.
   <https://ec.europa.eu/eurostat/databrowser/product/view/ilc_di03>
+  [Definitions, reference periods and comparability](https://ec.europa.eu/eurostat/cache/metadata/en/ilc_sieusilc.htm).
 - **Maddison Project Database:** Bolt, Jutta and Jan Luiten van Zanden (2024). "Maddison-style
   estimates of the evolution of the world economy: A new 2023 update." *Journal of Economic
   Surveys.* Maddison Project Database, version 2023. Groningen Growth and Development Centre,
@@ -120,17 +130,16 @@ python3 -m venv .venv && ./.venv/bin/pip install -r ../requirements.txt
 Outputs: per-source CSVs, `europe_combined_long.csv`, `europe_combined_wide.csv`, and
 `manifest.json` in `../data/` (raw data git-ignored); five PNGs in `../outputs/gdp_income/`.
 
-## Data integrity
-Every plotted value traces to an official API. Spot-checked live (all exact matches): UK 2024
-WDI constant-US$ & PPP GDP/cap, DE 2023 Eurostat median PPS, UK 2021 PIP median, and UK 1970
-Maddison ($17,162). PIP is fetched with `fill_gaps=false` (real survey observations only); no
+## Source observations and derived measures
+PIP is fetched with `fill_gaps=false` (survey observations only); no
 pipeline performs interpolation or gap-filling. That does not mean upstream GDP or PPP
-estimates are free of modelling or extrapolation.
+estimates are free of modelling or extrapolation. Eurostat's `status` codes accompany
+the long-format observations and appear as `<metric>__status` columns in the wide table
+when flags are present; `b` identifies a break in series.
 
-The [methodology review](../ppp_data/README.md#methodology-and-contemporary-research)
+The [PPP methodology](../ppp_data/README.md#methodology-and-contemporary-research)
 compares the approach with World Bank guidance, the Eurostat-OECD PPP manual, and ONS's
-August 2026 national-accounts analysis. Regression tests inspect the actual plotted
-values and dates with deliberately different nominal and volume paths.
+August 2026 national-accounts analysis.
 
 ## Modules
 `countries.py` (curated countries + US peer + aggregates) · `worldbank.py` · `maddison.py` ·

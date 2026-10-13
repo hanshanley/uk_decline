@@ -71,7 +71,8 @@ METRICS: dict[str, Metric] = {
         description=(
             "Market capitalisation of listed domestic companies as a share of GDP -- "
             "the size of the market relative to the wider economy. A same-year ratio, "
-            "so it is inflation-neutral by construction."
+            "so it needs no separate CPI deflation. Asset prices and nominal GDP "
+            "need not rise together."
         ),
     ),
     "listed_domestic_companies": Metric(
@@ -107,8 +108,8 @@ CAVEATS: dict[str, str] = {
         "summary. This uses market exchange rates, i.e. constant dollars -- NOT PPP, "
         "which would distort market values by adjusting for domestic price levels. It "
         "removes US-dollar inflation; for non-US markets it does not remove exchange-rate "
-        "effects. Only years with both market-cap and CPI data are computed (US CPI ends "
-        "2024), so the newest year may be absent."
+        "effects. Only years with both market-cap and CPI data are computed, so the "
+        "newest year may be absent."
     ),
     "market_cap_pct_gdp": (
         "The more comparable 'size relative to the economy' measure, but sensitive to "

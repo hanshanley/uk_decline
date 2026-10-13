@@ -8,7 +8,6 @@ listed for context. Definitional caveats are included to keep comparisons honest
 
 from __future__ import annotations
 
-import datetime as _dt
 from pathlib import Path
 
 from . import markets, regions
@@ -59,7 +58,6 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
 
     df = df.copy()
     ylo, yhi = int(df["year"].min()), int(df["year"].max())
-    accessed = _dt.date.today().isoformat()
     real = df[df["metric"] == "market_cap_usd_real"]
     real_unit = str(real["unit"].iloc[0]) if not real.empty else None
     lines.append(
@@ -108,7 +106,7 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
             )
 
         # Cite the organization that collected this metric's data.
-        lines.append(f"\n_{markets.citation_short(metric_id, accessed)}_")
+        lines.append(f"\n_{markets.citation_short(metric_id)}_")
 
         caveat = markets.CAVEATS.get(metric_id)
         if caveat:
@@ -117,7 +115,7 @@ def build_summary(source=None, path: Path | str = DEFAULT_SUMMARY) -> Path:
     # Full formal citations, naming the collecting organizations.
     lines.append("\n## Data citations\n")
     for key in ("market_cap_usd", "market_cap_pct_gdp", "listed_domestic_companies", "cpi"):
-        lines.append(f"- {markets.citation(key, accessed)}")
+        lines.append(f"- {markets.citation(key)}")
 
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

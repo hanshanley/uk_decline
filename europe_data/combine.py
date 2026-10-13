@@ -8,7 +8,7 @@ import json
 import os
 from typing import Iterable
 
-LONG_FIELDS = ["iso3", "country", "year", "metric", "value", "unit", "source"]
+LONG_FIELDS = ["iso3", "country", "year", "metric", "value", "unit", "source", "status"]
 
 # Wide-table column order (one row per country-year).
 METRIC_ORDER = [
@@ -30,24 +30,33 @@ def write_long(rows: list[dict], path: str) -> None:
         writer = csv.DictWriter(fh, fieldnames=LONG_FIELDS)
         writer.writeheader()
         for r in rows_sorted:
-            writer.writerow({k: r[k] for k in LONG_FIELDS})
+            writer.writerow({
+                k: r.get(k, "") if k == "status" else r[k] for k in LONG_FIELDS
+            })
 
 
 def write_wide(rows: list[dict], path: str) -> None:
-    # (iso3, country, year) -> {metric: value}
-    table: dict[tuple[str, str, int], dict[str, float]] = {}
+    # (iso3, country, year) -> metric values and optional source statuses.
+    table: dict[tuple[str, str, int], dict[str, float | str]] = {}
+    flagged_metrics = {r["metric"] for r in rows if r.get("status")}
+    columns = [
+        *METRIC_ORDER,
+        *[f"{metric}__status" for metric in METRIC_ORDER if metric in flagged_metrics],
+    ]
     for r in rows:
         key = (r["iso3"], r["country"], r["year"])
         table.setdefault(key, {})[r["metric"]] = r["value"]
+        if r.get("status"):
+            table[key][f"{r['metric']}__status"] = r["status"]
 
-    header = ["iso3", "country", "year", *METRIC_ORDER]
+    header = ["iso3", "country", "year", *columns]
     with open(path, "w", newline="") as fh:
         writer = csv.writer(fh)
         writer.writerow(header)
         for (iso3, country, year) in sorted(table, key=lambda k: (k[1], k[2])):
             metrics = table[(iso3, country, year)]
             writer.writerow(
-                [iso3, country, year, *[metrics.get(m, "") for m in METRIC_ORDER]]
+                [iso3, country, year, *[metrics.get(m, "") for m in columns]]
             )
 
 

@@ -30,8 +30,8 @@ SOURCE = "Eurostat ilc_di03"
 UNIT = "PPS"  # Purchasing Power Standard
 
 
-def _iter_values(payload: dict) -> Iterator[tuple[dict, float]]:
-    """Yield (coord_codes, value) for every observation in a JSON-stat payload."""
+def _iter_values(payload: dict) -> Iterator[tuple[dict, float, str]]:
+    """Yield coordinates, value and source status for each JSON-stat observation."""
     dim_ids: list[str] = payload["id"]
     sizes: list[int] = payload["size"]
     # For each dimension, an ordered list of category codes (by index).
@@ -52,7 +52,7 @@ def _iter_values(payload: dict) -> Iterator[tuple[dict, float]]:
         for d, dim in enumerate(dim_ids):
             pos = (idx // strides[d]) % sizes[d]
             coord[dim] = ordered[d][pos]
-        yield coord, value
+        yield coord, value, payload.get("status", {}).get(key, "")
 
 
 def fetch(
@@ -84,7 +84,7 @@ def fetch(
         return []
 
     out: list[dict] = []
-    for coord, value in _iter_values(payload):
+    for coord, value, status in _iter_values(payload):
         geo = coord.get("geo", "")
         metric = STATINFO.get(coord.get("statinfo", ""))
         if metric is None or value is None:
@@ -98,6 +98,7 @@ def fetch(
                 "value": float(value),
                 "unit": UNIT,
                 "source": SOURCE,
+                "status": status,
             }
         )
     return out

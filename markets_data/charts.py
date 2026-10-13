@@ -18,7 +18,10 @@ from . import markets, regions
 from .paths import CHART_DIR, DEFAULT_CSV
 
 # --- Substack-style theme (matches pre1870_reapportionment_package) ---
-from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, RC_PARAMS as _THEME, house_style
+from vizstyle import (
+    BG, TEXT, MUTED, GRID, ACCENT, RC_PARAMS as _THEME, house_style,
+    with_year_gaps as _with_year_gaps,
+)
 
 # World Bank "World" is a super-aggregate (the sum of every market), so it always
 # towers over the country lines and crushes the UK-vs-peers comparison. Exclude it
@@ -58,11 +61,10 @@ def _source_note(metric_id: str) -> str:
 
     Uses the formal citation registry (``markets.citation_short``) so every figure
     names its collecting organization (e.g. the World Federation of Exchanges) and
-    the World Bank indicator that redistributes it, dated to the run.
+    the World Bank indicator that redistributes it. Cached inputs do not establish
+    a new source-access date.
     """
-    import datetime as _dt
-
-    return markets.citation_short(metric_id, accessed=_dt.date.today().isoformat())
+    return markets.citation_short(metric_id)
 
 
 def _footnote(fig, note: str = SOURCE_NOTE) -> None:
@@ -85,13 +87,6 @@ def _load(source):
     if hasattr(source, "columns"):  # already a DataFrame
         return source
     return pd.read_csv(source)
-
-
-def _with_year_gaps(series):
-    """Reindex an annual series so missing years break matplotlib lines."""
-    if series.empty:
-        return series
-    return series.reindex(range(int(series.index.min()), int(series.index.max()) + 1))
 
 
 def _annotate_year_gaps(ax, series, label: str = "UK data unavailable") -> None:

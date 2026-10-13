@@ -20,7 +20,11 @@ See ``vizstyle/README.md`` for the full guide and palette swatches.
 from __future__ import annotations
 
 import pathlib
-from typing import Any
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 import matplotlib
 
@@ -32,6 +36,7 @@ import matplotlib.pyplot as plt
 __all__ = [
     "PALETTE", "BG", "TEXT", "MUTED", "GRID", "ACCENT", "BLUE", "GOLD", "GREEN",
     "RC_PARAMS", "house_style", "source_note", "end_label", "save_fig", "white_stroke",
+    "with_year_gaps",
 ]
 
 # ── Palette ──────────────────────────────────────────────────────────────────
@@ -81,6 +86,18 @@ def house_style() -> None:
     Call once before creating figures. Idempotent.
     """
     plt.rcParams.update(RC_PARAMS)
+
+
+def with_year_gaps(series: pd.Series, *, breaks: Iterable[int] = ()) -> pd.Series:
+    """Preserve observations but break lines at missing years and source breaks."""
+    if series.empty:
+        return series
+    first, last = int(series.index.min()), int(series.index.max())
+    annual = series.reindex(range(first, last + 1))
+    for year in breaks:
+        if first < year <= last:
+            annual.loc[year - 0.5] = float("nan")
+    return annual.sort_index()
 
 
 def source_note(fig, text: str, *, x: float = 0.01, y: float = 0.01,

@@ -19,7 +19,7 @@ Total market value of listed domestic companies, in current (nominal) US dollars
 
 **UK / US:** 8% in 2022 (peak 27% in 1990).
 
-_Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LCAP.CD; accessed 2026-10-12)._
+_Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LCAP.CD)._
 
 > Caveat: Compiled by the World Bank from S&P Global / World Federation of Exchanges data. Denominated in current (nominal) US$, so it blends local-currency valuation, USD exchange-rate moves, and inflation. The WDI series has tail-year gaps -- the UK is missing after 2022 -- so recent years may be blank; values are not spliced. See the real series for the inflation-adjusted view.
 
@@ -38,13 +38,13 @@ The nominal market-cap series deflated by US CPI to constant US dollars, so size
 
 **UK / US:** 8% in 2022 (peak 27% in 1990).
 
-_Data: World Federation of Exchanges (WFE) & International Monetary Fund (IMF), via World Bank World Development Indicators (CM.MKT.LCAP.CD, FP.CPI.TOTL; accessed 2026-10-12)._
+_Data: World Federation of Exchanges (WFE) & International Monetary Fund (IMF), via World Bank World Development Indicators (CM.MKT.LCAP.CD, FP.CPI.TOTL)._
 
-> Caveat: Derived: the nominal current-US$ series deflated by US CPI (World Bank FP.CPI.TOTL) to constant US dollars of the base year noted in the manifest/summary. This uses market exchange rates, i.e. constant dollars -- NOT PPP, which would distort market values by adjusting for domestic price levels. It removes US-dollar inflation; for non-US markets it does not remove exchange-rate effects. Only years with both market-cap and CPI data are computed (US CPI ends 2024), so the newest year may be absent.
+> Caveat: Derived: the nominal current-US$ series deflated by US CPI (World Bank FP.CPI.TOTL) to constant US dollars of the base year noted in the manifest/summary. This uses market exchange rates, i.e. constant dollars -- NOT PPP, which would distort market values by adjusting for domestic price levels. It removes US-dollar inflation; for non-US markets it does not remove exchange-rate effects. Only years with both market-cap and CPI data are computed, so the newest year may be absent.
 
 ## Stock-market cap-to-GDP ratio (% of GDP)
 
-Market capitalisation of listed domestic companies as a share of GDP -- the size of the market relative to the wider economy. A same-year ratio, so it is inflation-neutral by construction.
+Market capitalisation of listed domestic companies as a share of GDP -- the size of the market relative to the wider economy. A same-year ratio, so it needs no separate CPI deflation. Asset prices and nominal GDP need not rise together.
 
 | Region | First | Latest |
 |---|---|---|
@@ -57,7 +57,7 @@ Market capitalisation of listed domestic companies as a share of GDP -- the size
 
 **UK / US:** 63% in 2022 (peak 175% in 1987).
 
-_Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LCAP.GD.ZS; accessed 2026-10-12)._
+_Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LCAP.GD.ZS)._
 
 > Caveat: The more comparable 'size relative to the economy' measure, but sensitive to the denominator: listed companies may earn much of their revenue abroad. Foreign companies exclusively listed on the exchange are included; other foreign listings and investment funds are excluded.
 
@@ -76,13 +76,13 @@ Number of domestic companies and foreign companies exclusively listed on the cou
 
 **UK / US:** 35% in 2022 (peak 113% in 1979).
 
-_Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LDOM.NO; accessed 2026-10-12)._
+_Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LDOM.NO)._
 
 > Caveat: Counts domestic and exclusively listed foreign firms, excluding funds and pure holding/investment companies; delistings, M&A, and take-private activity reduce the count even as market value rises. Compare trends, not raw counts, across exchanges with different listing rules.
 
 ## Data citations
 
-- World Federation of Exchanges (WFE), WFE database. Market capitalization of listed domestic companies (current US$) (CM.MKT.LCAP.CD). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/CM.MKT.LCAP.CD (accessed 2026-10-12).
-- World Federation of Exchanges (WFE), WFE database. Market capitalization of listed domestic companies (% of GDP) (CM.MKT.LCAP.GD.ZS). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/CM.MKT.LCAP.GD.ZS (accessed 2026-10-12).
-- World Federation of Exchanges (WFE), WFE database. Listed domestic companies, total (CM.MKT.LDOM.NO). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/CM.MKT.LDOM.NO (accessed 2026-10-12).
-- International Monetary Fund (IMF), International Financial Statistics. Consumer price index, United States (2010 = 100) (FP.CPI.TOTL). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/FP.CPI.TOTL (accessed 2026-10-12).
+- World Federation of Exchanges (WFE), WFE database. Market capitalization of listed domestic companies (current US$) (CM.MKT.LCAP.CD). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/CM.MKT.LCAP.CD.
+- World Federation of Exchanges (WFE), WFE database. Market capitalization of listed domestic companies (% of GDP) (CM.MKT.LCAP.GD.ZS). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/CM.MKT.LCAP.GD.ZS.
+- World Federation of Exchanges (WFE), WFE database. Listed domestic companies, total (CM.MKT.LDOM.NO). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/CM.MKT.LDOM.NO.
+- International Monetary Fund (IMF), International Financial Statistics. Consumer price index, United States (2010 = 100) (FP.CPI.TOTL). Distributed by World Bank, World Development Indicators. https://data.worldbank.org/indicator/FP.CPI.TOTL.
