@@ -65,7 +65,7 @@ def write_long(rows: list[dict], path: str) -> None:
         key=lambda r: (r["country"], r["year"], r["metric"], r["household"], r["earnings"]),
     )
     with open(path, "w", newline="") as fh:
-        writer = csv.DictWriter(fh, fieldnames=LONG_FIELDS)
+        writer = csv.DictWriter(fh, fieldnames=LONG_FIELDS, lineterminator="\n")
         writer.writeheader()
         for r in rows_sorted:
             writer.writerow({k: r[k] for k in LONG_FIELDS})

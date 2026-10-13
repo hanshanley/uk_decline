@@ -39,6 +39,18 @@ def _validate_live_rows(name: str, rows: list[dict], owned: tuple[str, ...]) -> 
         (r["metric"], r["household"], r["earnings"])
         for r in rows
     }
+    for metric in owned:
+        if config.METRICS[metric].family == "macro":
+            variants.add((metric, "", ""))
+        else:
+            variants.update(
+                (metric, config.HOUSEHOLDS["S_C0"], earnings)
+                for earnings in config.EARNINGS.values()
+            )
+            # OECD's standard one-earner couple comparison is at 100% AW.
+            variants.add(
+                (metric, config.HOUSEHOLDS["C_C2"], config.EARNINGS["AW100"])
+            )
     for variant in sorted(variants):
         countries = {
             r["iso3"] for r in rows
@@ -89,7 +101,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument(
         "--allow-snapshot-fallback",
         action="store_true",
-        help="Explicitly allow the locally audited source snapshot if an online fetch is empty.",
+        help="Explicitly allow the local source snapshot if an online fetch is empty.",
     )
     p.add_argument(
         "--summary-year",
@@ -106,7 +118,7 @@ def _print_summary(all_rows: list[dict], year: int | None) -> None:
         print("\n(no data available for a summary)")
         return
     print("\nUK vs Europe (median) vs US — tax burden:")
-    header = f"  {'metric variant':<52} {'year':>4}  {'UK':>7} {'EU med':>7} {'EU avg':>7} {'US':>7}"
+    header = f"  {'metric variant':<52} {'year':>4}  {'UK':>7} {'Europe med':>10} {'Europe mean':>11} {'US':>7}"
     print(header)
     print("  " + "-" * (len(header) - 2))
 
@@ -119,7 +131,8 @@ def _print_summary(all_rows: list[dict], year: int | None) -> None:
             variant = f"{r['metric']} [{r['household']},{r['earnings']}]"
         print(
             f"  {variant:<52} {r['year']:>4}  "
-            f"{fmt(r['uk'])} {fmt(r['europe_median'])} {fmt(r['europe_mean'])} {fmt(r['us'])}"
+            f"{fmt(r['uk'])} {fmt(r['europe_median']):>10} "
+            f"{fmt(r['europe_mean']):>11} {fmt(r['us'])}"
         )
 
 
@@ -158,8 +171,12 @@ def main(argv: list[str] | None = None) -> int:
                 r for r in manual
                 if r["metric"] in owned and args.start <= r["year"] <= args.end
             ]
-            if rows:
-                tqdm.write(f"  {name}: using manual fallback ({len(rows)} rows)")
+            if not rows:
+                raise RuntimeError(
+                    f"{name}: snapshot contains no matching observations for "
+                    f"{args.start}-{args.end}"
+                )
+            tqdm.write(f"  {name}: using manual fallback ({len(rows)} rows)")
         tqdm.write(f"  {name}: {len(rows)} rows")
         grouped.append((stem, rows))
         all_rows.extend(rows)

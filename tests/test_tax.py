@@ -178,7 +178,7 @@ def test_fallback_missing_file_returns_empty(tmp_path):
     assert fallback.load(str(tmp_path / "nope.csv")) == []
 
 
-# --- source metric ownership + scoped fallback (regression for the HIGH bug) ---
+# --- source metric ownership + scoped fallback -------------------------------
 
 def test_source_modules_declare_owned_metrics():
     assert revenue.METRICS == ("tax_to_gdp_pct",)
@@ -187,21 +187,57 @@ def test_source_modules_declare_owned_metrics():
     assert not set(revenue.METRICS) & set(taxing_wages.METRICS)
 
 
-def test_live_validation_checks_each_variant_comparators():
-    from tax import fetch_tax
-
-    complete = [
-        combine.make_row(
-            iso3, 2024, "tax_wedge_pct", value, "live",
-            "single_nokids", "100aw",
-        )
+@pytest.fixture
+def live_tax_rows():
+    return [
+        combine.make_row(iso3, 2025, metric, value, "live", household, earnings)
+        for metric in taxing_wages.METRICS
+        for household, earnings in [
+            ("single_nokids", "67aw"),
+            ("single_nokids", "100aw"),
+            ("single_nokids", "167aw"),
+            ("couple2kids_1earner", "100aw"),
+        ]
         for iso3, value in (("GBR", 30.0), ("USA", 29.0), ("FRA", 40.0))
     ]
-    fetch_tax._validate_live_rows("taxing_wages", complete, ("tax_wedge_pct",))
 
-    incomplete = [r for r in complete if r["iso3"] != "USA"]
+
+def test_live_validation_checks_each_variant_comparators(live_tax_rows):
+    from tax import fetch_tax
+
+    fetch_tax._validate_live_rows("taxing_wages", live_tax_rows, taxing_wages.METRICS)
+
+    incomplete = [r for r in live_tax_rows if r["iso3"] != "USA"]
     with pytest.raises(RuntimeError):
-        fetch_tax._validate_live_rows("taxing_wages", incomplete, ("tax_wedge_pct",))
+        fetch_tax._validate_live_rows("taxing_wages", incomplete, taxing_wages.METRICS)
+
+
+@pytest.mark.parametrize("metric", taxing_wages.METRICS)
+@pytest.mark.parametrize("household,earnings", [
+    ("single_nokids", "67aw"),
+    ("single_nokids", "100aw"),
+    ("single_nokids", "167aw"),
+    ("couple2kids_1earner", "100aw"),
+])
+def test_missing_whole_tax_variant_does_not_replace_saved_data(
+    live_tax_rows, metric, household, earnings, monkeypatch, tmp_path,
+):
+    from tax import fetch_tax
+
+    incomplete = [
+        row for row in live_tax_rows
+        if (row["metric"], row["household"], row["earnings"])
+        != (metric, household, earnings)
+    ]
+    monkeypatch.setattr(fetch_tax.taxing_wages, "fetch", lambda *args: incomplete)
+    saved = tmp_path / "tax_combined_long.csv"
+    saved.write_text("preserved source data\n")
+    with pytest.raises(RuntimeError, match="incomplete online response"):
+        fetch_tax.main([
+            "--sources", "taxing_wages", "--out", str(tmp_path),
+            "--no-charts", "--allow-snapshot-fallback",
+        ])
+    assert saved.read_text() == "preserved source data\n"
 
 
 def test_fetch_tax_scopes_fallback_per_source(tmp_path, monkeypatch):
@@ -250,6 +286,26 @@ def test_fetch_tax_scopes_fallback_per_source(tmp_path, monkeypatch):
         ]
     assert len(keys) == len(set(keys))
     assert all(2022 <= int(r["year"]) <= 2023 for r in fallback_rows)
+
+
+@pytest.mark.parametrize("snapshot", [
+    [],
+    [combine.make_row("GBR", 2024, "tax_to_gdp_pct", 34.4, "snapshot")],
+])
+def test_unusable_snapshot_does_not_replace_saved_data(snapshot, monkeypatch, tmp_path):
+    from tax import fetch_tax
+
+    monkeypatch.setattr(fetch_tax.revenue, "fetch", lambda *args: [])
+    monkeypatch.setattr(fetch_tax.fallback, "load", lambda: snapshot)
+    saved = tmp_path / "tax_combined_long.csv"
+    saved.write_text("preserved source data\n")
+    with pytest.raises(RuntimeError, match="snapshot contains no matching observations"):
+        fetch_tax.main([
+            "--sources", "revenue", "--out", str(tmp_path), "--no-charts",
+            "--start", "2025", "--end", "2025", "--allow-snapshot-fallback",
+        ])
+    assert saved.read_text() == "preserved source data\n"
+    assert not (tmp_path / "tax_revenue_to_gdp.csv").exists()
 
 
 def test_combine_dedupes_overlapping_rows(tmp_path):

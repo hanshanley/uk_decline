@@ -23,7 +23,7 @@ wage, and an average-wage tax wedge is not the median person's tax burden. Indiv
 reported at **67% / 100% / 167% of the average wage** (a single person, no children) plus a
 **one-earner married couple with 2 children** at 100% AW.
 
-## Results (latest live run — 2025 Taxing Wages; tax-to-GDP through 2024)
+## Published comparison (2025 Taxing Wages; tax-to-GDP through 2024)
 
 Headline comparison, latest year with data per metric:
 
@@ -48,13 +48,13 @@ is hand-authored, modelled, or estimated by this project. Every output row carri
 **Proper citations** (the organisation that collected the data — also in
 `data/tax_manifest.json` under `citations`, and on every figure's source note):
 
-> OECD (2024). *Revenue Statistics — Comparative tables*. OECD Tax Statistics (database).
-> Paris: Organisation for Economic Co-operation and Development. Retrieved 2026-08-15 via
+> OECD (n.d.). *Revenue Statistics — Comparative tables*. OECD Tax Statistics (database).
+> Paris: Organisation for Economic Co-operation and Development. Retrieved 2026-10-13 via
 > the OECD SDMX API (`https://sdmx.oecd.org/public/rest/data`), dataflow
 > `OECD.CTP.TPS,DSD_REV_COMP_OECD@DF_RSOECD,2.0`.
 >
-> OECD (2024). *Taxing Wages — Comparative tables*. OECD Tax Statistics (database). Paris:
-> Organisation for Economic Co-operation and Development. Retrieved 2026-08-15 via the OECD
+> OECD (n.d.). *Taxing Wages — Comparative tables*. OECD Tax Statistics (database). Paris:
+> Organisation for Economic Co-operation and Development. Retrieved 2026-10-13 via the OECD
 > SDMX API, dataflow `OECD.CTP.TPS,DSD_TAX_WAGES_COMP@DF_TW_COMP,2.1`.
 
 | Source | OECD SDMX dataflow | Exact query key |
@@ -80,12 +80,16 @@ curl -s "https://sdmx.oecd.org/public/rest/data/OECD.CTP.TPS,DSD_TAX_WAGES_COMP@
 
 For offline reproducibility (and CI), the pipeline can fall back to
 `data/raw/manual_tax.csv`. **This file is not hand-typed data** — it is a verifiable
-**snapshot of the live OECD data** (latest year, all 27 countries, the headline variants),
-regenerated from `data/tax_combined_long.csv`. Every row keeps its OECD `source` + `year`,
+**snapshot of the live OECD data** (all 27 countries, the headline variants),
+generated from `data/tax_combined_long.csv`. It contains **2024 tax-to-GDP** and
+**2025 Taxing Wages**, retrieved **13 October 2026**.
+Every row keeps its OECD `source` + `year`,
 so it traces back to the same API. The fallback requires
 **`--allow-snapshot-fallback`**, is used only when the live fetch returns nothing,
 and each source contributes only its own metrics. Incomplete live responses are
 rejected, not silently combined with the snapshot.
+The snapshot must contain observations for each requested source within the requested
+years; otherwise the run fails.
 
 ## A note on inflation adjustment
 
@@ -165,6 +169,12 @@ tests/test_tax.py
 - **European scope.** 25 European OECD members are included (see `tax/config.py`).
   Transcontinental Turkey is excluded, matching the geographic-Europe scope of the sibling
   `europe_data` package. The "Europe median/mean" is unweighted across these countries.
+- **Historical coverage.** The European reference uses reporting countries in each
+  year, not a balanced country panel. Changes can reflect country coverage as well as
+  changes in tax ratios.
+- **Tax-rule periods.** OECD year labels are retained. For the UK, the 2025 Taxing Wages
+  model uses the **2025/26 income-tax year**, not a calendar-year survey of taxes paid
+  ([OECD country methodology](https://www.oecd.org/en/publications/taxing-wages-2026_3a5169ef-en/full-report/united-kingdom-2025-2026-income-tax-year_98c92486.html)).
 - **Reporting vintages differ.** OECD releases arrive at different times per country; the
   summary uses the latest UK (then US) year per variant. Grouped bar charts instead use
   the latest year actually shared by their metric/earnings variants. They reject disjoint
