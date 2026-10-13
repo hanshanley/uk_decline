@@ -119,6 +119,10 @@ def trust_govt():
     return ys, [pts[y] for y in ys]
 
 
+def trust_period(year):
+    return f"{year} (period end)"
+
+
 def uk_listed_companies():
     r = _rows(DATA / "stock_market_size_wide.csv")
     pts = {int(x["year"]): float(x["listed_domestic_companies"]) for x in r
@@ -189,7 +193,8 @@ PANELS = [
     ("England tuition cap (real)", tuition_real, lambda v: f"${v/1e3:.1f}k", -1,
      "England fee cap · academic years; FX, constant 2022 US$", 2006, academic_period),
     ("Trust in national government", trust_govt, lambda v: f"{v:.0f}%", +1,
-     "OECD / Gallup World Poll via OWID", 2007),
+     "OECD / Gallup via OWID · 2–3-year pooled averages\n"
+     "Years label the end of each survey period", 2007, trust_period, (), 3),
     ("Emergency food parcels", food_bank_parcels, lambda v: f"{v/1e6:.1f}M", -1,
      "Trussell network · calendar-year parcels, not people", 2015),
     ("Crime incidents, England & Wales", crime_incidents, lambda v: f"{v/1e6:.1f}M", -1,
@@ -197,7 +202,8 @@ PANELS = [
 ]
 
 
-def _panel(ax, title, loader, fmt, good_dir, source, start, period_fmt=str, break_years=()):
+def _panel(ax, title, loader, fmt, good_dir, source, start, period_fmt=str, break_years=(),
+           max_gap_years=1):
     xs, ys = loader()
     pts = [(x, y) for x, y in zip(xs, ys) if x >= start]
     if not pts:
@@ -210,11 +216,13 @@ def _panel(ax, title, loader, fmt, good_dir, source, start, period_fmt=str, brea
 
     boundaries = [0] + [
         i for i in range(1, len(xs))
-        if any(xs[i - 1] < year <= xs[i] for year in breaks)
+        if xs[i] > xs[i - 1] + max_gap_years
+        or any(xs[i - 1] < year <= xs[i] for year in breaks)
     ] + [len(xs)]
     for first, last in zip(boundaries, boundaries[1:]):
         ax.plot(xs[first:last], ys[first:last], color=color, linewidth=2.4,
-                solid_capstyle="round")
+                solid_capstyle="round", marker="o" if last - first == 1 else None,
+                markersize=3)
     ax.plot([xs[-1]], [ys[-1]], "o", color=color, markersize=6,
             markeredgecolor="white", markeredgewidth=1.5, zorder=5)
 
@@ -281,7 +289,7 @@ def main() -> int:
              ha="center", fontsize=11, color=MUTED)
     fig.text(0.5, 0.015,
              "Baselines vary with data availability. Monetary series are inflation-adjusted. "
-             "Definitions and caveats are documented in each analysis README.",
+             "Lines break at missing observations or definition changes; see each analysis README.",
              ha="center", fontsize=8, color=MUTED)
 
     fig.tight_layout(rect=[0.01, 0.03, 0.99, 0.92])

@@ -150,12 +150,15 @@ def test_trust_chart_discloses_changing_eu_reporting_coverage(monkeypatch):
     def save(fig, path, **kwargs):
         captured["caption"] = "\n".join(text.get_text() for text in fig.texts)
         captured["labels"] = fig.axes[0].get_legend_handles_labels()[1]
+        captured["xlabel"] = fig.axes[0].get_xlabel()
 
     monkeypatch.setattr(matplotlib.figure.Figure, "savefig", save)
     with tempfile.TemporaryDirectory() as out_dir:
         charts.chart_metric(df, "trust_national_govt_pct", out_dir)
     assert "n=1\u20132 of 27; 2024: n=2" in captured["caption"]
     assert "EU-27 reporters median" in captured["labels"]
+    assert "2- or 3-year pooled averages" in captured["caption"]
+    assert captured["xlabel"] == "Pooled survey period ending"
 
 
 def test_worldbank_parser(monkeypatch) -> None:  # type: ignore[no-untyped-def]

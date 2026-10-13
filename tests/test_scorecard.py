@@ -59,8 +59,10 @@ def test_crime_panel_shows_counts_and_marks_falling_crime_as_improvement(monkeyp
     fig, ax = scorecard.plt.subplots()
     try:
         scorecard._panel(ax, *scorecard.PANELS[-1])
-        assert list(ax.lines[0].get_xdata()) == [2007, 2026]
-        assert list(ax.lines[0].get_ydata()) == [11_182_000, 4_333_000]
+        assert list(ax.lines[0].get_xdata()) == [2007]
+        assert list(ax.lines[0].get_ydata()) == [11_182_000]
+        assert list(ax.lines[1].get_xdata()) == [2026]
+        assert list(ax.lines[1].get_ydata()) == [4_333_000]
         assert ax.lines[0].get_color() == scorecard.BETTER
         text = " ".join(t.get_text() for t in ax.texts)
         assert "11.2M in YE Mar 2007  to  4.3M in YE Mar 2026" in text
@@ -110,15 +112,51 @@ def test_nhs_scorecard_neither_bridges_scope_changes_nor_labels_them_worse(monke
     try:
         panel = next(p for p in scorecard.PANELS if p[1] is scorecard.nhs_england)
         scorecard._panel(ax, *panel)
-        assert len(ax.lines) == 4
         for line in ax.lines:
             assert line.get_color() == scorecard.NEUTRAL
             xs = line.get_xdata()
             assert not any(min(xs) < year <= max(xs) for year in [2013, 2024])
+            assert all(b - a == 1 for a, b in zip(xs, xs[1:]))
         assert list(ax.lines[-1].get_ydata()) == [7_158_164]
         text = " ".join(t.get_text() for t in ax.texts)
         assert "Aug 2026" in text
         assert "endpoints not like-for-like" in text
+    finally:
+        scorecard.plt.close(fig)
+
+
+def test_scorecard_crime_line_breaks_at_missing_annual_observations():
+    fig, ax = scorecard.plt.subplots()
+    try:
+        scorecard._panel(
+            ax, "Crime", lambda: ([2019, 2020, 2023, 2024], [6, 5.5, 4.4, 4.5]),
+            str, -1, "ONS", 2007,
+        )
+        assert [list(line.get_xdata()) for line in ax.lines[:-1]] == [
+            [2019, 2020], [2023, 2024],
+        ]
+    finally:
+        scorecard.plt.close(fig)
+
+
+def test_scorecard_trust_preserves_pooled_cadence_and_labels_period_end(monkeypatch):
+    monkeypatch.setattr(scorecard, "_rows", lambda path: [
+        {"iso3": "GBR", "metric": "trust_national_govt_pct", "year": year, "value": value}
+        for year, value in [
+            (2007, 42.5), (2010, 40), (2013, 42.3),
+            (2019, 40), (2022, 35.7), (2024, 34.5),
+        ]
+    ])
+    fig, ax = scorecard.plt.subplots()
+    try:
+        panel = next(p for p in scorecard.PANELS if p[1] is scorecard.trust_govt)
+        scorecard._panel(ax, *panel)
+        assert [list(line.get_xdata()) for line in ax.lines[:-1]] == [
+            [2007, 2010, 2013], [2019, 2022, 2024],
+        ]
+        text = " ".join(t.get_text() for t in ax.texts)
+        assert "pooled averages" in text
+        assert "2024 (period end)" in text
     finally:
         scorecard.plt.close(fig)
 

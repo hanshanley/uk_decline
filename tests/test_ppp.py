@@ -568,6 +568,40 @@ def test_tuition_share_subtitle_uses_a_shared_year() -> None:
     assert "30.0%" not in text, "the UK's unmatched 2024 point must not be compared to 2022"
 
 
+def test_tuition_share_plots_germany_as_reference_points_not_continuous_history(
+    monkeypatch, tmp_path
+):
+    from ppp_data import tuition_ppp
+    from vizstyle import ACCENT, BLUE
+    import matplotlib.pyplot as plt
+
+    points = [
+        tuition_ppp.TuitionPoint(country, iso3, region, year, 0, "EUR", 0, 0, share)
+        for country, iso3, region, year, share in [
+            ("United Kingdom", "GBR", "UK", 2021, 25),
+            ("United Kingdom", "GBR", "UK", 2022, 24),
+            ("Germany", "DEU", "EU", 1990, 0),
+            ("Germany", "DEU", "EU", 2022, 0),
+        ]
+    ]
+    figures = []
+    monkeypatch.setattr(tuition_ppp, "save_fig", lambda fig, *a, **k: figures.append(fig))
+    tuition_ppp.chart_tuition_share(points, tmp_path)
+    fig = figures[0]
+    try:
+        ax = fig.axes[0]
+        german = [line for line in ax.lines if line.get_color() == BLUE]
+        assert len(german) == 1
+        assert german[0].get_linestyle() == "None"
+        assert list(german[0].get_xdata()) == [1990, 2022]
+        uk = next(line for line in ax.lines if line.get_color() == ACCENT)
+        assert uk.get_drawstyle() == "default"
+        assert any("selected zero-fee reference years" in t.get_text() for t in ax.texts)
+        assert any("2006\u20132014" in t.get_text() for t in fig.texts)
+    finally:
+        plt.close(fig)
+
+
 def test_tuition_fee_schedule_expands_only_the_nominal_cap() -> None:
     from ppp_data import tuition_ppp
 

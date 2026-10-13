@@ -111,8 +111,6 @@ Two programmes feed the World Bank series:
 The numerical series cannot establish which country-years contain a fresh survey.
 Matching or deviating from a deflator extrapolation formula does **not** prove provenance:
 rounding, revisions and linked national accounts can also affect that calculation.
-Earlier claims that 1996 universally starts a certified survey era have been removed.
-
 `metrics.PEER_COMPARISON_START_YEAR = 1996` retains the existing reporting window for the
 Poland subtitle, not a survey certification. Validation instead requires overlapping
 observations at the decomposition baseline and a later endpoint, and discloses that recent
@@ -142,7 +140,7 @@ without a 2007 observation are omitted rather than rebased to a different year.
 ![Tuition at PPP](../outputs/ppp/ppp_tuition_history.png)
 ![Tuition as a share of GDP per capita](../outputs/ppp/tuition_share_of_gdp_per_capita.png)
 
-The England fee cap changes only when policy changes, but both converted lines now move
+The England fee cap changes only when policy changes, but both converted lines move
 **every year**: the nominal statutory cap is carried through the years in which it applies,
 then each year's exchange rate, PPP factor and inflation adjustment are applied separately.
 Because UK prices are below US prices, the cap is generally worth more in international
@@ -154,6 +152,8 @@ PPP. On that basis, in **2022** (the last year both fee series cover — the NCE
 ends there) a year's fees equalled **24.2% of UK GDP per head against 12.5% in the US**.
 This avoids currency-conversion effects, but GDP per head is not a student's disposable
 income. The ratio is an output-relative fee measure, not a household affordability estimate.
+Germany is shown only at selected zero-fee reference years, not as a continuous
+zero-fee history: some states charged general tuition during 2006–2014.
 
 ## Method
 

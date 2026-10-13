@@ -18,7 +18,7 @@ from typing import Any, NamedTuple
 ROW_FIELDS: tuple[str, ...] = (
     "iso3",     # World Bank / OECD country code, e.g. "GBR"
     "country",  # display name, e.g. "United Kingdom"
-    "year",     # int
+    "year",     # int; end of the pooled survey period for the OWID/OECD trust series
     "metric",   # canonical metric id (see METRICS)
     "value",    # float
     "unit",     # unit label
@@ -45,7 +45,8 @@ METRICS: dict[str, Metric] = {
         description=(
             "Share of people who report they trust the national government "
             "(OECD, based on the Gallup World Poll question on confidence in "
-            "national government)."
+            "national government). OWID/OECD observations are 2- or 3-year pooled "
+            "averages, labelled by the final year of the period."
         ),
     ),
     "wgi_voice_accountability": Metric(
@@ -101,9 +102,9 @@ METRICS: dict[str, Metric] = {
 # Comparability caveats surfaced in the summary so cross-metric reads stay honest.
 CAVEATS: dict[str, str] = {
     "trust_national_govt_pct": (
-        "Survey measure with sparse, roughly-annual coverage; question wording and "
-        "sample differ from national polls (e.g. British Social Attitudes), so treat "
-        "the level as indicative and focus on the trend."
+        "OWID/OECD reports 2- or 3-year pooled Gallup averages, not single-year "
+        "readings; the year is the period end. Question wording and sample differ "
+        "from national polls (e.g. British Social Attitudes)."
     ),
     "wgi_voice_accountability": (
         "WGI is a perceptions-based composite index (aggregated from many sources) on "

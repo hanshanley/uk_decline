@@ -100,6 +100,8 @@ def print_table(summary: list[dict]) -> None:
             f"{_fmt(r['uk_latest_value']):>10} {_fmt(r['uk_change']):>8} "
             f"{r['uk_direction']:>8} {_fmt(r['eu27_mean_latest']):>8} {_fmt(r['us_latest']):>8}"
         )
+    if any(r["family"] == "survey" for r in summary):
+        print("Survey years label the end of 2- or 3-year pooled Gallup averages.")
 
 
 def print_verdict(summary: list[dict]) -> None:
@@ -108,7 +110,8 @@ def print_verdict(summary: list[dict]) -> None:
     if survey:
         print(
             f"  Survey trust in national government: {survey['uk_latest_value']:g}% "
-            f"in {survey['uk_latest_year']} ({survey['uk_direction']} since "
+            f"for the pooled period ending {survey['uk_latest_year']} "
+            f"({survey['uk_direction']} since the period ending "
             f"{survey['uk_first_year']}, {survey['uk_change']:+g} pts)."
         )
         if survey["eu27_mean_latest"] is not None:

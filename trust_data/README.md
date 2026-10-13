@@ -10,8 +10,9 @@ comparators. Two complementary angles (different scales — read each on its own
 
 ## Headline finding (UK)
 
-- **Survey trust in national government:** 42.5% (2007) → **34.5% (2024)** — lower at
-  these endpoints, ~9.6 pts below the reporting EU countries' mean (44.1%).
+- **Survey trust in national government:** 42.5% in the pooled period ending 2007 →
+  **34.5% in the period ending 2024** — lower at these endpoints, ~9.6 pts below
+  the reporting EU countries' mean (44.1%).
 - **WGI governance quality:** all four indicators are lower in 2024 than at the 1996 series
   start; Control of Corruption and Government Effectiveness fell most.
 
@@ -53,7 +54,10 @@ citations reproduced here.
 - **Machine-readable file used:**
   `https://ourworldindata.org/grapher/oecd-average-trust-in-governments.csv?csvType=full&useColumnShortNames=true`
   (column `trust_in_government`, a percentage).
-- **Coverage:** UK 2007–2024 (survey waves); 27 of the 29 selected countries.
+- **Coverage:** UK pooled-period end years 2007–2024; 27 of the 29 selected countries.
+- **Period definition:** OECD publishes 2- and 3-year pooled Gallup averages.
+  OWID labels each observation by its final year (for example, the 2020–2022
+  average is labelled 2022). These are not annual readings or instant snapshots.
 - **Live retrieval:** `trust_data/owid.py` downloads and parses the machine-readable CSV on
   every production run. `trust_data/oecd.py` can validate the separate OECD Drivers of Trust
   SDMX dataflow (`TRUST_NG`, scale `HMH`), but those observations are not spliced into this
@@ -96,13 +100,16 @@ never claim a source the underlying data didn't carry.
 
 Tidy long rows (`trust_data/metrics.py`, `ROW_FIELDS`):
 `iso3, country, year, metric, value, unit, source`.
+For the OWID/OECD survey series, `year` denotes the end of the pooled period;
+for WGI it denotes the observation year.
 
 ---
 
 ## How far back does this go, and why not the 1970s?
 
 - **WGI** genuinely begins in **1996** (World Bank does not publish earlier estimates).
-- **OECD survey trust** genuinely begins in **2007** for the UK (Gallup World Poll basis).
+- **OECD survey trust** first covers a UK pooled period ending in **2007**
+  (Gallup World Poll basis).
 
 Older **British Election Study** and **British Social Attitudes** series ask about
 trusting governments of any party to put the nation's needs above their party's

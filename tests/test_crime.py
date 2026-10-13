@@ -12,6 +12,7 @@ import tempfile
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -81,6 +82,87 @@ def test_csew_indent_level() -> None:
     sub = next(r for r in rows if r["offence_group"] == "Violence with injury")
     assert top["level"] == 0
     assert sub["level"] == 1
+
+
+def test_csew_disambiguates_burglary_subcategories_despite_source_indentation():
+    df = pd.DataFrame([
+        ["Offence group", "Apr 2025 to Mar 2026"],
+        ["    Domestic burglary", 348],
+        ["With entry", 206],
+        ["            With loss", 105],
+        ["            No loss", 101],
+        ["Attempts", 142],
+        ["Domestic burglary in a dwelling", 238],
+        ["        With entry", 125],
+        ["            With loss", 57],
+        ["            No loss", 68],
+        ["        Attempts", 113],
+        ["    Domestic burglary in a non-connected building to a dwelling", 110],
+        ["        With entry", 81],
+        ["            With loss", 48],
+        ["            No loss", 33],
+        ["        Attempts", 29],
+    ])
+    rows = csew.build_rows(df)
+    values = {r["offence_group"]: r["value"] for r in rows}
+    assert len(values) == len(rows) == 15
+    assert values["Domestic burglary: Attempts"] == 142
+    assert values["Domestic burglary in a dwelling: Attempts"] == 113
+    assert values["Domestic burglary in a non-connected building to a dwelling: Attempts"] == 29
+    assert values["Domestic burglary in a dwelling: With loss"] == 57
+    assert sum(r["value"] for r in rows) == sum(df.iloc[1:, 1])
+
+
+def test_csew_rejects_unresolved_duplicate_offence_observations():
+    df = pd.DataFrame([
+        ["Offence group", "Apr 2025 to Mar 2026"],
+        ["VIOLENCE", 989],
+        ["VIOLENCE", 989],
+    ])
+    with pytest.raises(ValueError, match="duplicate CSEW offence observation"):
+        csew.build_rows(df)
+
+
+@pytest.mark.parametrize("chart", [
+    charts.chart_csew_total, charts.chart_csew_21st_century, charts.chart_fraud_gap,
+])
+def test_csew_charts_do_not_bridge_missing_pandemic_observations(chart, monkeypatch, tmp_path):
+    df = pd.DataFrame([
+        {"offence_group": group, "date": f"{year}-03-31",
+         "value": value, "source": "ONS"}
+        for year, value in [(2019, 6000), (2020, 5500), (2023, 4400), (2024, 4500)]
+        for group in [charts.TOTAL_EXCL, charts.TOTAL_INCL]
+    ])
+    figures = []
+    monkeypatch.setattr(charts, "_save", lambda fig, *a: figures.append(fig))
+    chart(df, tmp_path)
+    fig = figures[0]
+    try:
+        ax = fig.axes[0]
+        for line in ax.lines:
+            if line.get_linestyle() == "None":
+                continue
+            dates = pd.to_datetime(line.get_xdata())
+            assert not (dates.min() <= pd.Timestamp("2020-03-31")
+                        and dates.max() >= pd.Timestamp("2023-03-31"))
+        if chart is charts.chart_fraud_gap:
+            from matplotlib.dates import date2num
+
+            for collection in ax.collections:
+                for path in collection.get_paths():
+                    xs = path.vertices[:, 0]
+                    assert not (xs.min() <= date2num(pd.Timestamp("2020-03-31"))
+                                and xs.max() >= date2num(pd.Timestamp("2023-03-31")))
+        assert any("2021 or 2022" in t.get_text() for t in fig.texts)
+    finally:
+        charts.plt.close(fig)
+
+
+def test_csew_retains_irregular_pre_annual_survey_intervals():
+    df = pd.DataFrame({"date": pd.to_datetime([
+        "1981-12-31", "1983-12-31", "1987-12-31", "2002-03-31", "2003-03-31",
+    ])})
+    assert len(list(charts._csew_segments(df))) == 1
 
 
 def test_homicide_parser(monkeypatch) -> None:  # type: ignore[no-untyped-def]
@@ -188,7 +270,7 @@ def test_fraud_gap_labels_combined_fraud_and_computer_misuse(monkeypatch) -> Non
 
     monkeypatch.setattr(charts, "_save", capture)
     charts.chart_fraud_gap(df, Path("."))
-    assert captured["title"] == "Fraud & computer misuse: 55% of headline crime (2026)"
+    assert captured["title"] == "Fraud & computer misuse: 55% of headline crime (YE March 2026)"
     assert "Including fraud &\ncomputer misuse  0.1M" in captured["labels"]
     assert "Excluding fraud &\ncomputer misuse  0.0M" in captured["labels"]
 
@@ -216,7 +298,7 @@ def test_fraud_gap_compares_matching_dates_and_handles_one_shared_period(monkeyp
 
     monkeypatch.setattr(charts, "_save", capture)
     charts.chart_fraud_gap(df, Path("."))
-    assert captured["title"] == "Fraud & computer misuse: 60% of headline crime (2024)"
+    assert captured["title"] == "Fraud & computer misuse: 60% of headline crime (YE March 2024)"
     assert captured["gap_date"] == pd.Timestamp("2024-03-31")
 
 
@@ -265,36 +347,7 @@ def test_nation_homicide_rows_start_in_2000() -> None:
 
 
 def _run() -> int:
-    class _MP:
-        def __init__(self) -> None:
-            self._undo: list = []
-
-        def setattr(self, obj, name, value):  # type: ignore[no-untyped-def]
-            self._undo.append((obj, name, getattr(obj, name)))
-            setattr(obj, name, value)
-
-        def undo(self) -> None:
-            for obj, name, old in reversed(self._undo):
-                setattr(obj, name, old)
-            self._undo.clear()
-
-    tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
-    failed = 0
-    for t in tests:
-        mp = _MP()
-        try:
-            if "monkeypatch" in t.__code__.co_varnames[: t.__code__.co_argcount]:
-                t(mp)
-            else:
-                t()
-            print(f"ok   {t.__name__}")
-        except AssertionError as e:
-            failed += 1
-            print(f"FAIL {t.__name__}: {e}")
-        finally:
-            mp.undo()
-    print(f"\n{len(tests) - failed}/{len(tests)} passed")
-    return 1 if failed else 0
+    return int(pytest.main([__file__, "-q"]))
 
 
 if __name__ == "__main__":

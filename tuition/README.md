@@ -35,8 +35,10 @@ Latest run (nominal USD, annual domestic tuition, one figure per country):
 Constant-2022-USD values require the tuition source year's US CPI. The published 2026/27
 England cap has no same-year CPI yet, so its real value is blank rather than silently
 using the 2025 CPI or publishing nominal dollars under a real-dollar label.
-*(PPP conversion was intentionally dropped — PPP baskets distort tuition comparisons; we use
-market-FX nominal plus CPI-deflated constant dollars.)*
+Market exchange rates express fees in US dollars at the year's exchange rate.
+GDP PPP expresses them against an economy-wide purchasing-power basket, not a
+tuition-specific price index. The two answer different questions; neither alone
+measures student affordability.
 
 > **The PPP alternative, for comparison.** [`../ppp_data/`](../ppp_data/README.md) builds a
 > PPP-converted twin of the history chart, plus a **tuition-as-a-share-of-GDP-per-capita**

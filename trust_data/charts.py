@@ -72,7 +72,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         plotted_vals += list(gg["value"].astype(float))
 
     ax.set_title(meta.label)
-    ax.set_xlabel("Year")
+    ax.set_xlabel("Pooled survey period ending" if meta.family == "survey" else "Year")
     direction = "more trust" if meta.family == "survey" else "better governance"
     ax.set_ylabel(f"{meta.unit} (higher = {direction})")
     if meta.unit == "percent" and plotted_vals:
@@ -97,6 +97,8 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     cites = "; ".join(citations.short_citation(s) for s in sources)
     year_lo, year_hi = int(sub["year"].min()), int(sub["year"].max())
     caption = f"Source: {cites}. Data: {year_lo}\u2013{year_hi}."
+    if meta.family == "survey":
+        caption += "\nSurvey values are 2- or 3-year pooled averages, labelled by period end."
     if not eu.empty:
         counts = eu.groupby("year")["iso3"].nunique()
         coverage = str(counts.min()) if counts.min() == counts.max() else f"{counts.min()}\u2013{counts.max()}"
@@ -105,7 +107,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
             f"(n={coverage} of 27; {counts.index.max()}: n={counts.iloc[-1]})."
         )
     fig.text(0.01, 0.01, caption, fontsize=7, color="#6B6B6B", ha="left", va="bottom")
-    fig.tight_layout(rect=(0, 0.065, 0.84, 1))
+    fig.tight_layout(rect=(0, 0.09 if meta.family == "survey" else 0.065, 0.84, 1))
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

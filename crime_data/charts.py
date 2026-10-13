@@ -7,8 +7,7 @@ italic source note taken from the data's own ``source`` column):
      the large fall from the mid-1990s peak.
   2. ``crime_csew_21st_century.png`` — the same series zoomed to the 21st century.
   3. ``crime_fraud_gap.png``    — the same headline total *excluding* vs *including* fraud &
-     computer misuse: once online harms are counted, "total crime" is far higher, i.e. crime
-     has shifted online rather than simply disappearing.
+     computer misuse: the broader definition includes substantial additional harms.
   4. ``crime_homicide_peers.png`` — intentional homicide rate, UK vs US vs the EU-27 mean.
   5. ``crime_homicide_nations.png`` — homicide rates across England & Wales, Scotland,
      and Northern Ireland since 2000.
@@ -72,12 +71,35 @@ def _source_note(fig, df):
     }
     srcs = "; ".join(sorted(parts))
     fig.text(0.06, 0.025, f"Source: {srcs}.", ha="left", fontsize=7.5, color=MUTED)
+    if "offence_group" in df.columns:
+        fig.text(
+            0.06, 0.049,
+            "No comparable CSEW estimates for YE March 2021 or 2022; "
+            "lines break at missing annual observations.",
+            ha="left", fontsize=7.5, color=MUTED,
+        )
 
 
 def _series(df, offence_group) -> pd.DataFrame:
     sub = df[df["offence_group"] == offence_group].copy()
     sub["date"] = pd.to_datetime(sub["date"])
     return sub.sort_values("date")
+
+
+def _csew_segments(series):
+    """Retain irregular early surveys, but do not bridge gaps in the annual series."""
+    dates = series["date"]
+    gaps = (
+        (dates.diff() > pd.Timedelta(days=370))
+        & (dates.shift() >= pd.Timestamp("2002-03-31"))
+    )
+    return series.groupby(gaps.cumsum())
+
+
+def _plot_csew(ax, series, **style):
+    for _, segment in _csew_segments(series):
+        ax.plot(segment["date"], segment["value"] / 1_000.0,
+                marker="o", markersize=3, solid_capstyle="round", **style)
 
 
 def _heading(ax, title, subtitle):
@@ -117,7 +139,7 @@ def chart_csew_total(df, out_dir):
     x, y = s["date"], s["value"] / 1_000.0  # 1,000s of incidents -> millions
 
     fig, ax = plt.subplots(figsize=(10.5, 5.8))
-    ax.plot(x, y, color=ACCENT, linewidth=2.7, solid_capstyle="round")
+    _plot_csew(ax, s, color=ACCENT, linewidth=2.7)
 
     peak = y.idxmax()
     ax.plot([x[peak]], [y[peak]], "o", color=ACCENT, markersize=6,
@@ -136,7 +158,7 @@ def chart_csew_total(df, out_dir):
     decline = (1 - y.iloc[-1] / y[peak]) * 100
     _style_incidents_axes(
         ax,
-        f"Traditional crime is down {decline:.0f}% from its 1995 peak",
+        f"Traditional crime is down {decline:.0f}% from its {x[peak].year} peak",
         "England & Wales · CSEW headline crime excluding fraud and computer misuse",
         y.max() * 1.10,
     )
@@ -158,7 +180,7 @@ def chart_csew_21st_century(df, out_dir):
 
     x, y = s["date"], s["value"] / 1_000.0
     fig, ax = plt.subplots(figsize=(10.5, 5.8))
-    ax.plot(x, y, color=ACCENT, linewidth=2.7, solid_capstyle="round")
+    _plot_csew(ax, s, color=ACCENT, linewidth=2.7)
 
     first_value, latest_value = y.iloc[0], y.iloc[-1]
     ax.plot([x.iloc[0], x.iloc[-1]], [first_value, latest_value], "o", color=ACCENT,
@@ -215,12 +237,13 @@ def chart_fraud_gap(df, out_dir):
     fig, ax = plt.subplots(figsize=(10.5, 5.8))
     xe, ye = excl["date"], excl["value"] / 1_000.0
     xi, yi = incl["date"], incl["value"] / 1_000.0
-    ax.fill_between(
-        gap["date"], gap["value_incl"] / 1_000.0,
-        gap["value_excl"] / 1_000.0, color=ACCENT, alpha=0.075,
-    )
-    ax.plot(xi, yi, color=ACCENT, linewidth=2.7, solid_capstyle="round")
-    ax.plot(xe, ye, color=BLUE, linewidth=2.25, solid_capstyle="round")
+    for _, segment in _csew_segments(gap):
+        ax.fill_between(
+            segment["date"], segment["value_incl"] / 1_000.0,
+            segment["value_excl"] / 1_000.0, color=ACCENT, alpha=0.075,
+        )
+    _plot_csew(ax, incl, color=ACCENT, linewidth=2.7)
+    _plot_csew(ax, excl, color=BLUE, linewidth=2.25)
     ax.plot([xi.iloc[-1]], [yi.iloc[-1]], "o", color=ACCENT, markersize=5, zorder=5)
     ax.plot([xe.iloc[-1]], [ye.iloc[-1]], "o", color=BLUE, markersize=5, zorder=5)
     _end_label(ax, xi.iloc[-1], yi.iloc[-1], f"Including fraud &\ncomputer misuse  {yi.iloc[-1]:.1f}M",
@@ -242,7 +265,7 @@ def chart_fraud_gap(df, out_dir):
     _style_incidents_axes(
         ax,
         f"Fraud & computer misuse: {fraud_and_misuse_share:.0f}% of headline crime "
-        f"({latest['date'].year})",
+        f"(YE {latest['date']:%B %Y})",
         "England & Wales · CSEW crime including vs excluding fraud and computer misuse",
         max(yi.max(), ye.max()) * 1.12,
     )

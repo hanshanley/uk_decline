@@ -59,7 +59,7 @@ World Bank Poverty & Inequality Platform (median per-capita income/consumption,
 2021 PPP $/day; UK to ~2021). These welfare definitions and equivalisation conventions
 are different; they are not interchangeable household-income measures.*
 
-## Data sources (all free, no API key — verified live)
+## Data sources (all free, no API key)
 
 | Metric (column) | Source & citation | Endpoint | Inflation basis |
 |---|---|---|---|

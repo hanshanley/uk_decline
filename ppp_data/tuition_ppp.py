@@ -333,20 +333,19 @@ def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | Non
         return None
 
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
-    ax.step(uk_years, uk, where="post", color=ACCENT, linewidth=2.8)
+    ax.plot(uk_years, uk, color=ACCENT, linewidth=2.8)
     ax.plot(uk_years, uk, "o", color=ACCENT, markersize=5,
             markeredgecolor="white", markeredgewidth=1.0)
     if us_years:
         ax.plot(us_years, us, color=GOLD, linewidth=2.0)
     if de_years:
-        ax.step(de_years, de, where="post", color=BLUE, linewidth=2.4)
-        # Germany sits flat on zero, so its label goes inline above the line rather than
-        # at the right-hand end, where it would collide with the axis.
+        ax.plot(de_years, de, "o", color=BLUE, markersize=5)
         ax.text(sum(de_years) / len(de_years), max(uk) * 0.03,
-                "Germany \u2014 no general tuition", fontsize=9.5, fontweight="bold",
+                "Germany \u2014 selected zero-fee reference years",
+                fontsize=9.5, fontweight="bold",
                 color=BLUE, ha="center", va="bottom", path_effects=white_stroke())
 
-    labels = [(uk[-1], "United Kingdom", ACCENT)]
+    labels = [(uk[-1], "England fee cap / UK GDP per head", ACCENT)]
     if us_years:
         labels.append((us[-1], "United States", GOLD))
     labelled_ends(ax, labels, min_gap=max(uk) * 0.09,
@@ -363,10 +362,12 @@ def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | Non
     source_note(fig, note(
         "Sources: UK \u2014 England statutory fee caps (legislation.gov.uk / GOV.UK); US "
         "\u2014 NCES Digest 2023 Table 330.10; GDP per capita from the World Bank "
-        "(NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.CD). Fees and income are taken in the same "
+        "(NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.CD). Germany: selected zero-fee policy "
+        "reference years, not a continuous history; some states charged general "
+        "tuition during 2006\u20132014. Fees and GDP per capita are taken in the same "
         "currency, so the units cancel and the figure reads the same at market rates as at "
-        f"PPP ({ICP_VINTAGE} parities)."))
-    return save_fig(fig, out_dir / "tuition_share_of_gdp_per_capita.png")
+        f"PPP ({ICP_VINTAGE} parities). This is not a share of household income."))
+    return save_fig(fig, out_dir / "tuition_share_of_gdp_per_capita.png", bottom=0.18)
 
 
 def make_charts(rows: list[dict], out_dir: Path | str = CHART_DIR) -> list[Path]:

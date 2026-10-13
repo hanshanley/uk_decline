@@ -109,6 +109,6 @@ No API keys are required, and source observations are not fabricated. Derived me
 source-published estimates, method breaks and coverage limitations are documented in
 each analysis. Downloaded/intermediate data generally lives under `data/`
 (git-ignored, regenerable); cited historical input snapshots are tracked where needed.
-The curated figures under `outputs/` are the committed showcase. Targeted observations
-have been checked against primary sources; this is not independent verification of
-every observation in every dataset.
+The curated figures under `outputs/` are the committed showcase. Series reflect
+their available source vintages; revisions and missing observations can change
+future releases.

@@ -44,6 +44,7 @@ _UA = {"User-Agent": "uk_decline/0.1 (crime statistics research)"}
 
 # "Unweighted base ..." rows are sample sizes, not crime counts — never emit them.
 _SKIP_PREFIX = "unweighted base"
+_GENERIC_LABELS = {"With entry", "With loss", "No loss", "Attempts"}
 
 _MONTH_END = {
     "Jan": (1, 31), "Feb": (2, 28), "Mar": (3, 31), "Apr": (4, 30),
@@ -152,6 +153,8 @@ def build_rows(df: pd.DataFrame | None = None) -> list[dict]:
             periods[j] = parsed
 
     rows: list[dict] = []
+    category = None
+    seen: set[tuple[str, str]] = set()
     for i in range(header + 1, df.shape[0]):
         raw = df.iloc[i, 0]
         if raw is None or str(raw).strip() == "" or str(raw).strip().lower() == "nan":
@@ -160,11 +163,22 @@ def build_rows(df: pd.DataFrame | None = None) -> list[dict]:
         name = _clean_label(raw)
         if name.lower().startswith(_SKIP_PREFIX):
             continue
+        if name in _GENERIC_LABELS:
+            if category is None:
+                raise ValueError(f"CSEW subcategory {name!r} has no parent category")
+            # Some burglary labels have lost their indentation in the source workbook.
+            name = f"{category}: {name}"
+        else:
+            category = name
         level = _indent_level(raw)
         for j, (period, year, iso_date) in periods.items():
             value = _to_float(df.iloc[i, j])
             if value is None:
                 continue
+            key = (name, iso_date)
+            if key in seen:
+                raise ValueError(f"duplicate CSEW offence observation: {key!r}")
+            seen.add(key)
             rows.append({
                 "region": REGION,
                 "offence_group": name,
