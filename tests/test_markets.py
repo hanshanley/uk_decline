@@ -14,6 +14,187 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from markets_data import charts, combine, markets, regions, worldbank  # noqa: E402
 
 
+def _lse_workbook(sheet, month, year, rows):
+    import io
+    import openpyxl
+
+    workbook = openpyxl.Workbook()
+    ws = workbook.active
+    ws.title = sheet
+    ws.append([None, f"{month} {year}"])
+    if sheet == "AIM since launch":
+        ws.append([None, "Year", "Number of Companies"])
+        ws.append([None, None, "UK", None, "International", None, "Total"])
+    for row in rows:
+        ws.append(row)
+    buffer = io.BytesIO()
+    workbook.save(buffer)
+    workbook.close()
+    buffer.seek(0)
+    return buffer
+
+
+def test_lse_annual_and_partial_year_rows_preserve_dates_and_both_sources(monkeypatch, tmp_path):
+    import csv
+    from datetime import date
+    from markets_data import lse_factsheets as lse
+
+    class Today(date):
+        @classmethod
+        def today(cls):
+            return cls(2026, 10, 13)
+
+    monkeypatch.setattr(lse, "date", Today)
+    sources = {}
+    for year, month, uk, international in (
+        (2024, "December", 855, 183),
+        (2025, "December", 776, 150),
+        (2026, "July", 757, 147),
+    ):
+        sources[lse._factsheet_url("Main Market", year, month)] = _lse_workbook(
+            "Summary", month, year, [
+                [None, "Year", "Number of Companies"],
+                [None, None, "UK", "International", None, "Total"],
+                [None, year, uk, international, None, uk + international],
+            ],
+        )
+    aim_url = lse._factsheet_url("AIM", 2026, "July")
+    sources[aim_url] = _lse_workbook("AIM since launch", "July", 2026, [
+        [None, "2024", "558", None, "61", None, "619"],
+        [None, "2025", "530", None, "89", None, "619"],
+        [None, "2026", "511", None, "87", None, "598"],
+        [None, "Month", None, "New Issues"],
+        [None, "Year", None, "Turnover Value", None, None, "Number of Trades"],
+        [None, "2025", "999", None, "999", None, "1998"],
+    ])
+    requested = []
+
+    def download(url):
+        requested.append(url)
+        return sources[url]
+
+    monkeypatch.setattr(lse, "_download", download)
+    path = lse.write_csv(tmp_path / "lse.csv", 2024, 2025, "2026-07")
+    with path.open() as fh:
+        rows = list(csv.DictReader(fh))
+    uk = [row for row in rows if row["metric"] == "lse_companies_uk"]
+    total = [row for row in rows if row["metric"] == "lse_companies_total"]
+    assert [int(row["value"]) for row in uk] == [1413, 1306, 1268]
+    assert [int(row["value"]) for row in total] == [1657, 1545, 1502]
+    assert [row["date"] for row in uk] == ["2024-12-31", "2025-12-31", "2026-07-31"]
+    assert all(row["aim_source_url"] == aim_url for row in rows)
+    assert all(row["source_url"] in requested and "%20" in row["source_url"] for row in rows)
+    assert all(row["source_accessed"] == "2026-10-13" for row in rows)
+    assert len(requested) == 4
+
+
+def test_lse_bad_main_market_counts_do_not_become_zero(monkeypatch):
+    import pytest
+    from markets_data import lse_factsheets as lse
+
+    for international, total in ((None, 776), ("-", 776), (-1, 775), (1.5, 777.5), (150, 999)):
+        monkeypatch.setattr(lse, "_download", lambda url: _lse_workbook(
+            "Summary", "December", 2025, [
+                [None, "Year", "Number of Companies"],
+                [None, None, "UK", "International", None, "Total"],
+                [None, 2025, 776, international, None, total],
+            ],
+        ))
+        with pytest.raises(ValueError, match="counts"):
+            lse.main_market_year(2025)
+
+
+def test_lse_wrong_factsheet_month_is_rejected(monkeypatch):
+    import pytest
+    from markets_data import lse_factsheets as lse
+
+    monkeypatch.setattr(lse, "_download", lambda url: _lse_workbook(
+        "Summary", "June", 2026, [],
+    ))
+    with pytest.raises(ValueError, match="does not identify July 2026"):
+        lse.main_market_year(2026, "July")
+
+
+def test_lse_duplicate_and_missing_aim_counts_are_rejected(monkeypatch):
+    import pytest
+    from markets_data import lse_factsheets as lse
+
+    row = [None, "2025", "530", None, "89", None, "619"]
+    monkeypatch.setattr(lse, "_download", lambda url: _lse_workbook(
+        "AIM since launch", "December", 2025, [row, row],
+    ))
+    with pytest.raises(ValueError, match="duplicate"):
+        lse.aim_history(2025)
+    row[4] = None
+    monkeypatch.setattr(lse, "_download", lambda url: _lse_workbook(
+        "AIM since launch", "December", 2025, [row],
+    ))
+    with pytest.raises(ValueError, match="missing or invalid"):
+        lse.aim_history(2025)
+
+
+def test_lse_missing_requested_year_preserves_saved_data(monkeypatch, tmp_path):
+    import pytest
+    from markets_data import lse_factsheets as lse
+
+    monkeypatch.setattr(lse, "aim_history", lambda *args: {2025: (530, 89)})
+    monkeypatch.setattr(lse, "main_market_year", lambda *args: (776, 150))
+    path = tmp_path / "lse.csv"
+    path.write_text("preserved observations\n")
+    with pytest.raises(ValueError, match="2024.*row not found"):
+        lse.write_csv(path, 2024, 2025)
+    assert path.read_text() == "preserved observations\n"
+    monkeypatch.setattr(lse, "build_rows", lambda *args: [])
+    with pytest.raises(RuntimeError, match="no company counts"):
+        lse.write_csv(path)
+    assert path.read_text() == "preserved observations\n"
+
+
+def test_lse_rejects_old_definition_and_invalid_snapshot_range(monkeypatch):
+    import pytest
+    from datetime import date
+    from markets_data import lse_factsheets as lse
+
+    class Today(date):
+        @classmethod
+        def today(cls):
+            return cls(2026, 10, 13)
+
+    monkeypatch.setattr(lse, "date", Today)
+    for start, end, latest in (
+        (2017, 2025, None), (2025, 2024, None), (2018, 2026, None),
+        (2018, 2025, "2025-12"), (2018, 2025, "2026-10"), (2018, 2025, "2027-01"),
+        (2018, 2025, "2026-13"), (2018, 2025, "2026-7"),
+    ):
+        with pytest.raises(ValueError):
+            lse.build_rows(start, end, latest)
+
+
+def test_lse_chart_uses_only_uk_series_and_discloses_partial_year(monkeypatch, tmp_path):
+    import pandas as pd
+
+    source = pd.DataFrame([
+        {"region": "United Kingdom", "year": year, "date": date, "metric": metric, "value": value}
+        for year, date, metric, value in (
+            (2025, "2025-12-31", "lse_companies_uk", 1306),
+            (2026, "2026-07-31", "lse_companies_uk", 1268),
+            (2026, "2026-07-31", "lse_companies_total", 1502),
+        )
+    ])
+    seen = []
+
+    def save(fig, out_dir, name):
+        ax = fig.axes[0]
+        seen.append(list(ax.lines[0].get_ydata()))
+        assert "31 July 2026" in " ".join(text.get_text() for text in ax.texts)
+        assert "not the World Bank/WFE definition" in " ".join(text.get_text() for text in fig.texts)
+        return tmp_path / name
+
+    monkeypatch.setattr(charts, "_save", save)
+    charts.chart_lse_companies(source, tmp_path)
+    assert seen == [[1306, 1268]]
+
+
 def test_empty_fetch_preserves_saved_market_outputs(monkeypatch, tmp_path):
     import pytest
 

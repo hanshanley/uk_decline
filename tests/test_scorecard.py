@@ -65,7 +65,8 @@ def test_crime_panel_shows_counts_and_marks_falling_crime_as_improvement(monkeyp
         assert list(ax.lines[1].get_ydata()) == [4_333_000]
         assert ax.lines[0].get_color() == scorecard.BETTER
         text = " ".join(t.get_text() for t in ax.texts)
-        assert "11.2M in YE Mar 2007  to  4.3M in YE Mar 2026" in text
+        assert "11.2M in 2007  to  4.3M in 2026" in text
+        assert [t.get_text() for t in ax.get_xticklabels()] == ["2007", "2026"]
         assert "excludes fraud & computer misuse" in text
     finally:
         scorecard.plt.close(fig)
@@ -95,7 +96,6 @@ def test_nhs_annual_snapshot_uses_latest_date_not_input_order(monkeypatch):
         )
     ])
     assert scorecard.nhs_england() == ([2025], [7_000_000])
-    assert scorecard.nhs_period(2025) == "Dec 2025"
 
 
 def test_nhs_scorecard_neither_bridges_scope_changes_nor_labels_them_worse(monkeypatch):
@@ -119,7 +119,9 @@ def test_nhs_scorecard_neither_bridges_scope_changes_nor_labels_them_worse(monke
             assert all(b - a == 1 for a, b in zip(xs, xs[1:]))
         assert list(ax.lines[-1].get_ydata()) == [7_158_164]
         text = " ".join(t.get_text() for t in ax.texts)
-        assert "Aug 2026" in text
+        assert "in 2026" in text
+        assert "Aug" not in text
+        assert "treatment entries, not unique patients" in text
         assert "endpoints not like-for-like" in text
     finally:
         scorecard.plt.close(fig)
@@ -139,7 +141,7 @@ def test_scorecard_crime_line_breaks_at_missing_annual_observations():
         scorecard.plt.close(fig)
 
 
-def test_scorecard_trust_preserves_pooled_cadence_and_labels_period_end(monkeypatch):
+def test_scorecard_trust_preserves_pooled_cadence_and_explains_period_end(monkeypatch):
     monkeypatch.setattr(scorecard, "_rows", lambda path: [
         {"iso3": "GBR", "metric": "trust_national_govt_pct", "year": year, "value": value}
         for year, value in [
@@ -156,26 +158,34 @@ def test_scorecard_trust_preserves_pooled_cadence_and_labels_period_end(monkeypa
         ]
         text = " ".join(t.get_text() for t in ax.texts)
         assert "pooled averages" in text
-        assert "2024 (period end)" in text
+        assert "Years label the end of each survey period" in text
+        assert [t.get_text() for t in ax.get_xticklabels()] == ["2007", "2024"]
     finally:
         scorecard.plt.close(fig)
 
 
-def test_scorecard_discloses_month_financial_and_academic_periods(monkeypatch):
-    monkeypatch.setattr(scorecard, "_rows", lambda path: [
-        {"nation_code": "ENG", "metric": "rtt_waiting_list_total",
-         "date": "2026-06-30", "value": "7000000"},
-    ])
-    assert scorecard.nhs_period(2026) == "Jun 2026"
-    fig, ax = scorecard.plt.subplots()
-    try:
-        scorecard._panel(ax, "Spending", lambda: ([2007, 2025], [19.1, 15.1]),
-                         str, 1, "Source", 2007, scorecard.financial_period)
-        assert any("2007–08" in t.get_text() and "2025–26" in t.get_text() for t in ax.texts)
-        assert [t.get_text() for t in ax.get_xticklabels()] == ["2007–08", "2025–26"]
-        assert scorecard.academic_period(2024) == "2024/25"
-    finally:
-        scorecard.plt.close(fig)
+def test_overview_panels_use_year_only_labels_without_changing_period_selection(monkeypatch):
+    import pytest
+
+    for loader in (scorecard.culture_spending, scorecard.tuition_real):
+        panel = next(p for p in scorecard.PANELS if p[1] is loader)
+        monkeypatch.setattr(scorecard, "_rows", lambda path: [
+            {"year": "2007", "metric": "functional_spending_real", "category": "recreation_culture",
+             "value": "19.1", "country": "United Kingdom", "real_2022_usd": "8000"},
+            {"year": "2025", "metric": "functional_spending_real", "category": "recreation_culture",
+             "value": "15.1", "country": "United Kingdom", "real_2022_usd": "11000"},
+        ])
+        fig, ax = scorecard.plt.subplots()
+        try:
+            scorecard._panel(ax, *panel)
+            assert [t.get_text() for t in ax.get_xticklabels()] == ["2007", "2025"]
+            expected = [19.1, 15.1] if loader is scorecard.culture_spending else [8000, 11000]
+            assert [line.get_ydata()[0] for line in ax.lines[:-1]] == pytest.approx(expected)
+            text = " ".join(t.get_text() for t in ax.texts)
+            assert "in 2007" in text and "in 2025" in text
+            assert "years" in text
+        finally:
+            scorecard.plt.close(fig)
 
 
 def test_gdp_comparison_uses_constant_ppp_and_shared_years(monkeypatch):
@@ -200,9 +210,17 @@ def test_listed_company_count_does_not_splice_in_a_different_definition(tmp_path
         [{"region": "United Kingdom", "year": year, "listed_domestic_companies": value}
          for year, value in ((2007, "2588"), (2022, "1606"))]
         if path.name == "stock_market_size_wide.csv"
-        else [{"year": "2025", "metric": "lse_companies_uk", "value": "1306"}]
+        else [
+            {"region": "United Kingdom", "year": year, "date": date, "metric": metric, "value": value}
+            for year, date, metric, value in (
+                ("2026", "2026-07-31", "lse_companies_uk", "1268"),
+                ("2018", "2018-12-31", "lse_companies_uk", "1719"),
+                ("2025", "2025-12-31", "lse_companies_total", "1545"),
+                ("2026", "2026-01-31", "lse_companies_uk", "1290"),
+            )
+        ]
     ))
-    assert scorecard.uk_listed_companies() == ([2007, 2022], [2588.0, 1606.0])
+    assert scorecard.uk_listed_companies() == ([2018, 2026], [1719.0, 1268.0])
 
 
 def test_main_rejects_empty_panel_instead_of_saving_incomplete_scorecard(tmp_path, monkeypatch, capsys):

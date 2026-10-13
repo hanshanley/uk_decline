@@ -18,8 +18,10 @@ charity administrative counts and a constructed tuition-fee series. It uses 2007
 the common framing; each panel uses its own available baseline and latest year.
 It is not a composite index or an exhaustive measure of UK performance. Colours
 describe the selected direction of change between endpoints, not the latest annual trend.
-Monthly NHS observations, financial years, academic years and CSEW year-ending
-periods are labelled separately; they are not interchangeable annual observations.
+The overview uses **year-only labels**: financial and academic years use their
+starting year; pooled trust surveys and CSEW periods use their ending year.
+Monthly waiting-list and company counts use the latest available snapshot in
+each year. These periods are not interchangeable annual observations.
 
 <p align="center">
   <img src="outputs/uk_decline_scorecard.png" width="1200" alt="Eight source-backed indicators showing change in the UK since 2007">
@@ -30,13 +32,16 @@ market-exchange-rate dollars, so sterling movements are not mistaken for relativ
 changes in economic output. The tuition panel is an **England undergraduate fee-cap
 series**, converted at annual market exchange rates and deflated with US CPI to
 2022 dollars—not average UK tuition or a domestic UK purchasing-power measure.
-NHS waiting counts are **treatment
-pathways**, not unique patients, and Trussell figures count **parcels distributed by
-its network**, not unique recipients or all UK food-bank provision. The listed-firm
-panel retains the **World Bank/WFE series only**, including domestic companies and
-foreign companies listed exclusively on those exchanges, but excluding funds and
-pure holding companies. It ends earlier than other panels: the newer LSE
-UK-domiciled counts have a different definition and are no longer spliced onto it.
+The NHS waiting list counts **entries awaiting consultant-led treatment**, not
+unique patients. It excludes non-consultant-led pathways and estimates for missing
+providers; the latest snapshot is **August 2026**. Trussell figures count **parcels
+distributed by its network**, not unique recipients or all UK food-bank provision.
+The listed-company panel uses **LSE-classified UK companies on the Main Market
+and AIM**, including investment companies: **1,719 in December 2018 to 1,268 in
+July 2026**. It starts after the Main Market's May 2018 coverage change. This is
+not the World Bank/WFE definition; the separate international charts retain WDI
+counts, and the two sources are never spliced. See the
+[stock-market analysis](markets_data/README.md) for the sources and exact dates.
 
 The GDP ratio represents **real output volumes valued at the 2021 PPP benchmark**,
 not median household income or annually repriced purchasing power. The

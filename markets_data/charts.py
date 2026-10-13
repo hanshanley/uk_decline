@@ -238,3 +238,51 @@ def make_charts(source=None, out_dir: Path | str = CHART_DIR) -> list[Path]:
         if p is not None:
             written.append(p)
     return written
+
+
+def chart_lse_companies(source, out_dir: Path | str = CHART_DIR) -> Path:
+    """Chart LSE UK-classified companies without splicing in WDI counts."""
+    import pandas as pd
+    import matplotlib.ticker as mticker
+
+    df = _load(source)
+    sub = df[
+        (df["region"] == "United Kingdom") & (df["metric"] == "lse_companies_uk")
+    ].copy()
+    if sub.empty:
+        raise ValueError("No LSE UK company counts to chart")
+    sub["date"] = pd.to_datetime(sub["date"], errors="raise")
+    sub = sub.sort_values("date").drop_duplicates("year", keep="last")
+    annual = _with_year_gaps(sub.set_index("year")["value"])
+    latest = sub.iloc[-1]
+    plt = _plt()
+    fig, ax = plt.subplots(figsize=(11, 6))
+    ax.plot(
+        annual.index, annual.values, color=ACCENT, linewidth=2.8, marker="o",
+        markersize=4, markeredgecolor="white", markeredgewidth=1,
+    )
+    _end_label(ax, sub["year"], sub["value"], f'{latest["value"]:,.0f}', ACCENT)
+    ax.set_title("UK companies on the London Stock Exchange", fontweight="bold", pad=30)
+    ax.text(
+        0.5, 1.015,
+        f'Main Market + AIM; latest snapshot {latest["date"].strftime("%d %B %Y")}',
+        transform=ax.transAxes, ha="center", va="bottom", fontsize=12, color=MUTED,
+    )
+    ax.set_xlabel("Year")
+    ax.set_ylabel("LSE-classified UK companies")
+    ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+    ax.yaxis.set_major_formatter(mticker.StrMethodFormatter("{x:,.0f}"))
+    ax.grid(axis="y")
+    ax.set_axisbelow(True)
+    ax.margins(x=0.07)
+    _footnote(
+        fig,
+        "Source: London Stock Exchange Main Market and AIM factsheets. December snapshots, "
+        "except latest partial year.\n"
+        "Includes investment companies; not the World Bank/WFE definition. "
+        "Starts after the May 2018 Main Market coverage change.",
+    )
+    fig.tight_layout(rect=[0, 0.05, 1, 1])
+    out = _save(fig, out_dir, "stock_lse_uk_companies.png")
+    plt.close(fig)
+    return out

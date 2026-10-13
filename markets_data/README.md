@@ -2,7 +2,8 @@
 
 Documents the relative decline of the UK stock market vs the US (with World / EU / Japan /
 China for context), using **only real, publicly-sourced data** from the World Bank's World
-Development Indicators (no API key).
+Development Indicators (no API key), alongside a separate current UK company-count
+series from London Stock Exchange factsheets.
 
 ## Headline results (figures in [`../outputs/stock_markets/`](../outputs/stock_markets))
 
@@ -17,6 +18,7 @@ share of GDP, and the number of listed domestic companies.
 | `stock_market_cap_usd.png` / `_real.png` | Market cap, current US$ / constant 2024 US$ (CPI-deflated). |
 | `stock_market_cap_pct_gdp.png` | Market cap as a share of GDP. |
 | `stock_listed_domestic_companies.png` | Number of listed domestic companies. |
+| `stock_lse_uk_companies.png` | LSE-classified UK companies on Main Market + AIM, 2018–2026; separate from WDI. |
 | `stock_uk_us_ratio_*` | UK-as-a-share-of-US variants of the above. |
 
 ## Data source & citation
@@ -40,33 +42,59 @@ are never spliced or interpolated. Full per-metric citations are in
 > at the market rate, not at PPP. Deflating market value by a domestic consumption basket
 > would answer no meaningful question.
 
-> **UK listed-company counts past 2022 (LSE factsheets).** The World Bank/WFE
-> `CM.MKT.LDOM.NO` series ends at 2022 for the UK, but the LSE publishes the underlying
-> counts monthly as machine-readable factsheets on its documents host (e.g.
-> `docs.londonstockexchange.com/.../Main%20Market%20factsheet%20December%202024.xlsx` and the
-> `AIM factsheet`). `lse_factsheets.py` reads the December factsheets and sums Main Market +
-> AIM to a **UK-domiciled** count, which is numerically close to the WB/WFE figure
-> at the 2022 overlap (WB 1,606 vs LSE 1,619). **This is not an identical definition**:
-> WDI includes foreign firms exclusively listed on the exchange and excludes investment
-> funds, unit trusts and pure holding/investment companies. Domicile-based LSE totals alone
-> do not apply those filters, so the close overlap does not validate a seamless splice.
-> Regenerate with `python -m markets_data.lse_factsheets` (writes the cited
-> `data/uk_listed_companies_lse.csv`). The scorecard's listed-company panel uses
-> **only the comparable World Bank/WFE series through 2022**. The LSE UK-domiciled
-> counts (**1,538 / 1,413 / 1,306** for 2023–2025) remain a separate dataset;
-> they are not appended to the scorecard. Every LSE value is read straight from the
-> factsheet; none are estimated or interpolated.
+## Current UK company counts
+
+![UK companies on the London Stock Exchange](../outputs/stock_markets/stock_lse_uk_companies.png)
+
+The overview uses the **London Stock Exchange's UK-classified company counts**,
+summing Main Market and AIM. These fall from **1,719 at December 2018** to
+**1,268 at July 2026**: **757 Main Market + 511 AIM** at the latest snapshot.
+The separate all-nationality total is **1,502**. These are counts of companies,
+not securities, new listings, market capitalisation or companies operating only in the UK.
+
+The [Main Market reports](https://www.londonstockexchange.com/reports?tab=main-market)
+and [AIM reports](https://www.londonstockexchange.com/reports?tab=aim) provide downloadable
+monthly factsheets. `lse_factsheets.py` reads the Main Market's **Summary** table and
+the AIM **Primary Market Summary** annual history, not its trading-activity tables.
+Both files are cited for every observation. The published snapshot was retrieved
+**13 October 2026**; July was the latest month verified available for both markets.
+
+Annual points are **December month-end snapshots** through 2025. The 2026 point is
+**31 July 2026**, not a full-year or December count. The overview labels all points
+by year for readability; exact observation dates and retrieval dates remain in
+`data/uk_listed_companies_lse.csv` and the detailed chart identifies the latest month.
+The series begins at December 2018 because the Main Market factsheet's notes define
+a new scope from **May 2018**: issuers with shares, depositary receipts or other
+equity instruments admitted to the Main Market. Earlier summaries included companies
+with no equity listed, so they are not treated as like-for-like history.
+
+**Do not splice LSE and WDI counts.** The LSE series includes investment companies.
+WDI includes foreign companies listed exclusively on an exchange and excludes funds,
+unit trusts and pure holding/investment companies. Even the close 2022 overlap
+(WDI **1,606** versus LSE UK-classified **1,619**) does not establish equal definitions.
+The international comparison charts continue to use only WDI; the overview and the
+separate LSE chart use only LSE observations. Nothing is estimated or interpolated.
+
+The fetcher requires every requested year's Main Market and AIM counts, checks that
+UK plus international equals the published total, and rejects missing, fractional or
+negative counts before replacing the saved CSV.
 
 ## Usage
 
 ```bash
 python -m markets_data                 # fetch + combine + charts + summary (1975..current)
 python -m markets_data --no-charts     # data only
+python -m markets_data.lse_factsheets --start 2018 --end 2025 --latest-month 2026-07
+python scorecard.py                    # overview from saved inputs
 ```
 
 Combined CSVs/manifest are written to `../data/` (git-ignored, regenerable); charts and the
 trend summary are written to `../outputs/stock_markets/`.
+The LSE command writes its separate CSV and chart. Without `--latest-month`, it fetches
+December observations only, ending in the last completed year; a later verified
+month can be requested explicitly. Use `--no-chart` for data only.
 
 ## Modules
 `markets.py` · `worldbank.py` · `regions.py` · `combine.py` · `charts.py` · `summary.py` ·
-`paths.py` · `_http.py`. Entry point: `python -m markets_data`. Tests: `../tests/test_markets.py`.
+`paths.py` · `_http.py` · `lse_factsheets.py`. Entry point: `python -m markets_data`.
+Tests: `../tests/test_markets.py`.

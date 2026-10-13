@@ -32,7 +32,7 @@ REQUIRED_INPUTS = {
     OUT / "nhs" / "nhs_waiting_times.csv": ".venv/bin/python -m nhs_data",
     DATA / "processed" / "tuition_history.csv": ".venv/bin/python -m tuition.build_history",
     DATA / "trust" / "trust_combined_long.csv": ".venv/bin/python -m trust_data.fetch_trust",
-    DATA / "stock_market_size_wide.csv": ".venv/bin/python -m markets_data",
+    DATA / "uk_listed_companies_lse.csv": ".venv/bin/python -m markets_data.lse_factsheets",
     DATA / "austerity_spending.csv": ".venv/bin/python -m austerity_data",
     DATA / "food_bank_calendar_year.csv": ".venv/bin/python -m foodbank_data",
     DATA / "crime_csew_long.csv": ".venv/bin/python -m crime_data",
@@ -93,18 +93,6 @@ def nhs_england():
     return ys, [float(pts[y]["value"]) for y in ys]
 
 
-def nhs_period(year):
-    return date.fromisoformat(_nhs_observations()[year]["date"]).strftime("%b %Y")
-
-
-def financial_period(year):
-    return f"{year}–{str(year + 1)[-2:]}"
-
-
-def academic_period(year):
-    return f"{year}/{str(year + 1)[-2:]}"
-
-
 def tuition_real():
     r = _rows(DATA / "processed" / "tuition_history.csv")
     pts = {int(x["year"]): float(x["real_2022_usd"]) for x in r if x["country"] == "United Kingdom" and x.get("real_2022_usd")}
@@ -119,14 +107,12 @@ def trust_govt():
     return ys, [pts[y] for y in ys]
 
 
-def trust_period(year):
-    return f"{year} (period end)"
-
-
 def uk_listed_companies():
-    r = _rows(DATA / "stock_market_size_wide.csv")
-    pts = {int(x["year"]): float(x["listed_domestic_companies"]) for x in r
-           if x["region"] == "United Kingdom" and x.get("listed_domestic_companies")}
+    r = _rows(DATA / "uk_listed_companies_lse.csv")
+    pts = {int(x["year"]): float(x["value"])
+           for x in sorted(r, key=lambda x: x["date"])
+           if x["region"] == "United Kingdom" and x["metric"] == "lse_companies_uk"
+           and x.get("value")}
     ys = sorted(pts)
     return ys, [pts[y] for y in ys]
 
@@ -170,40 +156,37 @@ def crime_incidents():
     return ys, [float(pts[y]["value"]) * 1_000 for y in ys]
 
 
-def crime_period(year):
-    return date.fromisoformat(_crime_observations()[year]["date"]).strftime("YE %b %Y")
-
-
 # title, loader, value formatter, good_direction (+1 up-is-good, -1 down-is-good, 0 neutral),
 # source, start year. Baselines vary because the official comparable series do.
 
 PANELS = [
     ("Real GDP per head vs US", gdp_vs_us, lambda v: f"{v:.0f}%", +1,
      "World Bank WDI · volume ratio, 2021 PPP benchmark", 2007),
-    ("Listed firms, UK (WDI)", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
-     "World Bank/WFE · excludes funds & pure holdings", 2007),
-    ("NHS waiting pathways, England", nhs_england, lambda v: f"{v/1e6:.1f}M", -1,
-     "NHS England · excludes NONC & missing-provider estimates\n"
-     "Scope breaks: Apr 2013, Feb 2024; endpoints not like-for-like",
-     2007, nhs_period,
+    ("UK companies on the LSE", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
+     "LSE · UK-classified companies, Main Market + AIM\n"
+     "Includes investment companies; not the WDI definition", 2018),
+    ("NHS waiting list, England", nhs_england, lambda v: f"{v/1e6:.1f}M", -1,
+     "NHS England · treatment entries, not unique patients\n"
+     "Scope breaks: 2013, 2024; endpoints not like-for-like",
+     2007,
      tuple(int(date[:4]) for date, _ in nhs_metrics.series_breaks(
          "rtt_waiting_list_total", "ENG"))),
     ("Recreation, culture & religion", culture_spending, lambda v: f"£{v:.1f}bn", +1,
-     "HM Treasury · financial years, real 2025–26 prices", 2007, financial_period),
+     "HM Treasury · financial years, inflation-adjusted", 2007),
     ("England tuition cap (real)", tuition_real, lambda v: f"${v/1e3:.1f}k", -1,
-     "England fee cap · academic years; FX, constant 2022 US$", 2006, academic_period),
+     "England fee cap · academic years; FX, constant 2022 US$", 2006),
     ("Trust in national government", trust_govt, lambda v: f"{v:.0f}%", +1,
      "OECD / Gallup via OWID · 2–3-year pooled averages\n"
-     "Years label the end of each survey period", 2007, trust_period, (), 3),
+     "Years label the end of each survey period", 2007, (), 3),
     ("Emergency food parcels", food_bank_parcels, lambda v: f"{v/1e6:.1f}M", -1,
      "Trussell network · calendar-year parcels, not people\n"
-     "Mixed 3-/7-day parcels from Apr 2020", 2015),
+     "Mixed 3-/7-day parcels from 2020", 2015),
     ("Crime incidents, England & Wales", crime_incidents, lambda v: f"{v/1e6:.1f}M", -1,
-     "ONS CSEW · excludes fraud & computer misuse", 2007, crime_period),
+     "ONS CSEW · excludes fraud & computer misuse", 2007),
 ]
 
 
-def _panel(ax, title, loader, fmt, good_dir, source, start, period_fmt=str, break_years=(),
+def _panel(ax, title, loader, fmt, good_dir, source, start, break_years=(),
            max_gap_years=1):
     xs, ys = loader()
     pts = [(x, y) for x, y in zip(xs, ys) if x >= start]
@@ -232,7 +215,7 @@ def _panel(ax, title, loader, fmt, good_dir, source, start, period_fmt=str, brea
     ax.annotate(fmt(ys[-1]), xy=(1, 1), xycoords="axes fraction", xytext=(0, 18),
                 textcoords="offset points", fontsize=14, fontweight="bold", color=color,
                 ha="right", va="bottom")
-    ax.annotate(f"{fmt(ys[0])} in {period_fmt(xs[0])}  to  {fmt(ys[-1])} in {period_fmt(xs[-1])}",
+    ax.annotate(f"{fmt(ys[0])} in {xs[0]}  to  {fmt(ys[-1])} in {xs[-1]}",
                 xy=(0, 1), xycoords="axes fraction", xytext=(0, 3), textcoords="offset points",
                 fontsize=8, color=MUTED, ha="left", va="bottom")
 
@@ -244,7 +227,7 @@ def _panel(ax, title, loader, fmt, good_dir, source, start, period_fmt=str, brea
     ax.set_axisbelow(True)
 
     ax.set_xticks([xs[0], xs[-1]])
-    ax.set_xticklabels([period_fmt(xs[0]), period_fmt(xs[-1])], fontsize=8.5, color=MUTED)
+    ax.set_xticklabels([str(xs[0]), str(xs[-1])], fontsize=8.5, color=MUTED)
     # Give each panel at least a minimum span relative to its own magnitude, so a
     # genuinely small move (e.g. tax burden 33->34%, median age 39->41) is not
     # magnified to fill the panel and overstate the change.
