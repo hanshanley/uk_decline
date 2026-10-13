@@ -27,6 +27,8 @@ SCOTLAND = "S92000003"
 
 # Stage of Treatment Waiting Times / Ongoing Waits - Long Trend
 RTT_ONGOING_RESOURCE = "5816ec92-66bf-4033-ae55-9df45ff19d49"
+# Stage of Treatment Waiting Times / Ongoing and Completed Waits - Monthly
+RTT_MONTHLY_RESOURCE = "ac63b747-fdcc-410c-ae43-de6fe3c46abf"
 # Monthly A&E Activity and Waiting Times / Monthly Accident and Emergency Activity
 AE_ACTIVITY_RESOURCE = "37ba17b1-c323-492c-87d5-e986aae9ab59"
 # Cancer Waiting Times / Cancer Wait Time - 62 Day Standard
@@ -124,51 +126,62 @@ def _tidy_row(day: date, metric: str, value: float) -> dict:
     )
 
 
-def _fetch_rtt() -> list[dict]:
-    """Total ongoing waits across the two reported stages of treatment.
-
-    Public Health Scotland's ongoing-waits resource splits the list into two
-    patient types ("New Outpatient" and "Inpatient/Day case"). Some months report
-    only one type (e.g. New Outpatient is null Apr 2017-Dec 2018), which would
-    understate the total. We therefore emit a month only when BOTH components are
-    actually reported, so every value is a complete, source-traceable PHS figure
-    rather than a partial (misleading) sum.
-    """
+def _rtt_totals(
+    resource_id: str, count_field: str, *, monthly: bool = False,
+) -> dict[date, float | None]:
     required = (
         "MonthEnding",
         "HBT",
         "PatientType",
         "Specialty",
-        "NumberWaiting",
+        count_field,
     )
+    filters = {"HBT": SCOTLAND, "Specialty": "Z9"}
+    if monthly:
+        required += ("WaitType",)
+        filters["WaitType"] = "Ongoing"
     required_types = {"New Outpatient", "Inpatient/Day case"}
-    totals: dict[date, float] = defaultdict(float)
-    reported_types: dict[date, set[str]] = defaultdict(set)
+    components: dict[date, dict[str, float | None]] = {}
     for row in _datastore_records(
-        RTT_ONGOING_RESOURCE,
-        filters={"HBT": SCOTLAND, "Specialty": "Z9"},
+        resource_id,
+        filters=filters,
         required_fields=required,
         sort="MonthEnding",
     ):
-        if row.get("PatientType") not in required_types:
+        patient_type = row.get("PatientType")
+        if patient_type not in required_types:
+            continue
+        if monthly and row.get("WaitType") != "Ongoing":
             continue
         day = _month_end(row["MonthEnding"])
-        number_waiting = _num(row.get("NumberWaiting"))
-        if number_waiting is None:
-            continue
-        reported_types[day].add(str(row.get("PatientType")))
-        totals[day] += number_waiting
+        stage_counts = components.setdefault(day, {})
+        if patient_type in stage_counts:
+            raise ValueError(f"duplicate Scottish ongoing wait count: {day} {patient_type}")
+        stage_counts[patient_type] = _num(row.get(count_field))
+    return {
+        day: (
+            sum(value for value in counts.values() if value is not None)
+            if required_types <= counts.keys() and all(v is not None for v in counts.values())
+            else None
+        )
+        for day, counts in components.items()
+    }
 
-    def _complete(day: date) -> bool:
-        return required_types <= reported_types[day]
 
+def _fetch_rtt() -> list[dict]:
+    """Sum both stages, preferring the newer monthly resource's revised observations.
+
+    Incomplete months are omitted, including when the monthly resource suppresses
+    a component previously present in the older long-trend resource. Stage medians
+    cannot recover a pooled median and are not emitted.
+    """
+    totals = _rtt_totals(RTT_ONGOING_RESOURCE, "NumberWaiting")
+    totals.update(_rtt_totals(RTT_MONTHLY_RESOURCE, "Waits", monthly=True))
     rows = [
-        _tidy_row(day, "rtt_waiting_list_total", totals[day])
-        for day in sorted(totals)
-        if _complete(day)
+        _tidy_row(day, "rtt_waiting_list_total", total)
+        for day, total in sorted(totals.items())
+        if total is not None
     ]
-    # Stage medians cannot be averaged to recover the pooled median. The source
-    # does not provide the combined wait distribution, so no median is emitted.
     return rows
 
 

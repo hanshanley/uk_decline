@@ -107,6 +107,9 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
             label = f"{label} (\u00d7{g['value'].iloc[-1] / base:.2f})"
         boundaries = [pd.Timestamp(date) for date, _ in metrics.series_breaks(metric_id, code)]
         segments = g["date"].map(lambda d: sum(d >= boundary for boundary in boundaries))
+        step = 3 if g["period"].str.fullmatch(r"\d{4}-Q[1-4]").all() else 1
+        month_numbers = g["date"].dt.year * 12 + g["date"].dt.month
+        segments += (month_numbers.diff() > step).cumsum()
         labelled = False
         for _, segment in g.groupby(segments):
             ax.plot(
@@ -166,6 +169,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
             "Definition/recording changes (" + "; ".join(affected)
             + "); lines do not bridge them.", width=145
         )
+    note += "\nLines also break at missing monthly or quarterly observations."
     caption = fig.text(0.01, 0.01, note, ha="left", va="bottom",
                        fontsize=8, color=MUTED, style="italic")
     fig.canvas.draw()

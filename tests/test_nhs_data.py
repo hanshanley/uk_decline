@@ -371,6 +371,53 @@ def test_scottish_stage_medians_are_not_a_pooled_median(monkeypatch) -> None:
     ]
 
 
+def test_scottish_rtt_prefers_complete_monthly_revisions_and_excludes_completed_waits(
+    monkeypatch
+):
+    from nhs_data import scotland
+
+    old = [
+        {"MonthEnding": day, "PatientType": stage, "NumberWaiting": count}
+        for day in ["20260331", "20260430"]
+        for stage, count in [("New Outpatient", 100), ("Inpatient/Day case", 200)]
+    ]
+    monthly = [
+        {"MonthEnding": day, "PatientType": stage, "WaitType": wait_type, "Waits": count}
+        for day, stage, wait_type, count in [
+            ("20260331", "New Outpatient", "Ongoing", 110),
+            ("20260331", "Inpatient/Day case", "Ongoing", 210),
+            ("20260331", "New Outpatient", "Completed", 1000),
+            ("20260430", "New Outpatient", "Ongoing", 120),
+            ("20260430", "Inpatient/Day case", "Ongoing", None),
+            ("20260531", "New Outpatient", "Ongoing", 130),
+            ("20260531", "Inpatient/Day case", "Ongoing", 230),
+        ]
+    ]
+
+    def records(resource_id, **kwargs):
+        if resource_id == scotland.RTT_MONTHLY_RESOURCE:
+            assert kwargs["filters"]["WaitType"] == "Ongoing"
+            assert "WaitType" in kwargs["required_fields"]
+            return iter(monthly)
+        return iter(old)
+
+    monkeypatch.setattr(scotland, "_datastore_records", records)
+    rows = scotland._fetch_rtt()
+    assert [(r["date"], r["value"]) for r in rows] == [
+        ("2026-03-31", 320), ("2026-05-31", 360),
+    ]
+
+
+def test_scottish_rtt_rejects_duplicate_stage_counts(monkeypatch):
+    from nhs_data import scotland
+
+    record = {"MonthEnding": "20260831", "PatientType": "New Outpatient",
+              "WaitType": "Ongoing", "Waits": 100}
+    monkeypatch.setattr(scotland, "_datastore_records", lambda *a, **k: iter([record, record]))
+    with pytest.raises(ValueError, match="duplicate Scottish ongoing wait count"):
+        scotland._rtt_totals(scotland.RTT_MONTHLY_RESOURCE, "Waits", monthly=True)
+
+
 def test_england_rtt_excludes_non_english_commissioned_paths_from_count_and_median(monkeypatch):
     from nhs_data import england
 
@@ -599,11 +646,49 @@ def test_indexed_nhs_growth_uses_baseline_after_last_observed_rollout(monkeypatc
     monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: figures.append(fig))
     charts.chart_metric(combine.to_frame(rows), "rtt_waiting_list_total", tmp_path, indexed=True)
     ax = figures[0].axes[0]
-    for line in ax.lines[:2]:
+    labelled = [line for line in ax.lines
+                if line.get_label().startswith(("England", "Northern Ireland"))]
+    assert len(labelled) == 2
+    for line in labelled:
         assert pd.Timestamp(line.get_xdata()[0]) == pd.Timestamp("2025-06-30")
-        assert list(line.get_ydata()) == pytest.approx([100, 110])
+        assert line.get_ydata()[0] == pytest.approx(100)
         assert "\u00d71.10" in line.get_label()
+    for code in ["ENG", "NIR"]:
+        values = [v for line in ax.lines if line.get_color() == charts.NATION_COLOURS[code]
+                  for v in line.get_ydata()]
+        assert values == pytest.approx([100, 110])
     assert "Jun 2025" in ax.get_title()
+
+
+@pytest.mark.parametrize("indexed", [False, True])
+@pytest.mark.parametrize("code,metric_id,periods,dates", [
+    ("SCO", "rtt_waiting_list_total",
+     ["2017-02", "2017-03", "2019-01", "2019-02"],
+     ["2017-02-28", "2017-03-31", "2019-01-31", "2019-02-28"]),
+    ("SCO", "cancer_62day_pct",
+     ["2024-Q1", "2024-Q2", "2024-Q4", "2025-Q1"],
+     ["2024-03-31", "2024-06-30", "2024-12-31", "2025-03-31"]),
+])
+def test_nhs_chart_breaks_at_missing_periods_without_breaking_quarterly_cadence(
+    monkeypatch, tmp_path, indexed, code, metric_id, periods, dates
+):
+    rows = [
+        metrics.make_row(nations.name_for_code(code), code, period, date,
+                         metric_id, value, "PHS")
+        for period, date, value in zip(periods, dates, [50, 60, 70, 80])
+    ]
+    figures = []
+    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: figures.append(fig))
+    charts.chart_metric(combine.to_frame(rows), metric_id, tmp_path, indexed=indexed)
+    ax = figures[0].axes[0]
+    lines = [line for line in ax.lines if line.get_color() == charts.NATION_COLOURS[code]]
+    assert [list(pd.to_datetime(line.get_xdata())) for line in lines] == [
+        list(pd.to_datetime(dates[:2])), list(pd.to_datetime(dates[2:])),
+    ]
+    assert [list(line.get_ydata()) for line in lines] == (
+        [[100, 120], [140, 160]] if indexed else [[50, 60], [70, 80]]
+    )
+    assert len(ax.get_legend_handles_labels()[0]) == 1
 
 
 def test_summary_does_not_compare_across_england_cancer_standards(tmp_path):

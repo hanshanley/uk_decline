@@ -10,7 +10,7 @@ Recorded elective pathways / ongoing waits, not unique people. Scotland sums out
 | Nation | First | Latest | Change |
 |---|---|---|---|
 | England | 4.19M (Aug 2007) | 7.16M (Aug 2026) | Not like-for-like (community-service scope, sexual-health scope break) |
-| Scotland | 247k (Oct 2012) | 654k (Jun 2026) | ↑ 406k (worse) |
+| Scotland | 247k (Oct 2012) | 664k (Aug 2026) | ↑ 417k (worse) |
 | Wales | 392k (Sep 2011) | 710k (Jul 2026) | ↑ 317k (worse) |
 | Northern Ireland | 77k (Jun 2008) | 505k (Jun 2026) | Not like-for-like (encompass break) |
 
@@ -23,7 +23,7 @@ Recorded elective pathways / ongoing waits per 1,000 residents, using published 
 | Nation | First | Latest | Change |
 |---|---|---|---|
 | England | 81.5/1k (Aug 2007) | 122.4/1k (Dec 2025) | Not like-for-like (community-service scope, sexual-health scope break) |
-| Scotland | 46.6/1k (Oct 2012) | 122.0/1k (Dec 2025) | ↑ 75.5/1k (worse) |
+| Scotland | 46.6/1k (Oct 2012) | 122.3/1k (Dec 2025) | ↑ 75.8/1k (worse) |
 | Wales | 128.1/1k (Sep 2011) | 233.4/1k (Dec 2025) | ↑ 105.3/1k (worse) |
 | Northern Ireland | 43.3/1k (Jun 2008) | 273.3/1k (Dec 2025) | Not like-for-like (encompass break) |
 

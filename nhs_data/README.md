@@ -51,11 +51,9 @@ providers are **not** added, even though the historical workbook also contains a
 estimated-total column. Changes in reporting coverage can affect these counts.
 Monthly extracts also contain `NONC` pathways commissioned outside England;
 these are excluded from both totals and band-midpoint medians to match NHS England's
-published outputs. The August 2026 extract independently reconciles with the
-current overview: **7,158,164 reported pathways**, not 7,189,213 including `NONC`
+published outputs. The August 2026 extract reports **7,158,164 pathways**,
+not 7,189,213 including `NONC`
 or 7,370,100 including estimates for missing providers.
-All 130 refreshed monthly totals reconcile exactly with that overview;
-band-midpoint medians differ from its interpolated medians by at most 0.50 weeks.
 England's median is approximated from
 weekly count bands; a weighted average of Scottish stage medians is **not** a pooled
 median, so Scotland is omitted from that metric. The derived `rtt_waiting_list_per_1000` is computed as
@@ -207,6 +205,15 @@ the earliest exact common observation date after the latest observed NI encompas
 rollout step (9 November 2023, 6 June 2024, 7 November 2024 and 8 May 2025).
 This avoids attributing a reporting-system change to waiting-list growth; it does
 not make the four nations' underlying definitions identical.
+Lines also break at missing monthly or quarterly observations. In particular,
+Scotland's combined waiting-list total is unavailable from April 2017 through
+December 2018 because the outpatient component is missing.
+
+Scottish ongoing waits combine the historical long-trend resource with PHS's
+newer monthly resource. Monthly observations supersede overlapping historical
+values, including source revisions. Only ongoing waits are selected, and a
+month is published only when both outpatient and inpatient/day-case counts exist;
+components from different publication vintages are not mixed.
 
 NI loaders discover current publications before their pinned June 2026 releases;
 discovery failures produce explicit warnings. NHS England's empty/challenged HTML
@@ -214,12 +221,12 @@ pages are handled through the official REST API, with exact canonical-page valid
 Older root-level publication aliases are normalised against the relevant work-area
 landing page before lookup. A pinned cancer fallback remains explicit and warning-bearing.
 
-### Verified coverage as of 12 October 2026
+### Published snapshot coverage
 
 | Nation | RTT / median where available | Cancer | Diagnostics | A&E |
 |---|---|---|---|---|
 | England | August 2026 | August 2026 | August 2026 | September 2026 |
-| Scotland | June 2026 (no pooled median) | June 2026 | June 2026 | August 2026 |
+| Scotland | August 2026 (no pooled median) | June 2026 | June 2026 | August 2026 |
 | Wales | July 2026 | July 2026 | July 2026 (separate six/eight-week series) | August 2026 |
 | Northern Ireland | June 2026 (outpatient total only) | June 2026 | June 2026 | June 2026 |
 
