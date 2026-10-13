@@ -53,28 +53,13 @@ citations reproduced here.
 - **Machine-readable file used:**
   `https://ourworldindata.org/grapher/oecd-average-trust-in-governments.csv?csvType=full&useColumnShortNames=true`
   (column `trust_in_government`, a percentage).
-- **Coverage:** UK 2007–2024 (survey waves); 27 of our 29 countries.
+- **Coverage:** UK 2007–2024 (survey waves); 27 of the 29 selected countries.
 - **Live retrieval:** `trust_data/owid.py` downloads and parses the machine-readable CSV on
   every production run. `trust_data/oecd.py` can validate the separate OECD Drivers of Trust
   SDMX dataflow (`TRUST_NG`, scale `HMH`), but those observations are not spliced into this
   trend because they come from a different survey instrument.
 - **`source` column value:**
   `OECD Trust in Government via Our World in Data (grapher: oecd-average-trust-in-governments)`.
-
-> **Provenance guarantee.** The production pipeline reads the live OWID/OECD file directly.
-> The retained historical snapshot can still be audited against the same source:
->
-> ```bash
-> curl -s "https://ourworldindata.org/grapher/oecd-average-trust-in-governments.csv?csvType=full&useColumnShortNames=true" -o /tmp/src.csv
-> .venv/bin/python - <<'PY'
-> import csv
-> src={(x['code'],int(x['year'])):round(float(x['trust_in_government']),2)
->      for x in csv.DictReader(open('/tmp/src.csv')) if x['code'] and x['trust_in_government']!=''}
-> bad=[(r['iso3'],r['year']) for r in csv.DictReader(open('data/trust/raw/manual_trust.csv'))
->      if src.get((r['iso3'],int(r['year']))) != round(float(r['value']),2)]
-> print('untraceable rows:', len(bad))
-> PY
-> ```
 
 ---
 
@@ -119,19 +104,11 @@ Tidy long rows (`trust_data/metrics.py`, `ROW_FIELDS`):
 - **WGI** genuinely begins in **1996** (World Bank does not publish earlier estimates).
 - **OECD survey trust** genuinely begins in **2007** for the UK (Gallup World Poll basis).
 
-There is **no free, machine-readable source** that carries UK *trust-in-government* back to
-the 1970s. The only UK series reaching that far is the survey question *"trust governments of
-any party to place the needs of the nation above their own party"* — **British Election Study
-(1974)** and **British Social Attitudes (1986+)**. That data lives only in:
-- **UK Data Service microdata** (registration-gated; `britishelectionstudy.com`, `natcen.ac.uk`), and
-- **NatCen BSA report PDFs** (headline figures in tables/charts, not a downloadable series).
-
-To honour the project's integrity rule — *every value must trace to a real, downloadable
-source* — those pre-1996/pre-2007 figures are **deliberately not included**, because doing so
-would mean transcribing/estimating numbers rather than pulling them from a verifiable file. If
-you register with the UK Data Service and download the BES/BSA cumulative files, they can be
-added as a new metric (`trust_govt_nation_above_party_pct`) via the same `manual.py` seed
-mechanism, with the UK Data Service study number recorded in the `source` column.
+Older **British Election Study** and **British Social Attitudes** series ask about
+trusting governments of any party to put the nation's needs above their party's
+interests. That is a different question from the Gallup confidence-in-national-government
+item. Those observations are not spliced into this series; a longer history would
+need a separate metric with its own survey definition and source attribution.
 
 ## A note on inflation
 
@@ -143,6 +120,7 @@ and `tuition` projects, which deal with GDP/income and fees in currency.)
 ## Data integrity
 
 - WGI rows are fetched live from the World Bank API every run.
-- Survey rows come verbatim from the OWID/OECD CSV (audit above proves 0 untraceable rows).
+- Survey values are read from the live OWID/OECD CSV.
 - Chart captions and `manifest.json` echo the exact `source` recorded on the data.
-- No value in this pipeline is generated, interpolated, or estimated by the tooling.
+- The pipeline does not interpolate missing survey waves or governance observations.
+  Reporting-country means, medians and interquartile ranges are derived summaries.

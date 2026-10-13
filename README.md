@@ -40,7 +40,7 @@ UK-domiciled counts have a different definition and are no longer spliced onto i
 
 The GDP ratio represents **real output volumes valued at the 2021 PPP benchmark**,
 not median household income or annually repriced purchasing power. The
-[GDP analysis](europe_data/README.md) now separates genuine national-accounts real
+[GDP analysis](europe_data/README.md) separates national-accounts real
 growth from nominal dollar valuations; the [PPP analysis](ppp_data/README.md) adds a
 2007 = 100 growth chart and documents the methodological research and validation.
 
@@ -51,11 +51,6 @@ an improvement. This is a long-run survey measure, not all UK crime, a police-re
 total, or the percentage of people victimised; it does not cover every offence type.
 See the [crime analysis](crime_data/README.md) for coverage and the separate series
 including fraud and computer misuse.
-
-It replaces a misleadingly labelled "fraud share" panel. That calculation actually
-measured **fraud and computer misuse combined as a share of CSEW headline incidents**,
-not fraud alone or the chance of being a fraud victim. A share can increase simply
-because other crime falls, so it was not a sound standalone worsening indicator.
 
 ## Explore the evidence
 
@@ -117,67 +112,3 @@ each analysis. Downloaded/intermediate data generally lives under `data/`
 The curated figures under `outputs/` are the committed showcase. Targeted observations
 have been checked against primary sources; this is not independent verification of
 every observation in every dataset.
-
-### Final audit — 12 October 2026
-
-The audit traced published charts to their loaders and source definitions, rechecked
-overview endpoints against WDI, ONS, Treasury, OWID and Trussell, and reproduced live
-OECD tax, WDI trade and age pipelines in an isolated staging tree. Confirmed fixes
-include NHS lines/indexes crossing definition changes, superseded NI cancer counts,
-incomplete age profiles being normalised into plausible medians, rail smoothers
-drawing through missing quarters,
-ambiguous overview periods and stale source-splice/fallback documentation. Historical
-tuition was rebuilt to include annual fee/FX/CPI observations between policy changes.
-
-Alternative-baseline checks use observed 2010 and 2019 values where available, not
-invented missing observations. For example, the real UK/US GDP ratio fell **14.0%**
-from 2007, **12.0%** from 2010 and **9.1%** from 2019; recreation/culture/religion
-spending fell **20.9%**, **22.6%** and **3.8%** respectively. Magnitudes depend on the
-baseline. Food-parcel counts fell **11.7% from 2024 to 2025** despite remaining above
-2015/2019 levels. The real market-dollar tuition cap rose **37.6% from 2006**
-but fell **18.4% from 2019**; it is not a measure of domestic purchasing power.
-The selected panels are not evidence that every measure worsened,
-and no chart by itself establishes a policy cause.
-
-Remaining limitations are explicit: the EU tuition compilation contains approximate
-secondary-source values and mixed definitions; population-age distributions from
-WPP 2024 contain projection assumptions from 2024 onward; country medians are
-unweighted, not medians of people; survey crime/trust estimates carry uncertainty;
-and endpoint dates differ across sources. WDI still has no US CPI observation for
-2025, so the real-dollar tuition history ends in 2024 rather than borrowing another
-year's deflator. NI cancer/outpatient/diagnostic source discovery was repaired and
-those series refreshed through June 2026. NI's October 2026 cancer release revises
-historical waits after a calculation error; the refreshed dataset uses those
-revisions, omits months without all five trusts, and splits the encompass breaks.
-The freshness retry recovered NHS England publications through its official REST
-API despite empty/challenged HTML, and NI emergency-care history from structured
-counts embedded in its current interactive release. England's raw RTT extracts
-also include non-English commissioned `NONC` pathways; these are excluded from
-both totals and band-midpoint medians. August 2026 independently reconciles with
-the official overview at **7,158,164 reported pathways**, without missing-provider
-estimates. England's RTT service-scope changes and NI emergency-care recording
-changes are now segmented as well. The NI four-hour denominator is the sum of
-classified waiting-time bands, not all attendances or averaged department rates;
-June 2026 independently reproduces the published **42.8%**.
-
-Verified NHS coverage as of **12 October 2026**:
-
-| Nation | RTT / cancer / diagnostics | A&E |
-|---|---|---|
-| England | August 2026 | September 2026 |
-| Scotland | June 2026 | August 2026 |
-| Wales | July 2026 | August 2026 |
-| Northern Ireland | June 2026 | June 2026 |
-
-Per-capita NHS series stop in 2025 because no 2026 population is extrapolated.
-The rail reconstruction was independently compared with official Table 3113 over
-28 overlapping quarters: maximum discrepancies are **0.51 percentage points for
-London and South East** and **0.18 points for Great Britain**. These approximate
-series are not exact official sector aggregates.
-
-Verification: **317 regression tests passed**, as did all **16 GDP/PPP validation
-checks**. All **2,970 live country-year age profiles** passed the complete-profile
-checks; the opt-in age snapshot also passed. Affected NHS, age, rail, tuition,
-spending and overview figures were rebuilt, with representative published figures
-visually inspected. Tests validate the implemented methods, not the truth of every
-source observation or causal interpretation.
