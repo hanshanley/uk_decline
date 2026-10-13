@@ -202,7 +202,8 @@ def foodbank_chart(
         f"{int(latest['year'])} calendar-year workbook. Accessed {ACCESSED_DATE}.\n"
         f"{historical.iloc[0]['period_label']}–{historical.iloc[-1]['period_label']} "
         f"are financial years; the separated final bar is calendar-year {int(latest['year'])}. "
-        "Counts are distribution instances, not unique people.",
+        "Counts are distribution instances, not unique people. "
+        "From Apr 2020, 3-/7-day parcels are combined without duration adjustment.",
         x=0.075,
         y=0.022,
     )

@@ -196,7 +196,8 @@ PANELS = [
      "OECD / Gallup via OWID · 2–3-year pooled averages\n"
      "Years label the end of each survey period", 2007, trust_period, (), 3),
     ("Emergency food parcels", food_bank_parcels, lambda v: f"{v/1e6:.1f}M", -1,
-     "Trussell network · calendar-year parcels, not people", 2015),
+     "Trussell network · calendar-year parcels, not people\n"
+     "Mixed 3-/7-day parcels from Apr 2020", 2015),
     ("Crime incidents, England & Wales", crime_incidents, lambda v: f"{v/1e6:.1f}M", -1,
      "ONS CSEW · excludes fraud & computer misuse", 2007, crime_period),
 ]

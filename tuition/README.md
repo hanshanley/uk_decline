@@ -183,8 +183,9 @@ tests/test_tuition.py
   the **in-state public** figure most students face; the private figure is kept as a
   reference row (`include_primary=0`).
 - **UK is nation-split.** The headline is **England (£9,790 published for 2026/27)**; **Scotland** charges
-  Scottish-domiciled students **£0** (reference row). **Wales** tracks England closely
-  (~£9,000), but **Northern Ireland** caps NI-domiciled fees materially lower (~£4,750).
+  eligible Scottish-domiciled students **£0** (reference row). **Wales** and
+  **Northern Ireland** have their own fee rules; the England cap must not be applied
+  to all UK students.
 - **Many EU states charge €0** for domestic students (Germany, the Nordics, etc.). These
   zeros are legitimate data points and are kept, which is why the EU **median is $0**.
 - **3-vs-4-year programmes.** The results table's ×4 total is a normalized comparison;
