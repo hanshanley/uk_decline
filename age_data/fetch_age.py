@@ -86,7 +86,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument(
         "--allow-snapshot-fallback",
         action="store_true",
-        help="Explicitly allow the locally audited source snapshot if an online fetch is empty.",
+        help="Explicitly allow the local source snapshot if an online fetch is empty.",
     )
     p.add_argument(
         "--summary-year", type=int, default=None,
@@ -103,7 +103,7 @@ def _print_summary(all_rows: list[dict], year: int | None) -> None:
         print("\n(no data available for a summary)")
         return
     print("\nUK vs Europe (median) vs US — age distribution:")
-    header = f"  {'metric':<28} {'year':>4}  {'UK':>8} {'EU med':>8} {'EU avg':>8} {'US':>8}"
+    header = f"  {'metric':<28} {'year':>4}  {'UK':>8} {'Eur med':>8} {'Eur avg':>8} {'US':>8}"
     print(header)
     print("  " + "-" * (len(header) - 2))
 
@@ -129,6 +129,7 @@ def main(argv: list[str] | None = None) -> int:
     manual: list[dict] | None = None
     grouped: list[tuple[str, list[dict]]] = []
     all_rows: list[dict] = []
+    source_accessed: dict[str, str | None] = {}
 
     def fallback_rows(owned: tuple[str, ...]) -> list[dict]:
         nonlocal manual
@@ -142,12 +143,18 @@ def main(argv: list[str] | None = None) -> int:
     def with_fallback(name: str, rows: list[dict], owned: tuple[str, ...]) -> list[dict]:
         if rows:
             _validate_live_rows(name, rows, owned, args.start, args.end)
+            source_accessed[name] = dt.date.today().isoformat()
             return rows
         if not args.allow_snapshot_fallback:
             raise RuntimeError(f"{name}: online source returned no rows")
         scoped = fallback_rows(owned)
-        if scoped:
-            tqdm.write(f"  {name}: using manual fallback ({len(scoped)} rows)")
+        if not scoped:
+            raise RuntimeError(
+                f"{name}: snapshot fallback has no observations matching "
+                f"the requested source and years {args.start}-{args.end}"
+            )
+        source_accessed[name] = None
+        tqdm.write(f"  {name}: using manual fallback ({len(scoped)} rows)")
         return scoped
 
     for name in tqdm(args.sources, desc="sources", unit="src"):
@@ -197,6 +204,7 @@ def main(argv: list[str] | None = None) -> int:
             "requested_start": args.start,
             "requested_end": args.end,
             "requested_sources": args.sources,
+            "source_accessed": source_accessed,
         },
     )
 

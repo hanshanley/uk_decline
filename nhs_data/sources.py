@@ -18,7 +18,7 @@ class Citation(NamedTuple):
     via: str  # access platform + URL
 
 
-# Ordered list of citations. ``accessed`` is stamped at render time.
+# Ordered list of citations; an access date is included only when supplied.
 CITATIONS: list[Citation] = [
     Citation(
         "NHS England",
@@ -65,8 +65,8 @@ LICENCE_NOTE = (
 
 
 def render_markdown(accessed: date | None = None) -> str:
-    """Return a markdown block of formal citations, stamped with an access date."""
-    accessed = accessed or date.today()
+    """Return citations without inferring source retrieval from rendering time."""
+    access_note = f" (accessed {accessed:%Y-%m-%d})" if accessed is not None else ""
     lines = ["## Data sources & citations\n"]
     lines.append(
         "Underlying observations are published by each nation's official statistical "
@@ -75,8 +75,7 @@ def render_markdown(accessed: date | None = None) -> str:
     )
     for c in CITATIONS:
         lines.append(
-            f"- **{c.publisher}** \u2014 *{c.title}.* {c.via} "
-            f"(accessed {accessed:%Y-%m-%d})."
+            f"- **{c.publisher}** \u2014 *{c.title}.* {c.via}{access_note}."
         )
     lines.append(f"\n{LICENCE_NOTE}")
     return "\n".join(lines) + "\n"

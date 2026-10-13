@@ -14,6 +14,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from markets_data import charts, combine, markets, regions, worldbank  # noqa: E402
 
 
+def test_empty_fetch_preserves_saved_market_outputs(monkeypatch, tmp_path):
+    import pytest
+
+    monkeypatch.setattr(combine, "fetch_all", lambda *args: ([], None))
+    paths = [tmp_path / name for name in ("long.csv", "wide.csv", "manifest.json")]
+    for path in paths:
+        path.write_text("preserved source data\n")
+    with pytest.raises(RuntimeError, match="Market sources returned no observations"):
+        combine.build(path=paths[0], wide_path=paths[1], manifest_path=paths[2])
+    assert all(path.read_text() == "preserved source data\n" for path in paths)
+
+
 def test_metric_indicator_mapping() -> None:
     # Every metric maps to a World Bank indicator and back.
     assert markets.METRICS["market_cap_usd"].wb_indicator == "CM.MKT.LCAP.CD"

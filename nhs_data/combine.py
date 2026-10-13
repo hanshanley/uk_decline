@@ -116,5 +116,7 @@ def build(
 ):
     """Fetch all nations and write the combined CSV. Returns the DataFrame."""
     rows = fetch_all(start_year, end_year)
+    if not rows:
+        raise RuntimeError("NHS sources returned no observations; existing data was not replaced")
     rows = add_per_capita(rows, start_year, end_year)
     return write_csv(rows, path)

@@ -6,6 +6,17 @@ import pytest
 from rail_data import charts, orr
 
 
+def test_empty_fetch_preserves_saved_rail_data(monkeypatch, tmp_path):
+    from rail_data import __main__ as cli
+
+    path = tmp_path / "rail.csv"
+    path.write_text("preserved source data\n")
+    monkeypatch.setattr(orr, "build_rows", lambda: [])
+    with pytest.raises(RuntimeError, match="Rail source returned no observations"):
+        cli.main(["--csv", str(path), "--charts-dir", str(tmp_path)])
+    assert path.read_text() == "preserved source data\n"
+
+
 def _sheets():
     header = ["Franchise status", "Franchise title", "Franchise code",
               "Train operator", "Jan to Mar 2020", "Apr to Jun 2020"]

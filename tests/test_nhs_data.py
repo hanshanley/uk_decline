@@ -292,6 +292,24 @@ def test_summary_content() -> None:
         assert "Data sources & citations" in text
         assert "NHS England" in text and "Public Health Scotland" in text
         assert "Office for National Statistics" in text
+        assert "(accessed " not in text
+
+
+def test_source_citations_only_use_explicit_access_dates() -> None:
+    from datetime import date
+    from nhs_data import sources
+
+    text = sources.render_markdown(accessed=date(2020, 2, 29))
+    assert text.count("(accessed 2020-02-29)") == len(sources.CITATIONS)
+
+
+def test_empty_fetch_preserves_saved_nhs_data(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(combine, "fetch_all", lambda *args: [])
+    path = tmp_path / "nhs.csv"
+    path.write_text("preserved source data\n")
+    with pytest.raises(RuntimeError, match="NHS sources returned no observations"):
+        combine.build(path=path)
+    assert path.read_text() == "preserved source data\n"
 
 
 def test_add_per_capita_uses_real_population(monkeypatch) -> None:

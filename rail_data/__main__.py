@@ -20,6 +20,8 @@ _FIELDS = ["region", "period", "date", "year", "quarter", "metric", "value", "un
 
 
 def _write_csv(rows: list[dict], path: pathlib.Path) -> None:
+    if not rows:
+        raise RuntimeError("Rail source returned no observations; existing data was not replaced")
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=_FIELDS)

@@ -56,9 +56,9 @@ total-population estimates. The figures disclose this distinction.
 
 **Access point (redistributor):**
 
-> World Bank (2025). *World Development Indicators*. Washington, DC: The World Bank.
+> World Bank (2026). *World Development Indicators*. Washington, DC: The World Bank.
 > <https://databank.worldbank.org/source/world-development-indicators>. Retrieved
-> 2026-08-15 via the World Bank API (`https://api.worldbank.org/v2`), indicators `SP.POP.*`.
+> 2026-10-12 via the World Bank API (`https://api.worldbank.org/v2`), indicators `SP.POP.*`.
 
 Indicators used: `SP.POP.0014.TO.ZS`, `SP.POP.1564.TO.ZS`, `SP.POP.65UP.TO.ZS`,
 `SP.POP.DPND.OL`, `SP.POP.DPND.YG`, and the 5-year age-sex bands `SP.POP.{00-04…80UP}.{MA,FE}`.
@@ -98,6 +98,8 @@ with a published value, and it is fully reproducible from the same band counts. 
 For offline reproducibility, `--allow-snapshot-fallback` explicitly permits
 `data/raw/manual_age.csv` when the live fetch returns nothing; it is never automatic.
 A partial live response is rejected rather than supplemented silently.
+A missing snapshot or one with no observations for the requested source and years
+is rejected before any saved outputs are overwritten.
 **It is not hand-typed** — it is a verifiable
 **snapshot of the live World Bank data** (2024 broad structure + derived median age
 for all countries, plus the UK pyramid bands for 1960 and 2024), each row keeping its World
@@ -165,9 +167,10 @@ tests/test_age.py
 - **Median age is derived, not published** — see the method above. It is a standard,
   reproducible interpolation on the published band counts, clearly labelled as derived.
 - **Open-ended top band.** The oldest World Bank 5-year band is 80+; the pyramid shows it
-  as a single bar and the median derivation treats it as 80–85.
+  as a single bar. A median in that band is rejected because no finite width is known.
 - **European scope** reuses `europe_data`'s geographic-Europe list (transcontinental
   Turkey excluded); the "Europe median/mean" is unweighted across countries with data.
 - **UN revisions.** Figures reflect the *World Population Prospects 2024* revision as
-  redistributed by the World Bank; earlier revisions differ slightly. The access date is
-  recorded in the manifest and figure notes.
+  redistributed by the World Bank; earlier revisions differ slightly. Per-source access
+  dates are recorded in the manifest for live retrievals, not inferred from chart rendering.
+  Snapshot fallback runs leave the source-access date unknown.

@@ -210,6 +210,50 @@ def test_fallback_missing_file(tmp_path):
     assert fallback.load(str(tmp_path / "nope.csv")) == []
 
 
+@pytest.mark.parametrize("source", ["structure", "pyramids"])
+@pytest.mark.parametrize("defect", ["missing", "wrong_year", "wrong_metric"])
+def test_unusable_fallback_preserves_saved_outputs(source, defect, monkeypatch, tmp_path):
+    module = worldbank if source == "structure" else pyramids
+    metric = "pop_share_65plus_pct" if source == "structure" else "pop_band_share_pct"
+    if defect == "wrong_metric":
+        metric = "pop_band_share_pct" if source == "structure" else "pop_share_65plus_pct"
+    snapshot = [] if defect == "missing" else [
+        combine.make_row("GBR", 2024 if defect == "wrong_year" else 2025, metric, 20, "snapshot")
+    ]
+    monkeypatch.setattr(module, "fetch", lambda *args: [])
+    monkeypatch.setattr(fallback, "load", lambda: snapshot)
+    saved = [tmp_path / f"age_combined_{kind}.csv" for kind in ("long", "wide")]
+    saved.append(tmp_path / "age_manifest.json")
+    for path in saved:
+        path.write_text("preserved source data\n")
+    with pytest.raises(RuntimeError, match="snapshot fallback has no observations matching"):
+        fetch_age.main([
+            "--sources", source, "--out", str(tmp_path), "--no-charts",
+            "--start", "2025", "--end", "2025", "--allow-snapshot-fallback",
+        ])
+    assert all(path.read_text() == "preserved source data\n" for path in saved)
+    assert not (tmp_path / f"age_{source}.csv").exists()
+
+
+@pytest.mark.parametrize("live", [False, True])
+def test_access_date_records_live_retrieval_only(live, monkeypatch, tmp_path):
+    rows = [
+        combine.make_row("GBR", 2025, metric, 20, "source")
+        for metric in worldbank.METRICS
+    ]
+    monkeypatch.setattr(config, "iso3_codes", lambda: ["GBR"])
+    monkeypatch.setattr(worldbank, "fetch", lambda *args: rows if live else [])
+    monkeypatch.setattr(fallback, "load", lambda: rows)
+    assert fetch_age.main([
+        "--sources", "structure", "--out", str(tmp_path), "--no-charts",
+        "--start", "2025", "--end", "2025", "--allow-snapshot-fallback",
+    ]) == 0
+    manifest = json.loads((tmp_path / "age_manifest.json").read_text())
+    assert manifest["source_accessed"] == {
+        "structure": fetch_age.dt.date.today().isoformat() if live else None,
+    }
+
+
 # --- charts -----------------------------------------------------------------
 
 def test_charts_render(tmp_path):

@@ -122,6 +122,8 @@ def build(
 ):
     """Fetch, write long + wide CSVs and a manifest. Returns the long DataFrame."""
     rows, base_year = fetch_all(start, end)
+    if not rows:
+        raise RuntimeError("Market sources returned no observations; existing data was not replaced")
     df = to_frame(rows)
 
     path = Path(path)

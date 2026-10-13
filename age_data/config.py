@@ -158,15 +158,12 @@ CAVEATS: dict[str, str] = {
     "median_age_years": (
         "DERIVED, not published: linear interpolation of the cumulative population "
         "distribution within the band containing the 50th percentile. The open-ended "
-        "80+ band is treated as 80-85 for interpolation; reproducible from the WB counts."
+        "80+ band has no known width, so a median in that band is rejected."
     ),
 }
 
 
 # --- Citations (proper bibliographic form; the organisations that collected the data) ---
-# Access date recorded for the live pulls performed while building this section.
-ACCESS_DATE = "2026-10-12"
-
 CITATIONS: dict[str, str] = {
     "un_wpp": (
         "United Nations, Department of Economic and Social Affairs, Population Division "
@@ -174,9 +171,9 @@ CITATIONS: dict[str, str] = {
         "https://population.un.org/wpp/ (data collector / original source)."
     ),
     "world_bank_wdi": (
-        "World Bank (2026). World Development Indicators. Washington, DC: The World Bank. "
-        "https://databank.worldbank.org/source/world-development-indicators. Retrieved "
-        f"{ACCESS_DATE} via the World Bank API ({WORLD_BANK_BASE}), indicators SP.POP.* "
+        "World Bank. World Development Indicators. Washington, DC: The World Bank. "
+        "https://databank.worldbank.org/source/world-development-indicators. "
+        f"Access via the World Bank API ({WORLD_BANK_BASE}), indicators SP.POP.* "
         "(age structure, dependency ratios and 5-year age-sex population). Age/sex bands "
         "are World Bank staff estimates using the UN Population Division's World "
         "Population Prospects."
@@ -190,7 +187,7 @@ SOURCE_WB_DERIVED = "World Bank WDI (derived: median from 5-year age bands)"
 # One-line proper citation for figure source-notes.
 FIGURE_SOURCE_NOTE = (
     "Data: UN DESA Population Division, World Population Prospects 2024, via the World "
-    f"Bank World Development Indicators (SP.POP.*). Accessed {ACCESS_DATE}.\n"
+    "Bank World Development Indicators (SP.POP.*).\n"
     "WPP 2024 age distributions include projections from 2024; median age is a grouped approximation."
 )
 

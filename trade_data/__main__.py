@@ -15,6 +15,8 @@ DEFAULT_CSV = ROOT / "data" / "trade_share_gdp.csv"
 
 
 def _write(rows: list[dict], path: Path) -> None:
+    if not rows:
+        raise RuntimeError("Trade source returned no observations; existing data was not replaced")
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=worldbank.ROW_FIELDS)
@@ -45,4 +47,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

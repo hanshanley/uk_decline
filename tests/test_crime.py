@@ -19,6 +19,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from crime_data import charts, countries, csew, homicide, nations  # noqa: E402
 
 
+def test_empty_fetch_preserves_saved_crime_data(monkeypatch, tmp_path):
+    from crime_data import __main__ as cli
+
+    path = tmp_path / "crime.csv"
+    path.write_text("preserved source data\n")
+    monkeypatch.setattr(cli, "CSEW_CSV", path)
+    monkeypatch.setattr(csew, "build_rows", lambda: [])
+    with pytest.raises(RuntimeError, match="Crime source returned no observations"):
+        cli.main(["--sources", "csew", "--charts-dir", str(tmp_path)])
+    assert path.read_text() == "preserved source data\n"
+
+
 def test_country_mappings() -> None:
     assert countries.COUNTRIES[0].iso3 == countries.UK_ISO3 == "GBR"
     assert countries.group_for_iso3("GBR") == countries.UK

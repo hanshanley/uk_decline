@@ -10,6 +10,23 @@ from uk_migration._aggregate import aggregate_by_year
 from uk_migration.sources import asylum, irregular, ons_ltim, visas
 
 
+def test_empty_fetch_preserves_saved_migration_data(monkeypatch, tmp_path):
+    from uk_migration import combine
+
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    source_path = raw / "visas.csv"
+    combined_path = tmp_path / "combined.csv"
+    for path in (source_path, combined_path):
+        path.write_text("preserved source data\n")
+    monkeypatch.setattr(combine, "RAW_DIR", raw)
+    monkeypatch.setattr(combine, "COMBINED_CSV", combined_path)
+    monkeypatch.setattr(combine, "SOURCES", {"visas": lambda: []})
+    with pytest.raises(RuntimeError, match="Migration source returned no observations"):
+        combine.run(["visas"])
+    assert source_path.read_text() == combined_path.read_text() == "preserved source data\n"
+
+
 def test_schema_row_valid():
     r = schema.row(
         2020, "immigration", 500000,

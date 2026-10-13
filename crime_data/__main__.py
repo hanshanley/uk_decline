@@ -28,6 +28,8 @@ _NATIONS_FIELDS = ["jurisdiction", "year", "metric", "value", "unit", "source"]
 
 
 def _write_csv(rows: list[dict], path: pathlib.Path, fields: list[str]) -> None:
+    if not rows:
+        raise RuntimeError(f"Crime source returned no observations; {path} was not replaced")
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fields)

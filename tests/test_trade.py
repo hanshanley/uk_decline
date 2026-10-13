@@ -8,6 +8,18 @@ import pytest
 from trade_data import charts, worldbank
 
 
+def test_empty_fetch_preserves_saved_trade_data(monkeypatch, tmp_path) -> None:
+    from trade_data import __main__ as cli
+
+    monkeypatch.setattr(worldbank, "fetch", lambda: [])
+    path = tmp_path / "trade.csv"
+    path.write_text("preserved source data\n")
+    with pytest.raises(RuntimeError, match="Trade source returned no observations"):
+        cli.main(["--csv", str(path), "--output", str(tmp_path / "trade.png")])
+    assert path.read_text() == "preserved source data\n"
+    assert not (tmp_path / "trade.png").exists()
+
+
 def test_parse_payload() -> None:
     payload = [
         {"pages": 2},
@@ -76,4 +88,3 @@ def test_chart_renders(tmp_path) -> None:
     output = charts.make_chart(pd.DataFrame(rows), tmp_path / "trade.png")
     assert output.exists()
     assert output.stat().st_size > 20_000
-
