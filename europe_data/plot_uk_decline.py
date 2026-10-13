@@ -30,7 +30,7 @@ matplotlib.use("Agg")  # headless: no display required
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
-from europe_data import pip
+from europe_data import combine, pip
 from ppp_data.figure import labelled_ends
 
 # ── Professional house style (shared vizstyle house style) ───────────────────
@@ -74,16 +74,18 @@ SOURCE_EUROSTAT = ("Data: Eurostat (European Commission), ECHP/EU-SILC \u2014 me
                    "Missing years and flagged method breaks are not connected. UK ends 2018.")
 SOURCE_PIP = ("Data: World Bank Group, Poverty and Inequality Platform \u2014 median "
               f"per-capita income/consumption, {pip.UNIT}. Survey observations only; "
-              "missing years are not connected. Multiply by 365 for an annual figure.")
+              "gaps and known survey/welfare-definition breaks are not connected. "
+              "Multiply by 365 for an annual figure.")
 
 
 def _series(df: pd.DataFrame, country: str, metric: str) -> pd.DataFrame:
     """Non-null (year, value) rows for one country/metric, sorted by year."""
     sub = df[(df["country"] == country) & df[metric].notna()]
     columns = ["year", metric]
-    status_column = f"{metric}__status"
-    if status_column in sub.columns:
-        columns.append(status_column)
+    columns.extend(
+        f"{metric}__{field}" for field in combine.OPTIONAL_FIELDS
+        if f"{metric}__{field}" in sub.columns
+    )
     return sub[columns].sort_values("year")
 
 
@@ -114,9 +116,16 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
         plotted = True
         status_column = f"{metric}__status"
         breaks = (
-            s.loc[s[status_column].fillna("").astype(str).str.contains("b", regex=False), "year"]
-            if status_column in s.columns else ()
+            s.loc[s[status_column].fillna("").astype(str).str.contains("b", regex=False), "year"].tolist()
+            if status_column in s.columns else []
         )
+        for field in ("survey_comparability", "welfare_type"):
+            column = f"{metric}__{field}"
+            if column in s.columns:
+                metadata = s[column]
+                known = metadata.notna() & metadata.ne("")
+                changed = known & known.shift(fill_value=False) & metadata.ne(metadata.shift())
+                breaks.extend(s.loc[changed, "year"])
         annual = with_year_gaps(s.set_index("year")[metric] / scale, breaks=breaks)
         is_uk = country == "United Kingdom"
         label = eu_label if country.startswith("European Union") else country

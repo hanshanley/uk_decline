@@ -67,6 +67,11 @@ def main(argv: list[str] | None = None) -> int:
     for name in tqdm(args.sources, desc="sources", unit="src"):
         stem, fn = fetchers[name]
         rows = fn(args.start, args.end)
+        if not rows:
+            raise RuntimeError(
+                f"{name}: source returned no observations for {args.start}-{args.end}; "
+                "existing data was not replaced"
+            )
         # Retain the legacy CPI-adjusted dollar valuation for downstream consumers.
         if name == "worldbank":
             cpi = worldbank.us_cpi(args.start, args.end)

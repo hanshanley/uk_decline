@@ -3,9 +3,9 @@
 Endpoint: https://api.worldbank.org/pip/v1/pip
 Returns the median daily household per-capita income/consumption in 2021 PPP $.
 
-This is globally comparable and, crucially, covers the UK through ~2021 -- filling the
-gap left by Eurostat (which loses the UK after ~2018). Values are per person per day;
-multiply by 365 for an annual figure (documented in the README).
+PPPs adjust for price differences, but survey welfare definitions can still differ.
+The UK series extends beyond Eurostat's coverage, which ends around 2018. Values are
+per person per day; multiply by 365 for an annual figure (documented in the README).
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def fetch(
 ) -> list[dict]:
     """Fetch PIP median-income rows (national level) for the given years/countries.
 
-    Returns tidy dict rows: iso3, country, year, metric, value, unit, source.
+    Returns tidy rows with the source's comparability identifier and welfare type.
     """
     requested = list(iso3s) if iso3s is not None else countries.iso3_codes()
     # PIP returns a 404 if *any* requested code is absent, so pre-filter to valid codes.
@@ -94,6 +94,8 @@ def fetch(
                 "value": float(median),
                 "unit": UNIT,
                 "source": SOURCE,
+                "survey_comparability": row.get("survey_comparability"),
+                "welfare_type": row.get("welfare_type"),
             })
 
     return [record for _, record in best.values()]

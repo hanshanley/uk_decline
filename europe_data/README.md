@@ -65,7 +65,11 @@ preceding calendar year, with exceptions including the UK. The ECHP-to-EU-SILC
 transition and later national survey changes introduce method breaks. Source status
 flags are retained in the data; charts do not connect observations across a flagged
 break or a missing year. PIP's sparse early surveys are shown as points, not an
-interpolated annual history.
+interpolated annual history. Its comparability-spell identifiers and welfare types
+are retained, and lines also stop at known changes in either. PPP adjustment does
+not eliminate differences in national survey methods or welfare definitions.
+PIP labels observations by the **welfare reporting year**, which can precede the
+survey year when income is collected retrospectively.
 
 ## Data sources (all free, no API key)
 
@@ -93,7 +97,7 @@ Poland. Spain is fetched but not plotted.
 ## Citations
 
 GDP inputs: WDI release updated **8 October 2026**, accessed **12 October 2026**.
-Eurostat income data: accessed **13 October 2026**. PIP and Maddison sources:
+Eurostat and PIP income data: accessed **13 October 2026**. Maddison source:
 accessed **15 August 2026**.
 
 - **World Bank** (2026). *World Development Indicators* — GDP per capita, constant 2015 US$
@@ -136,6 +140,16 @@ pipeline performs interpolation or gap-filling. That does not mean upstream GDP 
 estimates are free of modelling or extrapolation. Eurostat's `status` codes accompany
 the long-format observations and appear as `<metric>__status` columns in the wide table
 when flags are present; `b` identifies a break in series.
+PIP's `survey_comparability` (including the valid identifier `0`) and `welfare_type`
+are retained in long format and as `<metric>__survey_comparability` /
+`<metric>__welfare_type` in wide format. A change between known identifiers or
+welfare types marks a line break; absent metadata alone is not treated as a break.
+This follows the World Bank's
+[PIP comparability guidance](https://worldbank.github.io/PIP-Methodology-2022-04/welfareaggregate.html#comparability)
+and the comparability metadata described in its
+[March 2026 technical note, section 6](https://documents1.worldbank.org/curated/en/099434403202630952/pdf/IDU-6226a428-a460-457e-ad48-9625630a029f.pdf).
+If any requested source returns no observations, the fetch run stops before replacing
+the source files or combined tables.
 
 The [PPP methodology](../ppp_data/README.md#methodology-and-contemporary-research)
 compares the approach with World Bank guidance, the Eurostat-OECD PPP manual, and ONS's

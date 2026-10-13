@@ -8,7 +8,8 @@ import json
 import os
 from typing import Iterable
 
-LONG_FIELDS = ["iso3", "country", "year", "metric", "value", "unit", "source", "status"]
+OPTIONAL_FIELDS = ("status", "survey_comparability", "welfare_type")
+LONG_FIELDS = ["iso3", "country", "year", "metric", "value", "unit", "source", *OPTIONAL_FIELDS]
 
 # Wide-table column order (one row per country-year).
 METRIC_ORDER = [
@@ -31,23 +32,29 @@ def write_long(rows: list[dict], path: str) -> None:
         writer.writeheader()
         for r in rows_sorted:
             writer.writerow({
-                k: r.get(k, "") if k == "status" else r[k] for k in LONG_FIELDS
+                k: r.get(k, "") if k in OPTIONAL_FIELDS else r[k] for k in LONG_FIELDS
             })
 
 
 def write_wide(rows: list[dict], path: str) -> None:
-    # (iso3, country, year) -> metric values and optional source statuses.
-    table: dict[tuple[str, str, int], dict[str, float | str]] = {}
-    flagged_metrics = {r["metric"] for r in rows if r.get("status")}
+    # (iso3, country, year) -> metric values and optional source metadata.
+    table: dict[tuple[str, str, int], dict[str, float | str | int]] = {}
+    metadata_columns = {
+        (r["metric"], field)
+        for r in rows for field in OPTIONAL_FIELDS
+        if r.get(field) is not None and r.get(field) != ""
+    }
     columns = [
         *METRIC_ORDER,
-        *[f"{metric}__status" for metric in METRIC_ORDER if metric in flagged_metrics],
+        *[f"{metric}__{field}" for metric in METRIC_ORDER for field in OPTIONAL_FIELDS
+          if (metric, field) in metadata_columns],
     ]
     for r in rows:
         key = (r["iso3"], r["country"], r["year"])
         table.setdefault(key, {})[r["metric"]] = r["value"]
-        if r.get("status"):
-            table[key][f"{r['metric']}__status"] = r["status"]
+        for field in OPTIONAL_FIELDS:
+            if r.get(field) is not None and r.get(field) != "":
+                table[key][f"{r['metric']}__{field}"] = r[field]
 
     header = ["iso3", "country", "year", *columns]
     with open(path, "w", newline="") as fh:

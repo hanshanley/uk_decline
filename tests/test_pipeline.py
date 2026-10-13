@@ -36,6 +36,63 @@ def test_pip_request_pins_ppp_vintage_and_labels_it(monkeypatch):
     assert rows[0]["unit"] == "2021 PPP $ per day"
 
 
+def test_pip_selected_survey_metadata_survives_long_and_wide(monkeypatch, tmp_path):
+    from europe_data import pip
+
+    common = {"country_code": "GBR", "reporting_year": 2021}
+    payload = [
+        {**common, "reporting_level": "national", "welfare_type": "consumption",
+         "median": 20, "survey_comparability": 9},
+        {**common, "reporting_level": "urban", "welfare_type": "income",
+         "median": 90, "survey_comparability": 8},
+        {**common, "reporting_level": "national", "welfare_type": "income",
+         "median": 50, "survey_comparability": 0},
+        {**common, "reporting_year": 2022, "reporting_level": "national",
+         "welfare_type": "income", "median": 55, "survey_comparability": 1},
+    ]
+    monkeypatch.setattr(pip, "get_json", lambda *args, **kwargs: payload)
+    monkeypatch.setattr(pip, "_valid_codes", {"GBR"})
+    rows = pip.fetch(2021, 2022, iso3s=["GBR"])
+    assert [r["value"] for r in rows] == [50, 55]
+    assert [r["survey_comparability"] for r in rows] == [0, 1]
+    assert [r["welfare_type"] for r in rows] == ["income", "income"]
+    long_path, wide_path = tmp_path / "long.csv", tmp_path / "wide.csv"
+    combine.write_long(rows, str(long_path))
+    combine.write_wide(rows, str(wide_path))
+    with long_path.open() as fh:
+        long = list(csv.DictReader(fh))
+    with wide_path.open() as fh:
+        wide = list(csv.DictReader(fh))
+    assert [r["survey_comparability"] for r in long] == ["0", "1"]
+    assert [r["median_income_pip__survey_comparability"] for r in wide] == ["0", "1"]
+    assert [r["median_income_pip__welfare_type"] for r in wide] == ["income", "income"]
+    assert [float(r["median_income_pip"]) for r in wide] == [50, 55]
+
+
+def test_empty_source_preserves_europe_outputs_after_another_source_succeeds(monkeypatch, tmp_path):
+    import pytest
+    from europe_data import fetch_data
+
+    row = {"iso3": "GBR", "country": "United Kingdom", "year": 2021,
+           "metric": "gdp_per_capita_real_maddison", "value": 40_000,
+           "unit": "2011 international $", "source": "Maddison"}
+    monkeypatch.setattr(fetch_data.maddison, "fetch", lambda *args: [row])
+    monkeypatch.setattr(fetch_data.pip, "fetch", lambda *args: [])
+    paths = [tmp_path / name for name in (
+        "pip_median_income.csv", "europe_combined_long.csv",
+        "europe_combined_wide.csv", "manifest.json",
+    )]
+    for path in paths:
+        path.write_text("preserved source data\n")
+    with pytest.raises(RuntimeError, match="pip: source returned no observations"):
+        fetch_data.main([
+            "--sources", "maddison", "pip", "--out", str(tmp_path),
+            "--start", "2021", "--end", "2021",
+        ])
+    assert all(path.read_text() == "preserved source data\n" for path in paths)
+    assert not (tmp_path / "gdp_per_capita_real_maddison.csv").exists()
+
+
 def test_country_mappings() -> None:
     # Eurostat quirks: Greece is EL (not GR), UK is UK (not GB).
     assert countries.BY_ISO3["GRC"].eurostat == "EL"
@@ -217,6 +274,37 @@ def test_income_chart_preserves_sparse_points_and_source_breaks(monkeypatch, tmp
     assert list(ys[pd.notna(ys)]) == [100, 120, 130]
     assert line.get_marker() == "o"
     assert ax.get_xlabel() == "Survey year"
+
+
+def test_pip_chart_breaks_at_known_survey_and_welfare_changes(monkeypatch, tmp_path):
+    import pandas as pd
+    from europe_data import plot_uk_decline as plots
+
+    metric = "median_income_pip"
+    data = pd.DataFrame([
+        {"country": "United Kingdom", "year": year, metric: value,
+         f"{metric}__survey_comparability": group,
+         f"{metric}__welfare_type": welfare}
+        for year, value, group, welfare in [
+            (2000, 100, 0, "income"), (2001, 110, 0, "income"),
+            (2002, 120, 1, "income"), (2003, 130, None, "income"),
+            (2004, 140, None, "consumption"), (2005, 150, "", ""),
+            (2006, 160, 2, "consumption"),
+        ]
+    ])
+    captured = []
+    monkeypatch.setattr(plots.plt, "savefig", lambda *args, **kwargs:
+                        captured.append(plots.plt.gcf()))
+    plots._line_chart(
+        data, metric, "Income", "PPP $/day", lambda value, _: str(value),
+        plots.SOURCE_PIP, "pip.png", tmp_path,
+    )
+    line = captured[0].axes[0].lines[0]
+    xs, ys = line.get_xdata(), line.get_ydata()
+    assert list(xs[pd.isna(ys)]) == [2001.5, 2003.5]
+    assert list(xs[pd.notna(ys)]) == list(range(2000, 2007))
+    assert list(ys[pd.notna(ys)]) == [100, 110, 120, 130, 140, 150, 160]
+    assert line.get_marker() == "o"
 
 
 def test_combine_long_and_wide() -> None:
