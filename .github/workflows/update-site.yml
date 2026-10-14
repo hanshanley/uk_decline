@@ -54,7 +54,7 @@ jobs:
           git config user.name "hanshanley"
           git config user.email "hanshanley@users.noreply.github.com"
           git add -u
-          git add data/site/refresh.json
+          git add data/site/refresh.json outputs/page_background
           if ! git diff --cached --quiet; then
             git commit -m "Refresh published UK statistics and figures"
           fi

@@ -80,6 +80,18 @@ public-debt stock relative to GDP from market yields on government bonds.
 Each analysis is a self-contained pipeline with its own methodology, caveats, charts, and
 primary-source citations. The complete figure collection is in [`outputs/`](outputs).
 
+Separate [page-background versions](outputs/page_background) use **#F5F5F5** to
+match the article background. Filenames and analysis folders mirror the originals;
+only opaque background pixels change, preserving chart colours, labels, dimensions
+and transparency. Original plots are unchanged. Regenerate these copies after
+rendering charts with:
+
+```bash
+./.venv/bin/python -m scripts.export_page_plots
+```
+
+Automatic source refreshes regenerate these versions too.
+
 ## Setup
 
 ```bash

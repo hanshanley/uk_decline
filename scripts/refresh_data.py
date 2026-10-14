@@ -108,6 +108,7 @@ def refresh(root: Path = ROOT, only: list[str] | None = None) -> None:
             if regressed:
                 raise RuntimeError(f"NHS refresh lost published series or date coverage: {regressed}")
     run(("scorecard.py",), root)
+    run(("-m", "scripts.export_page_plots"), root)
     if only is None:
         status = root / "data/site/refresh.json"
         status.parent.mkdir(parents=True, exist_ok=True)

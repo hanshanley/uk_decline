@@ -252,7 +252,9 @@ def test_partial_refresh_does_not_claim_all_sources_checked(monkeypatch, tmp_pat
     commands = []
     monkeypatch.setattr(refresh_data, "run", lambda command, root: commands.append(command))
     refresh_data.refresh(tmp_path, only=["trade"])
-    assert commands == [("-m", "trade_data"), ("scorecard.py",)]
+    assert commands == [
+        ("-m", "trade_data"), ("scorecard.py",), ("-m", "scripts.export_page_plots"),
+    ]
     assert not (tmp_path / "data/site/refresh.json").exists()
 
 
@@ -267,7 +269,22 @@ def test_complete_refresh_records_success_only_after_scorecard(monkeypatch, tmp_
 
     monkeypatch.setattr(refresh_data, "run", succeed)
     refresh_data.refresh(tmp_path)
-    assert commands == [("-m", "trade_data"), ("scorecard.py",)]
+    assert commands == [
+        ("-m", "trade_data"), ("scorecard.py",), ("-m", "scripts.export_page_plots"),
+    ]
     saved = json.loads(status.read_text())
     assert saved["last_successful_refresh_utc"].endswith("+00:00")
     assert saved["automated_analyses"] == ["trade"]
+
+
+def test_failed_plot_exports_do_not_advance_refresh_date(monkeypatch, tmp_path):
+    monkeypatch.setattr(refresh_data, "STEPS", {"trade": (("-m", "trade_data"),)})
+
+    def fail_export(command, root):
+        if command == ("-m", "scripts.export_page_plots"):
+            raise subprocess.CalledProcessError(1, command)
+
+    monkeypatch.setattr(refresh_data, "run", fail_export)
+    with pytest.raises(subprocess.CalledProcessError):
+        refresh_data.refresh(tmp_path)
+    assert not (tmp_path / "data/site/refresh.json").exists()
