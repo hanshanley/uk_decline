@@ -1,0 +1,27 @@
+{
+  "last_successful_refresh_utc": "2026-10-14T19:36:40+00:00",
+  "automated_analyses": [
+    "gdp-income",
+    "markets",
+    "sterling",
+    "trade",
+    "ageing",
+    "trust",
+    "tax",
+    "nhs",
+    "rail",
+    "london",
+    "crime",
+    "migration",
+    "public-spending",
+    "debt-borrowing",
+    "food-banks",
+    "tuition",
+    "purchasing-power"
+  ],
+  "curated_inputs": [
+    "LSE monthly factsheet selection and historical coverage",
+    "National tuition schedules and publisher workbook editions",
+    "Historical source URLs and manually compiled reference observations"
+  ]
+}

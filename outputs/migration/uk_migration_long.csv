@@ -23,7 +23,7 @@ GBR,United Kingdom,2021,asylum_applications,main_applicant,48182.0,claims,legal,
 GBR,United Kingdom,2022,asylum_applications,main_applicant,76948.0,claims,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2023,asylum_applications,main_applicant,68462.0,claims,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2024,asylum_applications,main_applicant,82368.0,claims,legal,count,Home Office Immigration System Statistics
-GBR,United Kingdom,2025,asylum_applications,main_applicant,82140.0,claims,legal,count,Home Office Immigration System Statistics
+GBR,United Kingdom,2025,asylum_applications,main_applicant,82559.0,claims,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2001,asylum_applications_per_1000_pop,main_applicant,1.2014105693717216,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2002,asylum_applications_per_1000_pop,main_applicant,1.4170679000248592,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2003,asylum_applications_per_1000_pop,main_applicant,0.8283152893201345,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
@@ -48,7 +48,7 @@ GBR,United Kingdom,2021,asylum_applications_per_1000_pop,main_applicant,0.719370
 GBR,United Kingdom,2022,asylum_applications_per_1000_pop,main_applicant,1.1376781595599976,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2023,asylum_applications_per_1000_pop,main_applicant,0.9990660479234159,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2024,asylum_applications_per_1000_pop,main_applicant,1.188897388894502,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2025,asylum_applications_per_1000_pop,main_applicant,1.1820916142587823,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2025,asylum_applications_per_1000_pop,main_applicant,1.1881215191330752,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2012,emigration,all,448000.0,people,total,outflow,ONS Long-Term International Migration
 GBR,United Kingdom,2013,emigration,all,469000.0,people,total,outflow,ONS Long-Term International Migration
 GBR,United Kingdom,2014,emigration,all,494000.0,people,total,outflow,ONS Long-Term International Migration
@@ -878,7 +878,7 @@ GBR,United Kingdom,2021,irregular_arrivals,air,2561.0,detections,irregular,count
 GBR,United Kingdom,2022,irregular_arrivals,air,5130.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2023,irregular_arrivals,air,3854.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2024,irregular_arrivals,air,3349.0,detections,irregular,count,Home Office Immigration System Statistics
-GBR,United Kingdom,2025,irregular_arrivals,air,3027.0,detections,irregular,count,Home Office Immigration System Statistics
+GBR,United Kingdom,2025,irregular_arrivals,air,3016.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2018,irregular_arrivals,all,13377.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2019,irregular_arrivals,all,16531.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2020,irregular_arrivals,all,17030.0,detections,irregular,count,Home Office Immigration System Statistics
@@ -886,7 +886,7 @@ GBR,United Kingdom,2021,irregular_arrivals,all,36785.0,detections,irregular,coun
 GBR,United Kingdom,2022,irregular_arrivals,all,54574.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2023,irregular_arrivals,all,36363.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2024,irregular_arrivals,all,43290.0,detections,irregular,count,Home Office Immigration System Statistics
-GBR,United Kingdom,2025,irregular_arrivals,all,46497.0,detections,irregular,count,Home Office Immigration System Statistics
+GBR,United Kingdom,2025,irregular_arrivals,all,46508.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2018,irregular_arrivals,in_country,7257.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2019,irregular_arrivals,in_country,8492.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2020,irregular_arrivals,in_country,5428.0,detections,irregular,count,Home Office Immigration System Statistics
@@ -894,7 +894,7 @@ GBR,United Kingdom,2021,irregular_arrivals,in_country,5036.0,detections,irregula
 GBR,United Kingdom,2022,irregular_arrivals,in_country,3379.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2023,irregular_arrivals,in_country,2836.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2024,irregular_arrivals,in_country,2900.0,detections,irregular,count,Home Office Immigration System Statistics
-GBR,United Kingdom,2025,irregular_arrivals,in_country,1817.0,detections,irregular,count,Home Office Immigration System Statistics
+GBR,United Kingdom,2025,irregular_arrivals,in_country,1816.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2018,irregular_arrivals,port,1052.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2019,irregular_arrivals,port,959.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2020,irregular_arrivals,port,808.0,detections,irregular,count,Home Office Immigration System Statistics
@@ -902,7 +902,7 @@ GBR,United Kingdom,2021,irregular_arrivals,port,662.0,detections,irregular,count
 GBR,United Kingdom,2022,irregular_arrivals,port,291.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2023,irregular_arrivals,port,236.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2024,irregular_arrivals,port,225.0,detections,irregular,count,Home Office Immigration System Statistics
-GBR,United Kingdom,2025,irregular_arrivals,port,181.0,detections,irregular,count,Home Office Immigration System Statistics
+GBR,United Kingdom,2025,irregular_arrivals,port,204.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2018,irregular_arrivals,small_boat,299.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2019,irregular_arrivals,small_boat,1843.0,detections,irregular,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2020,irregular_arrivals,small_boat,8466.0,detections,irregular,count,Home Office Immigration System Statistics
@@ -918,7 +918,7 @@ GBR,United Kingdom,2021,irregular_arrivals_per_1000_pop,all,0.5492101884200782,"
 GBR,United Kingdom,2022,irregular_arrivals_per_1000_pop,all,0.8068779939677094,"per 1,000 population",irregular,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2023,irregular_arrivals_per_1000_pop,all,0.5306453025129149,"per 1,000 population",irregular,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2024,irregular_arrivals_per_1000_pop,all,0.6248466390496673,"per 1,000 population",irregular,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2025,irregular_arrivals_per_1000_pop,all,0.6691467468735159,"per 1,000 population",irregular,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2025,irregular_arrivals_per_1000_pop,all,0.6693050498654425,"per 1,000 population",irregular,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,1990,migrant_stock,all,3664896.0,people,total,stock,World Bank WDI
 GBR,United Kingdom,1995,migrant_stock,all,4173053.0,people,total,stock,World Bank WDI
 GBR,United Kingdom,2000,migrant_stock,all,4747902.0,people,total,stock,World Bank WDI
@@ -1564,7 +1564,7 @@ GBR,United Kingdom,2021,visas_granted,family,42182.0,visas issued,legal,count,Ho
 GBR,United Kingdom,2022,visas_granted,family,47119.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2023,visas_granted,family,80083.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2024,visas_granted,family,85161.0,visas issued,legal,count,Home Office Immigration System Statistics
-GBR,United Kingdom,2025,visas_granted,family,66610.0,visas issued,legal,count,Home Office Immigration System Statistics
+GBR,United Kingdom,2025,visas_granted,family,65971.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2005,visas_granted,other,124084.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2006,visas_granted,other,123524.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2007,visas_granted,other,118840.0,visas issued,legal,count,Home Office Immigration System Statistics
@@ -1585,7 +1585,7 @@ GBR,United Kingdom,2021,visas_granted,other,181483.0,visas issued,legal,count,Ho
 GBR,United Kingdom,2022,visas_granted,other,335153.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2023,visas_granted,other,134508.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2024,visas_granted,other,95700.0,visas issued,legal,count,Home Office Immigration System Statistics
-GBR,United Kingdom,2025,visas_granted,other,72539.0,visas issued,legal,count,Home Office Immigration System Statistics
+GBR,United Kingdom,2025,visas_granted,other,72243.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2005,visas_granted,study,207418.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2006,visas_granted,study,234329.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2007,visas_granted,study,246196.0,visas issued,legal,count,Home Office Immigration System Statistics
@@ -1606,7 +1606,7 @@ GBR,United Kingdom,2021,visas_granted,study,435110.0,visas issued,legal,count,Ho
 GBR,United Kingdom,2022,visas_granted,study,623698.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2023,visas_granted,study,604253.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2024,visas_granted,study,418932.0,visas issued,legal,count,Home Office Immigration System Statistics
-GBR,United Kingdom,2025,visas_granted,study,429254.0,visas issued,legal,count,Home Office Immigration System Statistics
+GBR,United Kingdom,2025,visas_granted,study,427340.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2005,visas_granted,visitor,1424155.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2006,visas_granted,visitor,1550650.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2007,visas_granted,visitor,1427381.0,visas issued,legal,count,Home Office Immigration System Statistics
@@ -1627,7 +1627,7 @@ GBR,United Kingdom,2021,visas_granted,visitor,401977.0,visas issued,legal,count,
 GBR,United Kingdom,2022,visas_granted,visitor,1396161.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2023,visas_granted,visitor,1954981.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2024,visas_granted,visitor,2159540.0,visas issued,legal,count,Home Office Immigration System Statistics
-GBR,United Kingdom,2025,visas_granted,visitor,2241336.0,visas issued,legal,count,Home Office Immigration System Statistics
+GBR,United Kingdom,2025,visas_granted,visitor,2239582.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2005,visas_granted,work,243424.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2006,visas_granted,work,249603.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2007,visas_granted,work,205790.0,visas issued,legal,count,Home Office Immigration System Statistics
@@ -1648,7 +1648,7 @@ GBR,United Kingdom,2021,visas_granted,work,239193.0,visas issued,legal,count,Hom
 GBR,United Kingdom,2022,visas_granted,work,421565.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2023,visas_granted,work,613627.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2024,visas_granted,work,368139.0,visas issued,legal,count,Home Office Immigration System Statistics
-GBR,United Kingdom,2025,visas_granted,work,261112.0,visas issued,legal,count,Home Office Immigration System Statistics
+GBR,United Kingdom,2025,visas_granted,work,260430.0,visas issued,legal,count,Home Office Immigration System Statistics
 GBR,United Kingdom,2005,visas_granted_per_1000_pop,family,1.0983721086628635,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2006,visas_granted_per_1000_pop,family,1.152977263232491,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2007,visas_granted_per_1000_pop,family,1.0506264237951433,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
@@ -1669,7 +1669,7 @@ GBR,United Kingdom,2021,visas_granted_per_1000_pop,family,0.6297888859028338,"pe
 GBR,United Kingdom,2022,visas_granted_per_1000_pop,family,0.6966556271807912,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2023,visas_granted_per_1000_pop,family,1.168651314829408,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2024,visas_granted_per_1000_pop,family,1.2292114721207834,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2025,visas_granted_per_1000_pop,family,0.9585965720206658,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2025,visas_granted_per_1000_pop,family,0.9494006073078418,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2005,visas_granted_per_1000_pop,other,2.0543298423544725,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2006,visas_granted_per_1000_pop,other,2.030081440574873,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2007,visas_granted_per_1000_pop,other,1.9379521660765648,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
@@ -1690,7 +1690,7 @@ GBR,United Kingdom,2021,visas_granted_per_1000_pop,other,2.7095912090537193,"per
 GBR,United Kingdom,2022,visas_granted_per_1000_pop,other,4.955245727127565,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2023,visas_granted_per_1000_pop,other,1.962875404955783,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2024,visas_granted_per_1000_pop,other,1.3813311008790288,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2025,visas_granted_per_1000_pop,other,1.0439218846690748,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2025,visas_granted_per_1000_pop,other,1.0396620950681421,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2005,visas_granted_per_1000_pop,study,3.4340042813052443,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2006,visas_granted_per_1000_pop,study,3.851129771449026,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2007,visas_granted_per_1000_pop,study,4.014776771115668,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
@@ -1711,7 +1711,7 @@ GBR,United Kingdom,2021,visas_granted_per_1000_pop,study,6.496312221923616,"per 
 GBR,United Kingdom,2022,visas_granted_per_1000_pop,study,9.221390975220297,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2023,visas_granted_per_1000_pop,study,8.81786475206491,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2024,visas_granted_per_1000_pop,study,6.046852672449878,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2025,visas_granted_per_1000_pop,study,6.177472045130743,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2025,visas_granted_per_1000_pop,study,6.149927324535525,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2005,visas_granted_per_1000_pop,visitor,23.57825438121219,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2006,visas_granted_per_1000_pop,visitor,25.48448711041925,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2007,visas_granted_per_1000_pop,visitor,23.27664170958039,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
@@ -1732,7 +1732,7 @@ GBR,United Kingdom,2021,visas_granted_per_1000_pop,visitor,6.001627400041805,"pe
 GBR,United Kingdom,2022,visas_granted_per_1000_pop,visitor,20.642276302560767,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2023,visas_granted_per_1000_pop,visitor,28.52904007238129,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2024,visas_granted_per_1000_pop,visitor,31.17073945237511,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2025,visas_granted_per_1000_pop,visitor,32.255472246607276,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2025,visas_granted_per_1000_pop,visitor,32.23023011498553,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2005,visas_granted_per_1000_pop,work,4.03011820658018,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2006,visas_granted_per_1000_pop,work,4.102153571871135,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2007,visas_granted_per_1000_pop,work,3.3558665117544284,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
@@ -1753,4 +1753,4 @@ GBR,United Kingdom,2021,visas_granted_per_1000_pop,work,3.571217414673475,"per 1
 GBR,United Kingdom,2022,visas_granted_per_1000_pop,work,6.232849370157904,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2023,visas_granted_per_1000_pop,work,8.954659545282082,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
 GBR,United Kingdom,2024,visas_granted_per_1000_pop,work,5.31370794301468,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
-GBR,United Kingdom,2025,visas_granted_per_1000_pop,work,3.757710075265877,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL
+GBR,United Kingdom,2025,visas_granted_per_1000_pop,work,3.747895289766431,"per 1,000 population",legal,count,Derived: Home Office Immigration System Statistics ÷ World Bank SP.POP.TOTL

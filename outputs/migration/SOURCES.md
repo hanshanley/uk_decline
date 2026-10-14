@@ -24,17 +24,17 @@ population adjustment, since headcounts are not monetary and CPI inflation does 
 
 | File | Shows | Source |
 |---|---|---|
-| `immigration_over_time.png` | UK long-term immigration over time, 1964–2025 | ONS IPS Long-Term International Migration, 1964–2015, ad hoc 006408 (ons.gov.uk); ONS Long-Term International Migration (ons.gov.uk) (admin-based, 2012+)
-Note: methodology changes at 2012; IPS is shown through 2011 and administrative estimates from 2012. |
-| `net_migration.png` | UK net long-term migration over time, 1964–2025 | ONS IPS Long-Term International Migration, 1964–2015, ad hoc 006408 (ons.gov.uk); ONS Long-Term International Migration (ons.gov.uk) (admin-based, 2012+)
-Note: methodology changes at 2012; IPS is shown through 2011 and administrative estimates from 2012. |
-| `immigration_vs_emigration.png` | Annual immigration vs emigration flows (2012+) | ONS Long-Term International Migration (ons.gov.uk) |
-| `immigration_by_origin.png` | Immigration by citizenship group, 1964–2025 (IPS + admin-based) | ONS IPS Long-Term International Migration, 1964–2015, ad hoc 006408 (ons.gov.uk); ONS Long-Term International Migration (ons.gov.uk) (admin-based, 2012+)
-Note: methodology changes at 2012; IPS is shown through 2011 and administrative estimates from 2012. |
-| `net_migration_by_origin.png` | Net migration by citizenship group, 1964–2025 (IPS + admin-based) | ONS IPS Long-Term International Migration, 1964–2015, ad hoc 006408 (ons.gov.uk); ONS Long-Term International Migration (ons.gov.uk) (admin-based, 2012+)
-Note: methodology changes at 2012; IPS is shown through 2011 and administrative estimates from 2012. |
+| `immigration_over_time.png` | UK long-term immigration over time, 1964–2025 | Office for National Statistics, International Passenger Survey, long-term migration 1964–2015, ad hoc 006408 (ons.gov.uk); Office for National Statistics, Long-Term International Migration (ons.gov.uk) (admin-based, 2012+)
+Note: International Passenger Survey through 2011; revised estimates based on administrative records from 2012. Different methods are not directly comparable. |
+| `net_migration.png` | UK net long-term migration over time, 1964–2025 | Office for National Statistics, International Passenger Survey, long-term migration 1964–2015, ad hoc 006408 (ons.gov.uk); Office for National Statistics, Long-Term International Migration (ons.gov.uk) (admin-based, 2012+)
+Note: International Passenger Survey through 2011; revised estimates based on administrative records from 2012. Different methods are not directly comparable. |
+| `immigration_vs_emigration.png` | Annual immigration vs emigration flows (2012+) | Office for National Statistics, Long-Term International Migration (ons.gov.uk) |
+| `immigration_by_origin.png` | Immigration by citizenship group, 1964–2025 (IPS + admin-based) | Office for National Statistics, International Passenger Survey, long-term migration 1964–2015, ad hoc 006408 (ons.gov.uk); Office for National Statistics, Long-Term International Migration (ons.gov.uk) (admin-based, 2012+)
+Note: International Passenger Survey through 2011; revised estimates based on administrative records from 2012. Different methods are not directly comparable. |
+| `net_migration_by_origin.png` | Net migration by citizenship group, 1964–2025 (IPS + admin-based) | Office for National Statistics, International Passenger Survey, long-term migration 1964–2015, ad hoc 006408 (ons.gov.uk); Office for National Statistics, Long-Term International Migration (ons.gov.uk) (admin-based, 2012+)
+Note: International Passenger Survey through 2011; revised estimates based on administrative records from 2012. Different methods are not directly comparable. |
 | `visas_by_category.png` | Entry-clearance visas granted by category (2005+) | Home Office Immigration System Statistics (gov.uk), entry-clearance-visa-outcomes dataset |
 | `asylum_applications.png` | Asylum applications, main applicants (2001+) | Home Office Immigration System Statistics (gov.uk), asylum-claims dataset |
 | `irregular_arrivals.png` | Detected irregular arrivals incl. small boats (2018+) | Home Office Immigration System Statistics (gov.uk), illegal-entry-routes dataset |
-| `legal_vs_irregular.png` | Total immigration vs detected irregular arrivals, log scale | ONS Long-Term International Migration (ons.gov.uk); Home Office Immigration System Statistics (gov.uk) |
-| `net_migration_per_capita.png` | ONS net migration per 1,000 population, 1964–2025 | ONS IPS Long-Term International Migration, 1964–2015, ad hoc 006408 (ons.gov.uk); ONS Long-Term International Migration (ons.gov.uk); World Bank WDI (api.worldbank.org) (SP.POP.TOTL denominator only) |
+| `legal_vs_irregular.png` | Total immigration vs detected irregular arrivals, log scale | Office for National Statistics, Long-Term International Migration (ons.gov.uk); Home Office Immigration System Statistics (gov.uk) |
+| `net_migration_per_capita.png` | ONS net migration per 1,000 population, 1964–2025 | Office for National Statistics, International Passenger Survey, long-term migration 1964–2015, ad hoc 006408 (ons.gov.uk); Office for National Statistics, Long-Term International Migration (ons.gov.uk); World Bank, World Development Indicators (api.worldbank.org) (SP.POP.TOTL denominator only) |

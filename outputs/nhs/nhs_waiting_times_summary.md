@@ -3,7 +3,7 @@
 Coverage: **Jul 2007 – Sep 2026** across 4 nations. Source data is devolved and defined differently per nation — read each metric's caveat and compare *trends*, not exact levels.
 
 
-## Elective waiting list (pathways / ongoing waits) (pathways / waits)
+## Recorded waits for planned care (pathways / waits)
 
 Recorded elective pathways / ongoing waits, not unique people. Scotland sums outpatient and inpatient/day-case waits; NI covers first outpatient appointments only, not a complete RTT pathway.
 
@@ -14,9 +14,9 @@ Recorded elective pathways / ongoing waits, not unique people. Scotland sums out
 | Wales | 392k (Sep 2011) | 710k (Jul 2026) | ↑ 317k (worse) |
 | Northern Ireland | 77k (Jun 2008) | 505k (Jun 2026) | Not like-for-like (encompass break) |
 
-> Caveat: England/Wales report RTT 'incomplete pathways'; Scotland reports 'ongoing waits' by stage of treatment; NI reports outpatient/inpatient/day-case waits separately (only outpatient waits are used here). These count waits, not unique people, and are not directly comparable across nations. England excludes non-English commissioned (NONC) pathways and estimates for missing providers. It excludes sexual-health pathways from April 2013 and community-service pathways from February 2024. NI's encompass rollout from November 2023 introduces a break: the Department says encompass and legacy figures are not directly comparable.
+> Caveat: England/Wales report referral-to-treatment 'incomplete pathways'; Scotland reports 'ongoing waits' by stage of treatment; NI reports outpatient/inpatient/day-case waits separately (only outpatient waits are used here). These count waits, not unique people, and are not directly comparable across nations. England excludes non-English commissioned treatment entries and estimates for missing providers. It excludes sexual-health pathways from April 2013 and community-service pathways from February 2024. NI's encompass rollout from November 2023 introduces a break: the Department says encompass and legacy figures are not directly comparable.
 
-## Elective pathways / waits per 1,000 residents (waits per 1,000 residents)
+## Planned-care waits per 1,000 residents (waits per 1,000 residents)
 
 Recorded elective pathways / ongoing waits per 1,000 residents, using published mid-year population estimates. This is not the number or proportion of unique residents waiting.
 
@@ -27,9 +27,9 @@ Recorded elective pathways / ongoing waits per 1,000 residents, using published 
 | Wales | 128.1/1k (Sep 2011) | 233.4/1k (Dec 2025) | ↑ 105.3/1k (worse) |
 | Northern Ireland | 43.3/1k (Jun 2008) | 273.3/1k (Dec 2025) | Not like-for-like (encompass break) |
 
-> Caveat: Derived: RTT waiting list ÷ real ONS mid-year population estimate × 1,000. Population comes from ONS/NRS/NISRA via Nomis; only years with a published estimate are shown (no projection/extrapolation). Not the proportion of residents waiting: people can have multiple waits. Inherits the per-nation RTT definitional differences.
+> Caveat: Derived: recorded waits ÷ published mid-year population estimate × 1,000. Population comes from the UK nations' official statistics agencies via Nomis; only years with a published estimate are shown (no projection/extrapolation). Not the proportion of residents waiting: people can have multiple waits. Inherits the national differences in what the waiting lists cover.
 
-## RTT median wait (weeks)
+## Median waiting time for planned treatment (weeks)
 
 Median waiting time of patients still waiting to start treatment.
 
@@ -40,7 +40,7 @@ Median waiting time of patients still waiting to start treatment.
 
 > Caveat: England is estimated from weekly count bands (midpoint of the median band); Wales reports its median. Scotland's stage medians cannot be combined into a pooled median and are not included.
 
-## A&E admitted, transferred or discharged within 4 hours (percent)
+## Emergency care: admitted, transferred or discharged within 4 hours (percent)
 
 Share of A&E attendances admitted, transferred or discharged within 4 hours (target 95%).
 
@@ -51,7 +51,7 @@ Share of A&E attendances admitted, transferred or discharged within 4 hours (tar
 | Wales | 91.7% (Oct 2009) | 63.8% (Aug 2026) | ↓ 27.9 pp (worse) |
 | Northern Ireland | 91.4% (Apr 2008) | 42.8% (Jun 2026) | Not like-for-like (encompass break) |
 
-> Caveat: A&E 4-hour scope differs (all types vs major/Type-1 only) and reporting cadence varies (weekly/monthly) between nations. NI includes Types 1–3 (including urgent care centres); service mix changes over time. Its rate uses classified waiting-time bands, which can cover fewer records than total attendances. Its encompass recording changes are conservatively segmented, and the affected statistics are in development.
+> Caveat: Emergency-department 4-hour scope differs (all types vs major/Type-1 only) and reporting cadence varies (weekly/monthly) between nations. NI includes Types 1–3 (including urgent care centres); service mix changes over time. Its rate uses classified waiting-time bands, which can cover fewer records than total attendances. Its encompass recording changes are conservatively segmented, and the affected statistics are in development.
 
 ## Cancer treated within 62 days (percent)
 
@@ -66,7 +66,7 @@ Share of patients starting first cancer treatment within 62 days of an urgent re
 
 > Caveat: 62-day cancer pathway definitions and standards were revised at different times per nation. England's October 2023 standards change is a comparability break, not an improvement or deterioration in performance. Wales changes from the urgent suspected pathway to the broader suspected cancer pathway from June 2019, with an earlier clock start. NI's encompass rollout from November 2023 also breaks comparability; revised 62-day counts replace superseded data. Months missing any trust are omitted.
 
-## Diagnostics: six-week threshold (percent)
+## Diagnostic-test waits of six weeks or more (percent)
 
 Share of patients on the diagnostic-test waiting list who have been waiting 6 weeks or more (breach of the 6-week standard).
 
@@ -77,7 +77,7 @@ Share of patients on the diagnostic-test waiting list who have been waiting 6 we
 | Wales | 48.5% (Aug 2024) | 42.9% (Jul 2026) | ↓ 5.6 pp (better) |
 | Northern Ireland | 36.1% (Mar 2008) | 69.2% (Jun 2026) | Not like-for-like (encompass break) |
 
-> Caveat: Diagnostic test lists (DM01 in England) cover different test sets per nation. NI's current target is 9 weeks, not the 6-week threshold shown here; its encompass rollout from November 2023 breaks comparability with legacy figures. Welsh six-week values use detailed bands available from August 2024 only; the historical over-eight-week series is a separate metric, not a substitute or a continuation of this series.
+> Caveat: Diagnostic-test waiting lists cover different test sets per nation. NI's current target is 9 weeks, not the 6-week threshold shown here; its encompass rollout from November 2023 breaks comparability with legacy figures. Welsh six-week values use detailed bands available from August 2024 only; the historical over-eight-week series is a separate metric, not a substitute or a continuation of this series.
 
 ## Wales diagnostics: waiting over 8 weeks (percent)
 
