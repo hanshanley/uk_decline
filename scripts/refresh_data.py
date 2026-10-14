@@ -23,7 +23,7 @@ STEPS = {
     "ageing": (("-m", "age_data.fetch_age"),),
     "trust": (("-m", "trust_data.fetch_trust", "--charts", "--summary"),),
     "tax": (("-m", "tax.fetch_tax"),),
-    "nhs": (("-m", "nhs_data"),),
+    "nhs": (("-m", "nhs_data", "--start", "2007"),),
     "rail": (("-m", "rail_data"),),
     "london": (("-m", "london_data"),),
     "crime": (("-m", "crime_data"),),
@@ -65,7 +65,7 @@ def run(command: tuple[str, ...], root: Path) -> None:
     # Incomplete trust aggregates are intentionally excluded; coverage is checked below.
     failure_output = "\n".join(
         line for line in result.stdout.splitlines()
-        if not (command == ("-m", "nhs_data") and EXPECTED_NHS_OMISSION.fullmatch(line))
+        if not (command[:2] == ("-m", "nhs_data") and EXPECTED_NHS_OMISSION.fullmatch(line))
     )
     if FAILURE_NOTICE.search(failure_output):
         raise RuntimeError(

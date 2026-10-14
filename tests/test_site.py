@@ -101,7 +101,7 @@ def test_refresh_rejects_errors_and_partial_source_warnings(monkeypatch, tmp_pat
         lambda *args, **kwargs: subprocess.CompletedProcess(args[0], returncode, stdout=output),
     )
     with pytest.raises((subprocess.CalledProcessError, RuntimeError)):
-        refresh_data.run(("-m", "nhs_data"), tmp_path)
+        refresh_data.run(("-m", "nhs_data", "--start", "2007"), tmp_path)
 
 
 def test_refresh_retains_expected_omission_diagnostic(monkeypatch, tmp_path, capsys):
