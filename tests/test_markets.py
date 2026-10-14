@@ -187,7 +187,8 @@ def test_lse_chart_uses_only_uk_series_and_discloses_partial_year(monkeypatch, t
         ax = fig.axes[0]
         seen.append(list(ax.lines[0].get_ydata()))
         assert "31 July 2026" in " ".join(text.get_text() for text in ax.texts)
-        assert "not the World Bank/WFE definition" in " ".join(text.get_text() for text in fig.texts)
+        caption = " ".join(" ".join(text.get_text().split()) for text in fig.texts)
+        assert "not the World Bank / World Federation of Exchanges definition" in caption
         return tmp_path / name
 
     monkeypatch.setattr(charts, "_save", save)

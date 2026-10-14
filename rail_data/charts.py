@@ -15,6 +15,7 @@ in the terracotta accent, italic source note).
 from __future__ import annotations
 
 import pathlib
+import textwrap
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -110,17 +111,25 @@ def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
         handlelength=2.0,
     )
     fig.autofmt_xdate(rotation=30, ha="right")
-    source_note(
-        fig,
+    citation = (
         "Source: Office of Rail and Road (ORR), Data Portal Table 3113. "
         "Published sector aggregates and trains-weighted moving annual averages; "
         "not joined to the earlier reconstructed series."
         if official else
         "Source: Office of Rail and Road (ORR), Data Portal Table 3103. "
         "Approximate trains-weighted aggregates; four-quarter arithmetic means, "
-        "not official moving annual averages.",
+        "not official moving annual averages."
     )
-    fig.tight_layout(rect=[0, 0.055, 1, 1], pad=0.7)
+    definition = (
+        "Counts full or part cancellations and trains arriving more than 30 minutes late."
+        if metric == "casl_pct" else
+        "Arrival threshold: within 5 minutes for London, regional and other commuter trains; "
+        "within 10 minutes for long-distance trains in the Great Britain comparison. "
+        "This is not the stricter one-minute arrival measure."
+    )
+    source_note(fig, textwrap.fill(citation, width=145) + "\n"
+                + textwrap.fill(definition, width=145))
+    fig.tight_layout(rect=[0, 0.13, 1, 1], pad=0.7)
     out_dir = pathlib.Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / filename
@@ -135,7 +144,7 @@ def make_charts(source, out_dir="outputs/rail") -> list[pathlib.Path]:
     p = _chart(
         df, "casl_pct",
         "Rail disruption \u2014 London & South East",
-        "Cancelled or significantly late trains, 4-quarter arithmetic mean",
+        "Cancelled or more than 30 minutes late; four-quarter arithmetic average",
         "Share of trains (%)\n(higher = worse)",
         "rail_london_casl.png", out_dir,
     )
@@ -144,8 +153,8 @@ def make_charts(source, out_dir="outputs/rail") -> list[pathlib.Path]:
     p = _chart(
         df, "ppm_pct",
         "Rail punctuality \u2014 London & South East",
-        "Public Performance Measure (PPM), 4-quarter arithmetic mean",
-        "Trains meeting PPM (%)",
+        "Arrivals within 5 or 10 minutes; four-quarter arithmetic average",
+        "Arrivals within 5 / 10 minutes (%)",
         "rail_london_ppm.png", out_dir,
     )
     if p:
@@ -153,8 +162,8 @@ def make_charts(source, out_dir="outputs/rail") -> list[pathlib.Path]:
     p = _chart(
         df, "ppm_official_maa_pct",
         "Rail punctuality \u2014 official London & South East series",
-        "PPM, ORR moving annual average",
-        "Trains meeting PPM (%)",
+        "Arrivals within 5 or 10 minutes; published rolling annual average",
+        "Arrivals within 5 / 10 minutes (%)",
         "rail_london_ppm_official.png", out_dir,
     )
     if p:

@@ -36,7 +36,7 @@ class Metric(NamedTuple):
 METRICS: dict[str, Metric] = {
     "rtt_waiting_list_total": Metric(
         "rtt_waiting_list_total",
-        "Elective waiting list (pathways / ongoing waits)",
+        "Recorded waits for planned care",
         "pathways / waits",
         "rtt",
         higher_is_better=False,
@@ -48,7 +48,7 @@ METRICS: dict[str, Metric] = {
     ),
     "rtt_waiting_list_per_1000": Metric(
         "rtt_waiting_list_per_1000",
-        "Elective pathways / waits per 1,000 residents",
+        "Planned-care waits per 1,000 residents",
         "waits per 1,000 residents",
         "rtt",
         higher_is_better=False,
@@ -60,7 +60,7 @@ METRICS: dict[str, Metric] = {
     ),
     "rtt_median_wait_weeks": Metric(
         "rtt_median_wait_weeks",
-        "RTT median wait",
+        "Median waiting time for planned treatment",
         "weeks",
         "rtt",
         higher_is_better=False,
@@ -68,7 +68,7 @@ METRICS: dict[str, Metric] = {
     ),
     "ae_4hr_pct": Metric(
         "ae_4hr_pct",
-        "A&E admitted, transferred or discharged within 4 hours",
+        "Emergency care: admitted, transferred or discharged within 4 hours",
         "percent",
         "ae",
         higher_is_better=True,
@@ -90,7 +90,7 @@ METRICS: dict[str, Metric] = {
     ),
     "diagnostics_6week_breach_pct": Metric(
         "diagnostics_6week_breach_pct",
-        "Diagnostics: six-week threshold",
+        "Diagnostic-test waits of six weeks or more",
         "percent",
         "diagnostics",
         higher_is_better=False,
@@ -113,22 +113,23 @@ METRICS: dict[str, Metric] = {
 # and the trend summary so comparisons stay honest.
 CAVEATS: dict[str, str] = {
     "rtt_waiting_list_total": (
-        "England/Wales report RTT 'incomplete pathways'; Scotland reports 'ongoing "
+        "England/Wales report referral-to-treatment 'incomplete pathways'; Scotland reports 'ongoing "
         "waits' by stage of treatment; NI reports outpatient/inpatient/day-case "
         "waits separately (only outpatient waits are used here). These count waits, "
         "not unique people, and are not directly comparable across nations. England "
-        "excludes non-English commissioned (NONC) pathways and estimates for missing "
+        "excludes non-English commissioned treatment entries and estimates for missing "
         "providers. It excludes sexual-health pathways from April 2013 and "
         "community-service pathways from February 2024. NI's "
         "encompass rollout from November 2023 introduces a break: the Department "
         "says encompass and legacy figures are not directly comparable."
     ),
     "rtt_waiting_list_per_1000": (
-        "Derived: RTT waiting list \u00f7 real ONS mid-year population estimate "
-        "\u00d7 1,000. Population comes from ONS/NRS/NISRA via Nomis; only years "
+        "Derived: recorded waits \u00f7 published mid-year population estimate "
+        "\u00d7 1,000. Population comes from the UK nations' official statistics agencies "
+        "via Nomis; only years "
         "with a published estimate are shown (no projection/extrapolation). "
         "Not the proportion of residents waiting: people can have multiple waits. "
-        "Inherits the per-nation RTT definitional differences."
+        "Inherits the national differences in what the waiting lists cover."
     ),
     "rtt_median_wait_weeks": (
         "England is estimated from weekly count bands (midpoint of the median "
@@ -136,7 +137,7 @@ CAVEATS: dict[str, str] = {
         "combined into a pooled median and are not included."
     ),
     "ae_4hr_pct": (
-        "A&E 4-hour scope differs (all types vs major/Type-1 only) and reporting "
+        "Emergency-department 4-hour scope differs (all types vs major/Type-1 only) and reporting "
         "cadence varies (weekly/monthly) between nations. NI includes Types 1–3 "
         "(including urgent care centres); service mix changes over time. Its "
         "rate uses classified waiting-time bands, which can cover fewer records "
@@ -154,7 +155,7 @@ CAVEATS: dict[str, str] = {
         "counts replace superseded data. Months missing any trust are omitted."
     ),
     "diagnostics_6week_breach_pct": (
-        "Diagnostic test lists (DM01 in England) cover different test sets per "
+        "Diagnostic-test waiting lists cover different test sets per "
         "nation. NI's current target is 9 weeks, not the 6-week threshold shown "
         "here; its encompass rollout from November 2023 breaks comparability "
         "with legacy figures. Welsh six-week values use detailed bands available from August "

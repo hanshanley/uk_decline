@@ -97,7 +97,7 @@ def headline_bars(rows: list[dict], out_path: str, year: Optional[int] = None) -
     """Grouped bars: UK / Europe median / US across the three headline metrics."""
     variants = [
         ("tax_to_gdp_pct", "", "", "Total tax\n(% of GDP)"),
-        ("tax_wedge_pct", "single_nokids", "100aw", "Labour tax wedge\n(avg-wage worker)"),
+        ("tax_wedge_pct", "single_nokids", "100aw", "Taxes on labour\n(average-wage worker)"),
         ("net_personal_avg_tax_rate_pct", "single_nokids", "100aw", "Net personal\navg tax rate"),
     ]
     variant_rows = [
@@ -239,9 +239,9 @@ def tax_wedge_by_earnings(rows: list[dict], out_path: str, year: Optional[int] =
     ax.set_xticks(list(x))
     ax.set_xticklabels(labels)
     ax.yaxis.set_major_formatter(mtick.PercentFormatter())
-    ax.set_ylabel("Labour tax wedge")
+    ax.set_ylabel("Taxes as a share of total employment cost")
     ax.set_title(
-        f"Labour tax wedge by earnings level, {year}", fontweight="bold", pad=14
+        f"Taxes on labour by earnings level, {year}", fontweight="bold", pad=14
     )
     ax.legend(loc="upper left", frameon=False)
     return _finish(fig, ax, out_path)

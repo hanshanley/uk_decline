@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import textwrap
 
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
@@ -313,11 +314,15 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     fig.text(
         0.057,
         0.041,
-        "Note: 2000–01 to 2002–03 use PESA 2012; later years use PSS 2026. Each "
-        "vintage is indexed to its own 2010–11 value; at the 2003–04 seam the "
-        "panels differ by up to 3 index points, and by up to 7 across the full overlap.\n"
-        "Education is omitted because of an accounting "
-        "break. Net investment is after depreciation and includes net capital grants.",
+        textwrap.fill(
+            "Note: 2000–01 to 2002–03 use Public Expenditure Statistical Analyses 2012; "
+            "later years use Public Spending Statistics 2026. Each "
+            "vintage is indexed to its own 2010–11 value; at the 2003–04 seam the "
+            "panels differ by up to 3 index points, and by up to 7 across the full overlap. "
+            "Education is omitted because of an accounting "
+            "break. Net investment is after depreciation and includes net capital grants.",
+            width=195,
+        ),
         ha="left",
         fontsize=8.4,
         color=MUTED,
@@ -326,8 +331,9 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     fig.text(
         0.057,
         0.015,
-        "Source: HM Treasury, PESA 2012 Table 4.3 and Public Spending Statistics "
-        "July 2026, Tables 4.1 and 4.3. Context: New York Times / IFS, 2019.",
+        "Source: HM Treasury, Public Expenditure Statistical Analyses 2012 Table 4.3 and "
+        "Public Spending Statistics July 2026, Tables 4.1 and 4.3.\n"
+        "Context: New York Times / Institute for Fiscal Studies, 2019.",
         ha="left",
         fontsize=8.4,
         color=MUTED,

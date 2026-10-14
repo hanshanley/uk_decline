@@ -24,10 +24,13 @@ FIGURES_DIR = Path("outputs/migration")
 
 # Canonical data-source citations (stable landing pages / indicator IDs, not volatile
 # per-quarter file URLs). Rendered as a caption on each chart and into SOURCES.md.
-SOURCE_ONS = "ONS Long-Term International Migration (ons.gov.uk)"
-SOURCE_ONS_IPS = "ONS IPS Long-Term International Migration, 1964\u20132015, ad hoc 006408 (ons.gov.uk)"
+SOURCE_ONS = "Office for National Statistics, Long-Term International Migration (ons.gov.uk)"
+SOURCE_ONS_IPS = (
+    "Office for National Statistics, International Passenger Survey, "
+    "long-term migration 1964\u20132015, ad hoc 006408 (ons.gov.uk)"
+)
 SOURCE_HO = "Home Office Immigration System Statistics (gov.uk)"
-SOURCE_WB = "World Bank WDI (api.worldbank.org)"
+SOURCE_WB = "World Bank, World Development Indicators (api.worldbank.org)"
 METHOD_BREAK_YEAR = 2012
 
 # ---- Substack theme (shared vizstyle house style) --------------------------
@@ -56,8 +59,11 @@ def _series(df: pd.DataFrame, metric: str, category: str = "all") -> pd.DataFram
 
 
 def _save(fig, name: str, source: str) -> Path:
+    import textwrap
+
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     path = FIGURES_DIR / name
+    source = "\n".join(textwrap.fill(line, width=145) for line in source.splitlines())
     fig.subplots_adjust(bottom=0.20 if "\n" in source else 0.14)
     fig.text(
         0.005, 0.012, f"Source: {source}", ha="left", va="bottom",
@@ -228,7 +234,7 @@ def chart_legal_vs_irregular(df: pd.DataFrame) -> Path:
     irregular = _series(df, "irregular_arrivals", "all")
     fig, ax = plt.subplots(figsize=(11, 6))
     ax.plot(total["period"], total["value"], marker="o", color=SUBSTACK_BLUE,
-            label="Total long-term immigration (ONS)")
+            label="Total long-term immigration (official estimates)")
     ax.plot(irregular["period"], irregular["value"], marker="o", color=SUBSTACK_ACCENT, label="Irregular arrivals (Home Office)")
     ax.set_yscale("log")
     _style_title(ax, "UK total immigration vs detected irregular arrivals (log scale)")
@@ -253,7 +259,7 @@ def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
     return _save(
         fig, "net_migration_per_capita.png",
         f"{SOURCE_ONS_IPS}; {SOURCE_ONS}; {SOURCE_WB} (population denominator only)\n"
-        "Note: IPS through 2011; revised/admin-based estimates from 2012. "
+        "Note: International Passenger Survey through 2011; revised estimates based on administrative records from 2012. "
         "Different methods are not directly comparable.",
     )
 
@@ -267,7 +273,7 @@ _ORIGIN_GROUPS = [
 
 _SOURCE_BY_ORIGIN = (
     f"{SOURCE_ONS_IPS}; {SOURCE_ONS} (admin-based, 2012+)\n"
-    "Note: IPS through 2011; revised/admin-based estimates from 2012. "
+    "Note: International Passenger Survey through 2011; revised estimates based on administrative records from 2012. "
     "Different methods are not directly comparable."
 )
 

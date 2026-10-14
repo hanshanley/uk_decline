@@ -29,10 +29,11 @@ SERIES = {
     config.EU: ("Germany — zero-fee reference years only", theme.BLUE, "points"),
 }
 SOURCE_NOTE = (
-    "Real 2022 USD (inflation-adjusted). Sources: US — College Board 2025 Table CP-2 "
+    "Real 2022 US dollars (inflation-adjusted). Sources: US — College Board 2025 Table CP-2 "
     "(current dollars); UK — England statutory fee caps (legislation.gov.uk / "
     "GOV.UK), converted at World Bank market exchange rates. "
-    "Both deflated with BLS annual CPI-U; 2025 averages 11 published months. "
+    "Both deflated with the US Bureau of Labor Statistics' annual consumer price index for urban consumers; "
+    "2025 averages 11 published months. "
     "Fee years are academic start years. US line breaks at the 1987 collection/weighting change. "
     "UK zero-fee anchors shown separately, without interpolation to fee introduction. "
     "Germany: zero-fee reference points only; some states charged fees in 2006–14."
@@ -86,7 +87,7 @@ def plot(out_path: str) -> None:
             ax.plot(series.index, series.values, color=color, linewidth=2.4, marker="o", markersize=4,
                     markeredgecolor=theme.BG, markeredgewidth=0.8, label=label)
 
-    ax.set_ylabel("Annual domestic tuition (constant 2022 USD)")
+    ax.set_ylabel("Annual domestic tuition (constant 2022 US dollars)")
     ax.set_xlabel("Academic start year")
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
     all_years = [y for pts in data.values() for y, _ in pts]
@@ -127,7 +128,7 @@ def plot_nominal_cap(out_path: str) -> None:
         fontweight="bold", pad=14,
     )
     ax.set_xlabel("Academic start year")
-    ax.set_ylabel("Maximum annual fee (GBP, not inflation-adjusted)")
+    ax.set_ylabel("Maximum annual fee (pounds, not inflation-adjusted)")
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda value, _: f"£{value:,.0f}"))
     ax.grid(axis="y", linewidth=0.5)
     ax.set_axisbelow(True)
@@ -136,7 +137,7 @@ def plot_nominal_cap(out_path: str) -> None:
         "Sources: England statutory caps, legislation.gov.uk / Hansard / GOV.UK; "
         "per-year citations in tuition_history.csv.\n"
         "Standard full-time home undergraduate maximum; not average UK tuition. "
-        "The separate real-dollar history requires same-year annual FX and CPI.",
+        "The separate real-dollar history requires same-year exchange rates and consumer-price data.",
     )
     fig.tight_layout()
     fig.subplots_adjust(bottom=0.17)

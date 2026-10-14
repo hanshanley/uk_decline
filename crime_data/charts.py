@@ -74,7 +74,7 @@ def _source_note(fig, df):
     if "offence_group" in df.columns:
         fig.text(
             0.06, 0.049,
-            "No comparable CSEW estimates for YE March 2021 or 2022; "
+            "No comparable crime-survey estimates for years ending March 2021 or 2022; "
             "lines break at missing annual observations.",
             ha="left", fontsize=7.5, color=MUTED,
         )
@@ -159,7 +159,7 @@ def chart_csew_total(df, out_dir):
     _style_incidents_axes(
         ax,
         f"Traditional crime is down {decline:.0f}% from its {x[peak].year} peak",
-        "England & Wales · CSEW headline crime excluding fraud and computer misuse",
+        "England & Wales · household crime survey, excluding fraud and computer misuse",
         y.max() * 1.10,
     )
     ax.xaxis.set_major_locator(mdates.YearLocator(5))
@@ -207,7 +207,7 @@ def chart_csew_21st_century(df, out_dir):
     _style_incidents_axes(
         ax,
         title,
-        "England & Wales · CSEW headline crime excluding fraud and computer misuse",
+        "England & Wales · household crime survey, excluding fraud and computer misuse",
         y.max() * 1.10,
     )
     ax.xaxis.set_major_locator(mdates.YearLocator(4))
@@ -265,8 +265,8 @@ def chart_fraud_gap(df, out_dir):
     _style_incidents_axes(
         ax,
         f"Fraud & computer misuse: {fraud_and_misuse_share:.0f}% of headline crime "
-        f"(YE {latest['date']:%B %Y})",
-        "England & Wales · CSEW crime including vs excluding fraud and computer misuse",
+        f"(year ending {latest['date']:%B %Y})",
+        "England & Wales · household crime survey, with and without fraud and computer misuse",
         max(yi.max(), ye.max()) * 1.12,
     )
     ax.xaxis.set_major_locator(mdates.YearLocator(2))

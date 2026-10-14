@@ -51,7 +51,7 @@ METRICS: dict[str, Metric] = {
     ),
     "wgi_voice_accountability": Metric(
         "wgi_voice_accountability",
-        "WGI: Voice & Accountability",
+        "Voice and accountability",
         "estimate (-2.5..2.5)",
         "governance",
         higher_is_better=True,
@@ -63,7 +63,7 @@ METRICS: dict[str, Metric] = {
     ),
     "wgi_government_effectiveness": Metric(
         "wgi_government_effectiveness",
-        "WGI: Government Effectiveness",
+        "Government effectiveness",
         "estimate (-2.5..2.5)",
         "governance",
         higher_is_better=True,
@@ -75,7 +75,7 @@ METRICS: dict[str, Metric] = {
     ),
     "wgi_rule_of_law": Metric(
         "wgi_rule_of_law",
-        "WGI: Rule of Law",
+        "Rule of law",
         "estimate (-2.5..2.5)",
         "governance",
         higher_is_better=True,
@@ -87,7 +87,7 @@ METRICS: dict[str, Metric] = {
     ),
     "wgi_control_of_corruption": Metric(
         "wgi_control_of_corruption",
-        "WGI: Control of Corruption",
+        "Control of corruption",
         "estimate (-2.5..2.5)",
         "governance",
         higher_is_better=True,

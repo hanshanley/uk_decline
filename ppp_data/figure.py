@@ -27,7 +27,10 @@ def themed_plt():
 
 def note(*parts: str) -> str:
     """Join the source-note sentences and wrap them to :data:`NOTE_WRAP`."""
-    return textwrap.fill(" ".join(p for p in parts if p), width=NOTE_WRAP)
+    text = " ".join(p for p in parts if p)
+    return textwrap.fill(
+        text.replace("ICP ", "International Comparison Program "), width=NOTE_WRAP,
+    )
 
 
 def subtitle(ax, text: str) -> None:

@@ -156,6 +156,32 @@ def test_official_rail_chart_uses_published_maa_without_smoothing_it_again(monke
     assert "trains-weighted" in captured[0].texts[0].get_text()
 
 
+def test_rail_charts_explain_delay_thresholds_without_measure_acronyms(monkeypatch, tmp_path):
+    official = pd.DataFrame(orr.build_official_rows(_official_workbook()))
+    historical = []
+    for region in (charts.LONDON, charts.GB):
+        for date in pd.date_range("2020-03-31", periods=4, freq="QE"):
+            for metric in ("ppm_pct", "casl_pct"):
+                historical.append({"region": region, "date": date, "metric": metric, "value": 90})
+    captured = []
+    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    paths = charts.make_charts(pd.concat([official, pd.DataFrame(historical)]), tmp_path)
+    assert len(paths) == 3
+    for fig in captured:
+        ax = fig.axes[0]
+        visible = " ".join([ax.get_title(), ax.get_ylabel(), *[t.get_text() for t in ax.texts]])
+        assert "PPM" not in visible
+        assert "CaSL" not in visible
+        caption = fig.texts[0].get_text()
+        if "disruption" in ax.get_title():
+            assert "more than 30 minutes late" in visible
+            assert "full or part cancellations" in caption
+        else:
+            assert "5 / 10 minutes" in ax.get_ylabel()
+            assert "within 10 minutes for long-distance" in caption
+            assert "one-minute" in caption
+
+
 def test_official_fetch_failure_preserves_saved_rail_dataset(monkeypatch, tmp_path):
     from rail_data import __main__ as cli
 

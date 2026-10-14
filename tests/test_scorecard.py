@@ -67,7 +67,7 @@ def test_crime_panel_shows_counts_and_marks_falling_crime_as_improvement(monkeyp
         text = " ".join(t.get_text() for t in ax.texts)
         assert "11.2M in 2007  to  4.3M in 2026" in text
         assert [t.get_text() for t in ax.get_xticklabels()] == ["2007", "2026"]
-        assert "excludes fraud & computer misuse" in text
+        assert "excludes fraud & computer misuse" in text.lower()
     finally:
         scorecard.plt.close(fig)
 
@@ -205,7 +205,7 @@ def test_tuition_overview_shows_current_nominal_cap_without_inventing_real_value
     assert scorecard.tuition_nominal() == ([2024, 2026], [9250, 9790])
     panel = next(p for p in scorecard.PANELS if p[1] is scorecard.tuition_nominal)
     assert panel[2](9790) == "£9,790"
-    assert "nominal GBP" in panel[4] and "Not inflation-adjusted" in panel[4]
+    assert "nominal pounds" in panel[4] and "Not inflation-adjusted" in panel[4]
 
 
 def test_gdp_comparison_uses_constant_ppp_and_shared_years(monkeypatch):

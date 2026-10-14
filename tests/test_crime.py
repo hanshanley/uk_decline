@@ -342,7 +342,7 @@ def test_fraud_gap_labels_combined_fraud_and_computer_misuse(monkeypatch) -> Non
 
     monkeypatch.setattr(charts, "_save", capture)
     charts.chart_fraud_gap(df, Path("."))
-    assert captured["title"] == "Fraud & computer misuse: 55% of headline crime (YE March 2026)"
+    assert captured["title"] == "Fraud & computer misuse: 55% of headline crime (year ending March 2026)"
     assert "Including fraud &\ncomputer misuse  0.1M" in captured["labels"]
     assert "Excluding fraud &\ncomputer misuse  0.0M" in captured["labels"]
 
@@ -370,7 +370,7 @@ def test_fraud_gap_compares_matching_dates_and_handles_one_shared_period(monkeyp
 
     monkeypatch.setattr(charts, "_save", capture)
     charts.chart_fraud_gap(df, Path("."))
-    assert captured["title"] == "Fraud & computer misuse: 60% of headline crime (YE March 2024)"
+    assert captured["title"] == "Fraud & computer misuse: 60% of headline crime (year ending March 2024)"
     assert captured["gap_date"] == pd.Timestamp("2024-03-31")
 
 

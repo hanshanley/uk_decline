@@ -42,7 +42,7 @@ def _end_label(ax, xs, ys, text, color):
             fontweight="bold", color=color, va="center", ha="left",
             path_effects=[pe.withStroke(linewidth=3.0, foreground="white")])
 
-SOURCE_NOTE = "Source: World Bank WDI (CM.MKT.* indicators). No API key."
+SOURCE_NOTE = "Source: World Bank, World Development Indicators (CM.MKT.* indicators)."
 
 
 def _plt():
@@ -68,6 +68,9 @@ def _source_note(metric_id: str) -> str:
 
 
 def _footnote(fig, note: str = SOURCE_NOTE) -> None:
+    import textwrap
+
+    note = "\n".join(textwrap.fill(line, width=145) for line in note.splitlines())
     fig.text(0.01, 0.005, note, ha="left", fontsize=8, color=MUTED, style="italic")
 
 
@@ -265,11 +268,12 @@ def chart_lse_companies(source, out_dir: Path | str = CHART_DIR) -> Path:
     ax.set_title("UK companies on the London Stock Exchange", fontweight="bold", pad=30)
     ax.text(
         0.5, 1.015,
-        f'Main Market + AIM; latest snapshot {latest["date"].strftime("%d %B %Y")}',
+        f'Main Market + Alternative Investment Market; '
+        f'latest snapshot {latest["date"].strftime("%d %B %Y")}',
         transform=ax.transAxes, ha="center", va="bottom", fontsize=12, color=MUTED,
     )
     ax.set_xlabel("Year")
-    ax.set_ylabel("LSE-classified UK companies")
+    ax.set_ylabel("UK-classified companies")
     ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
     ax.yaxis.set_major_formatter(mticker.StrMethodFormatter("{x:,.0f}"))
     ax.grid(axis="y")
@@ -277,9 +281,9 @@ def chart_lse_companies(source, out_dir: Path | str = CHART_DIR) -> Path:
     ax.margins(x=0.07)
     _footnote(
         fig,
-        "Source: London Stock Exchange Main Market and AIM factsheets. December snapshots, "
+        "Source: London Stock Exchange Main Market and Alternative Investment Market factsheets. December snapshots, "
         "except latest partial year.\n"
-        "Includes investment companies; not the World Bank/WFE definition. "
+        "Includes investment companies; not the World Bank / World Federation of Exchanges definition. "
         "Starts after the May 2018 Main Market coverage change.",
     )
     fig.tight_layout(rect=[0, 0.05, 1, 1])

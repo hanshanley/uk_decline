@@ -134,8 +134,9 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
                      fontweight="bold", pad=14)
         ax.set_ylabel(f"Index, {base_period} = 100 ({direction})", labelpad=2)
     else:
-        ax.set_title(meta.label, fontweight="bold", pad=14)
-        ax.set_ylabel(f"{meta.unit} ({direction})", labelpad=2)
+        ax.set_title(textwrap.fill(meta.label, width=58), fontweight="bold", pad=14)
+        unit = "Recorded waits" if meta.unit == "pathways / waits" else meta.unit
+        ax.set_ylabel(f"{unit} ({direction})", labelpad=2)
     ax.set_xlabel("Period", labelpad=2)
     if not indexed and meta.unit == "percent":
         # Fit to the plotted data (with a margin) instead of a fixed 0-100 that strands

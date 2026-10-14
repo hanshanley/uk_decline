@@ -9,6 +9,7 @@ dark line) against the EU-27 and US comparators (thin, faded). Charts are writte
 from __future__ import annotations
 
 from pathlib import Path
+import textwrap
 
 from . import countries, metrics
 from .paths import CHART_DIR, DEFAULT_LONG_CSV
@@ -74,7 +75,8 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ax.set_title(meta.label)
     ax.set_xlabel("Pooled survey period ending" if meta.family == "survey" else "Year")
     direction = "more trust" if meta.family == "survey" else "better governance"
-    ax.set_ylabel(f"{meta.unit} (higher = {direction})")
+    unit = "Governance score" if meta.family == "governance" else meta.unit
+    ax.set_ylabel(f"{unit} (higher = {direction})")
     if meta.unit == "percent" and plotted_vals:
         # Fit the axis to what is actually drawn (the EU middle-50% band + the US/UK
         # lines), rather than a fixed 0-100 that strands every line in empty space.
@@ -103,11 +105,16 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         counts = eu.groupby("year")["iso3"].nunique()
         coverage = str(counts.min()) if counts.min() == counts.max() else f"{counts.min()}\u2013{counts.max()}"
         caption += (
-            f"\nEU: unweighted reporting-country median/IQR "
+            f"\nEU: unweighted reporting-country median and middle 50% "
             f"(n={coverage} of 27; {counts.index.max()}: n={counts.iloc[-1]})."
         )
-    fig.text(0.01, 0.01, caption, fontsize=7, color="#6B6B6B", ha="left", va="bottom")
-    fig.tight_layout(rect=(0, 0.09 if meta.family == "survey" else 0.065, 0.84, 1))
+    caption = "\n".join(textwrap.fill(line, width=145) for line in caption.splitlines())
+    footnote = fig.text(0.01, 0.01, caption, fontsize=8, color="#6B6B6B", ha="left", va="bottom")
+    fig.canvas.draw()
+    caption_top = footnote.get_window_extent(fig.canvas.get_renderer()).transformed(
+        fig.transFigure.inverted()
+    ).y1
+    fig.tight_layout(rect=(0, max(0.09, caption_top + 0.025), 0.84, 1))
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

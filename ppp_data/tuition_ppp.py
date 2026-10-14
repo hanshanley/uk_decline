@@ -248,9 +248,9 @@ def _share_subtitle(uk_years: list[int], uk: list[float],
     """
     if not us_years:
         return (f"A year's fees took {uk[-1]:.1f}% of UK GDP per head in {uk_years[-1]}"
-                " \u2014 a comparison no exchange rate or PPP basket can move")
+                " \u2014 independent of currency conversion")
     shared = sorted(set(uk_years) & set(us_years))
-    tail = "\u2014 a comparison no exchange rate or PPP basket can move"
+    tail = "\u2014 independent of currency conversion"
     if not shared:
         return (f"UK fees took {uk[-1]:.1f}% of GDP per head in {uk_years[-1]}; US fees "
                 f"{us[-1]:.1f}% in {us_years[-1]} {tail}")
@@ -291,7 +291,7 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
     if us_years:
         ax.plot(us_years, us_ppp, color=GOLD, linewidth=2.0, zorder=2)
 
-    labels = [(uk_ppp[-1], "UK, at PPP", ACCENT),
+    labels = [(uk_ppp[-1], "UK, purchasing power", ACCENT),
               (uk_fx[-1], "UK, at market rates", MUTED)]
     if us_years:
         labels.append((us_ppp[-1], "United States", GOLD))
@@ -299,10 +299,10 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
                   x=max(uk_years[-1], us_years[-1] if us_years else uk_years[-1]),
                   fontsize=10)
 
-    ax.set_title("England's tuition cap at market exchange rates and PPP",
+    ax.set_title("England's tuition cap: market rates and purchasing power",
                  fontweight="bold", pad=30)
     subtitle(ax, f"Annual conversion of the statutory cap; latest complete year "
-                 f"${uk_ppp[-1]:,.0f} at PPP and ${uk_fx[-1]:,.0f} at market rates")
+                 f"${uk_ppp[-1]:,.0f} in purchasing power and ${uk_fx[-1]:,.0f} at market rates")
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"${v:,.0f}"))
     tidy(ax, ylabel=f"Annual tuition (constant {BASE_YEAR} $)")
     ax.set_ylim(bottom=0)
@@ -310,12 +310,13 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
 
     source_note(fig, note(
         "Sources: UK \u2014 England statutory fee caps (legislation.gov.uk / GOV.UK); US "
-        "\u2014 College Board 2025 Table CP-2. UK fees converted at the World Bank PPP "
-        f"factor (PA.NUS.PPP, {ICP_VINTAGE}) and at the market rate, both deflated by US CPI "
-        f"to constant {BASE_YEAR} dollars. The US is the PPP numeraire, so the conversion "
+        "\u2014 College Board 2025 Table CP-2. UK fees converted at the World Bank purchasing power parity "
+        f"factor (PA.NUS.PPP, {ICP_VINTAGE}) and at the market rate, both deflated by US consumer prices "
+        f"to constant {BASE_YEAR} dollars. US prices define the international dollar, so the conversion "
         "leaves its nominal fees unchanged. Both this chart and the market-rate tuition "
-        "history use the same BLS annual CPI-U; 2025 averages 11 published months. Fee years are "
-        "academic start years. PPP factors start in 1990; earlier fee years are omitted."))
+        "history use the US Bureau of Labor Statistics' annual consumer price index for urban consumers; "
+        "2025 averages 11 published months. Fee years are academic start years. "
+        "Purchasing power parity factors start in 1990; earlier fee years are omitted."))
     return save_fig(fig, out_dir / "ppp_tuition_history.png", bottom=0.18)
 
 
@@ -363,7 +364,7 @@ def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | Non
         "reference years, not a continuous history; some states charged general "
         "tuition during 2006\u20132014. Fees and GDP per capita are taken in the same "
         "currency, so the units cancel and the figure reads the same at market rates as at "
-        f"PPP ({ICP_VINTAGE} parities). This is not a share of household income."))
+        f"purchasing power parity ({ICP_VINTAGE} parities). This is not a share of household income."))
     return save_fig(fig, out_dir / "tuition_share_of_gdp_per_capita.png", bottom=0.18)
 
 

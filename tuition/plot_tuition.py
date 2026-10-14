@@ -29,8 +29,9 @@ SOURCE_NOTE = (
     "Sources: EU country compilation, Eurydice 2023/24 plus national fee sources "
     "(France, Ireland, Luxembourg, Netherlands 2026/27; Portugal 2025/26; Spain 2024/25); College Board Trends in "
     "College Pricing 2025 Table CP-1 (US 2025/26, in-state public); UK 2026/27 fee cap. "
-    "Source years differ. FX may use a nearby published year (recorded in the CSV); "
-    "Real values use same-year BLS CPI-U (2025: 11 months). Missing real values are omitted. "
+    "Source years differ. Exchange rates may use a nearby published year (recorded in the CSV); "
+    "real values use the US Bureau of Labor Statistics' same-year consumer price index for urban consumers "
+    "(2025: 11 months). Missing real values are omitted. "
     "EU fees mix caps, contributions and conditional free places, not national student averages."
 )
 
@@ -181,7 +182,7 @@ def main() -> None:
 
     theme.apply()
     value_key = "annual_tuition_usd_real2022" if args.real else "annual_tuition_usd"
-    unit = "constant 2022 USD" if args.real else "USD"
+    unit = "constant 2022 US dollars" if args.real else "US dollars"
     suffix = "_real" if args.real else ""
 
     os.makedirs(config.OUTPUTS_DIR, exist_ok=True)

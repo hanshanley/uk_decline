@@ -501,6 +501,9 @@ def test_source_notes_are_wrapped() -> None:
     # An unwrapped note sets the width of a tight-cropped figure.
     text = figure.note("word " * 200)
     assert max(len(line) for line in text.splitlines()) <= figure.NOTE_WRAP
+    assert figure.note("ICP 2021 benchmark") == (
+        "International Comparison Program 2021 benchmark"
+    )
 
 
 def test_span_is_derived_from_the_data() -> None:
@@ -862,6 +865,7 @@ def test_growth_chart_plots_country_growth_not_levels_or_current_prices(monkeypa
 
 @pytest.mark.parametrize("chart_name", [
     "chart_gdp_per_capita", "chart_price_level_index", "chart_ppp_vs_market_fx",
+    "chart_volume_growth", "chart_relative_to_peers", "chart_long_run",
 ])
 def test_gdp_source_footers_do_not_overlap_year_label(monkeypatch, tmp_path, chart_name):
     from ppp_data import charts
@@ -875,7 +879,12 @@ def test_gdp_source_footers_do_not_overlap_year_label(monkeypatch, tmp_path, cha
         return original_save(fig, path, **kwargs)
 
     monkeypatch.setattr(charts, "save_fig", save)
-    getattr(charts, chart_name)(_consistent_rows(), tmp_path)
+    rows = _consistent_rows() + [
+        _row(iso3, year, "gdp_per_capita_real_maddison", value)
+        for iso3, value in (("GBR", 40_000), ("USA", 60_000))
+        for year in (2007, 2024)
+    ]
+    getattr(charts, chart_name)(rows, tmp_path)
     fig = captured[0]
     canvas = FigureCanvasAgg(fig)
     canvas.draw()

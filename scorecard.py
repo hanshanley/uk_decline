@@ -163,10 +163,11 @@ def crime_incidents():
 
 PANELS = [
     ("Real GDP per head vs US", gdp_vs_us, lambda v: f"{v:.0f}%", +1,
-     "World Bank WDI · volume ratio, 2021 PPP benchmark", 2007),
-    ("UK companies on the LSE", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
-     "LSE · UK-classified companies, Main Market + AIM\n"
-     "Includes investment companies; not the WDI definition", 2018),
+     "World Bank · output-volume ratio\n2021 purchasing power parity benchmark", 2007),
+    ("UK companies listed in London", uk_listed_companies, lambda v: f"{v:,.0f}", +1,
+     "London Stock Exchange · UK-classified companies\n"
+     "Main Market + Alternative Investment Market\n"
+     "Investment companies included; different World Bank scope", 2018),
     ("NHS waiting list, England", nhs_england, lambda v: f"{v/1e6:.1f}M", -1,
      "NHS England · treatment entries, not unique patients\n"
      "Scope breaks: 2013, 2024; endpoints not like-for-like",
@@ -176,16 +177,16 @@ PANELS = [
     ("Recreation, culture & religion", culture_spending, lambda v: f"£{v:.1f}bn", +1,
      "HM Treasury · financial years, inflation-adjusted", 2007),
     ("England tuition cap", tuition_nominal, lambda v: f"£{v:,.0f}", -1,
-     "England statutory maximum · academic years, nominal GBP\n"
+     "England statutory maximum · academic years, nominal pounds\n"
      "Not inflation-adjusted; not average UK tuition", 2006),
     ("Trust in national government", trust_govt, lambda v: f"{v:.0f}%", +1,
-     "OECD / Gallup via OWID · 2–3-year pooled averages\n"
+     "Gallup World Poll via Our World in Data · pooled averages\n"
      "Years label the end of each survey period", 2007, (), 3),
     ("Emergency food parcels", food_bank_parcels, lambda v: f"{v/1e6:.1f}M", -1,
      "Trussell network · calendar-year parcels, not people\n"
      "Mixed 3-/7-day parcels from 2020", 2015),
     ("Crime incidents, England & Wales", crime_incidents, lambda v: f"{v/1e6:.1f}M", -1,
-     "ONS CSEW · excludes fraud & computer misuse", 2007),
+     "Crime Survey for England and Wales\nExcludes fraud & computer misuse", 2007),
 ]
 
 
@@ -275,7 +276,7 @@ def main() -> int:
              "baselines reflect data availability.",
              ha="center", fontsize=11, color=MUTED)
     fig.text(0.5, 0.015,
-             "Baselines vary. GDP and spending are inflation-adjusted; tuition is nominal GBP. "
+             "Baselines vary. GDP and spending are inflation-adjusted; tuition is nominal pounds. "
              "Lines break at missing observations or definition changes; see each analysis README.",
              ha="center", fontsize=8, color=MUTED)
 

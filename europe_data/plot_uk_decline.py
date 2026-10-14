@@ -61,19 +61,21 @@ NOMINAL_GDP_METRIC = "gdp_per_capita_nominal_usd"
 
 SOURCE_GDP = ("Data: World Bank Group, World Development Indicators \u2014 GDP per capita in "
               "constant 2015 US$ (NY.GDP.PCAP.KD), national-accounts volume measure. "
-              "Fixed-base dollar conversion, not annual market FX or PPP; compare growth, "
+              "Fixed-base dollar conversion, not annual market exchange rates or purchasing power parity; compare growth, "
               "not domestic purchasing-power levels.")
 SOURCE_NOMINAL_GDP = (
-    "Data: World Bank WDI \u2014 GDP per capita, current US$ (NY.GDP.PCAP.CD), "
+    "Data: World Bank, World Development Indicators \u2014 GDP per capita, current US$ (NY.GDP.PCAP.CD), "
     "at annual market exchange rates. Not inflation-adjusted: changes include output, "
     "GDP prices and exchange rates. GDP is not household income."
 )
-SOURCE_EUROSTAT = ("Data: Eurostat (European Commission), ECHP/EU-SILC \u2014 median equivalised "
-                   "net income, current PPS (ilc_di03). Survey year; income usually refers "
+SOURCE_EUROSTAT = ("Data: Eurostat (European Commission), European Community Household Panel / "
+                   "EU Statistics on Income and Living Conditions \u2014 median household-size-adjusted "
+                   "net income, current purchasing power standards (ilc_di03). Survey year; income usually refers "
                    "to the preceding year, with country exceptions including the UK. "
                    "Missing years and flagged method breaks are not connected. UK ends 2018.")
 SOURCE_PIP = ("Data: World Bank Group, Poverty and Inequality Platform \u2014 median "
-              f"per-capita income/consumption, {pip.UNIT}. Survey observations only; "
+              f"per-person income/consumption, {pip.PPP_VERSION} international dollars per day "
+              "(purchasing power parity). Survey observations only; "
               "gaps and known survey/welfare-definition breaks are not connected. "
               "Multiply by 365 for an annual figure.")
 
@@ -249,16 +251,16 @@ def main(argv: list[str] | None = None) -> int:
     fig_uk_relative(df, out)
     _line_chart(
         df, "median_disposable_income",
-        "Median disposable income (Eurostat, PPS): UK vs peers",
-        "Median equivalised income (PPS)",
+        "Median disposable income: UK vs peers",
+        "Household-size-adjusted income\n(purchasing power standards)",
         lambda v, _: f"{v/1000:.0f}k", SOURCE_EUROSTAT,
         "median_disposable_income_pps.png", out,
         eu_agg=EU_EUROSTAT, eu_label="EU-27", source_ha="right",
     )
     _line_chart(
         df, "median_income_pip",
-        f"Median income/consumption (World Bank PIP, {pip.PPP_VERSION} PPP $/day): UK vs peers",
-        f"Median income/consumption ({pip.UNIT})",
+        "Median daily income or consumption: UK vs peers",
+        f"Per person per day ({pip.PPP_VERSION} international dollars)",
         lambda v, _: f"${v:.0f}", SOURCE_PIP,
         "median_income_pip.png", out,
         eu_agg=EU_EUROSTAT, eu_label="EU-27", source_ha="right",

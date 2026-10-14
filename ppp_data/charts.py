@@ -48,7 +48,8 @@ DECOMPOSITION_START_YEAR = metrics.DECOMPOSITION_BASELINE_YEAR
 _WB = "Data: World Bank Group, World Development Indicators"
 # Kept deliberately short: it appears on the figures that show both bases, where a long
 # paragraph would crowd the plot. The full argument is in ppp_data/README.md.
-_FRAMING = ("Market-FX valuations and PPP output volumes answer different questions; "
+_FRAMING = ("Market-exchange-rate valuations and purchasing-power-adjusted output volumes "
+            "answer different questions; "
             "neither is household income.")
 
 
@@ -88,7 +89,7 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
                  fontweight="bold", pad=30)
     if uk_latest:
         _subtitle(ax, f"The UK reached ${uk_latest[1]:,.0f}k per head in {uk_latest[0]}, "
-                      f"valued at the 2021 PPP benchmark, with national volume growth")
+                      f"valued at the 2021 purchasing power parity benchmark")
     labelled_ends(ax, labels, min_gap=max(v for v, _, _ in labels) * 0.045, x=last_x,
                   fontsize=10)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"${v:,.0f}k"))
@@ -96,10 +97,10 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
     ax.margins(x=0.12)  # room on the right for the end labels
 
     source_note(fig, _note(
-        f"{_WB} \u2014 GDP per capita, PPP ({meta.wb_indicator}), {meta.unit} "
+        f"{_WB} \u2014 GDP per capita at purchasing power parity ({meta.wb_indicator}), {meta.unit} "
         f"[{meta.vintage} benchmark].",
-        "Constant PPPs measure volume growth on a fixed benchmark. Cross-country levels "
-        "are benchmark-sensitive, not annually repriced PPP comparisons. GDP per head "
+        "Fixed purchasing power parities measure volume growth on a fixed benchmark. Cross-country levels "
+        "are benchmark-sensitive, not annually repriced comparisons. GDP per head "
         "is not median household income."))
     return save_fig(fig, out_dir / "ppp_gdp_per_capita_over_time.png", bottom=0.17)
 
@@ -139,9 +140,9 @@ def chart_volume_growth(rows: list[dict], out_dir: Path,
     source_note(fig, _note(
         f"{_WB} \u2014 NY.GDP.PCAP.PP.KD, constant 2021 international dollars "
         f"[{metrics.ICP_VINTAGE}]. Each series divided by its own observed {start_year} "
-        "value. Fixed PPP conversion factors cancel; neither annual market FX nor a "
-        "changing PPP price structure drives these growth indices."))
-    return save_fig(fig, out_dir / "ppp_gdp_per_capita_growth.png")
+        "value. Fixed purchasing power parity conversion factors cancel; neither annual "
+        "market exchange rates nor changing international price weights drive these growth indices."))
+    return save_fig(fig, out_dir / "ppp_gdp_per_capita_growth.png", bottom=0.17)
 
 
 # ── 2. Peers relative to the UK, at PPP ──────────────────────────────────────
@@ -187,7 +188,8 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
         # so their labels are spread apart rather than drawn on top of one another.
         labelled_ends(ax, labels, min_gap=4.0, x=last_x)
 
-    ax.set_title(f"GDP per capita relative to the UK at PPP, {_span(*spans)}",
+    ax.set_title(f"GDP per person relative to the UK, {_span(*spans)}\n"
+                 "Adjusted for purchasing power at each year's prices",
                  fontweight="bold", pad=30)
     if facts:
         _subtitle(ax, "At domestic price levels, " + ", while ".join(facts))
@@ -195,11 +197,11 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
     _tidy(ax, ylabel="GDP per capita as % of the UK (UK = 100)")
 
     source_note(fig, _note(
-        f"{_WB} \u2014 GDP per capita, PPP ({meta.wb_indicator}), {meta.unit} "
+        f"{_WB} \u2014 GDP per capita at purchasing power parity ({meta.wb_indicator}), {meta.unit} "
         f"[{meta.vintage} benchmark].",
-        "Annual current PPPs compare output at each year's prices. Changes in these ratios "
-        "also reflect changing price weights and PPP estimates, not just real growth."))
-    return save_fig(fig, out_dir / "ppp_gdp_relative_to_peers.png")
+        "Annual purchasing power parities compare output at each year's prices. Changes in these ratios "
+        "also reflect changing price weights and parity estimates, not just real growth."))
+    return save_fig(fig, out_dir / "ppp_gdp_relative_to_peers.png", bottom=0.17)
 
 
 # ── 3. The two bases side by side ────────────────────────────────────────────
@@ -235,8 +237,8 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
     ax.plot(years, real_pct, color=GREEN, linewidth=2.2, linestyle="--", zorder=3)
 
     labelled_ends(ax, [(fx_pct[-1], "at market\nexchange rates", ACCENT),
-                       (ppp_pct[-1], "at annual PPPs\n(current prices)", BLUE),
-                       (real_pct[-1], "volume ratio\n(2021 PPPs)", GREEN)],
+                       (ppp_pct[-1], "purchasing power\n(current prices)", BLUE),
+                       (real_pct[-1], "output volumes\n(2021 price benchmark)", GREEN)],
                   min_gap=4.5, x=years[-1], fontsize=9.5)
 
     peak_year = max(years, key=lambda y: fx[y])
@@ -245,7 +247,7 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
             markeredgecolor="white", markeredgewidth=1.4, zorder=6)
     ax.annotate(
         f"{peak_year}: peak dollar GDP ratio\n{peak_pct:.0f}% of the US at market rates,\n"
-        f"but only {ppp[peak_year]*100:.0f}% at PPP",
+        f"but {ppp[peak_year]*100:.0f}% after adjusting for local prices",
         xy=(peak_year, peak_pct), xytext=(years[0] + 1, peak_pct - 12),
         fontsize=9.5, color=TEXT, va="top", ha="left", path_effects=white_stroke(),
         arrowprops={"arrowstyle": "-", "color": MUTED, "linewidth": 0.9,
@@ -256,7 +258,7 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
     real_then = real[peak_year] * 100
     ax.set_title("UK GDP per head relative to the US: three measures",
                  fontweight="bold", pad=30)
-    _subtitle(ax, f"Market-FX ratio: {peak_pct:.0f}% in {peak_year} to "
+    _subtitle(ax, f"Market-rate ratio: {peak_pct:.0f}% in {peak_year} to "
                   f"{fx_pct[-1]:.0f}% in {years[-1]}; volume ratio over those years: "
                   f"{real_then:.0f}% to {real_pct[-1]:.0f}%")
 
@@ -265,9 +267,9 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
     ax.margins(x=0.14)
 
     source_note(fig, _note(
-        f"{_WB} \u2014 NY.GDP.PCAP.CD (market rates), NY.GDP.PCAP.PP.CD (PPP levels) and "
-        f"NY.GDP.PCAP.PP.KD (real volumes), {metrics.ICP_VINTAGE} benchmark. The PPP-level "
-        "line compares GDP at each year's PPPs; the constant-price line tracks relative "
+        f"{_WB} \u2014 NY.GDP.PCAP.CD (market rates), NY.GDP.PCAP.PP.CD (purchasing power parity) and "
+        f"NY.GDP.PCAP.PP.KD (real volumes), {metrics.ICP_VINTAGE} benchmark. The purchasing-power "
+        "line compares GDP at each year's prices; the constant-price line tracks relative "
         "volume growth on the 2021 benchmark. The market-rate peak is not proof of a peak "
         "in sterling itself.", _FRAMING))
     return save_fig(fig, out_dir / "ppp_vs_market_fx_uk_us.png", bottom=0.17)
@@ -313,7 +315,7 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path | None:
                  fontweight="bold", pad=30)
     _subtitle(ax, f"UK prices peaked at {uk[peak_year]:.2f}\u00d7 US levels in {peak_year} "
                   f"and are {uk[uk_years[-1]]:.2f}\u00d7 in {uk_years[-1]} \u2014 the whole difference "
-                  "between market-FX and current-PPP GDP valuations")
+                  "between market-rate and purchasing-power GDP valuations")
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.2f}"))
     _tidy(ax, ylabel=meta.unit)
 
@@ -397,7 +399,7 @@ def chart_decomposition(rows: list[dict], out_dir: Path,
 
     for y, (_, value, colour) in zip(ys, bars):
         ax.barh(y, value, height=0.55, color=colour, zorder=3)
-        ax.text(value + (0.7 if value >= 0 else -0.7), y, f"{value:+.1f} pp",
+        ax.text(value + (0.7 if value >= 0 else -0.7), y, f"{value:+.1f} points",
                 va="center", ha="left" if value >= 0 else "right",
                 fontsize=12.5, fontweight="bold", color=colour,
                 path_effects=white_stroke())
@@ -488,19 +490,21 @@ def chart_long_run(rows: list[dict], out_dir: Path) -> Path | None:
         subtitle_text = (f"Annualised real growth per head, {first}\u2013{last}: "
                          f"US {us_cagr:.2f}%; UK {uk_cagr:.2f}%")
 
-    ax.set_title(f"Real GDP per capita at PPP over the long run, {_span(span_years)}",
+    ax.set_title(f"Long-run real GDP per person, {_span(span_years)}\n"
+                 "Adjusted for purchasing power",
                  fontweight="bold", pad=30)
     _subtitle(ax, subtitle_text)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"${v:,.0f}k"))
-    _tidy(ax, ylabel=f"GDP per capita, PPP (000s, {meta.unit})")
+    _tidy(ax, ylabel=f"GDP per person (000s, {meta.unit})")
     ax.margins(x=0.12)
 
     source_note(fig, _note(
         "Data: Maddison Project Database 2023 (Bolt & van Zanden), via Our World in Data "
-        f"\u2014 {meta.unit}. On the ICP 2011 benchmark, so its levels are not comparable "
-        "with the World Bank's ICP 2021 series shown elsewhere in this analysis, and the "
+        f"\u2014 {meta.unit}. On the International Comparison Program's 2011 benchmark, "
+        "so its levels are not comparable with the World Bank's 2021 benchmark shown "
+        "elsewhere in this analysis, and the "
         "spacing between countries should be read as indicative rather than exact."))
-    return save_fig(fig, out_dir / "ppp_gdp_long_run_maddison.png")
+    return save_fig(fig, out_dir / "ppp_gdp_long_run_maddison.png", bottom=0.17)
 
 
 CHARTS = (
