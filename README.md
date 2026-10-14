@@ -1,7 +1,5 @@
 <div align="center">
   <h1>Social, Economic, and Political Change in the United Kingdom</h1>
-  <p><strong>Source-backed data. Reproducible analysis. Long-run context.</strong></p>
-  <p>Comparing the UK with the United States and European peers.</p>
   <p>
     <a href="#uk-since-2007">Overview</a> ·
     <a href="#explore-the-evidence">Analyses</a> ·
