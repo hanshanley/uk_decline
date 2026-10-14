@@ -32,8 +32,9 @@ ONS_POPULATION_PATH = (
     "/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/"
     "populationestimatesforukenglandandwalesscotlandandnorthernireland"
 )
-SCOTLAND_DOCUMENTS_URL = (
-    "https://www.gov.scot/publications/homicide-scotland-2024-25/documents/"
+SCOTLAND_ANSWER_URL = (
+    "https://www.parliament.scot/chamber-and-committees/questions-and-answers/"
+    "question?ref=S6W-43088"
 )
 PSNI_REPORT_URL = (
     "https://www.psni.police.uk/system/files/2025-11/744575614/"
@@ -63,6 +64,11 @@ def _get(url: str, allowed: tuple[str, ...], timeout: int = 120) -> requests.Res
             url = urljoin(url, location)
             continue
         response.raise_for_status()
+        if response.status_code != 200:
+            raise requests.HTTPError(
+                f"Expected HTTP 200, received {response.status_code} from {url}",
+                response=response,
+            )
         return response
     raise ValueError(f"too many redirects while fetching {url!r}")
 
@@ -80,22 +86,9 @@ def _ons_download(landing_path: str, version_pattern: str | None = None) -> byte
     return csew._ons_get(url, timeout=120).content
 
 
-def _scotland_download() -> bytes:
-    page = _get(SCOTLAND_DOCUMENTS_URL, ("gov.scot",))
-    soup = BeautifulSoup(page.text, "html.parser")
-    href = next(
-        (
-            link.get("href")
-            for link in soup.find_all("a")
-            if link.get("href")
-            and ".xlsx" in link.get("href", "").lower()
-            and "homicide" in link.get("href", "").lower()
-        ),
-        None,
-    )
-    if href is None:
-        raise ValueError("Scottish homicide data workbook link not found")
-    return _get(urljoin(SCOTLAND_DOCUMENTS_URL, href), ("gov.scot",)).content
+def _scotland_counts() -> dict[int, int]:
+    page = _get(SCOTLAND_ANSWER_URL, ("parliament.scot",))
+    return _extract_scotland_counts(page.text)
 
 
 def _period_end_year(value) -> int | None:
@@ -125,17 +118,42 @@ def _extract_england_wales_rates(workbook: bytes) -> dict[int, float]:
     return rates
 
 
-def _extract_scotland_counts(workbook: bytes) -> dict[int, int]:
-    frame = pd.read_excel(io.BytesIO(workbook), sheet_name="Historical Data", header=None)
-    header = next(
-        i for i in range(frame.shape[0]) if str(frame.iloc[i, 0]).strip() == "Year"
-    )
+def _extract_scotland_counts(html: str) -> dict[int, int]:
+    """Read the government's complete 2024-25 series reproduced in its written answer."""
+    main = BeautifulSoup(html, "html.parser").find("main")
+    text = " ".join(main.stripped_strings) if main is not None else ""
+    if main is None or any(expected not in text for expected in (
+        "Question reference: S6W-43088",
+        "Homicide in Scotland 2024-25",
+    )):
+        raise ValueError("Expected Scottish homicide answer S6W-43088 (2024-25 edition)")
+    tables = []
+    for table in main.find_all("table"):
+        header = table.find("tr")
+        if header is not None and [
+            cell.get_text(" ", strip=True) for cell in header.find_all(["td", "th"])
+        ] == ["Year", "Total Victims"]:
+            tables.append(table)
+    if len(tables) != 1:
+        raise ValueError("Expected one Scottish homicide victims table")
     counts: dict[int, int] = {}
-    for _, row in frame.iloc[header + 1:].iterrows():
-        year = _period_end_year(row.iloc[0])
-        victims = pd.to_numeric(row.iloc[2], errors="coerce")
-        if year is not None and pd.notna(victims):
-            counts[year] = int(victims)
+    for row in tables[0].find_all("tr")[1:]:
+        cells = [cell.get_text(" ", strip=True) for cell in row.find_all(["td", "th"])]
+        if len(cells) != 2:
+            raise ValueError(f"Invalid Scottish homicide table row: {cells!r}")
+        if not re.fullmatch(r"\d{4}-\d{2}", cells[0]):
+            raise ValueError(f"Expected Scottish homicide financial-year period: {cells[0]!r}")
+        year = _period_end_year(cells[0])
+        if (
+            year is None
+            or year != int(cells[0][:4]) + 1
+            or year in counts
+            or not cells[1].isdigit()
+        ):
+            raise ValueError(f"Invalid or duplicate Scottish homicide observation: {cells!r}")
+        counts[year] = int(cells[1])
+    if set(counts) != set(range(2000, 2026)):
+        raise ValueError("Scottish homicide answer must cover every financial year 1999-00 to 2024-25")
     return counts
 
 
@@ -257,7 +275,10 @@ def _assemble_rows(
     rows: list[dict] = []
     sources = {
         ENGLAND_WALES: "ONS Homicide Index",
-        SCOTLAND: "Scottish Government, Homicide in Scotland; ONS population estimates",
+        SCOTLAND: (
+            "Scottish Government, Homicide in Scotland 2024-25 "
+            "(Scottish Parliament S6W-43088); ONS population estimates"
+        ),
         NORTHERN_IRELAND: (
             "Police Service of Northern Ireland; ONS population estimates"
         ),
@@ -301,12 +322,12 @@ def build_rows(start: int = 2000) -> list[dict]:
     population_workbook = _ons_download(
         ONS_POPULATION_PATH, r"/ukpopulationestimates\d+to\d+$"
     )
-    scotland_workbook = _scotland_download()
+    scotland_counts = _scotland_counts()
     psni_report = _get(PSNI_REPORT_URL, ("psni.police.uk",)).content
 
     return _assemble_rows(
         _extract_england_wales_rates(england_wales_workbook),
-        _extract_scotland_counts(scotland_workbook),
+        scotland_counts,
         _extract_psni_counts(psni_report),
         _extract_population(population_workbook, "Table 14"),
         _extract_population(population_workbook, "Table 17"),

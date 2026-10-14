@@ -16,6 +16,7 @@ italic source note taken from the data's own ``source`` column):
 from __future__ import annotations
 
 import pathlib
+import textwrap
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -70,7 +71,10 @@ def _source_note(fig, df):
         if part.strip()
     }
     srcs = "; ".join(sorted(parts))
-    fig.text(0.06, 0.025, f"Source: {srcs}.", ha="left", fontsize=7.5, color=MUTED)
+    fig.text(
+        0.06, 0.01, textwrap.fill(f"Source: {srcs}.", width=170),
+        ha="left", va="bottom", fontsize=7.5, color=MUTED,
+    )
     if "offence_group" in df.columns:
         fig.text(
             0.06, 0.049,
@@ -384,16 +388,16 @@ def chart_homicide_nations(df, out_dir):
     _style_axes(ax)
     _source_note(fig, sub)
     fig.text(
-        0.06, 0.052,
+        0.06, 0.075,
         "Periods: England & Wales and Scotland = financial-year ends; "
         "Northern Ireland = calendar years. NI counts are chart-derived.",
         ha="left", fontsize=7.5, color=MUTED,
     )
-    return _save(fig, out_dir, "crime_homicide_nations.png")
+    return _save(fig, out_dir, "crime_homicide_nations.png", bottom=0.12)
 
 
-def _save(fig, out_dir, filename) -> pathlib.Path:
-    plt.tight_layout(rect=(0.045, 0.075, 0.985, 0.985), pad=0.35)
+def _save(fig, out_dir, filename, *, bottom=0.075) -> pathlib.Path:
+    plt.tight_layout(rect=(0.045, bottom, 0.985, 0.985), pad=0.35)
     out_dir = pathlib.Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / filename

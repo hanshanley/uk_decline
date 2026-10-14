@@ -383,6 +383,59 @@ def test_homicide_financial_year_labels_use_end_year():
         assert nations._period_end_year(label) == year
 
 
+@pytest.fixture
+def scottish_homicide_answer():
+    rows = "".join(
+        f"<tr><td><p>{year - 1}-{year % 100:02d}</p></td><td><p>{year - 1900}</p></td></tr>"
+        for year in range(2000, 2026)
+    )
+    return (
+        "<main><h2>Question reference: S6W-43088</h2>"
+        "<p>Homicide in Scotland 2024-25</p><table><tbody>"
+        "<tr><td><p>Year</p></td><td><p>Total Victims</p></td></tr>"
+        f"{rows}</tbody></table></main>"
+    )
+
+
+def test_scottish_homicide_reads_complete_official_victim_table(scottish_homicide_answer):
+    counts = nations._extract_scotland_counts(scottish_homicide_answer)
+    assert len(counts) == 26
+    assert counts[2000] == 100
+    assert counts[2025] == 125
+
+
+@pytest.mark.parametrize(("old", "new"), [
+    ("S6W-43088", "S6W-00000"),
+    ("2024-25</p><table", "2023-24</p><table"),
+    ("Total Victims", "Total Cases"),
+    ("<tr><td><p>1999-00</p></td><td><p>100</p></td></tr>", ""),
+    ("2000-01", "1999-00"),
+    ("1999-00", "2000"),
+    ("1999-00", "1998-00"),
+    (">100</p>", ">-1</p>"),
+    (">100</p>", ">1.5</p>"),
+    (">100</p>", ">not available</p>"),
+])
+def test_scottish_homicide_rejects_wrong_or_incomplete_tables(
+    scottish_homicide_answer, old, new,
+):
+    with pytest.raises(ValueError):
+        nations._extract_scotland_counts(scottish_homicide_answer.replace(old, new))
+
+
+def test_homicide_download_rejects_incomplete_responses_and_off_host_redirects(monkeypatch):
+    response = nations.requests.Response()
+    response.status_code = 202
+    monkeypatch.setattr(nations.requests, "get", lambda *args, **kwargs: response)
+    with pytest.raises(nations.requests.HTTPError, match="received 202"):
+        nations._get(nations.SCOTLAND_ANSWER_URL, ("parliament.scot",))
+
+    response.status_code = 302
+    response.headers["Location"] = "https://example.invalid/table"
+    with pytest.raises(ValueError, match="untrusted host"):
+        nations._get(nations.SCOTLAND_ANSWER_URL, ("parliament.scot",))
+
+
 def test_scottish_homicide_uses_population_within_financial_year():
     rows = nations._assemble_rows(
         england_wales_rates={},
@@ -396,6 +449,43 @@ def test_scottish_homicide_uses_population_within_financial_year():
     assert by[nations.SCOTLAND]["year"] == 2025
     assert by[nations.SCOTLAND]["value"] == 9.0
     assert by[nations.NORTHERN_IRELAND]["value"] == 6.0
+
+
+def test_homicide_source_attribution_fits_below_period_note(monkeypatch, tmp_path):
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    rows = nations._assemble_rows(
+        england_wales_rates={2000: 12.5, 2025: 8.6},
+        scotland_counts={2000: 123, 2025: 45},
+        northern_ireland_counts={2000: 30, 2024: 18},
+        scotland_population={1999: 5_000_000, 2024: 5_500_000},
+        northern_ireland_population={2000: 1_500_000, 2024: 2_000_000},
+        start=2000,
+    )
+    captured = {}
+    save = charts._save
+
+    def capture(fig, out_dir, filename, **kwargs):
+        captured["figure"] = fig
+        return save(fig, out_dir, filename, **kwargs)
+
+    monkeypatch.setattr(charts, "_save", capture)
+    charts.chart_homicide_nations(pd.DataFrame(rows), tmp_path)
+    fig = captured["figure"]
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    source = next(text for text in fig.texts if text.get_text().startswith("Source:"))
+    period = next(text for text in fig.texts if text.get_text().startswith("Periods:"))
+    source_box = source.get_window_extent(renderer)
+    period_box = period.get_window_extent(renderer)
+    assert source_box.y1 + 2 <= period_box.y0
+    assert period_box.y1 + 2 <= min(
+        tick.get_window_extent(renderer).y0
+        for tick in fig.axes[0].get_xticklabels() if tick.get_visible()
+    )
+    assert source_box.x1 <= fig.bbox.x1
+    assert source_box.y0 >= 0
 
 
 def test_nation_homicide_rows_start_in_2000() -> None:

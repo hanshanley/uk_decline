@@ -70,8 +70,12 @@ England and Wales are combined because that is how the ONS Homicide Index publis
 official series.
 
 - **England & Wales:** ONS Homicide Index, rate per million population.
-- **Scotland:** Scottish Government *Homicide in Scotland*, divided by ONS mid-year
-  population estimates.
+- **Scotland:** Scottish Government *Homicide in Scotland 2024-25*, using the complete
+  1999–00 to 2024–25 victim-count table reproduced in the government's
+  [written answer S6W-43088](https://www.parliament.scot/chamber-and-committees/questions-and-answers/question?ref=S6W-43088)
+  on 26 January 2026, divided by ONS mid-year population estimates. This is the same
+  official series, not a different crime definition. The release edition is curated;
+  each fetch checks the answer, victim-count heading and complete reporting-year coverage.
 - **Northern Ireland:** PSNI *Trends in Police Recorded Crime*, divided by ONS mid-year
   population estimates. Counts are reconstructed from the PDF's vector-bar heights
   and rounded to integers, not read from a machine-readable table. Treat this as
