@@ -40,9 +40,12 @@ def _money(v: float) -> str:
     return f"${v:,.0f}"
 
 
-def _finalize(fig, out_path: str, bottom: float, missing_note: str = "") -> None:
+def _finalize(
+    fig, out_path: str, bottom: float, missing_note: str = "", *,
+    source: str = SOURCE_NOTE,
+) -> None:
     """Common figure tail: source note, layout, and high-DPI save (shared style)."""
-    note = textwrap.fill(SOURCE_NOTE + missing_note, width=155)
+    note = textwrap.fill(source + missing_note, width=155)
     theme.source_note(fig, note)
     plt.tight_layout()
     plt.subplots_adjust(bottom=max(bottom, (10 * len(note.splitlines()) + 42)
@@ -50,9 +53,6 @@ def _finalize(fig, out_path: str, bottom: float, missing_note: str = "") -> None
     fig.savefig(out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {out_path}")
-
-
-DEGREE_YEARS = {config.UK: 3, config.US: 4, config.EU: 3}  # typical bachelor's length by region
 
 
 def _missing_note(rows: list[dict], value_key: str) -> str:
@@ -76,19 +76,23 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
             and row.get(value_key) is not None
         ]
         region_year[region] = (
-            str(min(years)) if min(years) == max(years)
-            else f"{min(years)}–{max(years)}"
+            f"{min(years)}/{(min(years) + 1) % 100:02d}" if min(years) == max(years)
+            else f"{min(years)}/{(min(years) + 1) % 100:02d}–{max(years)}/{(max(years) + 1) % 100:02d}"
         ) if years else None
     labels = []
     for region in order:
         label = REGION_LABELS[region]
+        if region == config.EU:
+            label = "EU (country mean)"
         if region == config.EU and agg[region]["n"] < len(config.EU27):
             label = f"EU sample ({agg[region]['n']}/{len(config.EU27)} countries)"
         if region_year[region] is not None:
-            label += f" ({region_year[region]})"
+            label += f"\n{region_year[region]}"
         labels.append(label)
-    vals = [agg[r]["median_annual"] for r in order]
-    means = [agg[r]["mean_annual"] for r in order]
+    vals = [
+        agg[r]["mean_annual"] if r == config.EU else agg[r]["median_annual"]
+        for r in order
+    ]
     colors = [REGION_COLOR[r] for r in order]
 
     fig, ax = plt.subplots(figsize=(11, 5.4))
@@ -98,15 +102,17 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
     for i, r in enumerate(order):
         v = vals[i]
         if v and v > 0:
-            yrs = DEGREE_YEARS.get(r, 3)
             ax.annotate(f"{_money(v)}/yr", (v, i), ha="left", va="center", fontsize=12,
                         fontweight="bold", color=colors[i], xytext=(6, 0),
                         textcoords="offset points")
-            ax.annotate(f"\u2248 {_money(v*yrs)} over a typical {yrs}-year degree", (v, i),
-                        ha="left", va="center", fontsize=8.5, color=theme.MUTED, xytext=(6, -14),
-                        textcoords="offset points")
+            if r == config.EU:
+                ax.annotate(
+                    f"Country median: {_money(agg[r]['median_annual'])}; {agg[r]['n']} countries",
+                    (v, i), ha="left", va="center", fontsize=9, color=theme.MUTED,
+                    xytext=(6, -17), textcoords="offset points",
+                )
         else:
-            ax.annotate(f"Median listed fee: $0  (country mean {_money(means[i])}/yr)",
+            ax.annotate("Listed tuition: $0",
                         (0, i), ha="left", va="center", fontsize=10, color=theme.GREEN,
                         fontweight="bold", xytext=(6, 0), textcoords="offset points")
 
@@ -114,13 +120,24 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
     ax.set_yticklabels(labels, fontsize=12)
     ax.set_xlabel(f"Annual tuition & fees ({unit})")
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
-    ax.set_xlim(0, max([*vals, *means, 1.0]) * 1.4)
+    ax.set_xlim(0, max([*vals, 1.0]) * 1.3)
     ax.set_title("Domestic tuition comparison — source years differ\n"
                  "public universities, domestic / in-state students",
                  fontweight="bold", pad=14)
     ax.grid(axis="x", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)
-    _finalize(fig, out_path, bottom=0.16, missing_note=_missing_note(rows, value_key))
+    source = (
+        "Sources: Eurydice 2023/24 and national fee schedules (EU); College Board 2025/26 "
+        "(US public four-year institutions, in-state tuition and fees); Student Finance England "
+        "2026/27 (maximum fee, not an average). EU: arithmetic mean of listed country fees, "
+        "not an official EU or student-weighted average. Entries mix fees, caps, contributions "
+        "and conditional free places; source years differ. "
+        "Nominal US dollars at published annual exchange rates; 2026 fees use 2025 rates. "
+        "Not inflation-adjusted or purchasing-power-adjusted."
+    ) if value_key == "annual_tuition_usd" else SOURCE_NOTE
+    _finalize(
+        fig, out_path, bottom=0.16, missing_note=_missing_note(rows, value_key), source=source,
+    )
 
 
 def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) -> None:

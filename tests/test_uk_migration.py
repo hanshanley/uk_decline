@@ -10,6 +10,40 @@ from uk_migration._aggregate import aggregate_by_year
 from uk_migration.sources import asylum, irregular, ons_ltim, visas
 
 
+@pytest.mark.parametrize("chart,metric,categories,latest_label", [
+    (charts.chart_visas_by_category, "visas_granted", ["work", "study", "family"], "Work: 260k (2025)"),
+    (charts.chart_asylum, "asylum_applications", ["main_applicant"], "260,000 in 2025"),
+])
+def test_public_migration_charts_use_readable_labels_and_preserve_missing_years(
+    chart, metric, categories, latest_label, monkeypatch, tmp_path,
+):
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    rows = [
+        {"metric": metric, "category": category, "period": year, "value": value}
+        for category in categories
+        for year, value in [(2005, 100000), (2006, 120000), (2024, 250000), (2025, 260000)]
+    ]
+    captured = []
+    monkeypatch.setattr(Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    monkeypatch.setattr(charts, "FIGURES_DIR", tmp_path)
+    chart(pd.DataFrame(rows))
+    fig = captured[0]
+    ax = fig.axes[0]
+    assert ax.get_legend() is None
+    assert any(latest_label in text.get_text() for text in ax.texts)
+    assert all(int(tick) % 5 == 0 and int(tick) <= 2025 for tick in ax.get_xticks())
+    for line in ax.lines:
+        assert pd.isna(line.get_ydata()).sum() == 17
+        assert line.get_ydata()[-1] == 260
+    assert "complete calendar years" in fig.texts[1].get_text()
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    assert fig.texts[-1].get_window_extent(renderer).y1 + 5 < ax.xaxis.label.get_window_extent(renderer).y0
+
+
 def test_empty_fetch_preserves_saved_migration_data(monkeypatch, tmp_path):
     from uk_migration import combine
 

@@ -163,7 +163,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     panel_titles = {
         "housing_community": "Housing & community",
         "public_order_safety": "Public safety",
-        "recreation_culture": "Recreation, culture & religion",
+        "recreation_culture": "Recreation, culture\n& religion",
         "health": "Health",
     }
     for ax, category in zip(service_axes, panel_order):
@@ -191,7 +191,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
             va="top",
         )
         ax.text(
-            0.02, 0.83,
+            0.02, 0.73 if "\n" in panel_titles[category] else 0.83,
             f"{first['financial_year']}: {first['index']:.0f}\n"
             f"{last['financial_year']}: {last['index']:.0f}",
             transform=ax.transAxes,
@@ -313,7 +313,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
 
     fig.text(
         0.057,
-        0.041,
+        0.018,
         textwrap.fill(
             "Note: 2000–01 to 2002–03 use Public Expenditure Statistical Analyses 2012; "
             "later years use Public Spending Statistics 2026. Each "
@@ -321,20 +321,17 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
             "panels differ by up to 3 index points, and by up to 7 across the full overlap. "
             "Education is omitted because of an accounting "
             "break. Net investment is after depreciation and includes net capital grants.",
-            width=195,
-        ),
+            width=185,
+        )
+        + "\n"
+        + textwrap.fill(
+            "Source: HM Treasury, Public Expenditure Statistical Analyses 2012 Table 4.3 and "
+            "Public Spending Statistics July 2026, Tables 4.1 and 4.3.",
+            width=185,
+        )
+        + "\nContext: New York Times / Institute for Fiscal Studies, 2019.",
         ha="left",
-        fontsize=8.4,
-        color=MUTED,
-        style="italic",
-    )
-    fig.text(
-        0.057,
-        0.015,
-        "Source: HM Treasury, Public Expenditure Statistical Analyses 2012 Table 4.3 and "
-        "Public Spending Statistics July 2026, Tables 4.1 and 4.3.\n"
-        "Context: New York Times / Institute for Fiscal Studies, 2019.",
-        ha="left",
+        va="bottom",
         fontsize=8.4,
         color=MUTED,
         style="italic",
@@ -342,7 +339,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
 
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    fig.subplots_adjust(left=0.065, right=0.955, top=0.79, bottom=0.13)
+    fig.subplots_adjust(left=0.065, right=0.955, top=0.79, bottom=0.16)
     fig.savefig(output, dpi=220, bbox_inches="tight", facecolor=BG)
     plt.close(fig)
     return output

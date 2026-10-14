@@ -85,7 +85,7 @@ ANALYSES = (
              "National tax revenue and household labour-tax wedges are different measures."),
     Analysis("tuition", "University tuition", "Households", "tuition", "tuition",
              ("tuition_england_cap_nominal.png", "tuition_history_real_usd.png",
-              "tuition_by_country_real.png"),
+              "tuition_region_comparison.png"),
              "England's fee cap alongside dated US and European fee comparisons."),
     Analysis("food-banks", "Food-bank use", "Households", "foodbank_data", "food_banks",
              ("trussell_food_parcels.png",),
@@ -197,7 +197,7 @@ CHART_TITLES = {
     "tuition_england_cap_nominal": "England's maximum annual tuition fee, not inflation-adjusted",
     "tuition_history_real_usd": "Historical tuition fees in inflation-adjusted US dollars",
     "tuition_region_comparison_real": "Domestic undergraduate tuition by region: inflation-adjusted dollars",
-    "tuition_region_comparison": "Domestic undergraduate tuition by region: current dollars",
+    "tuition_region_comparison": "Annual tuition: England, the EU country mean and the US",
 }
 
 

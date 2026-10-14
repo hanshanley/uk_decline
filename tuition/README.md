@@ -19,7 +19,7 @@ claim that *the UK has a higher average cost of degrees*.
 | Cohort | **Domestic / in-country (EU) students** at public institutions |
 | Regions | **UK** (own category), **EU-27**, **US** |
 | Aggregation | **Per country, unweighted** median & average |
-| Degree totals | Summary table: annual tuition **× 4** normalized; chart annotations: typical 3-year UK/EU and 4-year US |
+| Degree totals | Summary table: annual tuition **× 4** normalized; the public chart compares annual fees only |
 | Currency | normalized to **USD** (nominal, market FX) and **constant 2022 USD** (CPI-adjusted) |
 
 ## Results
@@ -51,6 +51,17 @@ England and four EU entries dated 2026 remain blank in the real snapshot until
 annual 2026 CPI is available. Consequently that chart's EU mean covers **23 of
 27 countries**, not the full EU compilation; it is not comparable with the
 27-country nominal mean as a measure of change.
+
+The public cross-country chart therefore uses **nominal dollars**, with one entry
+each for England, the EU country-compilation mean and the US. All 27 EU country
+entries are included, with equal country weights and the country median noted
+separately. This is **not an official EU-wide or student-weighted fee average**.
+England's 2026/27 cap uses the latest published annual exchange rate (2025), which
+is stated on the figure; no unavailable 2026 annual CPI is fabricated. The
+per-country and inflation-adjusted snapshots remain supplemental charts on GitHub.
+
+![Annual tuition: England, EU country mean and US](../outputs/tuition/tuition_region_comparison.png)
+
 Market exchange rates express fees in US dollars at the year's exchange rate.
 GDP PPP expresses them against an economy-wide purchasing-power basket, not a
 tuition-specific price index. The two answer different questions; neither alone

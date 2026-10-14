@@ -167,3 +167,21 @@ def test_summary_cannot_substitute_earlier_endpoint(tmp_path):
                     & (frame["financial_year"] == charts.END_YEAR))]
     with pytest.raises(ValueError, match="endpoint"):
         summary.build_summary(frame, tmp_path / "summary.md")
+
+
+def test_investment_footer_has_separate_lines_and_clears_axis_labels(monkeypatch):
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    captured = []
+    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    charts.make_chart(_frame())
+    fig = captured[0]
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    footer = next(text for text in fig.texts if text.get_text().startswith("Note:"))
+    assert "\nSource:" in footer.get_text()
+    assert "\nContext:" in footer.get_text()
+    assert footer.get_window_extent(renderer).y1 + 5 < min(
+        tick.get_window_extent(renderer).y0 for tick in fig.axes[-1].get_xticklabels()
+    )

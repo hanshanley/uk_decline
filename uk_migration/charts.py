@@ -15,6 +15,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.ticker import MaxNLocator
+from ppp_data.figure import labelled_ends
 
 from .combine import COMBINED_CSV
 
@@ -37,7 +38,7 @@ METHOD_BREAK_YEAR = 2012
 from vizstyle import (  # noqa: E402
     BG as SUBSTACK_BG, TEXT as SUBSTACK_TEXT, MUTED as SUBSTACK_MUTED,
     ACCENT as SUBSTACK_ACCENT, BLUE as SUBSTACK_BLUE, GOLD as SUBSTACK_GOLD,
-    GREEN as SUBSTACK_GREEN, GRID as SUBSTACK_GRID, house_style,
+    GREEN as SUBSTACK_GREEN, GRID as SUBSTACK_GRID, house_style, with_year_gaps,
 )
 
 house_style()
@@ -58,16 +59,20 @@ def _series(df: pd.DataFrame, metric: str, category: str = "all") -> pd.DataFram
     return sel.sort_values("period")
 
 
-def _save(fig, name: str, source: str) -> Path:
+def _save(fig, name: str, source: str, *, publication: bool = False) -> Path:
     import textwrap
 
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     path = FIGURES_DIR / name
     source = "\n".join(textwrap.fill(line, width=145) for line in source.splitlines())
-    fig.subplots_adjust(bottom=0.20 if "\n" in source else 0.14)
+    if publication:
+        fig.subplots_adjust(left=0.09, right=0.96, top=0.80, bottom=0.20)
+    else:
+        fig.subplots_adjust(bottom=0.20 if "\n" in source else 0.14)
     fig.text(
-        0.005, 0.012, f"Source: {source}", ha="left", va="bottom",
-        fontsize=8, style="italic", color=SUBSTACK_MUTED,
+        0.09 if publication else 0.005, 0.025 if publication else 0.012,
+        f"Source: {source}", ha="left", va="bottom",
+        fontsize=9 if publication else 8, style="italic", color=SUBSTACK_MUTED,
     )
     fig.savefig(path, dpi=200, bbox_inches="tight")
     plt.close(fig)
@@ -191,28 +196,87 @@ def chart_inflow_outflow(df: pd.DataFrame) -> Path:
 
 def chart_visas_by_category(df: pd.DataFrame) -> Path:
     colors = {"work": SUBSTACK_BLUE, "study": SUBSTACK_GREEN, "family": SUBSTACK_GOLD}
-    fig, ax = plt.subplots(figsize=(11, 6))
-    for category, color in colors.items():
+    data = {}
+    for category in colors:
         s = _series(df, "visas_granted", category)
-        if not s.empty:
-            ax.plot(s["period"], s["value"], marker="o", color=color, label=category.capitalize())
-    _style_title(ax, "UK entry-clearance visas granted by category")
+        if s.empty:
+            raise ValueError(f"Missing published visa category: {category}")
+        data[category] = s
+    first = int(min(s["period"].min() for s in data.values()))
+    latest = int(max(s["period"].max() for s in data.values()))
+    house_style()
+    fig, ax = plt.subplots(figsize=(11, 5.8))
+    ends = []
+    for category, color in colors.items():
+        s = data[category]
+        annual = with_year_gaps(s.set_index("period")["value"] / 1000)
+        ax.plot(annual.index, annual.values, color=color, linewidth=2.6)
+        last = s.iloc[-1]
+        ax.scatter(last["period"], last["value"] / 1000, color=color, s=30, zorder=3)
+        ends.append((
+            last["value"] / 1000,
+            f"{category.capitalize()}: {last['value'] / 1000:,.0f}k ({int(last['period'])})",
+            color,
+        ))
+    labelled_ends(ax, ends, min_gap=60, x=latest + 0.3, fontsize=11)
+    ax.set_xlim(first - 0.3, latest + 6)
+    ax.set_ylim(0, max(s["value"].max() for s in data.values()) / 1000 * 1.12)
+    ax.set_xticks(list(range((first + 4) // 5 * 5, latest + 1, 5)))
+    ax.yaxis.set_major_formatter(lambda value, _: f"{value:,.0f}k")
+    ax.tick_params(labelsize=11)
     ax.set_xlabel("Year")
-    ax.set_ylabel("Visas issued per year")
-    ax.legend(loc="upper left", frameon=False)
-    _style_axes(ax)
-    return _save(fig, "visas_by_category.png", SOURCE_HO)
+    ax.set_ylabel("Visas granted per year")
+    ax.grid(axis="y", linewidth=0.5)
+    ax.set_axisbelow(True)
+    fig.suptitle("UK visas for work, study and family", x=0.09, y=0.97,
+                 ha="left", fontsize=22, fontweight="bold")
+    fig.text(0.09, 0.89, "Entry-clearance grants, including dependants; complete calendar years",
+             fontsize=11.5, color=SUBSTACK_MUTED)
+    return _save(
+        fig, "visas_by_category.png",
+        f"{SOURCE_HO}, entry-clearance outcomes, Data_Vis_D02. "
+        f"{first}\u2013{latest}; visas granted, not arrivals or net migration. "
+        "Visitor and other categories are not shown; missing years are not joined.",
+        publication=True,
+    )
 
 
 def chart_asylum(df: pd.DataFrame) -> Path:
     s = _series(df, "asylum_applications", "main_applicant")
-    fig, ax = plt.subplots(figsize=(11, 6))
-    ax.plot(s["period"], s["value"], marker="o", color=SUBSTACK_ACCENT)
-    _style_title(ax, "UK asylum applications (main applicants)")
+    if s.empty:
+        raise ValueError("Missing published asylum applications")
+    first, latest = int(s["period"].min()), int(s["period"].max())
+    house_style()
+    fig, ax = plt.subplots(figsize=(11, 5.8))
+    annual = with_year_gaps(s.set_index("period")["value"] / 1000)
+    ax.plot(annual.index, annual.values, color=SUBSTACK_ACCENT, linewidth=2.8)
+    ax.fill_between(annual.index, annual.values, 0, color=SUBSTACK_ACCENT, alpha=0.08)
+    last = s.iloc[-1]
+    ax.scatter(last["period"], last["value"] / 1000, color=SUBSTACK_ACCENT, s=35, zorder=3)
+    labelled_ends(
+        ax, [(last["value"] / 1000, f"{last['value']:,.0f} in {latest}", SUBSTACK_ACCENT)],
+        min_gap=1, x=latest + 0.3, fontsize=11,
+    )
+    ax.set_xlim(first - 0.3, latest + 6)
+    ax.set_ylim(0, s["value"].max() / 1000 * 1.12)
+    ax.set_xticks(list(range((first + 4) // 5 * 5, latest + 1, 5)))
+    ax.yaxis.set_major_formatter(lambda value, _: f"{value:,.0f}k")
+    ax.tick_params(labelsize=11)
     ax.set_xlabel("Year")
-    ax.set_ylabel("Claims per year")
-    _style_axes(ax)
-    return _save(fig, "asylum_applications.png", SOURCE_HO)
+    ax.set_ylabel("Asylum applications per year")
+    ax.grid(axis="y", linewidth=0.5)
+    ax.set_axisbelow(True)
+    fig.suptitle("UK asylum applications", x=0.09, y=0.97, ha="left",
+                 fontsize=22, fontweight="bold")
+    fig.text(0.09, 0.89, "Main applicants only; complete calendar years",
+             fontsize=11.5, color=SUBSTACK_MUTED)
+    return _save(
+        fig, "asylum_applications.png",
+        f"{SOURCE_HO}, asylum claims, Data_Asy_D01. {first}\u2013{latest}. "
+        "Dependants excluded; not decisions, the asylum backlog or all immigration. "
+        "Missing years are not joined.",
+        publication=True,
+    )
 
 
 def chart_irregular(df: pd.DataFrame) -> Path:

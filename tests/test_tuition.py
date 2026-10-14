@@ -175,6 +175,37 @@ def test_plot_region_comparison_missing_region_no_crash():
         os.unlink(out)
 
 
+def test_region_chart_includes_england_and_one_eu_summary_with_honest_units(monkeypatch, tmp_path):
+    import pytest
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    rows = [
+        {"country": "United Kingdom", "region": config.UK, "year": 2026, "annual_tuition_usd": 12890.5},
+        {"country": "United States", "region": config.US, "year": 2025, "annual_tuition_usd": 11950},
+        {"country": "Germany", "region": config.EU, "year": 2023, "annual_tuition_usd": 0},
+        {"country": "Italy", "region": config.EU, "year": 2023, "annual_tuition_usd": 1600},
+    ]
+    captured = []
+    monkeypatch.setattr(Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    plot_tuition.plot_region_comparison(rows, "annual_tuition_usd", "current US dollars", str(tmp_path / "chart.png"))
+    fig = captured[0]
+    ax = fig.axes[0]
+    assert len(ax.patches) == 3
+    assert [patch.get_width() for patch in ax.patches] == pytest.approx([800, 11950, 12890.5])
+    labels = [label.get_text() for label in ax.get_yticklabels()]
+    assert any("England (fee cap)" in label and "2026/27" in label for label in labels)
+    assert any("EU sample (2/27 countries)" in label for label in labels)
+    assert not any(label.startswith(("Germany", "Italy")) for label in labels)
+    assert "not an official EU or student-weighted average" in fig.texts[0].get_text()
+    assert "2026 fees use 2025 rates" in " ".join(fig.texts[0].get_text().split())
+    assert "constant" not in ax.get_xlabel()
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    assert fig.texts[0].get_window_extent(renderer).y1 + 5 < ax.xaxis.label.get_window_extent(renderer).y0
+
+
 # --- historical deflation (real-terms, inflation-adjusted) -------------------
 from tuition import build_history
 
@@ -595,7 +626,7 @@ def test_real_snapshot_with_only_zero_median_eu_remains_readable(tmp_path, monke
     assert captured[0].axes[0].get_xlim()[0] == 0
     assert captured[0].axes[0].get_xlim()[1] > 170 / 3
     assert [text.get_text() for text in captured[0].axes[0].get_yticklabels()] == [
-        "EU sample (3/27 countries) (2023)"
+        "EU sample (3/27 countries)\n2023/24"
     ]
     note = " ".join(captured[0].texts[0].get_text().split())
     assert "Not plotted: Italy (2026), United States (2025), England (2026)" in note
