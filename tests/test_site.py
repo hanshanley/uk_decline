@@ -49,6 +49,7 @@ def test_site_builds_nested_pages_and_rewrites_document_links(site_repository):
     output = build_site.build(root)
     home = BeautifulSoup((output / "index.html").read_text(), "html.parser")
     assert len(home.select(".topic-card")) == len(build_site.ANALYSES)
+    assert f"{len(build_site.ANALYSES)} analyses" in home.get_text()
     assert home.select_one(".explore-tools").has_attr("hidden")
     tuition = BeautifulSoup((output / "tuition/index.html").read_text(), "html.parser")
     assert tuition.find(

@@ -375,7 +375,7 @@ def homepage() -> str:
     <section id="explore" aria-labelledby="explore-title">
       <div class="section-heading"><div><p class="eyebrow">Go beyond the headline</p>
       <h2 id="explore-title">Explore the evidence</h2></div>
-      <p>16 analyses &middot; charts, definitions and sources</p></div>
+      <p>{len(ANALYSES)} analyses &middot; charts, data and source notes</p></div>
       <div class="explore-tools" hidden>
         <label class="search-label">Find a topic
           <input type="search" id="topic-search" placeholder="Try tuition, GDP or waiting lists">

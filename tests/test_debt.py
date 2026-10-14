@@ -136,6 +136,7 @@ def test_debt_charts_use_year_ticks_and_separate_debt_stock_from_yields(
         renderer = canvas.get_renderer()
         ax = fig.axes[0]
         assert all(label.get_text().isdigit() for label in ax.get_xticklabels())
+        assert max(int(label.get_text()) for label in ax.get_xticklabels()) <= 2026
         source = fig.texts[-1]
         assert source.get_window_extent(renderer).y1 + 5 < ax.xaxis.label.get_window_extent(renderer).y0
 
