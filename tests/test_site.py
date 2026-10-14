@@ -119,6 +119,16 @@ def test_refresh_retains_expected_omission_diagnostic(monkeypatch, tmp_path, cap
         refresh_data.run(("-m", "trade_data"), tmp_path)
 
 
+def test_library_warning_is_visible_but_not_a_partial_source_failure(monkeypatch, tmp_path, capsys):
+    output = "warning: The `fitz` API is deprecated. Use `import pymupdf` instead.\n"
+    monkeypatch.setattr(
+        refresh_data.subprocess, "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, stdout=output),
+    )
+    refresh_data.run(("-m", "crime_data"), tmp_path)
+    assert output in capsys.readouterr().out
+
+
 def test_failed_refresh_does_not_advance_success_date(monkeypatch, tmp_path):
     status = tmp_path / "data/site/refresh.json"
     status.parent.mkdir(parents=True)

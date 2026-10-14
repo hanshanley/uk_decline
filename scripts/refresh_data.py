@@ -42,7 +42,10 @@ STEPS = {
     ),
     "purchasing-power": (("-m", "ppp_data"),),
 }
-FAILURE_NOTICE = re.compile(r"\bWARNING:|\busing (?:manual )?fallback\b", re.IGNORECASE)
+FAILURE_NOTICE = re.compile(
+    r"^\[[^\]\r\n]+\] WARNING:|\busing (?:manual )?fallback\b",
+    re.IGNORECASE | re.MULTILINE,
+)
 EXPECTED_NHS_OMISSION = re.compile(
     r"\[nhs_data\] WARNING: NIR cancer_62day_pct: "
     r"omitting \d+ months without all five trusts"
