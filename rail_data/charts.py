@@ -53,8 +53,26 @@ def _maa(df: pd.DataFrame, region: str, metric: str) -> pd.DataFrame:
 
 
 def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
-    lon = _maa(df, LONDON, metric)
-    gb = _maa(df, GB, metric)
+    official = metric == "ppm_official_maa_pct"
+    if official:
+        selected = df[df["metric"] == metric].copy()
+        selected["date"] = pd.to_datetime(selected["date"])
+        selected["maa"] = selected["value"]
+        series = []
+        for region in (LONDON, GB):
+            sub = selected[selected["region"] == region].set_index("date").sort_index()
+            if not sub.empty:
+                sub = sub.reindex(pd.date_range(sub.index.min(), sub.index.max(), freq="QE"))
+            series.append(sub.rename_axis("date").reset_index())
+        lon, gb = series
+        if not selected.empty:
+            latest = selected["date"].max()
+            provisional = any("[p]" in str(period) for period in
+                              selected.loc[selected["date"] == latest, "period"])
+            subtitle += f" \u00b7 through {latest:%b %Y}" + (" (provisional)" if provisional else "")
+    else:
+        lon = _maa(df, LONDON, metric)
+        gb = _maa(df, GB, metric)
     if lon.empty or gb.empty:
         return None
 
@@ -73,11 +91,11 @@ def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
     ax.set_title(title, fontweight="bold", pad=18)
     ax.text(0.5, 1.01, subtitle, transform=ax.transAxes, ha="center", va="bottom",
             fontsize=10.5, color=MUTED)
-    ax.set_xlabel("Period", labelpad=4)
+    ax.set_xlabel("Quarter ending" if official else "Period", labelpad=4)
     ax.set_ylabel(ylabel, labelpad=4)
     ax.yaxis.set_major_locator(mtick.MaxNLocator(integer=True))
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _p: f"{v:.0f}%"))
-    ax.xaxis.set_major_locator(mdates.YearLocator(4))
+    ax.xaxis.set_major_locator(mdates.YearLocator(1 if official else 4))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
     ax.grid(axis="y")
     ax.set_axisbelow(True)
@@ -94,6 +112,10 @@ def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
     fig.autofmt_xdate(rotation=30, ha="right")
     source_note(
         fig,
+        "Source: Office of Rail and Road (ORR), Data Portal Table 3113. "
+        "Published sector aggregates and trains-weighted moving annual averages; "
+        "not joined to the earlier reconstructed series."
+        if official else
         "Source: Office of Rail and Road (ORR), Data Portal Table 3103. "
         "Approximate trains-weighted aggregates; four-quarter arithmetic means, "
         "not official moving annual averages.",
@@ -125,6 +147,15 @@ def make_charts(source, out_dir="outputs/rail") -> list[pathlib.Path]:
         "Public Performance Measure (PPM), 4-quarter arithmetic mean",
         "Trains meeting PPM (%)",
         "rail_london_ppm.png", out_dir,
+    )
+    if p:
+        written.append(p)
+    p = _chart(
+        df, "ppm_official_maa_pct",
+        "Rail punctuality \u2014 official London & South East series",
+        "PPM, ORR moving annual average",
+        "Trains meeting PPM (%)",
+        "rail_london_ppm_official.png", out_dir,
     )
     if p:
         written.append(p)

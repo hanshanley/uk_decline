@@ -4,10 +4,22 @@ Tracks how reliable **London & South East** trains have been over time, using th
 authoritative **Office of Rail and Road (ORR)** performance statistics, and puts them
 against a **Great Britain** reference.
 
+## Current official punctuality
+
+![Official rail punctuality](../outputs/rail/rail_london_ppm_official.png)
+
+ORR **Table 3113** supplies the published London & South East and Great Britain
+PPM aggregates through **April–June 2026 (provisional)**. This figure uses ORR's
+published, trains-weighted **moving annual averages**, without smoothing them again.
+Its history starts in April–June 2019 and is kept separate from the longer
+reconstructed series below: different sector coverage and weighting must not be
+hidden by joining the lines.
+
 ## The story
 
-Two metrics, both drawn as a 4-quarter moving average (the standard way to read
-seasonal rail statistics):
+The longer historical figures below use two reconstructed metrics, both drawn
+as a four-quarter arithmetic mean. Their Table 3103 source currently ends in
+**January–March 2026**; a newer rail release does not extend that historical workbook.
 
 | Metric | What it is | Trend |
 |---|---|---|
@@ -25,6 +37,11 @@ ORR's trains-weighted annual moving average; it is omitted across missing quarte
 - **Source:** ORR Data Portal, **Table 3103 — historic passenger trains planned, PPM
   and CaSL by operator** (quarterly, from 1997-98).
   <https://dataportal.orr.gov.uk/statistics/performance/passenger-rail-performance/>
+- **Current official PPM:** ORR **Table 3113 — Public Performance Measure by operator
+  and sector**, quarterly data and moving annual averages. The CSV keeps these as
+  `ppm_official_pct` and `ppm_official_maa_pct`, with their own source labels and
+  provisional/revision markers in `period`. Neither is spliced into `ppm_pct`.
+  <https://dataportal.orr.gov.uk/statistics/performance/passenger-rail-performance/table-3113-public-performance-measure-by-operator-and-sector/>
 - The ORR does **not** publish a *historic* sector aggregate (its sector table, 3113,
   starts 2019), so `orr.py` rebuilds the **London and South East** sector itself by taking
   each operator's figure **weighted by the trains it planned** that quarter:
@@ -67,6 +84,8 @@ ORR's trains-weighted annual moving average; it is omitted across missing quarte
 - `outputs/rail/rail_london_casl.png` — cancellations & significant lateness (the
   disruption story; London highlighted vs GB).
 - `outputs/rail/rail_london_ppm.png` — PPM "on time" (the broadly-flat headline).
+- `outputs/rail/rail_london_ppm_official.png` — published Table 3113 sector PPM
+  moving annual averages, updated independently of the longer reconstruction.
 
 Charts follow the shared house style (warm tan background, serif type, London in the
 terracotta accent, italic source note).

@@ -13,8 +13,9 @@ comparators. Two complementary angles (different scales — read each on its own
 - **Survey trust in national government:** 42.5% in the pooled period ending 2007 →
   **34.5% in the period ending 2024** — lower at these endpoints, ~9.6 pts below
   the reporting EU countries' mean (44.1%).
-- **WGI governance quality:** all four indicators are lower in 2024 than at the 1996 series
-  start; Control of Corruption and Government Effectiveness fell most.
+- **WGI governance quality:** three of four indicators are lower in 2025 than at the
+  1996 series start; Voice & Accountability is higher. These use the World Bank's
+  recalculated **2026 update**, not old-vintage scores joined to a new endpoint.
 
 ---
 
@@ -29,16 +30,19 @@ citations reproduced here.
 
 ### 1. World Bank — Worldwide Governance Indicators (WGI)  → governance metrics
 
-> Kaufmann, Daniel & Aart C. Kraay (2024). "The Worldwide Governance Indicators: Methodology
-> and 2024 Update." Policy Research Working Paper. Washington, DC: World Bank Group. Dataset:
-> *Worldwide Governance Indicators (WGI)*, 2024 update, World Bank Group, Washington, DC.
-> https://www.govindicators.org
+> World Bank (2026). "The Worldwide Governance Indicators: Methodology for Measuring
+> Governance Using Perception Data." Washington, DC: World Bank Group. Dataset:
+> *Worldwide Governance Indicators (WGI)*, 2026 update, accessed 14 October 2026.
+> https://www.worldbank.org/en/publication/worldwide-governance-indicators
 
 - **Collected/compiled by:** the World Bank Group (WGI draws on 30+ underlying sources).
 - **Accessed via:** `https://api.worldbank.org/v2/country/{ISO3}/indicator/{IND}?source=3` —
   indicators `GOV_WGI_VA.EST`, `GOV_WGI_GE.EST`, `GOV_WGI_RL.EST`, `GOV_WGI_CC.EST` (estimate
   series, ≈ −2.5…+2.5).
-- **Coverage:** UK 1996–2024. **Fetched live** by `trust_data/worldbank.py`.
+- **Coverage:** UK 1996–2025. **Fetched live** by `trust_data/worldbank.py`.
+- **Vintage:** the 2026 update recalculates historical estimates back to 1996.
+  The entire history is retrieved together; old and revised vintages are not spliced.
+  These charts use the standard-unit estimates, not the separate 0–100 scores.
 - **`source` column value:** `World Bank WGI`.
 
 ### 2. OECD — trust in national government (via Our World in Data)  → survey metric
@@ -72,7 +76,7 @@ citations reproduced here.
 ```bash
 python -m trust_data.fetch_trust                 # all sources, 1974-current (WGI 1996+, survey 2007+)
 python -m trust_data.fetch_trust --charts --summary
-python -m trust_data.fetch_trust --sources worldbank --start 1996 --end 2024
+python -m trust_data.fetch_trust --sources worldbank --start 1996 --end 2025
 ```
 
 Outputs (written to `data/trust/`):

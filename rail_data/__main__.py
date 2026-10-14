@@ -42,6 +42,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[rail_data] using existing CSV: {source}")
     else:
         rows = orr.build_rows()
+        if not rows:
+            raise RuntimeError("Rail source returned no observations; existing data was not replaced")
+        rows += orr.build_official_rows()
         _write_csv(rows, pathlib.Path(args.csv))
         print(f"[rail_data] wrote {len(rows)} rows -> {args.csv}")
         source = args.csv

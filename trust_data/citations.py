@@ -22,14 +22,14 @@ class Citation(NamedTuple):
 
 CITATIONS: dict[str, Citation] = {
     "World Bank WGI": Citation(
-        short="World Bank, Worldwide Governance Indicators (Kaufmann & Kraay, 2024)",
+        short="World Bank, Worldwide Governance Indicators, 2026 update",
         full=(
-            "Kaufmann, Daniel & Aart C. Kraay (2024). "
-            "\u201cThe Worldwide Governance Indicators: Methodology and 2024 Update.\u201d "
-            "Policy Research Working Paper. Washington, DC: World Bank Group. "
-            "Dataset: *Worldwide Governance Indicators (WGI)*, 2024 update, World Bank Group, "
-            "Washington, DC \u2014 accessed via the World Bank API (DataBank source 3). "
-            "https://www.govindicators.org"
+            "World Bank (2026). \u201cThe Worldwide Governance Indicators: Methodology "
+            "for Measuring Governance Using Perception Data.\u201d Washington, DC: "
+            "World Bank Group. Dataset: *Worldwide Governance Indicators (WGI)*, "
+            "2026 update, 1996\u20132025 (recalculated historical estimates), "
+            "accessed 14 October 2026 via the World Bank API (DataBank source 3). "
+            "https://www.worldbank.org/en/publication/worldwide-governance-indicators"
         ),
     ),
     "OECD Trust in Government via Our World in Data (grapher: oecd-average-trust-in-governments)": (

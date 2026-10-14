@@ -35,8 +35,16 @@ ORR_TABLE_3103_URL = (
     "https://dataportal.orr.gov.uk/media/1811/"
     "table-3103-historic-passenger-trains-planned-ppm-and-casl-quarterly-by-operator.ods"
 )
+ORR_TABLE_3113_URL = (
+    "https://dataportal.orr.gov.uk/media/1428/"
+    "table-3113-public-performance-measure-by-operator-and-sector.ods"
+)
 SOURCE = ("Office of Rail and Road (ORR) Data Portal, Table 3103 "
           "(historic PPM & CaSL by operator, quarterly)")
+OFFICIAL_SOURCE = (
+    "Office of Rail and Road (ORR) Data Portal, Table 3113 "
+    "(official PPM by operator and sector)"
+)
 
 # Franchise titles (Table 3103 column "Franchise title") that make up the ORR
 # "London and South East" sector. Grouping by franchise title folds operator renames
@@ -174,3 +182,67 @@ def build_rows(workbook: dict | None = None) -> list[dict]:
                 })
     rows.sort(key=lambda r: (r["metric"], r["region"], r["date"]))
     return rows
+
+
+def build_official_rows(workbook: dict | None = None) -> list[dict]:
+    """Read published sector PPM and trains-weighted MAA without splicing Table 3103."""
+    if workbook is None:
+        workbook = download_workbook(ORR_TABLE_3113_URL)
+    table = workbook["3113_PPM_(quarterly)"]
+    labels = [str(value).strip() for value in table.iloc[:, 0]]
+    sections = {}
+    for prefix, metric in [("Table 3113a:", "ppm_official_pct"),
+                           ("Table 3113b:", "ppm_official_maa_pct")]:
+        found = [i for i, label in enumerate(labels) if label.startswith(prefix)]
+        if len(found) != 1:
+            raise ValueError(f"ORR: missing or duplicate {prefix} section")
+        sections[found[0]] = metric
+    rows = []
+    for start, metric in sorted(sections.items()):
+        end = min((i for i in sections if i > start), default=len(table))
+        headers = [i for i in range(start + 1, end) if labels[i] == "Time period"]
+        if len(headers) != 1:
+            raise ValueError(f"ORR: missing or duplicate {metric} header")
+        header = headers[0]
+        columns = {}
+        for region, label in [
+            (GREAT_BRITAIN, "Great Britain (percentage)"),
+            (LONDON_SE, "London and South East sector (percentage)"),
+        ]:
+            matches = [i for i, value in enumerate(table.iloc[header]) if str(value) == label]
+            if len(matches) != 1:
+                raise ValueError(f"ORR: missing or duplicate official {region} column")
+            columns[region] = matches[0]
+        for i in range(header + 1, end):
+            parsed = _parse_period(labels[i])
+            if parsed is None:
+                continue
+            quarter, year, index, date = parsed
+            if (metric == "ppm_official_maa_pct"
+                    and all(str(table.iloc[i, column]).strip() == "[z]"
+                            for column in columns.values())
+                    and not any(r["metric"] == metric for r in rows)):
+                continue
+            for region, column in columns.items():
+                value = _to_float(table.iloc[i, column])
+                if value is None or not 0 <= value <= 100:
+                    raise ValueError(f"ORR: invalid official {region} PPM for {date}")
+                rows.append({
+                    "region": region, "period": labels[i], "date": date,
+                    "year": year, "quarter": index, "metric": metric,
+                    "value": round(value, 4), "unit": "percent", "source": OFFICIAL_SOURCE,
+                })
+    keys = {(r["metric"], r["region"], r["date"]) for r in rows}
+    if len(keys) != len(rows):
+        raise ValueError("ORR: duplicate official PPM observations")
+    coverage = {}
+    for metric in sections.values():
+        gb = {r["date"] for r in rows if r["metric"] == metric and r["region"] == GREAT_BRITAIN}
+        london = {r["date"] for r in rows if r["metric"] == metric and r["region"] == LONDON_SE}
+        if not gb or gb != london:
+            raise ValueError("ORR: incomplete official PPM sector/quarter coverage")
+        coverage[metric] = gb
+    quarterly, annual = coverage["ppm_official_pct"], coverage["ppm_official_maa_pct"]
+    if not annual <= quarterly or max(annual) != max(quarterly):
+        raise ValueError("ORR: incomplete official PPM sector/quarter coverage")
+    return sorted(rows, key=lambda r: (r["metric"], r["region"], r["date"]))

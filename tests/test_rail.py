@@ -86,3 +86,87 @@ def test_rolling_series_retains_internal_gaps_for_plotting(monkeypatch, tmp_path
     for line in captured[0].axes[0].lines:
         assert pd.isna(line.get_ydata()).sum() == 4
         assert list(pd.to_datetime(line.get_xdata())) == list(dates[3:])
+
+
+def _official_workbook():
+    header = ["Time period", "Great Britain (percentage)",
+              "London and South East sector (percentage)"]
+    return {"3113_PPM_(quarterly)": pd.DataFrame([
+        ["Table 3113a: quarterly data", None, None], header,
+        ["Jan to Mar 2026", 80, 81],
+        ["Apr to Jun 2026 [p]", 82, 83],
+        [None, None, None],
+        ["Table 3113b: moving annual average", None, None], header,
+        ["Jan to Mar 2026", 90, 91],
+        ["Apr to Jun 2026 [p]", 92, 93],
+    ])}
+
+
+def test_orr_official_quarters_and_published_maa_are_separate_series():
+    rows = orr.build_official_rows(_official_workbook())
+    assert len(rows) == 8
+    assert max(r["date"] for r in rows) == "2026-06-30"
+    london = {(r["metric"], r["date"]): r for r in rows if r["region"] == orr.LONDON_SE}
+    assert london[("ppm_official_pct", "2026-06-30")]["value"] == 83
+    assert london[("ppm_official_maa_pct", "2026-06-30")]["value"] == 93
+    assert london[("ppm_official_pct", "2026-06-30")]["period"].endswith("[p]")
+    assert all("Table 3113" in r["source"] for r in rows)
+
+
+def test_orr_official_maa_can_start_after_quarterly_but_not_have_internal_suppression():
+    wb = _official_workbook()
+    wb["3113_PPM_(quarterly)"].iloc[7, 1:] = ["[z]", "[z]"]
+    rows = orr.build_official_rows(wb)
+    assert len(rows) == 6
+    assert {r["date"] for r in rows if r["metric"] == "ppm_official_maa_pct"} == {
+        "2026-06-30",
+    }
+    wb = _official_workbook()
+    wb["3113_PPM_(quarterly)"].iloc[8, 1:] = ["[z]", "[z]"]
+    with pytest.raises(ValueError, match="invalid official"):
+        orr.build_official_rows(wb)
+
+
+def test_orr_official_missing_or_duplicate_data_is_not_silently_published():
+    for bad in [None, -1, 101, float("inf")]:
+        wb = _official_workbook()
+        wb["3113_PPM_(quarterly)"].iloc[3, 2] = bad
+        with pytest.raises(ValueError, match="invalid official"):
+            orr.build_official_rows(wb)
+    wb = _official_workbook()
+    wb["3113_PPM_(quarterly)"].iloc[3, 0] = "Jan to Mar 2026"
+    with pytest.raises(ValueError, match="duplicate official"):
+        orr.build_official_rows(wb)
+    wb = _official_workbook()
+    wb["3113_PPM_(quarterly)"] = wb["3113_PPM_(quarterly)"].drop(index=3)
+    with pytest.raises(ValueError, match="incomplete official"):
+        orr.build_official_rows(wb)
+
+
+def test_official_rail_chart_uses_published_maa_without_smoothing_it_again(monkeypatch, tmp_path):
+    df = pd.DataFrame(orr.build_official_rows(_official_workbook()))
+    captured = []
+    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    charts._chart(df, "ppm_official_maa_pct", "Title", "Subtitle", "Percent",
+                  "official.png", tmp_path)
+    lines = captured[0].axes[0].lines
+    assert list(lines[0].get_ydata()) == [90, 92]
+    assert list(lines[1].get_ydata()) == [91, 93]
+    assert "Table 3113" in captured[0].texts[0].get_text()
+    assert "trains-weighted" in captured[0].texts[0].get_text()
+
+
+def test_official_fetch_failure_preserves_saved_rail_dataset(monkeypatch, tmp_path):
+    from rail_data import __main__ as cli
+
+    path = tmp_path / "rail.csv"
+    path.write_text("saved rail data\n")
+    monkeypatch.setattr(orr, "build_rows", lambda: [{"value": 90}])
+
+    def fail():
+        raise ValueError("ORR: incomplete official PPM sector/quarter coverage")
+
+    monkeypatch.setattr(orr, "build_official_rows", fail)
+    with pytest.raises(ValueError, match="incomplete official"):
+        cli.main(["--csv", str(path)])
+    assert path.read_text() == "saved rail data\n"
