@@ -274,6 +274,7 @@ def layout(
       <nav aria-label="Primary navigation"><ul>
         <li><a href="https://www.themarginoferror.com/">Latest</a></li>
         <li><a href="https://www.themarginoferror.com/archive/">Archive</a></li>
+        <li><a href="https://www.themarginoferror.com/interactive-analysis/">Interactive analysis</a></li>
         <li><a href="https://www.themarginoferror.com/about/">About</a></li>
         <li><a class="subscribe-link" href="{SUBSCRIBE_URL}">Subscribe</a></li>
       </ul></nav>

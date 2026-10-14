@@ -85,7 +85,10 @@ def test_publication_shell_and_project_navigation_work_on_nested_pages(site_repo
         assert header.select_one(".wordmark")["aria-label"] == "The Margin of Error, home"
         assert header.select_one(".wordmark-main i").get_text() == "of"
         primary = header.select_one('nav[aria-label="Primary navigation"]')
-        assert [a.get_text() for a in primary.select("a")] == ["Latest", "Archive", "About", "Subscribe"]
+        assert [a.get_text() for a in primary.select("a")] == [
+            "Latest", "Archive", "Interactive analysis", "About", "Subscribe",
+        ]
+        assert primary.find("a", href="https://www.themarginoferror.com/interactive-analysis/")
         assert all(a["href"].startswith("https://") for a in primary.select("a"))
         project = page.select_one('main nav[aria-label="UK evidence navigation"]')
         assert project.find("a", string="UK overview")
