@@ -38,58 +38,66 @@ class Analysis:
     group: str
     module: str
     output: str
-    featured: str
+    charts: tuple[str, ...]
     description: str
+
+    @property
+    def featured(self) -> str:
+        return self.charts[0]
 
 
 ANALYSES = (
     Analysis("gdp-income", "GDP & incomes", "Economy", "europe_data", "gdp_income",
-             "uk_gdp_relative_to_peers.png",
+             ("uk_gdp_relative_to_peers.png", "gdp_per_capita_real_over_time.png",
+              "median_disposable_income_pps.png"),
              "Real output, nominal valuations and household incomes answer different questions."),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
-             "ppp_gdp_per_capita_growth.png",
+             ("ppp_gdp_per_capita_growth.png", "ppp_gdp_relative_to_peers.png",
+              "ppp_gap_decomposition_uk_us.png"),
              "Separate real economic growth from exchange rates and relative price levels."),
     Analysis("markets", "Stock markets", "Economy", "markets_data", "stock_markets",
-             "stock_lse_uk_companies.png",
+             ("stock_lse_uk_companies.png", "stock_listed_domestic_companies.png",
+              "stock_market_cap_pct_gdp.png"),
              "Company listings and market size, with London Stock Exchange and international definitions kept separate."),
     Analysis("sterling", "Sterling", "Economy", "sterling_data", "sterling",
-             "sterling_currency_strength_v2.png",
+             ("sterling_currency_strength_v2.png",),
              "The pound against other currencies, using observed annual exchange rates."),
     Analysis("trade", "Trade", "Economy", "trade_data", "trade",
-             "trade_share_gdp.png",
+             ("trade_share_gdp.png",),
              "Imports and exports relative to the size of the economy."),
     Analysis("london", "London's economy", "Economy", "london_data", "london",
-             "london_share_of_uk_gdp.png",
+             ("london_share_of_uk_gdp.png", "london_gdp_per_head_vs_uk.png"),
              "London's share of UK output and its GDP per head relative to the UK."),
     Analysis("public-spending", "Public spending", "Public services", "austerity_data", "austerity",
-             "uk_austerity_spending_investment.png",
+             ("uk_austerity_spending_investment.png",),
              "Public spending and investment, with financial years and inflation adjustments stated."),
     Analysis("nhs", "NHS performance", "Public services", "nhs_data", "nhs",
-             "rtt_waiting_list_total.png",
+             ("rtt_waiting_list_per_1000.png", "ae_4hr_pct.png", "cancer_62day_pct.png"),
              "Waiting lists and treatment standards across the four nations, with scope breaks."),
     Analysis("rail", "Rail performance", "Public services", "rail_data", "rail",
-             "rail_london_ppm_official.png",
+             ("rail_london_ppm_official.png", "rail_london_casl.png"),
              "Official punctuality and cancellation measures, distinct from historical reconstruction."),
     Analysis("tax", "Tax", "Households", "tax", "tax",
-             "tax_to_gdp_over_time.png",
+             ("tax_to_gdp_over_time.png", "tax_wedge_by_earnings.png"),
              "National tax revenue and household labour-tax wedges are different measures."),
     Analysis("tuition", "University tuition", "Households", "tuition", "tuition",
-             "tuition_england_cap_nominal.png",
+             ("tuition_england_cap_nominal.png", "tuition_history_real_usd.png",
+              "tuition_by_country_real.png"),
              "England's fee cap alongside dated US and European fee comparisons."),
     Analysis("food-banks", "Food-bank use", "Households", "foodbank_data", "food_banks",
-             "trussell_food_parcels.png",
+             ("trussell_food_parcels.png",),
              "Trussell network parcel counts, not unique recipients or all UK food-bank provision."),
     Analysis("migration", "Migration", "Population & institutions", "uk_migration", "migration",
-             "net_migration.png",
+             ("net_migration.png", "visas_by_category.png", "asylum_applications.png"),
              "Immigration, emigration, visas and asylum, without conflating people and events."),
     Analysis("ageing", "Ageing", "Population & institutions", "age_data", "age",
-             "share_65plus_over_time.png",
+             ("share_65plus_over_time.png", "uk_population_pyramid.png"),
              "Population age structures and the changing share of older residents."),
     Analysis("crime", "Crime", "Population & institutions", "crime_data", "crime",
-             "crime_csew_21st_century.png",
+             ("crime_csew_21st_century.png", "crime_fraud_gap.png", "crime_homicide_peers.png"),
              "Survey incidents and homicide statistics, with geography and coverage made explicit."),
     Analysis("trust", "Institutional trust", "Population & institutions", "trust_data", "trust",
-             "trust_national_govt_pct.png",
+             ("trust_national_govt_pct.png", "wgi_government_effectiveness.png"),
              "Survey trust and governance indicators, respecting collection and methodology changes."),
 )
 
@@ -379,10 +387,11 @@ def homepage() -> str:
     </aside>"""
 
 
-def analysis_page(analysis: Analysis, charts: list[Path], document: str, files: set[Path]) -> str:
+def analysis_page(analysis: Analysis) -> str:
     page = Path(analysis.slug) / "index.html"
     figures = []
-    for chart in sorted(charts, key=lambda path: (path.name != analysis.featured, path.name)):
+    for filename in analysis.charts:
+        chart = Path("outputs") / analysis.output / filename
         url = relative_url(chart, page)
         title = escape(chart_title(chart))
         figures.append(f"""
@@ -390,31 +399,18 @@ def analysis_page(analysis: Analysis, charts: list[Path], document: str, files: 
           <figcaption><h2>{title}</h2><a href="{url}" download>Download PNG</a></figcaption>
           <a href="{url}" class="chart-link"><img src="{url}" alt="{title}" loading="lazy"></a>
         </figure>""")
-    downloads = [
-        f'<a href="{relative_url(path, page)}" download>{escape(path.name)}</a>'
-        for path in sorted(files)
-        if path.parent == Path("outputs") / analysis.output and path.suffix == ".csv"
-    ]
-    download_section = (
-        '<aside class="reading-note"><h2>Published data</h2>'
-        + " &middot; ".join(downloads) + "</aside>"
-    ) if downloads else ""
     return f"""
     <section class="page-heading"><a class="breadcrumb" href="../index.html#explore">&#8592; All analyses</a>
       <p class="eyebrow">{escape(analysis.group)}</p><h1>{escape(analysis.title)}</h1>
       <p class="standfirst">{escape(analysis.description)}</p>
       <p class="context">Open any chart for full resolution. Observation periods and source notes
       are printed on each figure; the site's build date does not imply newer observations.</p>
-      <a class="text-link" href="#methodology">Definitions, methods and sources &#8595;</a>
     </section>
     <section class="chart-gallery" aria-label="Charts">{''.join(figures)}</section>
-    {download_section}
-    <section class="methodology" id="methodology">
-      <p class="eyebrow">Read alongside the charts</p><h2>Definitions, methods and sources</h2>
-      <p class="context">The notes below include documented results from their stated source vintages.
-      Use each chart's dates for its observation period, not the site's publication date.</p>
-      <article class="prose">{document}</article>
-    </section>"""
+    <p class="context">
+      <a href="{REPOSITORY}/tree/master/outputs/{analysis.output}">All charts on GitHub &#8599;</a>
+      &middot; <a href="{REPOSITORY}/blob/master/{analysis.module}/README.md">Full documentation on GitHub &#8599;</a>
+    </p>"""
 
 
 def validate_site(output: Path) -> None:
@@ -446,15 +442,16 @@ def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
     if output.is_symlink():
         raise ValueError("Refusing to replace a symlinked _site directory")
     files = tracked_files(root)
+    analysis_documents = {Path(item.module) / "README.md" for item in ANALYSES}
     documents = {
-        path: Path("notes") / path.with_suffix(".html") for path in files if path.suffix == ".md"
+        path: Path("notes") / path.with_suffix(".html")
+        for path in files if path.suffix == ".md" and path not in analysis_documents
     }
     documents[Path("README.md")] = Path("methods/index.html")
     for analysis in ANALYSES:
-        documents[Path(analysis.module) / "README.md"] = Path(analysis.slug) / "index.html"
         required = {
             Path(analysis.module) / "README.md",
-            Path("outputs") / analysis.output / analysis.featured,
+            *(Path("outputs") / analysis.output / chart for chart in analysis.charts),
         }
         if missing := required - files:
             raise ValueError(f"{analysis.title}: missing tracked publication inputs: {sorted(missing)}")
@@ -487,20 +484,15 @@ def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
                 homepage(),
             ),
         }
-        analyses_by_document = {Path(item.module) / "README.md": item for item in ANALYSES}
+        for analysis in ANALYSES:
+            pages[Path(analysis.slug) / "index.html"] = (
+                analysis.title, analysis.description, analysis_page(analysis),
+            )
         for source, page in documents.items():
             rendered = render_document(source, page, root, files, documents)
-            if analysis := analyses_by_document.get(source):
-                charts = [
-                    path for path in files
-                    if path.parent == Path("outputs") / analysis.output and path.suffix == ".png"
-                ]
-                body = analysis_page(analysis, charts, rendered, files)
-                title, description = analysis.title, analysis.description
-            else:
-                title = "About the data" if source == Path("README.md") else source.stem.replace("_", " ").title()
-                body = f'<section class="page-heading"><h1>{escape(title)}</h1></section><article class="prose">{rendered}</article>'
-                description = f"Definitions, methodology and source documentation. {source.as_posix()}."
+            title = "About the data" if source == Path("README.md") else source.stem.replace("_", " ").title()
+            body = f'<section class="page-heading"><h1>{escape(title)}</h1></section><article class="prose">{rendered}</article>'
+            description = f"Definitions, methodology and source documentation. {source.as_posix()}."
             pages[page] = (title, description, body)
         for page, (title, description, body) in pages.items():
             target = stage / page

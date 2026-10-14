@@ -26,9 +26,10 @@ def site_repository(tmp_path):
             f"![Chart](../outputs/{analysis.output}/{analysis.featured})\n\n"
             "[Overview](../README.md#scope)\n\n[Sources](#sources)\n"
         )
-        chart = root / "outputs" / analysis.output / analysis.featured
-        chart.parent.mkdir(parents=True, exist_ok=True)
-        chart.write_bytes(b"test image")
+        for filename in analysis.charts:
+            chart = root / "outputs" / analysis.output / filename
+            chart.parent.mkdir(parents=True, exist_ok=True)
+            chart.write_bytes(b"test image")
     (root / "outputs/uk_decline_scorecard.png").write_bytes(b"overview")
     (root / "README.md").write_text(
         "# About the data\n\n## Scope\n\n[Tuition](tuition/README.md#sources)\n"
@@ -50,8 +51,12 @@ def test_site_builds_nested_pages_and_rewrites_document_links(site_repository):
     assert len(home.select(".topic-card")) == len(build_site.ANALYSES)
     assert home.select_one(".explore-tools").has_attr("hidden")
     tuition = BeautifulSoup((output / "tuition/index.html").read_text(), "html.parser")
-    assert tuition.find("a", href="../methods/index.html#scope")
-    assert tuition.find("a", href="#sources")
+    assert tuition.find(
+        "a", href=f"{build_site.REPOSITORY}/blob/master/tuition/README.md",
+    )
+    assert tuition.find(
+        "a", href=f"{build_site.REPOSITORY}/tree/master/outputs/tuition",
+    )
     assert tuition.find("img", src="../outputs/tuition/tuition_england_cap_nominal.png")
     assert home.find("link", rel="canonical")["href"] == "https://www.themarginoferror.com/uk_decline/"
     assert tuition.find("link", rel="canonical")["href"] == "https://www.themarginoferror.com/uk_decline/tuition/"
@@ -69,11 +74,35 @@ def test_site_builds_nested_pages_and_rewrites_document_links(site_repository):
     build_site.validate_site(output)
 
 
-def test_site_rejects_charts_without_a_reader_facing_title(site_repository):
+def test_supplemental_charts_are_not_automatically_embedded(site_repository):
     chart = site_repository / "outputs/rail/rail_london_new_measure.png"
     chart.write_bytes(b"test image")
     subprocess.run(["git", "add", str(chart)], cwd=site_repository, check=True)
-    with pytest.raises(ValueError, match="reader-facing title"):
+    output = build_site.build(site_repository)
+    rail = BeautifulSoup((output / "rail/index.html").read_text(), "html.parser")
+    assert not rail.find("img", src="../outputs/rail/rail_london_new_measure.png")
+
+
+def test_topic_pages_only_embed_curated_charts_without_documentation_duplicates(site_repository):
+    root = site_repository
+    output = build_site.build(root)
+    for analysis in build_site.ANALYSES:
+        page = BeautifulSoup((output / analysis.slug / "index.html").read_text(), "html.parser")
+        images = page.select("main img")
+        assert [Path(image["src"]).name for image in images] == list(analysis.charts)
+        assert 1 <= len(images) <= 3
+        assert len({image["src"] for image in images}) == len(images)
+        assert not page.select(".methodology, #methodology, .prose, pre")
+        assert "Definitions, methods and sources" not in page.get_text()
+        assert not page.find("a", href="#methodology")
+        assert page.find("a", href=f"{build_site.REPOSITORY}/blob/master/{analysis.module}/README.md")
+
+
+def test_site_rejects_missing_curated_charts(site_repository):
+    analysis = next(item for item in build_site.ANALYSES if item.slug == "purchasing-power")
+    chart = Path("outputs") / analysis.output / analysis.charts[-1]
+    subprocess.run(["git", "rm", str(chart)], cwd=site_repository, check=True, capture_output=True)
+    with pytest.raises(ValueError, match="missing tracked publication inputs"):
         build_site.build(site_repository)
 
 
@@ -113,7 +142,7 @@ def test_invalid_build_keeps_the_previous_site(site_repository):
     root = site_repository
     output = build_site.build(root)
     previous = (output / "index.html").read_bytes()
-    (root / "tuition/README.md").write_text("# Tuition\n\n[Missing section](#missing)\n")
+    (root / "README.md").write_text("# About the data\n\n[Missing section](#missing)\n")
     with pytest.raises(ValueError, match="missing anchor"):
         build_site.build(root)
     assert (output / "index.html").read_bytes() == previous
@@ -121,8 +150,8 @@ def test_invalid_build_keeps_the_previous_site(site_repository):
 
 def test_site_rejects_untracked_images_and_preserves_source_notes(site_repository):
     root = site_repository
-    (root / "tuition/README.md").write_text(
-        "# Tuition\n\n![Unpublished](../outputs/tuition/untracked.png)\n"
+    (root / "README.md").write_text(
+        "# About the data\n\n![Unpublished](outputs/tuition/untracked.png)\n"
     )
     with pytest.raises(ValueError, match="not a tracked publication asset"):
         build_site.build(root)
