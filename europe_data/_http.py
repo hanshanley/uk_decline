@@ -45,8 +45,11 @@ def get_json(url: str, params: dict[str, Any] | None = None, timeout: int = 60) 
     wait=wait_exponential(multiplier=1, min=1, max=30),
     reraise=True,
 )
-def get_text(url: str, params: dict[str, Any] | None = None, timeout: int = 60) -> str:
+def get_text(
+    url: str, params: dict[str, Any] | None = None, timeout: int = 60,
+    *, headers: dict[str, str] | None = None,
+) -> str:
     """GET ``url`` and return the response body as text (e.g. a CSV download)."""
-    resp = session().get(url, params=params, timeout=timeout)
+    resp = session().get(url, params=params, timeout=timeout, headers=headers)
     resp.raise_for_status()
     return resp.text

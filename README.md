@@ -64,6 +64,8 @@ including fraud and computer misuse.
 [stock markets](markets_data/README.md), [sterling](sterling_data/README.md),
 [trade](trade_data/README.md), [London's economy](london_data/README.md), and
 [purchasing power parity](ppp_data/README.md).
+[Government debt and borrowing costs](debt_data/README.md) distinguish the UK
+public-debt stock relative to GDP from market yields on government bonds.
 
 **Public services and infrastructure:** [austerity](austerity_data/README.md),
 [NHS performance](nhs_data/README.md), and [rail performance](rail_data/README.md).
@@ -92,6 +94,7 @@ Each analysis runs as a module from the repo root, e.g.:
 ./.venv/bin/python -m europe_data.plot_uk_decline # figures -> outputs/gdp_income/
 ./.venv/bin/python -m markets_data                # UK vs US markets -> outputs/stock_markets/
 ./.venv/bin/python -m austerity_data              # austerity -> outputs/austerity/
+./.venv/bin/python -m debt_data                   # debt/GDP and bond yields -> outputs/debt/
 ./.venv/bin/python -m foodbank_data               # food-bank use -> outputs/food_banks/
 ./.venv/bin/python -m sterling_data               # pound exchange rates -> outputs/sterling/
 ./.venv/bin/python -m trade_data                  # trade share of GDP -> outputs/trade/
@@ -106,7 +109,7 @@ See each analysis's README for its exact commands and full source citations.
 
 ### Website and automatic updates
 
-The [public website](https://www.themarginoferror.com/uk_decline/) presents all 16 analyses,
+The [public website](https://www.themarginoferror.com/uk_decline/) presents all 17 analyses,
 with searchable topic navigation, full-resolution charts, downloads, and methodology.
 It is built directly from tracked publication figures and documentation, not private
 working files. It works without JavaScript; search, filters and the chart viewer are

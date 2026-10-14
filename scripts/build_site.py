@@ -48,7 +48,7 @@ class Analysis:
 
 ANALYSES = (
     Analysis("gdp-income", "GDP & incomes", "Economy", "europe_data", "gdp_income",
-             ("uk_gdp_relative_to_peers.png", "gdp_per_capita_real_over_time.png",
+             ("uk_gdp_relative_to_peers_simple.png", "gdp_per_capita_real_over_time.png",
               "median_disposable_income_oecd.png"),
              "Real output, nominal valuations and household incomes answer different questions."),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
@@ -71,6 +71,9 @@ ANALYSES = (
     Analysis("public-spending", "Public spending", "Public services", "austerity_data", "austerity",
              ("uk_austerity_spending_investment.png",),
              "Public spending and investment, with financial years and inflation adjustments stated."),
+    Analysis("debt-borrowing", "Debt & borrowing costs", "Economy", "debt_data", "debt",
+             ("uk_public_debt_pct_gdp.png", "government_borrowing_costs.png"),
+             "UK public debt relative to GDP and government-bond yields: the debt stock and the cost of new borrowing."),
     Analysis("nhs", "NHS performance", "Public services", "nhs_data", "nhs",
              ("rtt_waiting_list_per_1000.png", "ae_4hr_pct.png", "cancer_62day_pct.png"),
              "Waiting lists and treatment standards across the four nations, with scope breaks."),
@@ -119,6 +122,8 @@ SUBSCRIBE_URL = (
 )
 
 CHART_TITLES = {
+    "uk_public_debt_pct_gdp": "UK public-sector net debt as a share of GDP",
+    "government_borrowing_costs": "Government borrowing rates: 10-year bond yields",
     "median_age_over_time": "Median age across countries",
     "share_65plus_over_time": "Population aged 65 and over",
     "uk_age_structure_over_time": "The UK's changing age structure",
@@ -136,6 +141,7 @@ CHART_TITLES = {
     "median_disposable_income_oecd": "Median disposable income, adjusted for household size and purchasing power",
     "median_income_pip": "Median daily income or consumption, adjusted for purchasing power",
     "uk_gdp_relative_to_peers": "UK GDP per person relative to other countries at market exchange rates",
+    "uk_gdp_relative_to_peers_simple": "US, EU and Polish GDP per person relative to the UK at market exchange rates",
     "london_gdp_per_head_vs_uk": "London GDP per person relative to the UK",
     "london_share_of_uk_gdp": "London's share of UK GDP",
     "asylum_applications": "Applications for asylum",

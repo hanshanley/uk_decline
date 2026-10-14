@@ -327,6 +327,37 @@ def test_nominal_gdp_ratio_uses_only_shared_years_and_dates_each_peer(monkeypatc
     assert "2023\u20132025" in ax.get_title()
 
 
+def test_simplified_gdp_ratio_omits_only_germany_and_france(monkeypatch, tmp_path):
+    import pandas as pd
+    from europe_data import plot_uk_decline as plots
+
+    data = pd.DataFrame([
+        {"country": country, "year": 2025, plots.NOMINAL_GDP_METRIC: value}
+        for country, value in (
+            ("United Kingdom", 50000), ("United States", 80000),
+            ("Germany", 52000), ("France", 44000),
+            ("European Union", 41000), ("Poland", 25000),
+        )
+    ])
+    saved = []
+    monkeypatch.setattr(plots.plt, "savefig", lambda path, **kwargs:
+                        saved.append((path.name, plots.plt.gcf())))
+    plots.fig_uk_relative(data, tmp_path)
+    plots.fig_uk_relative(data, tmp_path, simplified=True)
+    assert [name for name, _ in saved] == [
+        "uk_gdp_relative_to_peers.png", "uk_gdp_relative_to_peers_simple.png",
+    ]
+    original, simplified = [figure.axes[0] for _, figure in saved]
+    assert len(original.lines) == 6
+    assert len(simplified.lines) == 4
+    assert [line.get_ydata()[0] for line in simplified.lines[:-1]] == [160, 82, 50]
+    labels = " ".join(text.get_text() for text in simplified.texts)
+    assert "United States (2025)" in labels
+    assert "EU average (2025)" in labels and "Poland (2025)" in labels
+    assert "Germany" not in labels and "France" not in labels
+    assert simplified.get_title() == original.get_title()
+
+
 def test_eurostat_decoder() -> None:
     # Minimal JSON-stat: 1 statinfo x 2 geo x 2 time = 4 obs (row-major).
     payload = {

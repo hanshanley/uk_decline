@@ -37,6 +37,12 @@ That much larger relative change includes GDP-price and exchange-rate effects.
 These current-dollar levels are explicitly not inflation-adjusted.
 
 ### UK relative to its peers (US, Germany, France, EU average, Poland)
+The simplified public version shows the US, EU average and Poland:
+
+![US, EU and Polish nominal GDP per person relative to the UK](../outputs/gdp_income/uk_gdp_relative_to_peers_simple.png)
+
+The full comparison remains available:
+
 ![Peer nominal GDP per capita as a share of the UK](../outputs/gdp_income/uk_gdp_relative_to_peers.png)
 
 The linear percentage axis shows **peer / UK**, with the UK fixed at 100, not UK / peer.
@@ -129,7 +135,7 @@ accessed **15 August 2026**. OECD income and consumption PPPs: accessed **14 Oct
 
 - **OECD** (2026). [Income Distribution Database](https://www.oecd.org/en/data/datasets/income-and-wealth-distribution-database.html):
   `INC_DISP`, `MEDIAN`, `XDC_HH_EQ`, all ages, `METH2012`.
-  [Annual purchasing power parities](https://data-explorer.oecd.org/s/32a):
+  [Annual purchasing power parities](https://www.oecd.org/en/data/indicators/purchasing-power-parities-ppp.html):
   `PPP_P31S14`, national currency per US dollar.
   The household-size adjustment and use of private-consumption PPPs follow
   [Society at a Glance 2024, household income](https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/06/society-at-a-glance-2024_08001b73/918d8db3-en.pdf).
@@ -166,7 +172,7 @@ python3 -m venv .venv && ./.venv/bin/pip install -r ../requirements.txt
 ```
 
 Outputs: per-source CSVs, `europe_combined_long.csv`, `europe_combined_wide.csv`, and
-`manifest.json` in `../data/`; six PNGs in `../outputs/gdp_income/`.
+`manifest.json` in `../data/`; seven PNGs in `../outputs/gdp_income/`.
 The derived OECD source table (`oecd_median_income_ppp.csv`) and combined wide table
 are tracked for reproducible offline chart generation; other raw downloads are git-ignored.
 

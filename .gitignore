@@ -20,6 +20,7 @@ data/processed/*.csv
 # Saved overview inputs allow offline rebuilds and safe scheduled site updates.
 !data/europe_combined_wide.csv
 !data/oecd_median_income_ppp.csv
+!data/debt_borrowing_long.csv
 !data/uk_listed_companies_lse.csv
 !data/austerity_spending.csv
 !data/food_bank_calendar_year.csv

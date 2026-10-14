@@ -10,6 +10,7 @@ Figures:
   - gdp_per_capita_real_over_time.png  National-accounts volumes, fixed-base dollars
   - gdp_per_capita_nominal_over_time.png  Nominal valuations at annual market FX
   - uk_gdp_relative_to_peers.png       Peer nominal GDP/capita as a share of the UK
+  - uk_gdp_relative_to_peers_simple.png  US, EU and Poland only
   - median_disposable_income_pps.png   Median income (Eurostat PPS), UK ends ~2018
   - median_disposable_income_oecd.png  Median income (OECD, household-consumption PPP)
   - median_income_pip.png              PIP median income (2021 PPP $/day), UK to ~2021
@@ -183,7 +184,9 @@ def fig_median_income_oecd(df: pd.DataFrame, out: pathlib.Path) -> None:
     )
 
 
-def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
+def fig_uk_relative(
+    df: pd.DataFrame, out: pathlib.Path, *, simplified: bool = False,
+) -> None:
     metric = NOMINAL_GDP_METRIC
     # Match the coverage of the companion World Bank PPP comparison.
     start = 1990
@@ -199,6 +202,8 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
         ("European Union", SUBSTACK_MUTED, "--", 2.0, "EU average"),
         ("Poland", SUBSTACK_GREEN, "-", 2.0, "Poland"),
     ]
+    if simplified:
+        refs = [ref for ref in refs if ref[0] not in {"Germany", "France"}]
     plotted_years = []
     labels = []
     for country, color, ls, lw, label in refs:
@@ -247,7 +252,10 @@ def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
     _source_note(fig, SOURCE_NOMINAL_GDP)
     plt.tight_layout(pad=0.5)
     plt.subplots_adjust(bottom=0.15)
-    plt.savefig(out / "uk_gdp_relative_to_peers.png", dpi=200, bbox_inches="tight")
+    filename = (
+        "uk_gdp_relative_to_peers_simple.png" if simplified else "uk_gdp_relative_to_peers.png"
+    )
+    plt.savefig(out / filename, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -279,6 +287,7 @@ def main(argv: list[str] | None = None) -> int:
         eu_agg=EU_WB, eu_label="EU average", scale=1000.0,
     )
     fig_uk_relative(df, out)
+    fig_uk_relative(df, out, simplified=True)
     fig_median_income_oecd(df, out)
     _line_chart(
         df, "median_disposable_income",
