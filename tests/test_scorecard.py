@@ -4,6 +4,11 @@ from __future__ import annotations
 
 import csv
 
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
+from matplotlib.text import Text
+import pytest
+
 import scorecard
 
 
@@ -252,3 +257,52 @@ def test_main_rejects_empty_panel_instead_of_saving_incomplete_scorecard(tmp_pat
     assert scorecard.main() == 2
     assert "Missing metric: no observations from 2007 onward" in capsys.readouterr().err
     assert not (tmp_path / "uk_decline_scorecard.png").exists()
+
+
+@pytest.mark.parametrize("font", ["DejaVu Sans", "DejaVu Sans Mono"])
+def test_scorecard_headers_and_sources_do_not_overlap(monkeypatch, font):
+    figures = []
+    monkeypatch.setattr(Figure, "savefig", lambda fig, *args, **kwargs: figures.append(fig))
+    with scorecard.plt.rc_context({"font.sans-serif": [font]}):
+        assert scorecard.main() == 0
+        fig = figures[0]
+        canvas = FigureCanvasAgg(fig)
+        canvas.draw()
+        renderer = canvas.get_renderer()
+        titles = []
+        sources = []
+        for ax in fig.axes:
+            title = next(
+                artist for artist in ax.get_children()
+                if isinstance(artist, Text)
+                and artist.get_text() == ax.get_title(loc="left")
+            )
+            title_box = title.get_window_extent(renderer)
+            value_box = ax.texts[0].get_window_extent(renderer)
+            baseline_box = ax.texts[1].get_window_extent(renderer)
+            source_box = ax.texts[2].get_window_extent(renderer)
+            plot_box = ax.get_window_extent(renderer)
+            assert title_box.y0 >= value_box.y1 + 8
+            assert value_box.y0 >= baseline_box.y1 + 5
+            assert baseline_box.y0 >= plot_box.y1 + 2
+            for box in (title_box, value_box, baseline_box, source_box):
+                assert box.x0 >= plot_box.x0 - 1
+                assert box.x1 <= plot_box.x1 + 1
+            ticks_bottom = min(
+                tick.get_window_extent(renderer).y0 for tick in ax.get_xticklabels()
+            )
+            assert source_box.y1 <= ticks_bottom - 8
+            titles.append(title_box)
+            sources.append(source_box)
+        for upper, lower in zip(sources[:4], titles[4:]):
+            assert upper.y0 >= lower.y1 + 8
+        subtitle = next(
+            text for text in fig.texts if text.get_text().startswith("Eight source-backed")
+        )
+        subtitle_box = subtitle.get_window_extent(renderer)
+        assert subtitle_box.y0 >= max(box.y1 for box in titles[:4]) + 8
+        footer = next(
+            text for text in fig.texts if text.get_text().startswith("Baselines vary.")
+        )
+        footer_box = footer.get_window_extent(renderer)
+        assert footer_box.y1 <= min(box.y0 for box in sources[4:]) - 8

@@ -14,6 +14,7 @@ from datetime import date
 import pathlib
 import re
 import sys
+import textwrap
 
 import matplotlib
 
@@ -214,11 +215,11 @@ def _panel(ax, title, loader, fmt, good_dir, source, start, break_years=(),
     ax.plot([xs[-1]], [ys[-1]], "o", color=color, markersize=6,
             markeredgecolor="white", markeredgewidth=1.5, zorder=5)
 
-    # Header: title (top-left), latest value (top-right), start->latest (just above plot).
-    ax.set_title(title, fontsize=11.5, fontweight="bold", loc="left", pad=25, color=TEXT)
-    ax.annotate(fmt(ys[-1]), xy=(1, 1), xycoords="axes fraction", xytext=(0, 18),
-                textcoords="offset points", fontsize=14, fontweight="bold", color=color,
-                ha="right", va="bottom")
+    ax.set_title(textwrap.fill(title, width=26), fontsize=11.5, fontweight="bold",
+                 loc="left", y=1.0, pad=65, color=TEXT, va="bottom")
+    ax.annotate(fmt(ys[-1]), xy=(0, 1), xycoords="axes fraction", xytext=(0, 28),
+                textcoords="offset points", fontsize=18, fontweight="bold", color=color,
+                ha="left", va="bottom")
     ax.annotate(f"{fmt(ys[0])} in {xs[0]}  to  {fmt(ys[-1])} in {xs[-1]}",
                 xy=(0, 1), xycoords="axes fraction", xytext=(0, 3), textcoords="offset points",
                 fontsize=8, color=MUTED, ha="left", va="bottom")
@@ -260,7 +261,7 @@ def main() -> int:
             print(f"  {display_path}\n    {command}", file=sys.stderr)
         return 2
 
-    fig, axes = plt.subplots(2, 4, figsize=(17, 9))
+    fig, axes = plt.subplots(2, 4, figsize=(17, 11))
     try:
         for ax, panel in zip(axes.flat, PANELS):
             _panel(ax, *panel)
@@ -280,8 +281,8 @@ def main() -> int:
              "Lines break at missing observations or definition changes; see each analysis README.",
              ha="center", fontsize=8, color=MUTED)
 
-    fig.tight_layout(rect=[0.01, 0.03, 0.99, 0.92])
-    fig.subplots_adjust(hspace=0.55, wspace=0.28)
+    fig.subplots_adjust(left=0.04, right=0.99, bottom=0.13, top=0.80,
+                        hspace=1.0, wspace=0.28)
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / "uk_decline_scorecard.png"
     fig.savefig(path, dpi=200, bbox_inches="tight")
