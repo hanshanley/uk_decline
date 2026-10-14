@@ -77,6 +77,8 @@ public-debt stock relative to GDP from market yields on government bonds.
 [ageing](age_data/README.md), [crime](crime_data/README.md), and
 [institutional trust](trust_data/README.md).
 
+## Working with the charts
+
 Each analysis is a self-contained pipeline with its own methodology, caveats, charts, and
 primary-source citations. The complete figure collection is in [`outputs/`](outputs).
 

@@ -91,6 +91,11 @@ def test_public_methods_omit_repository_setup_and_operations(site_repository):
         '<p><a href="#scope">Scope</a> \u00b7 <a href="#setup">Setup</a> \u00b7 '
         '<a href="https://github.com/hanshanley/uk_decline">Repository</a></p>\n\n'
         '## Scope\n\nReader-facing definitions.\n\n'
+        '## Working with the charts\n\n'
+        'Each analysis is a self-contained pipeline.\n\n'
+        'Separate page-background versions use #F5F5F5.\n\n'
+        '```bash\n./.venv/bin/python -m scripts.export_page_plots\n```\n\n'
+        'Automatic source refreshes regenerate these versions too.\n\n'
         '## Setup\n\n```bash\npython3 -m venv .venv\n```\n\n'
         '### Website and automatic updates\n\nDeployment instructions.\n\n'
         '## Data integrity\n\nNo API keys are required.\n\n'
@@ -103,6 +108,7 @@ def test_public_methods_omit_repository_setup_and_operations(site_repository):
     assert prose.find(id="scope")
     assert prose.find(id="comparability")
     assert "Retain methodological caveats." in prose.get_text()
+    assert not prose.find(id="working-with-the-charts")
     assert not prose.find(id="setup")
     assert not prose.find(id="website-and-automatic-updates")
     assert not prose.find(id="data-integrity")
@@ -110,6 +116,10 @@ def test_public_methods_omit_repository_setup_and_operations(site_repository):
     assert not prose.find("pre")
     assert "Deployment instructions." not in prose.get_text()
     assert "No API keys" not in prose.get_text()
+    assert "self-contained pipeline" not in prose.get_text()
+    assert "page-background" not in prose.get_text()
+    assert "#F5F5F5" not in prose.get_text()
+    assert "Automatic source refreshes" not in prose.get_text()
     assert prose.find("p").get_text(" ", strip=True) == "Scope \u00b7 Repository"
     assert readme.read_text() == content
 

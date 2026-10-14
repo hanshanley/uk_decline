@@ -216,7 +216,9 @@ def render_document(
     )
     soup = BeautifulSoup(html, "html.parser")
     if source == Path("README.md"):
-        for heading in soup.find_all("h2", id=["setup", "data-integrity"]):
+        for heading in soup.find_all(
+            "h2", id=["working-with-the-charts", "setup", "data-integrity"],
+        ):
             for sibling in list(heading.next_siblings):
                 if getattr(sibling, "name", None) == "h2":
                     break
