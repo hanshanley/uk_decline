@@ -215,6 +215,18 @@ def render_document(
         (root / source).read_text(), extensions=["tables", "fenced_code", "toc", "sane_lists"],
     )
     soup = BeautifulSoup(html, "html.parser")
+    if source == Path("README.md"):
+        for heading in soup.find_all("h2", id=["setup", "data-integrity"]):
+            for sibling in list(heading.next_siblings):
+                if getattr(sibling, "name", None) == "h2":
+                    break
+                sibling.extract()
+            heading.decompose()
+        for link in soup.find_all("a", href="#setup"):
+            separator = link.next_sibling
+            if isinstance(separator, str):
+                separator.replace_with(separator.replace("\u00b7", "", 1))
+            link.decompose()
     for heading in soup.find_all("h1"):
         heading.name = "h2"
     for element, attribute in [("a", "href"), ("img", "src")]:

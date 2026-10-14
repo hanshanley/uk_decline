@@ -84,6 +84,36 @@ def test_supplemental_charts_are_not_automatically_embedded(site_repository):
     assert not rail.find("img", src="../outputs/rail/rail_london_new_measure.png")
 
 
+def test_public_methods_omit_repository_setup_and_operations(site_repository):
+    readme = site_repository / "README.md"
+    content = (
+        '# About the data\n\n'
+        '<p><a href="#scope">Scope</a> \u00b7 <a href="#setup">Setup</a> \u00b7 '
+        '<a href="https://github.com/hanshanley/uk_decline">Repository</a></p>\n\n'
+        '## Scope\n\nReader-facing definitions.\n\n'
+        '## Setup\n\n```bash\npython3 -m venv .venv\n```\n\n'
+        '### Website and automatic updates\n\nDeployment instructions.\n\n'
+        '## Data integrity\n\nNo API keys are required.\n\n'
+        '## Comparability\n\nRetain methodological caveats.\n'
+    )
+    readme.write_text(content)
+    output = build_site.build(site_repository)
+    page = BeautifulSoup((output / "methods/index.html").read_text(), "html.parser")
+    prose = page.select_one(".prose")
+    assert prose.find(id="scope")
+    assert prose.find(id="comparability")
+    assert "Retain methodological caveats." in prose.get_text()
+    assert not prose.find(id="setup")
+    assert not prose.find(id="website-and-automatic-updates")
+    assert not prose.find(id="data-integrity")
+    assert not prose.find("a", href="#setup")
+    assert not prose.find("pre")
+    assert "Deployment instructions." not in prose.get_text()
+    assert "No API keys" not in prose.get_text()
+    assert prose.find("p").get_text(" ", strip=True) == "Scope \u00b7 Repository"
+    assert readme.read_text() == content
+
+
 def test_topic_pages_only_embed_curated_charts_without_documentation_duplicates(site_repository):
     root = site_repository
     output = build_site.build(root)
