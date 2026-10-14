@@ -19,19 +19,21 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from tuition import config, theme
+from tuition.fetch_collegeboard import BREAK_YEAR
 from vizstyle import with_year_gaps
 
 # region key -> (label, colour, matplotlib draw style)
 SERIES = {
-    config.US: ("US — public 4-year, in-state (NCES)", theme.GOLD, "line"),
+    config.US: ("US — public 4-year, in-state (College Board)", theme.GOLD, "line"),
     config.UK: ("UK — England fee cap (statutory)", theme.ACCENT, "line"),
     config.EU: ("Germany — zero-fee reference years only", theme.BLUE, "points"),
 }
 SOURCE_NOTE = (
-    "Real 2022 USD (inflation-adjusted). Sources: US — NCES Digest 2024 Table 330.10 "
+    "Real 2022 USD (inflation-adjusted). Sources: US — College Board 2025 Table CP-2 "
     "(current dollars); UK — England statutory fee caps (legislation.gov.uk / "
-    "GOV.UK), converted at market exchange rates and deflated by US CPI (World Bank); "
-    "Both US and UK deflated with calendar-year US CPI; fee years are academic start years. "
+    "GOV.UK), converted at World Bank market exchange rates. "
+    "Both deflated with BLS annual CPI-U; 2025 averages 11 published months. "
+    "Fee years are academic start years. US line breaks at the 1987 collection/weighting change. "
     "UK zero-fee anchors shown separately, without interpolation to fee introduction. "
     "Germany: zero-fee reference points only; some states charged fees in 2006–14."
 )
@@ -77,7 +79,10 @@ def plot(out_path: str) -> None:
             ax.step(xs, ys, where="post", color=color, linewidth=2.4, label=label)
             ax.plot(xs, ys, "o", color=color, markersize=5, markeredgecolor=theme.BG, markeredgewidth=0.8)
         else:
-            series = with_year_gaps(pd.Series(ys, index=xs))
+            series = with_year_gaps(
+                pd.Series(ys, index=xs),
+                breaks=(BREAK_YEAR,) if region == config.US else (),
+            )
             ax.plot(series.index, series.values, color=color, linewidth=2.4, marker="o", markersize=4,
                     markeredgecolor=theme.BG, markeredgewidth=0.8, label=label)
 

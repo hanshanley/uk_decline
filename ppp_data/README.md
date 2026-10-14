@@ -148,9 +148,13 @@ dollars than in market dollars.
 
 The second figure sidesteps the currency question entirely. Tuition as a share of GDP per
 capita is unit-free — the currency cancels, so the answer is identical at market rates and at
-PPP. On that basis, in **2023** (the last year both historical fee series cover — the
-NCES Digest 2024 US series ends in 2023/24) a year's fees equalled **23.0% of UK
-GDP per head against 12.0% in the US**.
+PPP. On that basis, in **2025** (the last year both historical fee series cover)
+a year's fees equalled **21.8% of UK GDP per head against 13.3% in the US**.
+The US history uses the complete College Board 2025 Table CP-2 series, not a
+splice onto the separate NCES collection. Both real tuition charts share the
+saved BLS annual CPI-U with the tuition package; BLS's published 2025 average
+uses 11 months because October data were unavailable during the shutdown.
+This tuition-specific source extension does not change the GDP volume measures.
 This avoids currency-conversion effects, but GDP per head is not a student's disposable
 income. The ratio is an output-relative fee measure, not a household affordability estimate.
 Germany is shown only at selected zero-fee reference years, not as a continuous
@@ -339,9 +343,11 @@ All free, no API key, fetched live. Data accessed via the World Bank API; see
 - **Bolt, J. & van Zanden, J. L.** (2024). *Maddison Project Database 2023*, via Our World in
   Data. Real GDP per capita in constant 2011 international $.
   <https://ourworldindata.org/grapher/gdp-per-capita-maddison>
-- **Tuition:** England statutory fee caps (legislation.gov.uk / GOV.UK); NCES *Digest of
-  Education Statistics 2023*, Table 330.10. Read from
+- **Tuition:** England statutory fee caps (legislation.gov.uk / GOV.UK);
+  College Board *Trends in College Pricing 2025*, Table CP-2. Read from
   `data/processed/tuition_history.csv`, built by [`../tuition`](../tuition/README.md).
+  Inflation uses the saved `data/raw/bls_us_cpi_annual.csv` (BLS CPI-U
+  `CUUR0000SA0`, annual `M13`), including for offline re-charting.
 
 ## Layout
 

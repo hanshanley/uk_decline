@@ -227,6 +227,7 @@ def test_future_fee_cap_without_same_year_inputs_is_omitted(monkeypatch):
         return {"GBR": {2025: 0.8}}
 
     monkeypatch.setattr(build_history, "fetch_series", fake_fetch)
+    monkeypatch.setattr(build_history, "load_cpi", lambda *a: {2022: 100, 2025: 110})
     rows = [{
         "country": "United Kingdom", "iso3": "GBR", "region": "UK",
         "year": "2026", "annual_tuition_local": "9790", "currency": "GBP",
@@ -248,6 +249,7 @@ def test_zero_fee_country_is_not_requested_from_fx_api(monkeypatch):
         return {"GBR": {2022: 0.8}}
 
     monkeypatch.setattr(build_history, "fetch_series", fake_fetch)
+    monkeypatch.setattr(build_history, "load_cpi", lambda *a: {2022: 100})
     rows = [
         {
             "country": "United Kingdom", "iso3": "GBR", "region": "UK",
@@ -269,8 +271,8 @@ def test_zero_fee_country_is_not_requested_from_fx_api(monkeypatch):
 def test_future_snapshot_does_not_substitute_nearest_published_cpi(monkeypatch):
     monkeypatch.setattr(
         build_dataset,
-        "fetch_series",
-        lambda *a, **k: {"USA": {2022: 100.0, 2025: 110.0}},
+        "load_cpi",
+        lambda *a, **k: {2022: 100.0, 2025: 110.0},
     )
     got = build_dataset._us_cpi_deflator({2026})
     assert got == {}
@@ -279,11 +281,11 @@ def test_future_snapshot_does_not_substitute_nearest_published_cpi(monkeypatch):
 def test_snapshot_cpi_request_includes_exact_base_year(monkeypatch):
     calls = []
 
-    def fetch(indicator, iso3s, start, end):
+    def fetch(start, end):
         calls.append(start)
-        return {"USA": {2022: 100.0, 2025: 110.0}}
+        return {2022: 100.0, 2025: 110.0}
 
-    monkeypatch.setattr(build_dataset, "fetch_series", fetch)
+    monkeypatch.setattr(build_dataset, "load_cpi", fetch)
     assert build_dataset._us_cpi_deflator({2025}) == {2025: 100 / 110}
     assert calls == [2022]
 
@@ -361,8 +363,9 @@ def test_nces_history_uses_same_calendar_cpi_basis(tmp_path, monkeypatch):
 def test_history_missing_exact_base_cpi_is_not_substituted(monkeypatch):
     import pytest
 
-    monkeypatch.setattr(build_history, "fetch_series",
-                        lambda *a, **k: {"USA": {2021: 100, 2023: 110}})
+    monkeypatch.setattr(build_history, "load_cpi",
+                        lambda *a, **k: {2021: 100, 2023: 110})
+    monkeypatch.setattr(build_history, "fetch_series", lambda *a, **k: {})
     with pytest.raises(RuntimeError, match="CPI"):
         build_history.deflate_manual([{
             "country": "United Kingdom", "iso3": "GBR", "region": "UK",
@@ -381,14 +384,121 @@ def test_nces_default_cpi_range_includes_observations_after_base_year(tmp_path, 
     monkeypatch.setattr(config, "NCES_CSV", csv)
     calls = []
 
-    def fetch(indicator, iso3s, start, end):
+    def fetch(start, end):
         calls.append((start, end))
-        return {"USA": {2022: 100, 2023: 110}}
+        return {2022: 100, 2023: 110}
 
-    monkeypatch.setattr(build_history, "fetch_series", fetch)
+    monkeypatch.setattr(build_history, "load_cpi", fetch)
     out = build_history.load_nces()
     assert calls == [(2022, 2023)]
     assert out[-1]["real_2022_usd"] == round(9872 * 100 / 110, 2)
+
+
+def _bls_payload(annual):
+    from tuition.cpi import SERIES_ID
+
+    return {
+        "status": "REQUEST_SUCCEEDED",
+        "Results": {"series": [{"seriesID": SERIES_ID, "data": [
+            {"year": str(year), "period": "M13", "value": str(value)}
+            for year, value in annual
+        ] + [{"year": "2025", "period": "M12", "value": "999"}]}]},
+    }
+
+
+def test_bls_uses_published_annual_not_december_or_monthly_average():
+    from tuition import cpi
+
+    assert cpi.parse(_bls_payload([(2024, 313.689), (2025, 321.943)]),
+                     2024, 2025) == {2024: 313.689, 2025: 321.943}
+
+
+def test_bls_invalid_refresh_preserves_saved_data(tmp_path, monkeypatch):
+    import pytest
+    from tuition import cpi
+
+    path = tmp_path / "cpi.csv"
+    path.write_text("saved data\n")
+    monkeypatch.setattr(config, "CPI_CSV", path)
+    for payload in (
+        {"status": "REQUEST_NOT_PROCESSED", "message": ["limit reached"]},
+        _bls_payload([]),
+        _bls_payload([(1963, 30), (1963, 31)]),
+        _bls_payload([(1963, float("nan"))]),
+        _bls_payload([(1963, 0)]),
+    ):
+        monkeypatch.setattr(cpi, "get_json", lambda *a, **k: payload)
+        with pytest.raises(ValueError, match="BLS"):
+            cpi.main()
+        assert path.read_text() == "saved data\n"
+
+
+def _collegeboard_frame():
+    import pandas as pd
+    from tuition.fetch_collegeboard import FIRST_YEAR, LAST_YEAR
+
+    rows = [
+        ["Tuition and Fees in 2025 Dollars"] + [None] * 11,
+        ["25-26", 99999, None, 99999] + [None] * 8,
+        [None, "Tuition and Fees in Current Dollars"] + [None] * 5
+        + ["Tuition and Fees and Housing and Food in Current Dollars"] + [None] * 4,
+        ["Academic Year", "Private Nonprofit Four-Year", "One-Year % Change",
+         "Public Four-Year"] + [None] * 5 + ["Public Four-Year", None, None],
+    ]
+    for year in range(FIRST_YEAR, LAST_YEAR + 1):
+        value = 11950 if year == LAST_YEAR else 430 + year - FIRST_YEAR
+        rows.append([f"{year % 100:02}-{(year + 1) % 100:02}", 45000, None, value]
+                    + [None] * 5 + [99999, None, None])
+    rows.append([
+        "SOURCES: 1987-88 and after: full-time undergraduate enrollment; "
+        "1986-87 and prior: full-time equivalent enrollment."
+    ] + [None] * 11)
+    return pd.DataFrame(rows)
+
+
+def test_collegeboard_parses_complete_nominal_source_not_housing_or_constant_dollars():
+    from tuition import fetch_collegeboard
+
+    rows = fetch_collegeboard.parse(_collegeboard_frame())
+    assert [r["year"] for r in rows] == list(range(1971, 2026))
+    assert rows[0]["tuition_current_usd"] == 430
+    assert rows[-1]["tuition_current_usd"] == 11950
+    assert "full-time-equivalent" in rows[15]["source"]
+    assert "Annual Survey" in rows[16]["source"]
+
+
+def test_collegeboard_missing_or_duplicate_year_does_not_replace_saved_data(tmp_path, monkeypatch):
+    import pytest
+    from tuition import fetch_collegeboard
+
+    path = tmp_path / "collegeboard.csv"
+    path.write_text("saved history\n")
+    workbook = tmp_path / "input.xlsx"
+    workbook.write_bytes(b"placeholder; reader mocked")
+    monkeypatch.setattr(config, "COLLEGEBOARD_CSV", path)
+    for label in ("missing", "24-25", "25-27"):
+        frame = _collegeboard_frame()
+        frame.iloc[-2, 0] = label
+        monkeypatch.setattr(fetch_collegeboard.pd, "read_excel", lambda *a, **k: frame)
+        with pytest.raises(ValueError, match="College Board"):
+            fetch_collegeboard.main(["--input", str(workbook)])
+        assert path.read_text() == "saved history\n"
+
+
+def test_collegeboard_chart_breaks_at_collection_change(tmp_path, monkeypatch):
+    import math
+    from tuition import plot_history
+
+    monkeypatch.setattr(plot_history, "load_history", lambda: {
+        config.US: [(1986, 4000), (1987, 4100), (1988, 4200)],
+    })
+    figures = []
+    monkeypatch.setattr(plot_history.plt.Figure, "savefig",
+                        lambda fig, *a, **k: figures.append(fig))
+    plot_history.plot(str(tmp_path / "history.png"))
+    line = figures[0].axes[0].lines[0]
+    assert any(math.isnan(value) for value in line.get_ydata())
+    assert 4100 in line.get_ydata(), "the break must not discard the 1987 observation"
 
 
 def _nces_html(*, missing_year=None, current_header="Current dollars", invalid_year=None):
@@ -484,7 +594,9 @@ def test_real_snapshot_with_only_zero_median_eu_remains_readable(tmp_path, monke
         rows, "annual_tuition_usd_real2022", "constant 2022 USD", str(tmp_path / "real.png"))
     assert captured[0].axes[0].get_xlim()[0] == 0
     assert captured[0].axes[0].get_xlim()[1] > 170 / 3
-    assert [text.get_text() for text in captured[0].axes[0].get_yticklabels()] == ["EU-27 (2023)"]
+    assert [text.get_text() for text in captured[0].axes[0].get_yticklabels()] == [
+        "EU sample (3/27 countries) (2023)"
+    ]
     note = " ".join(captured[0].texts[0].get_text().split())
     assert "Not plotted: Italy (2026), United States (2025), England (2026)" in note
     from matplotlib.backends.backend_agg import FigureCanvasAgg

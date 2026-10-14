@@ -17,10 +17,10 @@ import datetime as dt
 import os
 
 from tuition import config
+from tuition.cpi import load_cpi
 from tuition.rates import (
     _fallback_record,
     fetch_rates_for_years,
-    fetch_series,
     save_rates,
 )
 
@@ -114,15 +114,13 @@ def _us_cpi_deflator(years: set[int] | None = None) -> dict[int, float]:
     """Return only exact requested-year US CPI deflators."""
     years = years or set(range(2010, config.REAL_BASE_YEAR + 4))
     latest_complete_year = dt.date.today().year - 1
-    series = fetch_series(
-        config.WB_CPI_INDICATOR,
-        ["USA"],
+    series = load_cpi(
         min(min(years), config.REAL_BASE_YEAR),
-        min(max(years) + 3, latest_complete_year),
-    ).get("USA", {})
+        min(max(max(years), config.REAL_BASE_YEAR), latest_complete_year),
+    )
     base = series.get(config.REAL_BASE_YEAR)
     if not base:
-        return {}
+        raise RuntimeError("Missing BLS US CPI for the deflation base year")
     out: dict[int, float] = {}
     for year in years:
         if series.get(year):
@@ -160,7 +158,7 @@ def main() -> None:
         if missing_cpi:
             print(f"[build] no same-year US CPI for {missing_cpi}; real values left blank")
         fetched = sum(1 for rec in rates.values() if rec["fx_lcu_per_usd"] is not None)
-        print(f"[build] fetched {fetched} source-year World Bank FX observations + US CPI deflator")
+        print(f"[build] fetched {fetched} source-year World Bank FX observations; using saved BLS CPI")
 
     converted = convert(rows, rates, deflator)
     with open(config.TUITION_BY_COUNTRY_CSV, "w", newline="") as fh:

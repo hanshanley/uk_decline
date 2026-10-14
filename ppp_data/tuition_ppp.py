@@ -30,8 +30,8 @@ from typing import NamedTuple
 
 import matplotlib.ticker as mtick
 
-from europe_data.worldbank import us_cpi
 from tuition import config as tuition_config
+from tuition.cpi import load_cpi
 from vizstyle import ACCENT, BLUE, GOLD, MUTED, save_fig, source_note, white_stroke
 
 from . import peers, series
@@ -149,9 +149,8 @@ def build(rows: list[dict], history: list[dict] | None = None,
     """Re-express each fee at PPP and as a share of GDP per capita.
 
     ``rows`` are the tidy PPP rows; ``history`` defaults to the published tuition history.
-    ``cpi`` defaults to the deflator implied by ``rows`` (see :func:`us_cpi_from_rows`), and
-    falls back to a live World Bank fetch only if the rows do not carry it — so the
-    documented offline path stays offline.
+    ``cpi`` defaults to the saved BLS annual series shared with the market-rate
+    tuition history. GDP's own deflator is not substituted; offline rebuilds stay offline.
 
     A fee year is skipped entirely when the PPP conversion factor or GDP per capita is
     unavailable for it — the World Bank's PPP series begins in 1990, and nothing is
@@ -161,9 +160,7 @@ def build(rows: list[dict], history: list[dict] | None = None,
     values = series.index(rows)
     years = [int(r["year"]) for r in history]
     if cpi is None:
-        cpi = us_cpi_from_rows(rows)
-        if BASE_YEAR not in cpi:  # the rows did not carry the deflator; go to the source
-            cpi = us_cpi(min(years), max(max(years), BASE_YEAR))
+        cpi = load_cpi(min(min(years), BASE_YEAR), max(max(years), BASE_YEAR))
     cpi_base = cpi.get(BASE_YEAR)
     if not cpi_base:
         raise RuntimeError(f"no US CPI for the {BASE_YEAR} base year; cannot deflate")
@@ -244,7 +241,7 @@ def _share_subtitle(uk_years: list[int], uk: list[float],
                     us_years: list[int], us: list[float]) -> str:
     """The UK-vs-US sentence, quoted at the latest year both series actually cover.
 
-    The two fee series end in different years — the England fee cap runs ahead of the NCES
+    The two fee series end in different years — the England fee cap can run ahead of the
     US series — so quoting each at its own last point would compare (say) 2024 with 2022
     while saying "now". On the one figure whose selling point is that it is immune to
     methodological choices, that would be the only sloppy comparison on it.
@@ -313,11 +310,11 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
 
     source_note(fig, note(
         "Sources: UK \u2014 England statutory fee caps (legislation.gov.uk / GOV.UK); US "
-        "\u2014 NCES Digest 2024 Table 330.10. UK fees converted at the World Bank PPP "
+        "\u2014 College Board 2025 Table CP-2. UK fees converted at the World Bank PPP "
         f"factor (PA.NUS.PPP, {ICP_VINTAGE}) and at the market rate, both deflated by US CPI "
         f"to constant {BASE_YEAR} dollars. The US is the PPP numeraire, so the conversion "
         "leaves its nominal fees unchanged. Both this chart and the market-rate tuition "
-        "history use the same calendar-year World Bank US CPI deflator. Fee years are "
+        "history use the same BLS annual CPI-U; 2025 averages 11 published months. Fee years are "
         "academic start years. PPP factors start in 1990; earlier fee years are omitted."))
     return save_fig(fig, out_dir / "ppp_tuition_history.png", bottom=0.18)
 
@@ -361,7 +358,7 @@ def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | Non
 
     source_note(fig, note(
         "Sources: UK \u2014 England statutory fee caps (legislation.gov.uk / GOV.UK); US "
-        "\u2014 NCES Digest 2024 Table 330.10; GDP per capita from the World Bank "
+        "\u2014 College Board 2025 Table CP-2; GDP per capita from the World Bank "
         "(NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.CD). Germany: selected zero-fee policy "
         "reference years, not a continuous history; some states charged general "
         "tuition during 2006\u20132014. Fees and GDP per capita are taken in the same "

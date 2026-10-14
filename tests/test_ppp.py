@@ -686,6 +686,31 @@ def test_tuition_share_keeps_years_beyond_cpi_coverage() -> None:
     assert points[1].real_base_intl is None
 
 
+def test_tuition_default_deflator_matches_saved_market_history_not_gdp_rows():
+    import pytest
+    from ppp_data import tuition_ppp
+    from tuition import build_dataset
+    from tuition.cpi import load_cpi
+
+    history = [{
+        "country": "United States", "iso3": "USA", "region": "US",
+        "year": "2025", "nominal_local": "11950", "currency": "USD",
+    }]
+    rows = [
+        _row("USA", 2025, "ppp_conversion_factor", 1),
+        _row("USA", 2025, "market_exchange_rate", 1),
+        _row("USA", 2025, "gdp_per_capita_ppp_current", 90000),
+        _row("USA", 2025, "gdp_per_capita_nominal_usd", 90000),
+    ]
+    point, = tuition_ppp.build(rows, history=history)
+    cpi = load_cpi(2022, 2025)
+    expected = 11950 * cpi[2022] / cpi[2025]
+    assert point.real_base_usd == point.real_base_intl
+    assert point.real_base_usd == pytest.approx(expected)
+    assert build_dataset._us_cpi_deflator({2025})[2025] == cpi[2022] / cpi[2025]
+    assert point.share_of_gdp_pc_pct == 11950 / 90000 * 100
+
+
 def test_tuition_cpi_is_recovered_from_the_rows_for_offline_recharting() -> None:
     # `--from-csv` is documented as offline, so the deflator must come from the CSV rather
     # than a live World Bank call. The CPI is the *US* CPI, so it must be read from the US

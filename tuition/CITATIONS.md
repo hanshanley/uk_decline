@@ -9,7 +9,7 @@ original retrieval dates. Each entry notes which figures it supports.
 
 ## Primary sources
 
-### United States — tuition, historical series (1963–64 → 2023–24)
+### United States — separate NCES reference (1963–64 → 2023–24)
 **National Center for Education Statistics (NCES), Institute of Education Sciences, U.S.
 Department of Education.** (2024). *Digest of Education Statistics 2024*, Table 330.10:
 “Average undergraduate tuition, fees, room, and board rates charged for full-time students
@@ -19,25 +19,47 @@ Education. Retrieved 14 October 2026, from
 <https://nces.ed.gov/programs/digest/d24/tables/dt24_330.10.asp>
 *Underlying collection instruments:* Higher Education General Information Survey (HEGIS)
 and the Integrated Postsecondary Education Data System (IPEDS).
-*Supports:* US line in `tuition_history_real_usd.png`; `data/raw/nces_tuition_public4yr.csv`.
+*Supports:* `data/raw/nces_tuition_public4yr.csv`, retained as a separate reference;
+not appended to the College Board line in the current chart.
 
-### United States — Consumer Price Index (used for NCES constant dollars)
+### United States — annual Consumer Price Index (common tuition deflator)
 **U.S. Bureau of Labor Statistics (BLS), U.S. Department of Labor.** Consumer Price Index
-(CPI-U). NCES uses the BLS CPI to express Table 330.10 in constant 2023–24 dollars.
-*Supports:* the inflation adjustment embedded in the NCES constant-dollar column.
-That academic-year column is retained with an explicit base label in the raw
-CSV; the historical comparison instead deflates both countries using the same
-calendar-year World Bank US CPI.
+(CPI-U), U.S. city average, all items, not seasonally adjusted, series
+`CUUR0000SA0`, 1982–84 = 100. Retrieved 14 October 2026.
+<https://api.bls.gov/publicAPI/v2/timeseries/data/CUUR0000SA0>
+*Supports:* saved annual `M13` observations for 1963–2025 in
+`data/raw/bls_us_cpi_annual.csv`; the shared deflator for the snapshot,
+market-rate history and PPP tuition history. Ratios use calendar-year 2022 as
+base. No monthly observations, partial-year 2026 averages or December substitutes.
 
-### United States — tuition, 2025/26 snapshot
-**College Board.** (2025). *Trends in College Pricing 2025*, Table CP-1,
+For 2025, the API flags October (`M10`) as unavailable due to the lapse in
+appropriations. The published annual average (`M13`, **321.943**) equals the
+average of the **11 available monthly indexes**. The pipeline uses that published
+annual value without imputing October. NCES's separate academic-year
+constant-dollar column is retained as a reference only, not used in the
+calendar-year comparison.
+
+### United States — tuition, full history and 2025/26 snapshot
+**College Board.** (2025). *Trends in College Pricing 2025*, Tables CP-1 and CP-2.
+CP-1:
 “Average Published Prices (Enrollment-Weighted) for Full-Time Undergraduates,
 2024-25 and 2025-26.” Retrieved 14 October 2026.
 <https://research.collegeboard.org/media/xlsx/Trends-in_College-Pricing-2025-excel-data.xlsx>
 *Supports:* the US snapshot ($11,950 public four-year in-state; $45,000 private
 nonprofit reference) in `data/raw/manual_tuition.csv`. College Board publishes
-this table; the separate historical line remains on NCES rather than splicing
-the two collections.
+this table. **CP-2**, “Average Published Tuition and Fees and Housing and Food
+in Current Dollars and in 2025 Dollars,” supplies the **entire nominal
+public four-year in-state tuition-and-fees history, 1971/72–2025/26**, saved in
+`data/raw/collegeboard_tuition_public4yr.csv`. Housing/food and publisher
+constant-dollar columns are excluded. The chart uses this whole series,
+not NCES with College Board endpoints added.
+
+CP-2 notes a source/weighting change: through 1986/87, NCES/IPEDS and
+full-time-equivalent weights; from 1987/88, College Board Annual Survey of
+Colleges and full-time undergraduate weights. The historical chart breaks
+the line at 1987 without removing either observation. The workbook's nominal
+section and headers, rather than its stale introductory constant-dollar title,
+identify the input.
 
 ### United Kingdom — statutory tuition fee caps (England)
 Primary legislation, published by **The National Archives (legislation.gov.uk) on behalf of
@@ -67,18 +89,30 @@ an access and participation plan is **£9,790 in 2026/27**. The announced
 **£10,050 for 2027/28** is a future policy rate, not a current-year observation.
 *Supports:* the nominal England cap figure and overview endpoint.
 
-### Inflation and exchange rates
+### Exchange rates
 **The World Bank Group.** (2024). *World Development Indicators.* Washington, DC: The World
 Bank. Retrieved via the World Bank API on 14 October 2026.
-- Consumer price index (2010 = 100) — indicator `FP.CPI.TOTL`: <https://data.worldbank.org/indicator/FP.CPI.TOTL>
 - Official exchange rate (LCU per US$, period average) — indicator `PA.NUS.FCRF`: <https://data.worldbank.org/indicator/PA.NUS.FCRF>
 
-*Original data compiler for both indicators:* **International Monetary Fund (IMF),
+*Original data compiler:* **International Monetary Fund (IMF),
 *International Financial Statistics*** (and national statistical offices), redistributed by
 the World Bank.
-*Supports:* GBP→USD conversion and common calendar-2022 deflation of US/England
-tuition history and eligible snapshot figures. NCES's academic-year constant-dollar
-column is retained as raw source data but not mixed with the calendar-year series.
+*Supports:* market-FX currency conversion of tuition history and snapshots.
+History requires exact-year FX; nominal snapshots record any nearby-year FX.
+The common inflation adjustment is now sourced directly from BLS, above.
+
+### European Union — nationally sourced fee updates
+Retrieved **14 October 2026**. These are published fee schedules or clearly
+specified annual equivalents, not harmonized national student averages.
+
+| Entry | Publisher and source | Definition |
+|---|---|---|
+| France 2026/27 | **Service Public / DILA**, <https://www.service-public.gouv.fr/particuliers/vosdroits/F2865> | Annual licence registration €178; excludes €105 CVEC; scholarship exemptions |
+| Ireland 2026/27 | **Irish Statute Book**, *Student Grant Scheme 2026*, S.I. 70/2026, Schedule 4, <https://www.irishstatutebook.ie/eli/2026/si/70/made/en/> | Full student contribution €2,500 before means-tested grants; Free Fees Initiative eligibility; institutional levies excluded |
+| Luxembourg 2026/27 | **Ministry of Research and Higher Education**, MengStudien, <https://mengstudien.public.lu/de/actualites/2026/fevrier/uni-lu-registrations.html> | Most University of Luxembourg programmes €400/semester × 2 = €800/year; one-off €100 application fee excluded |
+| Netherlands 2026/27 | **Dienst Uitvoering Onderwijs (DUO)**, <https://duo.nl/particulier/tuition-fees.jsp> | Eligible full-time statutory annual fee €2,694, not institutional fees |
+| Portugal 2025/26 | **Direção-Geral do Ensino Superior (DGES)**, <https://www.dges.gov.pt/pt/pagina/propinas> | Public first-cycle annual maximum €697 |
+| Spain 2024/25 | **Ministry of Science, Innovation and Universities**, *Estadística de Precios Públicos Universitarios*, <https://www.ciencia.gob.es/Ministerio/Estadisticas/SIIU/Precios.html> | €15.37 arithmetic mean first-enrolment credit price × standardized 60 credits = €922.20/year; not enrollment-weighted; repeat credits and administration excluded |
 
 ---
 
@@ -86,11 +120,14 @@ column is retained as raw source data but not mixed with the calendar-year serie
 
 ### European Union (EU-27) — domestic tuition fees, 2023/24 snapshot
 **European Commission / European Education and Culture Executive Agency (EACEA) /
-Eurydice.** (2023). *National Student Fee and Support Systems in European Higher Education —
+Eurydice.** (2025). *National Student Fee and Support Systems in European Higher Education —
 2023/24* (Eurydice – Facts and Figures). Luxembourg: Publications Office of the European
-Union. <https://eurydice.eacea.ec.europa.eu/publications/national-student-fee-and-support-systems-european-higher-education-202324>
-*Supports:* EU-27 rows in `data/raw/manual_tuition.csv` (rows flagged `APPROXIMATE` are not
-pinned to an exact primary figure and should be verified against the primary report).
+Union. DOI: **10.2797/2086726**; released 7 March 2025.
+<https://op.europa.eu/en/publication-detail/-/publication/ad722572-ffbf-11ef-9503-01aa75ed71a1/language-en>
+*Supports:* the 21 still-dated 2023/24 summary entries in
+`data/raw/manual_tuition.csv`; Bulgaria remains flagged `APPROXIMATE`.
+This citation identifies the underlying primary publication, not an assertion
+that every retained secondary-summary value has been reverified.
 
 ### Germany — tuition fee history
 **Study.eu** (secondary web reference), *The History of Tuition Fees in Germany*.
@@ -101,8 +138,8 @@ Eurydice report above.
 ---
 
 *Note on provenance:* the historical US/England series uses the **primary sources**
-above (NCES, UK legislation/Hansard, World Bank/IMF). Germany's sparse zero-fee reference
+above (College Board, BLS, UK legislation/Hansard, World Bank/IMF). Germany's sparse zero-fee reference
 points use secondary sources and do not imply uninterrupted fee-free education.
 The EU-27 cross-sectional
-snapshot rests on the **Eurydice** summary; the current US snapshot is taken
+snapshot combines the dated **Eurydice** summary with six national updates; the current US snapshot is taken
 directly from College Board Table CP-1.

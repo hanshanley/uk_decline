@@ -1,12 +1,12 @@
 """Build the historical tuition series (back to the early 1970s), in real 2022 USD.
 
 Every figure is traceable to a real primary source:
-  * US   — NCES Digest 2024, Table 330.10 (Public 4-year, in-district tuition & fees),
-           current-dollar fees deflated by World Bank US CPI to calendar-2022 dollars.
-           The table's academic-year constant-dollar column is retained only in the raw CSV.
+  * US   — College Board 2025 Table CP-2 (public four-year, in-state tuition & fees),
+           complete nominal history deflated by saved BLS annual CPI-U.
+           NCES remains a separate reference source, never appended to this series.
   * UK   — England statutory fee caps (Acts / SIs on legislation.gov.uk), nominal GBP,
            converted to USD at the **year's market exchange rate** (World Bank PA.NUS.FCRF)
-           and deflated to constant-2022 USD by **US CPI (FP.CPI.TOTL)** — the same basis as
+           and deflated to constant-2022 USD by **BLS annual US CPI-U** — the same basis as
            the US series. Fee years denote the academic year's starting calendar year.
   * DE   — Germany (representative EU): no general tuition (0), from Eurydice / HE history.
 
@@ -22,6 +22,7 @@ import datetime as dt
 import os
 
 from tuition import config
+from tuition.cpi import load_cpi
 from tuition.rates import fetch_series
 
 
@@ -38,7 +39,7 @@ def real_base_usd(nominal_local: float, fx_year_lcu_per_usd: float,
                   us_cpi_year: float, us_cpi_base: float) -> float:
     """Convert nominal local-currency tuition to constant base-year (2022) USD.
 
-    Consistent with the US NCES series (real US$ deflated by US CPI) and the project's
+    Consistent with the US series (real US$ deflated by US CPI) and the project's
     house methodology: convert at that **year's market exchange rate**, then deflate by
     **US CPI** to the base year.
 
@@ -50,20 +51,24 @@ def real_base_usd(nominal_local: float, fx_year_lcu_per_usd: float,
 
 
 def load_nces(cpi: dict[int, float] | None = None) -> list[dict]:
-    """Deflate NCES nominal fees on the same calendar-year basis as the UK."""
-    with open(config.NCES_CSV, newline="") as fh:
+    """Separate NCES reference, not spliced into the College Board comparison."""
+    return load_us_history(config.NCES_CSV, cpi)
+
+
+def load_us_history(path: str, cpi: dict[int, float] | None = None) -> list[dict]:
+    """Deflate a single US nominal source on the same calendar-year basis as the UK."""
+    with open(path, newline="") as fh:
         rows = list(csv.DictReader(fh))
     if not rows:
-        raise RuntimeError("NCES tuition history contains no observations")
+        raise RuntimeError(f"US tuition history contains no observations: {path}")
     if cpi is None:
-        cpi = fetch_series(
-            config.WB_CPI_INDICATOR, ["USA"],
+        cpi = load_cpi(
             min(config.REAL_BASE_YEAR, min(int(r["year"]) for r in rows)),
             max(config.REAL_BASE_YEAR, max(int(r["year"]) for r in rows)),
-        ).get("USA", {})
+        )
     base = cpi.get(config.REAL_BASE_YEAR)
     if not base:
-        raise RuntimeError("missing World Bank US CPI for the 2022 base year")
+        raise RuntimeError("missing BLS US CPI for the 2022 base year")
     out = []
     for r in rows:
         year = int(r["year"])
@@ -113,7 +118,7 @@ def expand_uk_fee_schedule(rows: list[dict]) -> list[dict]:
 
 
 def deflate_manual(rows: list[dict]) -> list[dict]:
-    """Convert nominal local tuition to constant-2022 USD, on the SAME basis as the US NCES
+    """Convert nominal local tuition to constant-2022 USD, on the SAME basis as the US
     series: convert at the year's market exchange rate, then deflate by **US** CPI.
 
     (Earlier versions deflated by each country's own CPI and used a frozen base-year exchange
@@ -135,12 +140,12 @@ def deflate_manual(rows: list[dict]) -> list[dict]:
     # World Bank rejects ranges ending in a not-yet-complete calendar year. Published
     # future fee caps remain in the output with a blank real value until same-year inputs
     # exist; they are not converted with a carried-forward FX/CPI observation.
-    us_cpi = fetch_series(config.WB_CPI_INDICATOR, ["USA"], 1970, fetch_end).get("USA", {})
+    us_cpi = load_cpi(1970, fetch_end)
     fx = fetch_series(config.WB_FX_INDICATOR, iso3s, 1970, fetch_end)
 
     us_base = us_cpi.get(config.REAL_BASE_YEAR)
     if not us_base:
-        raise RuntimeError("missing World Bank US CPI; cannot deflate to real 2022 USD")
+        raise RuntimeError("missing BLS US CPI; cannot deflate to real 2022 USD")
 
     out = []
     for r in rows:
@@ -154,7 +159,7 @@ def deflate_manual(rows: list[dict]) -> list[dict]:
             if year not in us_cpi or year not in fx.get(iso3, {}):
                 print(
                     f"[history] leaving real value blank for {r['country']} {year}: "
-                    "no same-year World Bank US CPI/FX observation"
+                    "no same-year BLS US CPI / World Bank FX observation"
                 )
                 real_usd = None
             else:
@@ -181,7 +186,9 @@ FIELDS = ["country", "iso3", "region", "year", "nominal_local", "currency",
 
 def main() -> None:
     os.makedirs(config.PROCESSED_DIR, exist_ok=True)
-    rows = load_nces() + deflate_manual(expand_uk_fee_schedule(load_manual()))
+    rows = load_us_history(config.COLLEGEBOARD_CSV) + deflate_manual(
+        expand_uk_fee_schedule(load_manual())
+    )
     rows.sort(key=lambda r: (r["region"], r["year"]))
     with open(config.HISTORY_OUT_CSV, "w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=FIELDS)

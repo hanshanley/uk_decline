@@ -1,8 +1,9 @@
 """Static configuration: country tables, regions, sources, paths, fallback rates.
 
 The authoritative tuition figures live in ``data/raw/manual_tuition.csv`` (each row
-carries its own ``source`` + ``year``). Currency conversion (nominal FX and CPI) is
-pulled live from the World Bank API by :mod:`tuition.rates`; the ``FALLBACK_*`` tables
+carries its own ``source`` + ``year``). Currency conversion and inflation adjustment
+use World Bank FX from :mod:`tuition.rates` and saved BLS CPI from :mod:`tuition.cpi`;
+the ``FALLBACK_*`` tables
 below are only used when the network is unavailable (e.g. offline unit tests).
 """
 
@@ -95,8 +96,8 @@ OECD_TUITION_HINT = (
 # Eurostat/Eurydice "National Student Fee and Support Systems in European Higher
 # Education" — the annual EU-27 first-cycle fee reference.
 EURYDICE_HINT = (
-    "https://eurydice.eacea.ec.europa.eu/publications/"
-    "national-student-fee-and-support-systems-european-higher-education-202425"
+    "https://op.europa.eu/en/publication-detail/-/publication/"
+    "ad722572-ffbf-11ef-9503-01aa75ed71a1/language-en"
 )
 WORLD_BANK_BASE = "https://api.worldbank.org/v2"
 WB_FX_INDICATOR = "PA.NUS.FCRF"   # official exchange rate, LCU per US$ (period avg)
@@ -113,6 +114,8 @@ OUTPUTS_DIR = os.path.join(ROOT, "outputs", "tuition")  # generated figures
 MANUAL_CSV = os.path.join(RAW_DIR, "manual_tuition.csv")
 HISTORY_MANUAL_CSV = os.path.join(RAW_DIR, "tuition_history_manual.csv")
 NCES_CSV = os.path.join(RAW_DIR, "nces_tuition_public4yr.csv")
+COLLEGEBOARD_CSV = os.path.join(RAW_DIR, "collegeboard_tuition_public4yr.csv")
+CPI_CSV = os.path.join(RAW_DIR, "bls_us_cpi_annual.csv")
 OECD_CSV = os.path.join(RAW_DIR, "oecd_tuition.csv")
 EUROSTAT_CSV = os.path.join(RAW_DIR, "eurostat_tuition.csv")
 RATES_CSV = os.path.join(RAW_DIR, "wb_rates.csv")

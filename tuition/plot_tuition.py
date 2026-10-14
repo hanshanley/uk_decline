@@ -26,10 +26,12 @@ from tuition.stats import aggregate_by_region
 REGION_LABELS = {**config.REGION_LABELS, config.UK: "England (fee cap)"}
 REGION_COLOR = {config.UK: theme.ACCENT, config.EU: theme.BLUE, config.US: theme.GOLD}
 SOURCE_NOTE = (
-    "Sources: Eurydice National Student Fee 2023/24 (EU-27); College Board Trends in "
+    "Sources: EU country compilation, Eurydice 2023/24 plus national fee sources "
+    "(France, Ireland, Luxembourg, Netherlands 2026/27; Portugal 2025/26; Spain 2024/25); College Board Trends in "
     "College Pricing 2025 Table CP-1 (US 2025/26, in-state public); UK 2026/27 fee cap. "
     "Source years differ. FX may use a nearby published year (recorded in the CSV); "
-    "constant-dollar values require same-year US CPI. Missing real values are omitted."
+    "Real values use same-year BLS CPI-U (2025: 11 months). Missing real values are omitted. "
+    "EU fees mix caps, contributions and conditional free places, not national student averages."
 )
 
 
@@ -72,13 +74,18 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
             if row["region"] == region and row.get("year") not in (None, "")
             and row.get(value_key) is not None
         ]
-        region_year[region] = max(years) if years else None
-    labels = [
-        f"{REGION_LABELS[r]} ({region_year[r]})"
-        if region_year[r] is not None
-        else REGION_LABELS[r]
-        for r in order
-    ]
+        region_year[region] = (
+            str(min(years)) if min(years) == max(years)
+            else f"{min(years)}–{max(years)}"
+        ) if years else None
+    labels = []
+    for region in order:
+        label = REGION_LABELS[region]
+        if region == config.EU and agg[region]["n"] < len(config.EU27):
+            label = f"EU sample ({agg[region]['n']}/{len(config.EU27)} countries)"
+        if region_year[region] is not None:
+            label += f" ({region_year[region]})"
+        labels.append(label)
     vals = [agg[r]["median_annual"] for r in order]
     means = [agg[r]["mean_annual"] for r in order]
     colors = [REGION_COLOR[r] for r in order]
@@ -98,7 +105,7 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
                         ha="left", va="center", fontsize=8.5, color=theme.MUTED, xytext=(6, -14),
                         textcoords="offset points")
         else:
-            ax.annotate(f"most EU countries: free  (EU-27 average {_money(means[i])}/yr)",
+            ax.annotate(f"Median listed fee: $0  (country mean {_money(means[i])}/yr)",
                         (0, i), ha="left", va="center", fontsize=10, color=theme.GREEN,
                         fontweight="bold", xytext=(6, 0), textcoords="offset points")
 
@@ -116,7 +123,11 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
 
 
 def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) -> None:
-    data = [(r["country"], r[value_key], r["region"]) for r in rows if r[value_key] is not None]
+    data = [
+        (REGION_LABELS[config.UK] if r["region"] == config.UK else r["country"],
+         r[value_key], r["region"])
+        for r in rows if r[value_key] is not None
+    ]
     data.sort(key=lambda t: t[1])  # ascending -> highest at top of horizontal bars
 
     fig, ax = plt.subplots(figsize=(11, 9))
@@ -128,12 +139,17 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
     ax.set_yticklabels([name for name, _, _ in data], fontsize=9)
     ax.set_xlabel(f"Annual domestic tuition ({unit})")
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
-    periods = sorted({
-        (REGION_LABELS[r["region"]], int(r["year"]))
-        for r in rows if r[value_key] is not None
-    })
-    subtitle = " · ".join(f"{label}: {year}/{(year + 1) % 100:02d}"
-                          for label, year in periods)
+    periods = {}
+    for row in rows:
+        if row[value_key] is not None:
+            periods.setdefault(REGION_LABELS[row["region"]], set()).add(int(row["year"]))
+    def academic(year):
+        return f"{year}/{(year + 1) % 100:02d}"
+    subtitle = " · ".join(
+        f"{label}: {academic(min(years))}"
+        + (f"–{academic(max(years))}" if min(years) != max(years) else "")
+        for label, years in sorted(periods.items())
+    )
     ax.set_title("Annual domestic bachelor's tuition — dated source comparison\n"
                  + subtitle,
                  fontweight="bold", pad=14)
