@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import io
 import re
-import time
 from urllib.parse import urljoin, urlsplit
 
 import pandas as pd
@@ -78,15 +77,7 @@ def _ons_download(landing_path: str, version_pattern: str | None = None) -> byte
     version = csew._get_json(version_uri)
     filename = version["downloads"][0]["file"]
     url = f"{csew.ONS_BASE}/file?uri={version_uri}/{filename}"
-    for attempt in range(4):
-        try:
-            return csew._ons_get(url, timeout=120).content
-        except requests.HTTPError as exc:
-            status = exc.response.status_code if exc.response is not None else None
-            if status != 429 or attempt == 3:
-                raise
-            time.sleep(2 ** (attempt + 1))
-    raise RuntimeError("unreachable")
+    return csew._ons_get(url, timeout=120).content
 
 
 def _scotland_download() -> bytes:

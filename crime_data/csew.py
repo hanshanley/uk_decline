@@ -28,6 +28,8 @@ from urllib.parse import urlsplit
 
 import pandas as pd
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 
 ONS_BASE = "https://www.ons.gov.uk"
 DATASET_PATH = (
@@ -41,6 +43,17 @@ UNIT = "incidents (thousands)"
 SOURCE = "Crime Survey for England and Wales, Office for National Statistics (ONS)"
 
 _UA = {"User-Agent": "uk_decline/0.1 (crime statistics research)"}
+_SESSION = requests.Session()
+_RETRY_ADAPTER = HTTPAdapter(max_retries=Retry(
+    total=3,
+    allowed_methods=frozenset({"GET"}),
+    status_forcelist=(429, 500, 502, 503, 504),
+    backoff_factor=1,
+    respect_retry_after_header=True,
+    raise_on_status=False,
+))
+_SESSION.mount("https://", _RETRY_ADAPTER)
+_SESSION.mount("http://", _RETRY_ADAPTER)
 
 # "Unweighted base ..." rows are sample sizes, not crime counts — never emit them.
 _SKIP_PREFIX = "unweighted base"
@@ -64,7 +77,7 @@ def _ons_get(url: str, timeout: int, max_redirects: int = 5) -> requests.Respons
     redirect hop*, so a redirect can never send a live request to an off-allowlist host."""
     for _ in range(max_redirects + 1):
         _ensure_ons_host(url)
-        resp = requests.get(url, headers=_UA, timeout=timeout, allow_redirects=False)
+        resp = _SESSION.get(url, headers=_UA, timeout=timeout, allow_redirects=False)
         if resp.is_redirect or resp.is_permanent_redirect:
             nxt = resp.headers.get("Location")
             if not nxt:

@@ -9,7 +9,9 @@ from __future__ import annotations
 import sys
 import io
 import tempfile
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import Thread
 
 import pandas as pd
 import pytest
@@ -215,6 +217,64 @@ def test_ons_host_allowlist() -> None:
         else:  # pragma: no cover
             raise AssertionError(f"expected rejection of {bad!r}")
     csew._ensure_ons_host("https://www.ons.gov.uk/file?uri=x")  # ok, no raise
+
+
+@pytest.mark.parametrize("statuses", [
+    (429, 200),
+    (429, 429, 429, 429),
+    (404,),
+])
+def test_ons_metadata_retries_rate_limits_but_surfaces_failures(monkeypatch, statuses):
+    received = []
+    responses = iter(statuses)
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            received.append(self.path)
+            self.send_response(next(responses))
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Retry-After", "0")
+            self.end_headers()
+            self.wfile.write(b'{"ok":true}')
+
+        def log_message(self, *args):
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    thread = Thread(target=server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True)
+    thread.start()
+    monkeypatch.setattr(csew, "ONS_BASE", f"http://127.0.0.1:{server.server_port}")
+    monkeypatch.setattr(csew, "_ensure_ons_host", lambda url: None)
+    monkeypatch.setattr(csew._RETRY_ADAPTER.max_retries, "backoff_factor", 0)
+    try:
+        if statuses[-1] == 200:
+            assert csew._get_json("/dataset") == {"ok": True}
+        else:
+            with pytest.raises(csew.requests.HTTPError):
+                csew._get_json("/dataset")
+        assert received == ["/dataset/data"] * len(statuses)
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join()
+
+
+def test_ons_retry_client_still_rejects_off_host_redirects(monkeypatch):
+    received = []
+
+    def redirect(url, **kwargs):
+        received.append(url)
+        assert kwargs["allow_redirects"] is False
+        response = csew.requests.Response()
+        response.status_code = 302
+        response.headers["Location"] = "https://example.invalid/workbook.xlsx"
+        return response
+
+    monkeypatch.setattr(csew._SESSION, "get", redirect)
+    url = "https://www.ons.gov.uk/file?uri=x"
+    with pytest.raises(ValueError, match="untrusted host"):
+        csew._ons_get(url, timeout=1)
+    assert received == [url]
 
 
 def test_download_workbook_accepts_current_sheet_name(monkeypatch) -> None:
