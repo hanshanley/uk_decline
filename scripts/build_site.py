@@ -401,6 +401,7 @@ def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
         if redirects:
             for page in pages:
                 target = escape(canonical_url(page), quote=True)
+                destination = json.dumps(canonical_url(page)).replace("<", "\\u003c")
                 (stage / page).write_text(f"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8">
@@ -409,6 +410,7 @@ def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
 <meta http-equiv="refresh" content="0; url={target}">
 <link rel="canonical" href="{target}">
 <title>{TITLE} | The Margin of Error</title>
+<script>location.replace({destination} + location.search + location.hash);</script>
 </head><body><h1>{TITLE}</h1>
 <p><a href="{target}">Continue to The Margin of Error.</a></p>
 </body></html>

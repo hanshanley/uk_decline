@@ -69,6 +69,7 @@ def test_former_pages_addresses_redirect_to_matching_publication_pages(site_repo
         assert soup.find("meta", attrs={"http-equiv": "refresh"})["content"] == f"0; url={target}"
         assert soup.find("link", rel="canonical")["href"] == target
         assert soup.find("a", href=target)
+        assert f"location.replace({json.dumps(target)} + location.search + location.hash)" in soup.script.string
         assert not soup.select(".topic-card, .chart-gallery")
 
 
