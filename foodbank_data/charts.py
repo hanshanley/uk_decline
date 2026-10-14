@@ -44,24 +44,16 @@ def foodbank_chart(
     annual = annual.sort_values("year")
     latest = annual.iloc[-1]
 
-    # The long-run series uses fiscal observations through 2023/24. The latest
-    # calendar-year observation is appended at 2025 and identified in the note.
     historical = fiscal.copy()
     historical["x"] = historical["end_year"].astype(float)
-    latest_row = pd.DataFrame(
-        [{
-            "period_label": str(int(latest["year"])),
-            "x": float(latest["year"]),
-            "total": float(latest["total"]),
-            "adults": float(latest["adults"]),
-            "children": float(latest["children"]),
-        }]
-    )
 
     no_age = historical[historical["children"].isna()]
     age = historical[historical["children"].notna()]
 
-    fig, ax = plt.subplots(figsize=(13.6, 7.8))
+    fig, (ax, recent) = plt.subplots(
+        1, 2, figsize=(13.6, 7.8), sharey=True,
+        gridspec_kw={"width_ratios": [3.3, 1], "wspace": 0.12},
+    )
 
     ax.bar(
         no_age["x"],
@@ -94,20 +86,20 @@ def foodbank_chart(
         label="Children",
         zorder=3,
     )
-    ax.bar(
-        latest_row["x"],
-        latest_row["adults"],
+    recent.bar(
+        0,
+        latest["adults"],
         width=0.72,
         color=ADULT,
         edgecolor=BG,
         linewidth=0.8,
         zorder=3,
     )
-    ax.bar(
-        latest_row["x"],
-        latest_row["children"],
+    recent.bar(
+        0,
+        latest["children"],
         width=0.72,
-        bottom=latest_row["adults"],
+        bottom=latest["adults"],
         color=CHILD,
         edgecolor=BG,
         linewidth=0.8,
@@ -132,8 +124,8 @@ def foodbank_chart(
             color=TEXT if period in {"2005/06", "2023/24"} else MUTED,
             fontweight="bold" if period in {"2005/06", "2023/24"} else "normal",
         )
-    ax.text(
-        latest["year"],
+    recent.text(
+        0,
         latest["total"] + 72_000,
         _total_label(float(latest["total"])),
         ha="center",
@@ -143,32 +135,47 @@ def foodbank_chart(
         fontweight="bold",
     )
 
-    # Directly identify the child share without adding a second chart.
-    ax.text(
-        latest["year"],
-        latest["adults"] + latest["children"] / 2,
-        f"{latest['children'] / 1_000:.0f}k parcels\nfor children",
-        ha="center",
-        va="center",
-        fontsize=8.5,
-        color=TEXT,
-        fontweight="bold",
-    )
+    for count, center, label, color in (
+        (latest["adults"], latest["adults"] / 2, "adults", ADULT),
+        (latest["children"], latest["adults"] + latest["children"] / 2,
+         "children", CHILD),
+    ):
+        recent.annotate(
+            f"{_total_label(float(count))} parcels\nfor {label}",
+            xy=(0.36, center), xytext=(0.7, center),
+            ha="left", va="center", fontsize=11, color=TEXT,
+            arrowprops={"arrowstyle": "-", "color": color, "linewidth": 1.5},
+        )
 
-    ax.axvline(float(latest["year"]) - 0.5, linestyle="--", color=MUTED, linewidth=1)
-    ax.text(latest["year"], 0.98, "Calendar year", transform=ax.get_xaxis_transform(),
-            ha="center", va="top", fontsize=9, color=MUTED)
-    ax.set_xlim(1999.7, max(float(historical["x"].max()), latest["year"]) + 1)
+    ax.set_title(
+        f"Financial years, {historical.iloc[0]['period_label']}"
+        f"–{historical.iloc[-1]['period_label']}",
+        loc="left", fontsize=12, fontweight="bold", pad=14,
+    )
+    recent.set_title(f"Calendar year {int(latest['year'])}",
+                     loc="left", fontsize=12, fontweight="bold", pad=14)
+    ax.set_xlim(historical["x"].min() - 0.7, historical["x"].max() + 0.8)
+    recent.set_xlim(-0.65, 2.1)
+    recent.set_xticks([])
+    recent.tick_params(axis="y", left=False, labelleft=False)
     ax.set_ylim(0, max(float(historical["total"].max()), latest["total"]) * 1.14)
-    ax.set_xticks([2000, 2005, 2010, 2015, 2020, 2025])
-    ax.set_xticklabels(["2000", "2005", "2010", "2015", "2020", "2025"])
+    ticks = historical[
+        historical["end_year"].mod(5).eq(0)
+        | historical["end_year"].isin(
+            [historical.iloc[0]["end_year"], historical.iloc[-1]["end_year"]]
+        )
+    ]
+    ax.set_xticks(ticks["x"], ticks["period_label"])
     ax.yaxis.set_major_locator(mtick.MultipleLocator(500_000))
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(_millions))
     ax.set_ylabel("Emergency food parcels distributed")
-    ax.set_xlabel("Reporting year ending")
+    ax.set_xlabel("Financial year")
     ax.grid(axis="y")
     ax.set_axisbelow(True)
     ax.spines["left"].set_visible(False)
+    recent.grid(axis="y")
+    recent.set_axisbelow(True)
+    recent.spines["left"].set_visible(False)
     ax.legend(
         loc="upper left",
         frameon=False,
@@ -189,8 +196,7 @@ def foodbank_chart(
     fig.text(
         0.075,
         0.91,
-        "UK totals. Gold shows parcels distributed for children where the age "
-        "breakdown is available.",
+        "UK totals. Financial-year history and the latest calendar year shown separately.",
         ha="left",
         fontsize=11,
         color=MUTED,
@@ -201,14 +207,14 @@ def foodbank_chart(
         "Sources: Trussell archived reports and official 2023/24 fiscal dataset; "
         f"{int(latest['year'])} calendar-year workbook. Accessed {ACCESSED_DATE}.\n"
         f"{historical.iloc[0]['period_label']}–{historical.iloc[-1]['period_label']} "
-        f"are financial years; the separated final bar is calendar-year {int(latest['year'])}. "
+        f"are financial years; the right-hand panel is calendar-year {int(latest['year'])}. "
         "Counts are distribution instances, not unique people. "
         "From Apr 2020, 3-/7-day parcels are combined without duration adjustment.",
         x=0.075,
         y=0.022,
     )
 
-    fig.subplots_adjust(left=0.075, right=0.975, top=0.84, bottom=0.15)
+    fig.subplots_adjust(left=0.075, right=0.975, top=0.8, bottom=0.15)
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, dpi=220, bbox_inches="tight", pad_inches=0.15, facecolor=BG)

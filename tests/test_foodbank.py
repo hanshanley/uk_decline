@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.text import Text
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -102,7 +104,7 @@ def test_parser_rejects_fractional_counts_instead_of_truncating():
         parse.parse_calendar_years(io.BytesIO(payload))
 
 
-def test_chart_does_not_label_parcels_as_unique_children(monkeypatch):
+def test_chart_keeps_calendar_annotations_separate_and_readable(monkeypatch):
     annual = parse.parse_calendar_years(CALENDAR_SOURCE.path(RAW_DIR))
     fiscal = history.build_fiscal_history(FISCAL_ARCHIVE, FISCAL_SLIDES_SOURCE.path(RAW_DIR))
     original = charts.plt.subplots
@@ -110,15 +112,39 @@ def test_chart_does_not_label_parcels_as_unique_children(monkeypatch):
 
     def capture(*args, **kwargs):
         fig, ax = original(*args, **kwargs)
-        captured.append(ax)
+        captured.append((fig, ax))
         return fig, ax
 
     monkeypatch.setattr(charts.plt, "subplots", capture)
     monkeypatch.setattr(charts.plt.Figure, "savefig", lambda *a, **k: None)
     charts.foodbank_chart(fiscal, annual)
-    labels = [text.get_text() for text in captured[0].texts]
+    fig, (historical, recent) = captured[0]
+    labels = [text.get_text() for text in recent.texts]
     assert "912k parcels\nfor children" in labels
-    assert "Calendar year" in labels
+    assert "1.73m parcels\nfor adults" in labels
+    assert recent.get_title(loc="left") == "Calendar year 2025"
+    assert "2005/06–2023/24" in historical.get_title(loc="left")
+    assert historical.get_ylim() == recent.get_ylim()
+    assert len(recent.patches) == 2
+    assert sum(bar.get_height() for bar in recent.patches) == annual.iloc[-1]["total"]
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    title_box = next(
+        text.get_window_extent(renderer) for text in recent.findobj(Text)
+        if text.get_text() == "Calendar year 2025"
+    )
+    boxes = [text.get_window_extent(renderer) for text in recent.texts]
+    for index, box in enumerate(boxes):
+        assert not box.overlaps(historical.get_window_extent(renderer))
+        assert not box.overlaps(title_box)
+        assert all(not box.overlaps(other) for other in boxes[index + 1:])
+    for annotation in recent.texts:
+        if annotation.get_text().endswith(("for children", "for adults")):
+            assert annotation.arrow_patch is not None
+            assert annotation.xy[0] == pytest.approx(0.36)
+            bar = recent.patches[1 if annotation.get_text().endswith("for children") else 0]
+            assert bar.get_y() < annotation.xy[1] < bar.get_y() + bar.get_height()
 
 
 def test_official_workbooks_match_headlines() -> None:
