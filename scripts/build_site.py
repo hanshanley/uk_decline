@@ -72,7 +72,8 @@ ANALYSES = (
              ("uk_austerity_spending_investment.png",),
              "Public spending and investment, with financial years and inflation adjustments stated."),
     Analysis("debt-borrowing", "Debt & borrowing costs", "Economy", "debt_data", "debt",
-             ("uk_public_debt_pct_gdp.png", "government_borrowing_costs.png"),
+             ("uk_public_debt_pct_gdp.png", "uk_borrowing_costs_daily.png",
+              "government_borrowing_costs.png"),
              "UK public debt relative to GDP and government-bond yields: the debt stock and the cost of new borrowing."),
     Analysis("nhs", "NHS performance", "Public services", "nhs_data", "nhs",
              ("rtt_waiting_list_per_1000.png", "ae_4hr_pct.png", "cancer_62day_pct.png"),
@@ -113,7 +114,8 @@ def tracked_files(root: Path) -> set[Path]:
 
 
 def relative_url(target: Path, page: Path) -> str:
-    return Path(os.path.relpath(target, page.parent)).as_posix()
+    url = Path(os.path.relpath(target, page.parent)).as_posix()
+    return (url.removesuffix("index.html") or "./") if target.name == "index.html" else url
 
 
 SUBSCRIBE_URL = (
@@ -123,6 +125,7 @@ SUBSCRIBE_URL = (
 
 CHART_TITLES = {
     "uk_public_debt_pct_gdp": "UK public-sector net debt as a share of GDP",
+    "uk_borrowing_costs_daily": "UK 10-year borrowing rates: latest daily observations",
     "government_borrowing_costs": "Government borrowing rates: 10-year bond yields",
     "median_age_over_time": "Median age across countries",
     "share_65plus_over_time": "Population aged 65 and over",
@@ -352,7 +355,7 @@ def homepage() -> str:
         cards.append(f"""
         <article class="topic-card" data-group="{escape(analysis.group, quote=True)}"
                  data-search="{escape(f'{analysis.title} {analysis.description}'.lower(), quote=True)}">
-          <a href="{analysis.slug}/index.html">
+          <a href="{analysis.slug}/">
             <img src="outputs/{analysis.output}/{analysis.featured}" loading="lazy" alt="">
             <div class="card-copy"><span class="eyebrow">{escape(analysis.group)}</span>
             <h3>{escape(analysis.title)} <span aria-hidden="true">&#8594;</span></h3>
@@ -370,14 +373,13 @@ def homepage() -> str:
       <p class="eyebrow">A source-backed view of the United Kingdom</p>
       <h1>How has the UK<br>changed?</h1>
       <p class="standfirst">Explore the economy, public services, household pressures
-      and institutions. Different measures tell different stories.
-      The definitions matter as much as the direction.</p>
+      and institutions.</p>
       <a class="text-link" href="#explore">Explore the evidence <span aria-hidden="true">&#8595;</span></a>
     </section>
     <section class="overview" aria-labelledby="overview-title">
       <div class="section-heading"><div><p class="eyebrow">The overview</p>
       <h2 id="overview-title">The UK since 2007</h2></div>
-      <a href="methods/index.html">What these measures mean &#8594;</a></div>
+      <a href="methods/">What these measures mean &#8594;</a></div>
       <a href="outputs/uk_decline_scorecard.png" class="chart-link">
         <img class="scorecard" src="outputs/uk_decline_scorecard.png"
              alt="Eight selected UK indicators, with individual baselines, endpoints and sources.">
@@ -404,7 +406,7 @@ def homepage() -> str:
       <p>Annual, financial-year, academic-year and monthly observations are not interchangeable.
       A fee cap is not an average bill; a treatment entry is not a unique patient;
       a nominal dollar comparison is not a real-growth comparison.</p>
-      <a href="methods/index.html">Definitions and reproducibility &#8594;</a>
+      <a href="methods/">Definitions and reproducibility &#8594;</a>
     </aside>"""
 
 
@@ -421,7 +423,7 @@ def analysis_page(analysis: Analysis) -> str:
           <a href="{url}" class="chart-link"><img src="{url}" alt="{title}" loading="lazy"></a>
         </figure>""")
     return f"""
-    <section class="page-heading"><a class="breadcrumb" href="../index.html#explore">&#8592; All analyses</a>
+    <section class="page-heading"><a class="breadcrumb" href="../#explore">&#8592; All analyses</a>
       <p class="eyebrow">{escape(analysis.group)}</p><h1>{escape(analysis.title)}</h1>
       <p class="standfirst">{escape(analysis.description)}</p>
       <p class="context">Open any chart for full resolution. Observation periods and source notes
@@ -449,6 +451,8 @@ def validate_site(output: Path) -> None:
             if url.scheme or url.netloc:
                 continue
             target = (page.parent / unquote(url.path)).resolve() if url.path else page
+            if target.is_dir():
+                target = (target / "index.html").resolve()
             if not target.is_relative_to(output.resolve()) or not target.is_file():
                 raise ValueError(f"{page.relative_to(output)}: broken local link {value}")
             if url.fragment and target.suffix == ".html":

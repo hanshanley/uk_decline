@@ -1,4 +1,4 @@
-"""Two distinct debt-stock and market-borrowing-rate charts."""
+"""Separate debt-stock, monthly peer and daily UK borrowing-rate charts."""
 
 from __future__ import annotations
 
@@ -20,8 +20,12 @@ COLORS = {
 }
 
 
-def make_charts(frame: pd.DataFrame, output: Path) -> list[Path]:
+def make_charts(
+    frame: pd.DataFrame, output: Path, *, daily: pd.DataFrame | None = None,
+) -> list[Path]:
     frame = sources.validate(frame)
+    if daily is not None:
+        daily = sources.validate_daily(daily)
     house_style()
     output.mkdir(parents=True, exist_ok=True)
     written = []
@@ -69,7 +73,7 @@ def make_charts(frame: pd.DataFrame, output: Path) -> list[Path]:
             ax, ends, min_gap=1.0 if metric == sources.DEBT_METRIC else 0.65,
             x=mdates.date2num(latest + pd.DateOffset(months=3)), fontsize=9.5,
         )
-        ax.set_xlim(pd.Timestamp(sources.START), latest + pd.DateOffset(years=4))
+        ax.set_xlim(pd.Timestamp(sources.START), latest + pd.DateOffset(months=3))
         if metric == sources.DEBT_METRIC:
             ax.set_ylim(0, data["value"].max() * 1.12)
         else:
@@ -91,6 +95,41 @@ def make_charts(frame: pd.DataFrame, output: Path) -> list[Path]:
                  fontsize=8, color=MUTED, style="italic")
         fig.subplots_adjust(left=0.08, right=0.97, bottom=0.19, top=0.85)
         path = output / filename
+        fig.savefig(path, dpi=200, facecolor=BG, bbox_inches="tight", pad_inches=0.15)
+        plt.close(fig)
+        written.append(path)
+    if daily is not None:
+        data = daily[daily["date"] >= "2020-01-01"]
+        latest = data.iloc[-1]
+        fig, ax = plt.subplots(figsize=(13.5, 7.5))
+        series = data.set_index("date")["value"]
+        series = series.reindex(pd.date_range(series.index.min(), series.index.max(), freq="B"))
+        ax.plot(series.index, series.values, color=ACCENT, linewidth=2)
+        ax.scatter([latest["date"]], [latest["value"]], color=ACCENT, s=35, zorder=3)
+        ax.set_xlim(pd.Timestamp("2020-01-01"), latest["date"] + pd.Timedelta(days=14))
+        ax.set_xticks([pd.Timestamp(year=year, month=1, day=1)
+                      for year in range(2020, latest["date"].year + 1)])
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+        ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=100))
+        ax.set_xlabel("Year")
+        ax.set_ylabel("Nominal 10-year gilt yield (% per year)")
+        ax.grid(axis="y", linewidth=0.5)
+        ax.set_axisbelow(True)
+        fig.suptitle("UK borrowing rates: latest daily observations", x=0.08, y=0.97,
+                     ha="left", fontsize=22, fontweight="bold")
+        fig.text(0.08, 0.91,
+                 f"10-year nominal par gilt yield; latest {latest['date']:%d %b %Y}: "
+                 f"{latest['value']:.2f}%", fontsize=11, color=MUTED)
+        source = (
+            "Source: Bank of England, IUDMNPY. Daily fitted 10-year nominal par gilt yield; "
+            "not Bank Rate or the average interest paid on existing debt. "
+            "Shown separately from OECD monthly benchmark averages; series are not spliced. "
+            "Non-trading days and missing observations are not filled."
+        )
+        fig.text(0.08, 0.02, textwrap.fill(source, width=155), va="bottom",
+                 fontsize=8, color=MUTED, style="italic")
+        fig.subplots_adjust(left=0.08, right=0.97, bottom=0.19, top=0.85)
+        path = output / "uk_borrowing_costs_daily.png"
         fig.savefig(path, dpi=200, facecolor=BG, bbox_inches="tight", pad_inches=0.15)
         plt.close(fig)
         written.append(path)

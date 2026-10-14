@@ -219,7 +219,7 @@ def chart_visas_by_category(df: pd.DataFrame) -> Path:
             color,
         ))
     labelled_ends(ax, ends, min_gap=60, x=latest + 0.3, fontsize=11)
-    ax.set_xlim(first - 0.3, latest + 6)
+    ax.set_xlim(first - 0.3, latest + 0.3)
     ax.set_ylim(0, max(s["value"].max() for s in data.values()) / 1000 * 1.12)
     ax.set_xticks(list(range((first + 4) // 5 * 5, latest + 1, 5)))
     ax.yaxis.set_major_formatter(lambda value, _: f"{value:,.0f}k")
@@ -257,7 +257,7 @@ def chart_asylum(df: pd.DataFrame) -> Path:
         ax, [(last["value"] / 1000, f"{last['value']:,.0f} in {latest}", SUBSTACK_ACCENT)],
         min_gap=1, x=latest + 0.3, fontsize=11,
     )
-    ax.set_xlim(first - 0.3, latest + 6)
+    ax.set_xlim(first - 0.3, latest + 0.3)
     ax.set_ylim(0, s["value"].max() / 1000 * 1.12)
     ax.set_xticks(list(range((first + 4) // 5 * 5, latest + 1, 5)))
     ax.yaxis.set_major_formatter(lambda value, _: f"{value:,.0f}k")

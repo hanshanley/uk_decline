@@ -54,6 +54,70 @@ def debt_frame():
     return pd.DataFrame(rows)
 
 
+@pytest.fixture
+def daily_frame():
+    dates = pd.bdate_range("2000-01-04", "2026-10-12")
+    return pd.DataFrame({
+        "date": dates, "country": "United Kingdom", "metric": sources.DAILY_METRIC,
+        "value": 4.5, "unit": "percent per annum", "source": "Bank of England",
+        "series_id": sources.DAILY_SERIES,
+    })
+
+
+def test_daily_yield_parser_preserves_observation_dates_and_missing_days():
+    frame = sources.parse_daily_yields(
+        "DATE,IUDMNPY\n04 Jan 2000,-0.5\n05 Jan 2000,..\n06 Jan 2000,0\n"
+    )
+    assert frame["date"].tolist() == ["2000-01-04", "2000-01-06"]
+    assert frame["value"].tolist() == [-0.5, 0]
+
+
+@pytest.mark.parametrize("text", [
+    "DATE,OTHER\n04 Jan 2000,4.5\n",
+    "DATE,IUDMNPY\n04 Jan 2000,4.5\n04 Jan 2000,4.6\n",
+    "DATE,IUDMNPY\n04 Jan 2000,nan\n",
+    "DATE,IUDMNPY\n04 Jan 2000,4.5,extra\n",
+])
+def test_daily_yield_parser_rejects_wrong_series_and_invalid_observations(text):
+    with pytest.raises(ValueError):
+        sources.parse_daily_yields(text)
+
+
+def test_daily_yield_validation_checks_freshness_and_preserves_history(daily_frame):
+    today = pd.Timestamp("2026-10-14")
+    sources.validate_daily(daily_frame, require_recent=True, as_of=today)
+    with pytest.raises(ValueError, match="seven days"):
+        sources.validate_daily(
+            daily_frame, require_recent=True, as_of=pd.Timestamp("2026-10-22"),
+        )
+    with pytest.raises(ValueError, match="dates"):
+        sources.validate_daily(daily_frame, as_of=pd.Timestamp("2026-10-09"))
+    with pytest.raises(ValueError, match="previously published"):
+        sources.validate_daily(daily_frame.iloc[:-1], previous=daily_frame, as_of=today)
+    with pytest.raises(ValueError, match="historical"):
+        sources.validate_daily(daily_frame[daily_frame["date"].dt.year != 2005], as_of=today)
+
+
+def test_failed_daily_download_preserves_both_saved_inputs(
+    debt_frame, daily_frame, monkeypatch, tmp_path,
+):
+    monthly_csv, daily_csv = tmp_path / "monthly.csv", tmp_path / "daily.csv"
+    debt_frame.to_csv(monthly_csv, index=False)
+    daily_frame.to_csv(daily_csv, index=False)
+    saved = monthly_csv.read_bytes(), daily_csv.read_bytes()
+    monkeypatch.setattr(sources, "fetch", lambda: debt_frame)
+
+    def fail():
+        raise requests.ConnectionError("daily yield source unavailable")
+
+    monkeypatch.setattr(sources, "fetch_daily", fail)
+    with pytest.raises(requests.ConnectionError, match="daily yield"):
+        main(["--csv", str(monthly_csv), "--daily-csv", str(daily_csv),
+              "--out", str(tmp_path / "charts")])
+    assert (monthly_csv.read_bytes(), daily_csv.read_bytes()) == saved
+    assert not (tmp_path / "charts").exists()
+
+
 def test_debt_parser_selects_monthly_net_debt_percent_not_annual_or_quarterly_values():
     rows = sources.parse_debt(DEBT_CSV)
     assert [row["date"] for row in rows] == ["2000-01-01", "2000-02-01"]
@@ -137,6 +201,7 @@ def test_debt_charts_use_year_ticks_and_separate_debt_stock_from_yields(
         ax = fig.axes[0]
         assert all(label.get_text().isdigit() for label in ax.get_xticklabels())
         assert max(int(label.get_text()) for label in ax.get_xticklabels()) <= 2026
+        assert ax.get_xlim()[1] - ax.dataLim.x1 < 100
         source = fig.texts[-1]
         assert source.get_window_extent(renderer).y1 + 5 < ax.xaxis.label.get_window_extent(renderer).y0
 
@@ -152,3 +217,24 @@ def test_borrowing_chart_does_not_connect_missing_recent_months(debt_frame, monk
     charts.make_charts(debt_frame[~missing], tmp_path)
     uk = figures[1].axes[0].lines[0]
     assert pd.isna(uk.get_ydata()).sum() == 1
+
+
+def test_daily_chart_is_separate_recent_and_does_not_fill_missing_days(
+    debt_frame, daily_frame, monkeypatch, tmp_path,
+):
+    daily_frame = daily_frame[daily_frame["date"] != pd.Timestamp("2026-10-08")]
+    figures = []
+    monkeypatch.setattr(Figure, "savefig", lambda fig, *args, **kwargs: figures.append(fig))
+    paths = charts.make_charts(debt_frame, tmp_path, daily=daily_frame)
+    assert paths[-1].name == "uk_borrowing_costs_daily.png"
+    fig = figures[-1]
+    ax = fig.axes[0]
+    assert len(ax.lines) == 1
+    assert pd.isna(ax.lines[0].get_ydata()).sum() == 1
+    assert "12 Oct 2026" in fig.texts[1].get_text()
+    assert "not spliced" in fig.texts[-1].get_text()
+    assert ax.get_xlim()[1] - ax.dataLim.x1 <= 14
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    assert fig.texts[-1].get_window_extent(renderer).y1 + 5 < ax.xaxis.label.get_window_extent(renderer).y0

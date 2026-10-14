@@ -68,9 +68,9 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
             ha="left",
         )
 
-    ax.set_xlim(1999.7, latest_year + 4.6)
+    ax.set_xlim(1999.7, latest_year + 0.35)
     ax.set_ylim(15, 100)
-    ax.set_xticks([2000, 2005, 2010, 2015, 2020, 2025])
+    ax.set_xticks(list(range(2000, latest_year + 1, 5)))
     ax.set_yticks([20, 40, 60, 80, 100])
     ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=0))
     ax.set_ylabel("Exports plus imports of goods and services (% of GDP)")
@@ -109,4 +109,3 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     fig.savefig(output, dpi=220, bbox_inches="tight", pad_inches=0.15, facecolor=BG)
     plt.close(fig)
     return output
-

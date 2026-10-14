@@ -1,12 +1,13 @@
-"""Official UK debt snapshots and OECD monthly government-bond yields."""
+"""Official UK debt snapshots, OECD monthly yields and daily UK gilt yields."""
 
 from __future__ import annotations
 
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
 import io
 import math
 import re
+import subprocess
 
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -30,6 +31,83 @@ YIELD_SERIES = {
 }
 FIELDS = ["date", "country", "metric", "value", "unit", "source", "series_id"]
 START = "2000-01-01"
+DAILY_METRIC = "uk_gilt_yield_10y_daily"
+DAILY_SERIES = "IUDMNPY"
+DAILY_URL = (
+    "https://www.bankofengland.co.uk/boeapps/database/_iadb-fromshowcolumns.asp"
+    "?csv.x=yes&Datefrom=01/Jan/2000&Dateto=now&SeriesCodes=IUDMNPY"
+    "&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N"
+)
+
+
+def parse_daily_yields(text: str) -> pd.DataFrame:
+    reader = csv.DictReader(io.StringIO(text))
+    if reader.fieldnames != ["DATE", DAILY_SERIES]:
+        raise ValueError("Unexpected Bank of England daily 10-year par-yield columns")
+    rows = []
+    seen = set()
+    for row in reader:
+        if None in row or any(value is None for value in row.values()):
+            raise ValueError(f"Malformed Bank of England daily yield: {row!r}")
+        date = datetime.strptime(row["DATE"], "%d %b %Y").strftime("%Y-%m-%d")
+        if date in seen:
+            raise ValueError(f"Duplicate Bank of England daily yield: {date}")
+        seen.add(date)
+        if row[DAILY_SERIES].strip() in {"", ".."}:
+            continue
+        rows.append({
+            "date": date, "country": "United Kingdom", "metric": DAILY_METRIC,
+            "value": _number(row[DAILY_SERIES]), "unit": "percent per annum",
+            "source": "Bank of England, daily 10-year nominal par gilt yield",
+            "series_id": DAILY_SERIES,
+        })
+    if not rows:
+        raise ValueError("Bank of England returned no daily gilt yields")
+    return pd.DataFrame(rows)
+
+
+def validate_daily(
+    frame: pd.DataFrame, previous: pd.DataFrame | None = None, *,
+    require_recent: bool = False, as_of: pd.Timestamp | None = None,
+) -> pd.DataFrame:
+    if not set(FIELDS).issubset(frame.columns) or frame.empty or frame[FIELDS].isna().any().any():
+        raise ValueError("Daily gilt-yield data has missing fields or observations")
+    frame = frame[FIELDS].copy()
+    frame["date"] = pd.to_datetime(frame["date"], errors="raise")
+    frame["value"] = pd.to_numeric(frame["value"], errors="raise")
+    today = pd.Timestamp(as_of if as_of is not None else datetime.now(timezone.utc).date())
+    if (
+        not frame["value"].map(math.isfinite).all()
+        or frame["date"].duplicated().any()
+        or frame["date"].dt.dayofweek.ge(5).any()
+        or frame["date"].lt(START).any()
+        or frame["date"].gt(today).any()
+        or not frame["country"].eq("United Kingdom").all()
+        or not frame["metric"].eq(DAILY_METRIC).all()
+        or not frame["series_id"].eq(DAILY_SERIES).all()
+        or not frame["unit"].eq("percent per annum").all()
+    ):
+        raise ValueError("Invalid daily gilt-yield dates, values, series or units")
+    counts = frame.groupby(frame["date"].dt.year).size()
+    if any(counts.get(year, 0) < 200 for year in range(2000, 2026)):
+        raise ValueError("Daily gilt-yield source lost historical annual coverage")
+    if previous is not None:
+        old = pd.to_datetime(previous["date"], errors="raise")
+        if not old.isin(frame["date"]).all():
+            raise ValueError("Daily gilt-yield refresh lost previously published observations")
+    if require_recent and (today - frame["date"].max()).days > 7:
+        raise ValueError("Bank of England daily gilt yields are more than seven days old")
+    return frame.sort_values("date").reset_index(drop=True)
+
+
+def fetch_daily() -> pd.DataFrame:
+    # The Bank's download server rejects requests' client; curl serves the public CSV.
+    result = subprocess.run(
+        ["curl", "--fail", "--silent", "--show-error", "--location",
+         "--max-time", "90", "--retry", "2", DAILY_URL],
+        capture_output=True, text=True, check=True, timeout=300,
+    )
+    return validate_daily(parse_daily_yields(result.stdout), require_recent=True)
 
 
 def _number(value: str) -> float:

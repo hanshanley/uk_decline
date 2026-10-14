@@ -34,6 +34,7 @@ def test_public_migration_charts_use_readable_labels_and_preserve_missing_years(
     assert ax.get_legend() is None
     assert any(latest_label in text.get_text() for text in ax.texts)
     assert all(int(tick) % 5 == 0 and int(tick) <= 2025 for tick in ax.get_xticks())
+    assert ax.get_xlim()[1] - 2025 <= 0.31
     for line in ax.lines:
         assert pd.isna(line.get_ydata()).sum() == 17
         assert line.get_ydata()[-1] == 260

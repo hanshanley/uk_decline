@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
+from matplotlib.figure import Figure
 
 from trade_data import charts, worldbank
 
@@ -65,7 +66,15 @@ def test_untrusted_host_rejected() -> None:
         worldbank._ensure_host("https://example.com/data")
 
 
-def test_chart_renders(tmp_path) -> None:
+def test_chart_renders(monkeypatch, tmp_path) -> None:
+    figures = []
+    save = Figure.savefig
+
+    def capture(fig, *args, **kwargs):
+        figures.append(fig)
+        return save(fig, *args, **kwargs)
+
+    monkeypatch.setattr(Figure, "savefig", capture)
     rows = []
     for code, name, values in [
         ("GBR", "United Kingdom", [(2000, 50), (2024, 63)]),
@@ -88,3 +97,4 @@ def test_chart_renders(tmp_path) -> None:
     output = charts.make_chart(pd.DataFrame(rows), tmp_path / "trade.png")
     assert output.exists()
     assert output.stat().st_size > 20_000
+    assert figures[0].axes[0].get_xlim()[1] - 2024 <= 0.36

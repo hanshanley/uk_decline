@@ -21,6 +21,7 @@ data/processed/*.csv
 !data/europe_combined_wide.csv
 !data/oecd_median_income_ppp.csv
 !data/debt_borrowing_long.csv
+!data/uk_gilt_yields_daily.csv
 !data/uk_listed_companies_lse.csv
 !data/austerity_spending.csv
 !data/food_bank_calendar_year.csv

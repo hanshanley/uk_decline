@@ -25,6 +25,17 @@ and changes in nominal GDP. A falling ratio need not mean the cash debt stock fe
 
 ## Market borrowing rates
 
+![Recent daily UK gilt yields](../outputs/debt/uk_borrowing_costs_daily.png)
+
+The Bank of England's **daily 10-year nominal par gilt yield** (`IUDMNPY`)
+provides the recent UK view. It is a fitted yield-curve observation, shown from
+2020 onward, not Bank Rate or the actual interest bill on existing debt.
+The last observation's full date and value are printed above the plot.
+Non-trading days and missing observations are not filled.
+
+This daily series is shown separately from the international monthly comparison
+below. The two sources differ in frequency and construction and are never spliced.
+
 ![Monthly government-bond yields](../outputs/debt/government_borrowing_costs.png)
 
 The OECD's **10-year government-bond benchmark yields**, published in its Main
@@ -59,6 +70,10 @@ interest bill: neither the debt base nor the interest rate matches that calculat
   [France](https://fred.stlouisfed.org/series/IRLTLT01FRM156N),
   [Italy](https://fred.stlouisfed.org/series/IRLTLT01ITM156N).
   All sources accessed **14 October 2026**.
+- [Bank of England daily 10-year nominal par gilt yield, IUDMNPY](https://www.bankofengland.co.uk/boeapps/database/index.asp?SeriesCodes=IUDMNPY&UsingCodes=Y).
+  The [documented CSV download interface](https://www.bankofengland.co.uk/boeapps/database/help.asp)
+  is requested from January 2000 through `now`, without a fixed end date.
+  Downloads use `curl`, which is available on the GitHub-hosted Ubuntu runner.
 
 ```bash
 ./.venv/bin/python -m debt_data
@@ -69,12 +84,18 @@ The tracked [long-format CSV](../data/debt_borrowing_long.csv) contains date,
 country, metric, value, unit, source and series identifier. Monthly dates are
 labelled with the first day of the reference month; this does not turn a monthly
 average or month-end debt snapshot into a daily observation.
+The separate [daily UK CSV](../data/uk_gilt_yields_daily.csv) uses actual observation
+dates and the same explicit source and unit fields. Both tables are saved for offline
+reconstruction; `--daily-csv` can select an alternative daily input path.
 
-The scheduled full refresh includes this analysis. All six source series must be
+The **Monday 06:37 UTC** full refresh includes this analysis, including the daily
+UK source. All seven source series must be
 downloaded and validated before outputs are replaced. Wrong series, wrong units,
 duplicate observations, non-finite values, missing published 2000-2025 coverage,
-or loss of any previously saved month stop the refresh. Missing source observations
-are never interpolated, and chart lines do not bridge absent months.
+or loss of any previously saved observation stop the refresh. A live daily-yield
+response more than seven calendar days old also blocks publication; offline
+rebuilds do not impose this freshness check. Missing source observations are never
+interpolated, and chart lines do not bridge absent months or business days.
 
-Only these two figures are embedded in the public topic page. This documentation
+Only these three figures are embedded in the public topic page. This documentation
 and the underlying data remain on GitHub, not in a duplicated website methods section.

@@ -92,7 +92,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         )
 
     ax.axhline(0, color=TEXT, linewidth=0.9, alpha=0.5)
-    ax.set_xlim(1999.7, latest_year + 3.3)
+    ax.set_xlim(1999.7, latest_year + 0.35)
     lo = math.floor((float(frame["change_pct"].min()) - 5) / 10) * 10
     hi = math.ceil((float(frame["change_pct"].max()) + 5) / 10) * 10
     ax.set_ylim(lo, hi)

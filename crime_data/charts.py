@@ -169,7 +169,7 @@ def chart_csew_total(df, out_dir):
     ax.xaxis.set_major_locator(mdates.YearLocator(5))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
     ax.set_xlim(x.iloc[0] - pd.DateOffset(years=1),
-                x.iloc[-1] + pd.DateOffset(months=31))
+                x.iloc[-1] + (x.iloc[-1] - x.iloc[0]) * 0.02)
     _source_note(fig, s)
     return _save(fig, out_dir, "crime_csew_total.png")
 
@@ -217,7 +217,7 @@ def chart_csew_21st_century(df, out_dir):
     ax.xaxis.set_major_locator(mdates.YearLocator(4))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
     ax.set_xlim(x.iloc[0] - pd.DateOffset(years=1),
-                x.iloc[-1] + pd.DateOffset(months=31))
+                x.iloc[-1] + (x.iloc[-1] - x.iloc[0]) * 0.02)
     _source_note(fig, s)
     return _save(fig, out_dir, "crime_csew_21st_century.png")
 
@@ -276,7 +276,7 @@ def chart_fraud_gap(df, out_dir):
     ax.xaxis.set_major_locator(mdates.YearLocator(2))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
     ax.set_xlim(xi.iloc[0] - pd.DateOffset(months=8),
-                xi.iloc[-1] + pd.DateOffset(years=2))
+                xi.iloc[-1] + (xi.iloc[-1] - xi.iloc[0]) * 0.02)
     _source_note(fig, incl)
     return _save(fig, out_dir, "crime_fraud_gap.png")
 
@@ -338,7 +338,7 @@ def chart_homicide_peers(df, out_dir):
         yuk.max() if len(yuk) else 0,
     )
     ax.set_ylim(0, plotted_max * 1.08)
-    ax.set_xlim(sub["year"].min() - 1, sub["year"].max() + 5)
+    ax.set_xlim(sub["year"].min() - 1, sub["year"].max() + 0.5)
     ax.yaxis.set_major_locator(mtick.MaxNLocator(nbins=6))
     _style_axes(ax)
     _source_note(fig, sub)
@@ -382,7 +382,7 @@ def chart_homicide_nations(df, out_dir):
     )
     ax.set_xlabel("")
     ax.set_ylabel("")
-    ax.set_xlim(2000, sub["year"].max() + 5)
+    ax.set_xlim(2000, sub["year"].max() + 0.5)
     ax.set_ylim(0, sub["value"].max() * 1.08)
     ax.yaxis.set_major_locator(mtick.MaxNLocator(nbins=6))
     _style_axes(ax)

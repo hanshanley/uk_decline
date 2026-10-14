@@ -50,6 +50,9 @@ def test_site_builds_nested_pages_and_rewrites_document_links(site_repository):
     home = BeautifulSoup((output / "index.html").read_text(), "html.parser")
     assert len(home.select(".topic-card")) == len(build_site.ANALYSES)
     assert f"{len(build_site.ANALYSES)} analyses" in home.get_text()
+    intro = home.select_one(".standfirst").get_text()
+    assert "Different measures tell different stories" not in intro
+    assert "The definitions matter as much as the direction" not in intro
     assert home.select_one(".explore-tools").has_attr("hidden")
     tuition = BeautifulSoup((output / "tuition/index.html").read_text(), "html.parser")
     assert tuition.find(
@@ -82,6 +85,24 @@ def test_supplemental_charts_are_not_automatically_embedded(site_repository):
     output = build_site.build(site_repository)
     rail = BeautifulSoup((output / "rail/index.html").read_text(), "html.parser")
     assert not rail.find("img", src="../outputs/rail/rail_london_new_measure.png")
+
+
+def test_public_navigation_uses_directory_urls_and_validates_their_anchors(site_repository):
+    output = build_site.build(site_repository)
+    home = BeautifulSoup((output / "index.html").read_text(), "html.parser")
+    assert [a["href"] for a in home.select(".topic-card > a")] == [
+        f"{analysis.slug}/" for analysis in build_site.ANALYSES
+    ]
+    for path in output.rglob("*.html"):
+        page = BeautifulSoup(path.read_text(), "html.parser")
+        assert not any("index.html" in link["href"] for link in page.select('a[href]'))
+    trade = output / "trade/index.html"
+    page = BeautifulSoup(trade.read_text(), "html.parser")
+    assert page.select_one(".breadcrumb")["href"] == "../#explore"
+    assert page.select_one(".project-nav").find("a", href="../methods/")
+    trade.write_text(trade.read_text().replace("../#explore", "../#missing-section"))
+    with pytest.raises(ValueError, match="missing anchor"):
+        build_site.validate_site(output)
 
 
 def test_public_methods_omit_repository_setup_and_operations(site_repository):
@@ -315,6 +336,17 @@ def test_complete_refresh_records_success_only_after_scorecard(monkeypatch, tmp_
     saved = json.loads(status.read_text())
     assert saved["last_successful_refresh_utc"].endswith("+00:00")
     assert saved["automated_analyses"] == ["trade"]
+
+
+def test_complete_refresh_runs_debt_borrowing_before_recording_success(monkeypatch, tmp_path):
+    commands = []
+    monkeypatch.setattr(refresh_data, "nhs_coverage", lambda _: {})
+    monkeypatch.setattr(refresh_data, "run", lambda command, root: commands.append(command))
+    refresh_data.refresh(tmp_path)
+    assert ("-m", "debt_data") in commands
+    assert commands.index(("-m", "debt_data")) < commands.index(("scorecard.py",))
+    saved = json.loads((tmp_path / "data/site/refresh.json").read_text())
+    assert "debt-borrowing" in saved["automated_analyses"]
 
 
 def test_failed_plot_exports_do_not_advance_refresh_date(monkeypatch, tmp_path):
