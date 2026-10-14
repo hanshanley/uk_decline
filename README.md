@@ -108,10 +108,8 @@ After generating the input CSVs, rebuild the overview image without re-fetching 
 ```
 
 ## Data integrity
-No API keys are required, and source observations are not fabricated. Derived measures,
-source-published estimates, method breaks and coverage limitations are documented in
-each analysis. Downloaded/intermediate data generally lives under `data/`
+No API keys are required. Derived measures, source-published estimates, method breaks and coverage limitations 
+are documented in each analysis. Downloaded/intermediate data generally lives under `data/`
 (git-ignored, regenerable); cited historical input snapshots are tracked where needed.
-The curated figures under `outputs/` are the committed showcase. Series reflect
-their available source vintages; revisions and missing observations can change
-future releases.
+The curated figures are under `outputs/` . Series reflecttheir available source vintages; 
+revisions and missing observations can change future releases.
