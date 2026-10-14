@@ -51,7 +51,7 @@ ANALYSES = (
              "Separate real economic growth from exchange rates and relative price levels."),
     Analysis("markets", "Stock markets", "Economy", "markets_data", "stock_markets",
              "stock_lse_uk_companies.png",
-             "Company listings and market size, with LSE and international definitions kept separate."),
+             "Company listings and market size, with London Stock Exchange and international definitions kept separate."),
     Analysis("sterling", "Sterling", "Economy", "sterling_data", "sterling",
              "sterling_currency_strength_v2.png",
              "The pound against other currencies, using observed annual exchange rates."),
@@ -105,11 +105,92 @@ def relative_url(target: Path, page: Path) -> str:
     return Path(os.path.relpath(target, page.parent)).as_posix()
 
 
+SUBSCRIBE_URL = (
+    "https://docs.google.com/forms/d/e/"
+    "1FAIpQLSeHPhVHdJ0xdCYq3wDYjkOIxgVdErP4qszNOBQYrnyzTz3xyQ/viewform"
+)
+
+CHART_TITLES = {
+    "median_age_over_time": "Median age across countries",
+    "share_65plus_over_time": "Population aged 65 and over",
+    "uk_age_structure_over_time": "The UK's changing age structure",
+    "uk_population_pyramid": "UK population by age and sex",
+    "uk_austerity_spending_investment": "UK public spending and investment",
+    "crime_csew_21st_century": "Household survey crime since 2000: England and Wales",
+    "crime_csew_total": "Long-run household survey crime: England and Wales",
+    "crime_fraud_gap": "How including fraud changes the crime total",
+    "crime_homicide_nations": "Homicide rates across UK jurisdictions",
+    "crime_homicide_peers": "Homicide rates across countries",
+    "trussell_food_parcels": "Emergency food parcels distributed by the Trussell network",
+    "gdp_per_capita_nominal_over_time": "GDP per person at current market exchange rates",
+    "gdp_per_capita_real_over_time": "Real GDP per person: national output volumes",
+    "median_disposable_income_pps": "Median disposable income in purchasing power standards",
+    "median_income_pip": "Median daily income or consumption, adjusted for purchasing power",
+    "uk_gdp_relative_to_peers": "UK GDP per person relative to other countries at market exchange rates",
+    "london_gdp_per_head_vs_uk": "London GDP per person relative to the UK",
+    "london_share_of_uk_gdp": "London's share of UK GDP",
+    "asylum_applications": "Applications for asylum",
+    "immigration_by_origin": "Long-term immigration by citizenship group",
+    "immigration_over_time": "Long-term immigration over time",
+    "immigration_vs_emigration": "Long-term immigration and emigration",
+    "irregular_arrivals": "Detected irregular arrivals",
+    "legal_vs_irregular": "Long-term immigration and detected irregular arrivals: different measures",
+    "net_migration_by_origin": "Net migration by citizenship group",
+    "net_migration_per_capita": "Net migration relative to population",
+    "net_migration": "Net long-term migration",
+    "visas_by_category": "Visas granted by category",
+    "ae_4hr_pct": "Emergency care: admitted, transferred or discharged within four hours",
+    "cancer_62day_pct": "Cancer treatment starting within 62 days",
+    "diagnostics_6week_breach_pct": "Diagnostic-test waits of six weeks or more",
+    "diagnostics_8week_breach_pct": "Wales: diagnostic-test waits over eight weeks",
+    "rtt_median_wait_weeks": "Median waiting time for planned treatment",
+    "rtt_waiting_list_per_1000": "Planned-care waits per 1,000 residents",
+    "rtt_waiting_list_total_indexed": "Growth in recorded waits for planned care",
+    "rtt_waiting_list_total": "Recorded waits for planned care, not unique patients",
+    "ppp_gap_decomposition_uk_us": "The UK–US GDP gap: output growth, prices and exchange rates",
+    "ppp_gdp_long_run_maddison": "Long-run real GDP per person, adjusted for purchasing power",
+    "ppp_gdp_per_capita_growth": "Growth in real GDP per person",
+    "ppp_gdp_per_capita_over_time": "Real GDP per person at a fixed purchasing-power benchmark",
+    "ppp_gdp_relative_to_peers": "GDP per person relative to the UK, adjusted for purchasing power",
+    "ppp_tuition_history": "Historical tuition fees, adjusted for purchasing power",
+    "ppp_vs_market_fx_uk_us": "UK–US GDP per person: market rates and purchasing power",
+    "price_level_index": "GDP-wide price levels relative to the US",
+    "tuition_share_of_gdp_per_capita": "Tuition fees as a share of GDP per person",
+    "rail_london_casl": "Trains cancelled or more than 30 minutes late",
+    "rail_london_ppm_official": "Rail arrivals within 5 or 10 minutes: official annual averages",
+    "rail_london_ppm": "Rail arrivals within 5 or 10 minutes: historical reconstruction",
+    "sterling_currency_strength_v2": "The pound against other currencies",
+    "stock_listed_domestic_companies": "Listed domestic companies across countries",
+    "stock_lse_uk_companies": "UK-classified companies on the London Stock Exchange",
+    "stock_market_cap_pct_gdp": "Stock-market value as a share of GDP",
+    "stock_market_cap_usd_real": "Stock-market value in inflation-adjusted US dollars",
+    "stock_market_cap_usd": "Stock-market value in current US dollars",
+    "stock_uk_us_ratio_market_cap_pct_gdp": "UK–US ratio of stock-market value relative to GDP",
+    "stock_uk_us_ratio_market_cap_usd_real": "UK stock-market value relative to the US: inflation-adjusted dollars",
+    "stock_uk_us_ratio_market_cap_usd": "UK stock-market value relative to the US: current dollars",
+    "tax_burden_headline_bars": "National tax revenue and taxes on labour: different measures",
+    "tax_to_gdp_over_time": "Tax revenue as a share of GDP",
+    "tax_wedge_by_earnings": "Taxes on labour as a share of total employment cost",
+    "trade_share_gdp": "Imports and exports as a share of GDP",
+    "trust_national_govt_pct": "Trust in national government",
+    "wgi_control_of_corruption": "Control of corruption: governance scores",
+    "wgi_government_effectiveness": "Government effectiveness: governance scores",
+    "wgi_rule_of_law": "Rule of law: governance scores",
+    "wgi_voice_accountability": "Voice and accountability: governance scores",
+    "tuition_by_country_real": "Domestic undergraduate tuition by country: inflation-adjusted dollars",
+    "tuition_by_country": "Domestic undergraduate tuition by country: current dollars",
+    "tuition_england_cap_nominal": "England's maximum annual tuition fee, not inflation-adjusted",
+    "tuition_history_real_usd": "Historical tuition fees in inflation-adjusted US dollars",
+    "tuition_region_comparison_real": "Domestic undergraduate tuition by region: inflation-adjusted dollars",
+    "tuition_region_comparison": "Domestic undergraduate tuition by region: current dollars",
+}
+
+
 def chart_title(path: Path) -> str:
-    title = path.stem.replace("_", " ").capitalize()
-    for acronym in ("gdp", "uk", "us", "ppp", "lse", "nhs", "ppm", "csew", "wgi", "usd"):
-        title = re.sub(rf"\b{acronym}\b", acronym.upper(), title, flags=re.IGNORECASE)
-    return title
+    try:
+        return CHART_TITLES[path.stem]
+    except KeyError:
+        raise ValueError(f"Published chart needs a reader-facing title: {path}") from None
 
 
 def render_document(
@@ -171,32 +252,60 @@ def layout(
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="{escape(description, quote=True)}">
-  <meta name="theme-color" content="#f7f5f0">
+  <meta name="theme-color" content="#f2efe7">
   <title>{escape(title)} | {TITLE} | The Margin of Error</title>
   <link rel="canonical" href="{escape(canonical_url(page), quote=True)}">
+  <link rel="icon" href="https://www.themarginoferror.com/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="https://www.themarginoferror.com/apple-touch-icon.png" sizes="180x180">
   <link rel="stylesheet" href="{css}">
   <script src="{js}" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
-  <header class="masthead">
-    <a class="wordmark" href="https://www.themarginoferror.com/">The Margin of Error<span>Evidence, not a single story.</span></a>
-    <nav aria-label="Main navigation">
+  <header class="site-header">
+    <div class="edition-line" aria-hidden="true">
+      <span>Independent notes on systems and society</span><span>Est. 2021</span>
+    </div>
+    <div class="masthead">
+      <a class="wordmark" href="https://www.themarginoferror.com/" aria-label="The Margin of Error, home">
+        <span class="wordmark-the">The</span>
+        <span class="wordmark-main">Margin <i>of</i> Error</span>
+      </a>
+      <nav aria-label="Primary navigation"><ul>
+        <li><a href="https://www.themarginoferror.com/">Latest</a></li>
+        <li><a href="https://www.themarginoferror.com/archive/">Archive</a></li>
+        <li><a href="https://www.themarginoferror.com/about/">About</a></li>
+        <li><a class="subscribe-link" href="{SUBSCRIBE_URL}">Subscribe</a></li>
+      </ul></nav>
+    </div>
+  </header>
+  <main id="main">
+    <nav class="project-nav" aria-label="UK evidence navigation">
       <a href="{home}">UK overview</a>
       <a href="{home}#explore">Explore</a><a href="{methods}">Methods</a>
       <a href="{REPOSITORY}">GitHub <span aria-hidden="true">&#8599;</span></a>
     </nav>
-  </header>
-  <main id="main">{body}</main>
-  <footer>
-    <p><strong>{TITLE}</strong> &middot; Published by
-    <a href="https://www.themarginoferror.com/">The Margin of Error</a>.</p>
+    {body}
+    <aside class="publication-note" aria-label="UK data publication notes">
     <p>Site built <time datetime="{built_at}">{built_at[:10]}</time> (UTC).
     <a href="{REPOSITORY}/commit/{revision}">Source {revision[:7]}</a>.</p>
     <p>Publication date is not the observation date. Each chart carries its own periods,
     definitions and sources. Missing observations are not filled with estimates.</p>
     <p>{refresh_note} Curated source selections are reviewed separately.
     <a href="{REPOSITORY}/actions/workflows/update-site.yml">Update status</a>.</p>
+    </aside>
+  </main>
+  <footer class="site-footer">
+    <div><p class="eyebrow">Endnote</p>
+      <p>The Margin of Error is written by
+      <a href="https://www.hanshanley.com/">Hans W. A. Hanley</a>.</p></div>
+    <div class="footer-links">
+      <a href="https://www.themarginoferror.com/rss.xml">RSS</a>
+      <a href="https://www.themarginoferror.com/are-you-an-ai/">AI index</a>
+      <a href="{REPOSITORY}">Data &amp; code</a>
+      <a href="{SUBSCRIBE_URL}">Subscribe</a>
+    </div>
+    <p class="copyright">&copy; {built_at[:4]} Hans W. A. Hanley</p>
   </footer>
   <dialog id="chart-viewer" aria-label="Full-size chart">
     <button type="button" class="close-viewer" aria-label="Close full-size chart">Close &#215;</button>

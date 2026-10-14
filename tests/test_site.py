@@ -56,9 +56,42 @@ def test_site_builds_nested_pages_and_rewrites_document_links(site_repository):
     assert home.find("link", rel="canonical")["href"] == "https://www.themarginoferror.com/uk_decline/"
     assert tuition.find("link", rel="canonical")["href"] == "https://www.themarginoferror.com/uk_decline/tuition/"
     assert tuition.select_one(".chart-gallery figure img")
+    assert tuition.select_one("figcaption h2").get_text() == (
+        "England's maximum annual tuition fee, not inflation-adjusted"
+    )
+    rail = BeautifulSoup((output / "rail/index.html").read_text(), "html.parser")
+    assert rail.select_one("figcaption h2").get_text() == (
+        "Rail arrivals within 5 or 10 minutes: official annual averages"
+    )
+    assert rail.select_one(".chart-gallery img")["alt"] == rail.select_one("figcaption h2").get_text()
     assert not tuition.find("iframe")
     assert not (output / private_chart.relative_to(root)).exists()
     build_site.validate_site(output)
+
+
+def test_site_rejects_charts_without_a_reader_facing_title(site_repository):
+    chart = site_repository / "outputs/rail/rail_london_new_measure.png"
+    chart.write_bytes(b"test image")
+    subprocess.run(["git", "add", str(chart)], cwd=site_repository, check=True)
+    with pytest.raises(ValueError, match="reader-facing title"):
+        build_site.build(site_repository)
+
+
+def test_publication_shell_and_project_navigation_work_on_nested_pages(site_repository):
+    output = build_site.build(site_repository)
+    for path in ("index.html", "rail/index.html", "methods/index.html"):
+        page = BeautifulSoup((output / path).read_text(), "html.parser")
+        header = page.select_one("header.site-header")
+        assert header.select_one(".wordmark")["aria-label"] == "The Margin of Error, home"
+        assert header.select_one(".wordmark-main i").get_text() == "of"
+        primary = header.select_one('nav[aria-label="Primary navigation"]')
+        assert [a.get_text() for a in primary.select("a")] == ["Latest", "Archive", "About", "Subscribe"]
+        assert all(a["href"].startswith("https://") for a in primary.select("a"))
+        project = page.select_one('main nav[aria-label="UK evidence navigation"]')
+        assert project.find("a", string="UK overview")
+        assert project.find("a", string="Methods")
+        assert page.select_one(".site-footer .footer-links").find("a", href=build_site.REPOSITORY)
+        assert page.select_one("main .publication-note time")
 
 
 def test_former_pages_addresses_redirect_to_matching_publication_pages(site_repository):
