@@ -1,0 +1,83 @@
+name: Update site
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    - cron: "37 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      refresh_data:
+        description: "Refresh source data before publishing (otherwise use saved figures)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: pages-${{ github.event_name == 'pull_request' && github.ref || 'publish' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  MPLBACKEND: Agg
+  PYTHONUNBUFFERED: "1"
+  REFRESH_DATA: ${{ github.ref == 'refs/heads/master' && (github.event_name == 'schedule' || inputs.refresh_data == true) }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+      - name: Run offline tests
+        run: python -m pytest tests/ -q
+      - name: Refresh source data and figures
+        if: env.REFRESH_DATA == 'true'
+        run: python scripts/refresh_data.py
+      - name: Validate refreshed results
+        if: env.REFRESH_DATA == 'true'
+        run: python -m pytest tests/ -q
+      - name: Record refreshed publication inputs
+        if: env.REFRESH_DATA == 'true'
+        run: |
+          git config user.name "hanshanley"
+          git config user.email "hanshanley@users.noreply.github.com"
+          git add -u
+          git add data/site/refresh.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Refresh published UK statistics and figures"
+          fi
+      - name: Build and check the public site
+        run: python scripts/build_site.py
+      - name: Publish refreshed inputs
+        if: env.REFRESH_DATA == 'true'
+        run: git push origin HEAD:master
+      - uses: actions/upload-pages-artifact@v4
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+        with:
+          path: _site
+
+  deploy:
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

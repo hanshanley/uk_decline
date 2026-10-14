@@ -17,6 +17,15 @@ data/raw/*.csv
 !data/raw/manual_age.csv
 data/processed/*.csv
 
+# Saved overview inputs allow offline rebuilds and safe scheduled site updates.
+!data/europe_combined_wide.csv
+!data/uk_listed_companies_lse.csv
+!data/austerity_spending.csv
+!data/food_bank_calendar_year.csv
+!data/crime_csew_long.csv
+!data/trust/trust_combined_long.csv
+!data/processed/tuition_history.csv
+
 # Generated charts: committed showcase outputs live under outputs/<analysis>/ (TRACKED so
 # they render on GitHub). Only truly transient/duplicate chart dirs are ignored.
 
@@ -27,6 +36,8 @@ __pycache__/
 venv/
 .DS_Store
 .pytest_cache/
+_site/
+.site-build-*/
 
 # Agent/scratch artifacts — never commit these to the repo
 bug-hunter-report*.md
