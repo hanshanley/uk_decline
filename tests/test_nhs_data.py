@@ -436,16 +436,22 @@ def test_scottish_rtt_rejects_duplicate_stage_counts(monkeypatch):
         scotland._rtt_totals(scotland.RTT_MONTHLY_RESOURCE, "Waits", monthly=True)
 
 
-def test_england_rtt_excludes_non_english_commissioned_paths_from_count_and_median(monkeypatch):
+@pytest.mark.parametrize("function_columns,total,cardiology", [
+    ("Treatment Function Name", "Total", "Cardiology"),
+    ("Treatment Function Name,Treatment Function Description", "C_999,Total", "C_320,Cardiology"),
+])
+def test_england_rtt_excludes_non_english_commissioned_paths_from_count_and_median(
+    monkeypatch, function_columns, total, cardiology,
+):
     from nhs_data import england
 
     text = (
-        "RTT Part Type,Treatment Function Name,Commissioner Org Code,Total All,"
+        f"RTT Part Type,{function_columns},Commissioner Org Code,Total All,"
         "Gt 00 To 01 Weeks SUM 1,Gt 10 To 11 Weeks SUM 1\n"
-        "Part_2,Total,01A,100,100,0\n"
-        "Part_2,Total, nonc ,900,0,900\n"
-        "Part_2,Cardiology,01A,100,100,0\n"
-        "Part_1A,Total,01A,500,0,500\n"
+        f"Part_2,{total},01A,100,100,0\n"
+        f"Part_2,{total}, nonc ,900,0,900\n"
+        f"Part_2,{cardiology},01A,100,100,0\n"
+        f"Part_1A,{total},01A,500,0,500\n"
     )
     monkeypatch.setattr(england, "_csv_text_from_zip", lambda url: text)
     rows = england._rtt_rows_from_zip("fixture", 2026, 8)

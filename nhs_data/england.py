@@ -331,7 +331,10 @@ def _rtt_rows_from_zip(url: str, year: int, month: int) -> list[dict]:
     header_idx = _header_index(lines, ("RTT Part", "Treatment Function"))
     columns = _header_columns(lines, header_idx)
     part_col = next(c for c in columns if c.lower() in {"rtt part type", "rtt part name"})
-    function_col = next(c for c in columns if c.lower() == "treatment function name")
+    function_col = next(
+        c for name in ("treatment function description", "treatment function name")
+        for c in columns if c.lower() == name
+    )
     commissioner_col = next(c for c in columns if c.lower() == "commissioner org code")
     total_col = next(c for c in columns if c.lower() == "total all")
     week_cols = [c for c in columns if _rtt_week_lower(c) is not None]
@@ -424,7 +427,7 @@ def _fetch_rtt(start_year: int, end_year: int) -> list[dict]:
         try:
             rows.extend(_rtt_rows_from_zip(url, year, month))
         except Exception as exc:
-            _warn("RTT monthly extract", exc)
+            _warn(f"RTT monthly extract {year}-{month:02d} ({url})", exc)
     # Extend the waiting-list total back to the 2007 start of the collection using the
     # overview series, for any month the monthly zips don't already cover.
     if start_year <= 2014:
