@@ -43,6 +43,10 @@ STEPS = {
     "purchasing-power": (("-m", "ppp_data"),),
 }
 FAILURE_NOTICE = re.compile(r"\bWARNING:|\busing (?:manual )?fallback\b", re.IGNORECASE)
+EXPECTED_NHS_OMISSION = re.compile(
+    r"\[nhs_data\] WARNING: NIR cancer_62day_pct: "
+    r"omitting \d+ months without all five trusts"
+)
 CURATED_INPUTS = (
     "LSE monthly factsheet selection and historical coverage",
     "National tuition schedules and publisher workbook editions",
@@ -58,22 +62,27 @@ def run(command: tuple[str, ...], root: Path) -> None:
     )
     print(result.stdout, end="", flush=True)
     result.check_returncode()
-    if FAILURE_NOTICE.search(result.stdout):
+    # Incomplete trust aggregates are intentionally excluded; coverage is checked below.
+    failure_output = "\n".join(
+        line for line in result.stdout.splitlines()
+        if not (command == ("-m", "nhs_data") and EXPECTED_NHS_OMISSION.fullmatch(line))
+    )
+    if FAILURE_NOTICE.search(failure_output):
         raise RuntimeError(
             f"{' '.join(command)} reported an incomplete source or fallback; refusing publication"
         )
 
 
-def nhs_coverage(root: Path) -> dict[tuple[str, str], str]:
+def nhs_coverage(root: Path) -> dict[tuple[str, str], set[str]]:
     """Record the published series so a source cannot silently disappear or regress."""
     path = root / "outputs/nhs/nhs_waiting_times.csv"
-    coverage: dict[tuple[str, str], str] = {}
+    coverage: dict[tuple[str, str], set[str]] = {}
     with path.open(newline="") as handle:
         for row in csv.DictReader(handle):
             if row["value"] in ("", None):
                 continue
             key = row["nation_code"], row["metric"]
-            coverage[key] = max(coverage.get(key, ""), row["date"])
+            coverage.setdefault(key, set()).add(row["date"])
     if not coverage:
         raise ValueError("Published NHS data contains no observations")
     return coverage
@@ -87,7 +96,11 @@ def refresh(root: Path = ROOT, only: list[str] | None = None) -> None:
             run(command, root)
         if name == "nhs":
             current = nhs_coverage(root)
-            regressed = [key for key, end in baseline.items() if current.get(key, "") < end]
+            regressed = [
+                (key, sorted(dates - current.get(key, set()))[:5])
+                for key, dates in baseline.items()
+                if not dates.issubset(current.get(key, set()))
+            ]
             if regressed:
                 raise RuntimeError(f"NHS refresh lost published series or date coverage: {regressed}")
     run(("scorecard.py",), root)

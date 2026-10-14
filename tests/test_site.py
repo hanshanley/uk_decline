@@ -92,6 +92,8 @@ def test_site_separates_refresh_date_from_observation_dates(site_repository):
     ("request failed", 1),
     ("[nhs_data] WARNING: SCO cancer_62day_pct: source unavailable", 0),
     ("using manual fallback", 0),
+    ("[nhs_data] WARNING: NIR cancer_62day_pct: "
+     "omitting 3 months without all five trusts; source failed", 0),
 ])
 def test_refresh_rejects_errors_and_partial_source_warnings(monkeypatch, tmp_path, output, returncode):
     monkeypatch.setattr(
@@ -100,6 +102,21 @@ def test_refresh_rejects_errors_and_partial_source_warnings(monkeypatch, tmp_pat
     )
     with pytest.raises((subprocess.CalledProcessError, RuntimeError)):
         refresh_data.run(("-m", "nhs_data"), tmp_path)
+
+
+def test_refresh_retains_expected_omission_diagnostic(monkeypatch, tmp_path, capsys):
+    output = (
+        "[nhs_data] WARNING: NIR cancer_62day_pct: "
+        "omitting 3 months without all five trusts\n"
+    )
+    monkeypatch.setattr(
+        refresh_data.subprocess, "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 0, stdout=output),
+    )
+    refresh_data.run(("-m", "nhs_data"), tmp_path)
+    assert output in capsys.readouterr().out
+    with pytest.raises(RuntimeError):
+        refresh_data.run(("-m", "trade_data"), tmp_path)
 
 
 def test_failed_refresh_does_not_advance_success_date(monkeypatch, tmp_path):
@@ -117,20 +134,23 @@ def test_failed_refresh_does_not_advance_success_date(monkeypatch, tmp_path):
     assert json.loads(status.read_text())["last_successful_refresh_utc"] == "previous"
 
 
-def test_refresh_rejects_nhs_date_regression(monkeypatch, tmp_path):
+@pytest.mark.parametrize("current_dates", [["2026-07-31"], ["2026-08-31"]])
+def test_refresh_rejects_nhs_date_regression(monkeypatch, tmp_path, current_dates):
     table = tmp_path / "outputs/nhs/nhs_waiting_times.csv"
     table.parent.mkdir(parents=True)
 
-    def write(date):
+    def write(dates):
         with table.open("w", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=["nation_code", "metric", "date", "value"])
             writer.writeheader()
-            writer.writerow({"nation_code": "ENG", "metric": "rtt_waiting_list_total",
-                             "date": date, "value": "100"})
+            writer.writerows(
+                {"nation_code": "ENG", "metric": "rtt_waiting_list_total",
+                 "date": date, "value": "100"} for date in dates
+            )
 
-    write("2026-08-31")
+    write(["2026-07-31", "2026-08-31"])
     monkeypatch.setattr(refresh_data, "STEPS", {"nhs": (("-m", "nhs_data"),)})
-    monkeypatch.setattr(refresh_data, "run", lambda *args: write("2026-07-31"))
+    monkeypatch.setattr(refresh_data, "run", lambda *args: write(current_dates))
     with pytest.raises(RuntimeError, match="lost published series or date coverage"):
         refresh_data.refresh(tmp_path)
     assert not (tmp_path / "data/site/refresh.json").exists()
@@ -142,3 +162,20 @@ def test_partial_refresh_does_not_claim_all_sources_checked(monkeypatch, tmp_pat
     refresh_data.refresh(tmp_path, only=["trade"])
     assert commands == [("-m", "trade_data"), ("scorecard.py",)]
     assert not (tmp_path / "data/site/refresh.json").exists()
+
+
+def test_complete_refresh_records_success_only_after_scorecard(monkeypatch, tmp_path):
+    status = tmp_path / "data/site/refresh.json"
+    commands = []
+    monkeypatch.setattr(refresh_data, "STEPS", {"trade": (("-m", "trade_data"),)})
+
+    def succeed(command, root):
+        assert not status.exists()
+        commands.append(command)
+
+    monkeypatch.setattr(refresh_data, "run", succeed)
+    refresh_data.refresh(tmp_path)
+    assert commands == [("-m", "trade_data"), ("scorecard.py",)]
+    saved = json.loads(status.read_text())
+    assert saved["last_successful_refresh_utc"].endswith("+00:00")
+    assert saved["automated_analyses"] == ["trade"]
