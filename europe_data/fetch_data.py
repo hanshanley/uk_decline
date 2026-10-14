@@ -20,10 +20,10 @@ import sys
 
 from tqdm import tqdm
 
-from europe_data import combine, eurostat, maddison, pip, worldbank
+from europe_data import combine, eurostat, maddison, oecd_income, pip, worldbank
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
-SOURCES = ("worldbank", "maddison", "eurostat", "pip")
+SOURCES = ("worldbank", "maddison", "eurostat", "pip", "oecd-income")
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -61,6 +61,7 @@ def main(argv: list[str] | None = None) -> int:
         "maddison": ("gdp_per_capita_real_maddison", maddison.fetch),
         "eurostat": ("eurostat_median_income_pps", eurostat.fetch),
         "pip": ("pip_median_income", pip.fetch),
+        "oecd-income": ("oecd_median_income_ppp", oecd_income.fetch),
     }
 
     grouped: list[tuple[str, list[dict]]] = []

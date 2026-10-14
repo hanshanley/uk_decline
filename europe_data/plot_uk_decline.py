@@ -11,6 +11,7 @@ Figures:
   - gdp_per_capita_nominal_over_time.png  Nominal valuations at annual market FX
   - uk_gdp_relative_to_peers.png       Peer nominal GDP/capita as a share of the UK
   - median_disposable_income_pps.png   Median income (Eurostat PPS), UK ends ~2018
+  - median_disposable_income_oecd.png  Median income (OECD, household-consumption PPP)
   - median_income_pip.png              PIP median income (2021 PPP $/day), UK to ~2021
 
 Usage:
@@ -30,7 +31,7 @@ matplotlib.use("Agg")  # headless: no display required
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
-from europe_data import combine, pip
+from europe_data import combine, oecd_income, pip
 from ppp_data.figure import labelled_ends
 
 # ── Professional house style (shared vizstyle house style) ───────────────────
@@ -78,6 +79,13 @@ SOURCE_PIP = ("Data: World Bank Group, Poverty and Inequality Platform \u2014 me
               "(purchasing power parity). Survey observations only; "
               "gaps and known survey/welfare-definition breaks are not connected. "
               "Multiply by 365 for an annual figure.")
+SOURCE_OECD = (
+    "Data: OECD Income Distribution Database (2012 methodology); OECD annual household-consumption "
+    "purchasing power parities. Median disposable household income divided by the square root of household size. "
+    "Current-price purchasing-power dollars, not a real-income-growth index. OECD income-year labels retained "
+    "(UK financial years); latest common year across five countries. "
+    "Missing years and definition changes are not joined; not spliced to Eurostat."
+)
 
 
 def _series(df: pd.DataFrame, country: str, metric: str) -> pd.DataFrame:
@@ -100,7 +108,8 @@ def _source_note(fig, text: str, ha: str = "left") -> None:
 def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
                 source: str, filename: str, out: pathlib.Path, *,
                 eu_agg: tuple | None = None, eu_label: str | None = None,
-                scale: float = 1.0, source_ha: str = "left") -> None:
+                scale: float = 1.0, source_ha: str = "left",
+                xlabel: str | None = None) -> None:
     """Draw a UK-vs-peers line chart for one metric and save it to ``out/filename``.
 
     ``eu_agg``/``eu_label`` optionally add an EU reference series (Eurostat
@@ -118,10 +127,10 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
         plotted = True
         status_column = f"{metric}__status"
         breaks = (
-            s.loc[s[status_column].fillna("").astype(str).str.contains("b", regex=False), "year"].tolist()
+            s.loc[s[status_column].fillna("").astype(str).str.lower().str.contains("b", regex=False), "year"].tolist()
             if status_column in s.columns else []
         )
-        for field in ("survey_comparability", "welfare_type"):
+        for field in ("survey_comparability", "welfare_type", "income_definition"):
             column = f"{metric}__{field}"
             if column in s.columns:
                 metadata = s[column]
@@ -136,7 +145,7 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
                 markersize=5 if is_uk else 2.5,
                 markeredgecolor="white", markeredgewidth=1.0 if is_uk else 0)
 
-    ax.set_xlabel("Survey year" if metric == "median_disposable_income" else "Year", labelpad=2)
+    ax.set_xlabel(xlabel or ("Survey year" if metric == "median_disposable_income" else "Year"), labelpad=2)
     ax.set_ylabel(ylabel, labelpad=2)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(yfmt))
     ax.set_title(title, fontweight="bold", pad=14)
@@ -148,9 +157,30 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
         ax.legend(loc="upper left", frameon=False, labelcolor="linecolor", fontsize=10)
     _source_note(fig, source, ha=source_ha)
     plt.tight_layout(pad=0.5)
-    plt.subplots_adjust(bottom=0.18 if metric == "median_disposable_income" else 0.15)
+    bottom = 0.22 if metric == oecd_income.METRIC else (
+        0.18 if metric == "median_disposable_income" else 0.15
+    )
+    plt.subplots_adjust(bottom=bottom)
     plt.savefig(out / filename, dpi=200, bbox_inches="tight")
     plt.close(fig)
+
+
+def fig_median_income_oecd(df: pd.DataFrame, out: pathlib.Path) -> None:
+    income = df[(df["year"] >= oecd_income.COMPARISON_START) & df[oecd_income.METRIC].notna()]
+    endpoints = []
+    for country, *_ in PEERS:
+        series = income[income["country"] == country]
+        if series.empty:
+            raise ValueError(f"Missing OECD median disposable income: {country}")
+        endpoints.append(int(series["year"].max()))
+    end = min(endpoints)
+    _line_chart(
+        income[income["year"] <= end], oecd_income.METRIC,
+        f"Median disposable income: UK vs peers, {oecd_income.COMPARISON_START}\u2013{end}",
+        "Annual household-size-adjusted income\n(current purchasing-power dollars)",
+        lambda value, _: f"${value / 1000:.0f}k", SOURCE_OECD,
+        "median_disposable_income_oecd.png", out, xlabel="Income year (OECD labels)",
+    )
 
 
 def fig_uk_relative(df: pd.DataFrame, out: pathlib.Path) -> None:
@@ -249,6 +279,7 @@ def main(argv: list[str] | None = None) -> int:
         eu_agg=EU_WB, eu_label="EU average", scale=1000.0,
     )
     fig_uk_relative(df, out)
+    fig_median_income_oecd(df, out)
     _line_chart(
         df, "median_disposable_income",
         "Median disposable income: UK vs peers",

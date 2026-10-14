@@ -49,7 +49,7 @@ class Analysis:
 ANALYSES = (
     Analysis("gdp-income", "GDP & incomes", "Economy", "europe_data", "gdp_income",
              ("uk_gdp_relative_to_peers.png", "gdp_per_capita_real_over_time.png",
-              "median_disposable_income_pps.png"),
+              "median_disposable_income_oecd.png"),
              "Real output, nominal valuations and household incomes answer different questions."),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
              ("ppp_gdp_per_capita_growth.png", "ppp_gdp_relative_to_peers.png",
@@ -133,6 +133,7 @@ CHART_TITLES = {
     "gdp_per_capita_nominal_over_time": "GDP per person at current market exchange rates",
     "gdp_per_capita_real_over_time": "Real GDP per person: national output volumes",
     "median_disposable_income_pps": "Median disposable income in purchasing power standards",
+    "median_disposable_income_oecd": "Median disposable income, adjusted for household size and purchasing power",
     "median_income_pip": "Median daily income or consumption, adjusted for purchasing power",
     "uk_gdp_relative_to_peers": "UK GDP per person relative to other countries at market exchange rates",
     "london_gdp_per_head_vs_uk": "London GDP per person relative to the UK",

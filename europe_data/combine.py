@@ -8,7 +8,10 @@ import json
 import os
 from typing import Iterable
 
-OPTIONAL_FIELDS = ("status", "survey_comparability", "welfare_type")
+OPTIONAL_FIELDS = (
+    "status", "survey_comparability", "welfare_type", "income_definition",
+    "national_currency_income", "consumption_ppp", "currency",
+)
 LONG_FIELDS = ["iso3", "country", "year", "metric", "value", "unit", "source", *OPTIONAL_FIELDS]
 
 # Wide-table column order (one row per country-year).
@@ -20,6 +23,7 @@ METRIC_ORDER = [
     "gdp_per_capita_ppp_current",
     "gdp_per_capita_ppp_constant",
     "median_disposable_income",
+    "median_disposable_income_oecd_ppp",
     "mean_disposable_income",
     "median_income_pip",
 ]

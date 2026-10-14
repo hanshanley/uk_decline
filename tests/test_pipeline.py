@@ -7,6 +7,7 @@ Or with pytest: pytest tests/ -q
 from __future__ import annotations
 
 import csv
+import io
 import sys
 import tempfile
 from pathlib import Path
@@ -159,6 +160,7 @@ def test_gdp_figures_plot_distinct_volume_and_nominal_series(monkeypatch, tmp_pa
             rows.append(row)
     data = pd.DataFrame(rows)
     monkeypatch.setattr(plots.pd, "read_csv", lambda _: data)
+    monkeypatch.setattr(plots, "fig_median_income_oecd", lambda *args: None)
     captured = {}
     def save(path, **kwargs):
         captured[Path(path).name] = plots.plt.gcf()
@@ -175,6 +177,129 @@ def test_gdp_figures_plot_distinct_volume_and_nominal_series(monkeypatch, tmp_pa
         assert pd.isna(line.get_ydata()[1:-1]).all()
     assert "2007\u20132025" in ratio.get_title()
     assert "2025" in " ".join(t.get_text() for t in ratio.texts)
+
+
+def _income_csv(rows):
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=list(rows[0]))
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+
+def _oecd_income_tables():
+    income = []
+    ppps = []
+    for country, currency, factor in (("GBR", "GBP", 0.5), ("FRA", "EUR", 0.8)):
+        for year in (2019, 2020):
+            income.append({
+                "REF_AREA": country, "TIME_PERIOD": str(year), "OBS_VALUE": "20000",
+                "OBS_STATUS": "A", "UNIT_MULT": "", "CURRENCY": currency,
+                "FREQ": "A", "MEASURE": "INC_DISP", "STATISTICAL_OPERATION": "MEDIAN",
+                "UNIT_MEASURE": "XDC_HH_EQ", "AGE": "_T", "METHODOLOGY": "METH2012",
+                "PRICE_BASE": "V", "POVERTY_LINE": "_Z",
+                "DEFINITION": "D_PREV" if country == "FRA" and year == 2019 else "D_CUR",
+            })
+            ppps.append({
+                "REF_AREA": country, "TIME_PERIOD": str(year), "OBS_VALUE": str(factor),
+                "OBS_STATUS": "A", "UNIT_MULT": "0", "CURRENCY": currency,
+                "FREQ": "A", "SECTOR": "S1", "COUNTERPART_SECTOR": "S1",
+                "TRANSACTION": "PPP_P31S14", "INSTR_ASSET": "F21", "ACTIVITY": "_Z",
+                "EXPENDITURE": "_Z", "UNIT_MEASURE": "XDC_USD",
+                "PRICE_BASE": "_Z", "TRANSFORMATION": "N",
+                "TABLE_IDENTIFIER": "T001",
+            })
+    income.append({**income[-1], "DEFINITION": "D_PREV", "OBS_VALUE": "19000"})
+    return income, ppps
+
+
+def test_oecd_median_income_uses_consumption_ppps_and_keeps_definition_metadata(monkeypatch, tmp_path):
+    from europe_data import oecd_income
+
+    incomes, ppps = _oecd_income_tables()
+    calls = []
+
+    def get_text(url, **kwargs):
+        calls.append(url)
+        return _income_csv(incomes if oecd_income.INCOME_FLOW in url else ppps)
+
+    monkeypatch.setattr(oecd_income, "get_text", get_text)
+    rows = oecd_income.fetch(2019, 2020, iso3s=["GBR", "FRA"])
+    assert "INC_DISP.MEDIAN.XDC_HH_EQ._T.METH2012.D_CUR+D_PREV" in calls[0]
+    assert "PPP_P31S14" in calls[1]
+    assert len(rows) == 4
+    assert [row["value"] for row in rows if row["iso3"] == "GBR"] == [40000, 40000]
+    france = [row for row in rows if row["iso3"] == "FRA"]
+    assert [row["value"] for row in france] == [25000, 25000]
+    assert [row["income_definition"] for row in france] == ["METH2012/D_PREV", "METH2012/D_CUR"]
+    long_path, wide_path = tmp_path / "long.csv", tmp_path / "wide.csv"
+    combine.write_long(rows, str(long_path))
+    combine.write_wide(rows, str(wide_path))
+    with long_path.open() as handle:
+        saved = list(csv.DictReader(handle))
+    assert saved[0]["national_currency_income"] == "20000.0"
+    assert saved[0]["consumption_ppp"] == "0.8"
+    with wide_path.open() as handle:
+        wide = list(csv.DictReader(handle))
+    assert wide[0][f"{oecd_income.METRIC}__income_definition"] == "METH2012/D_PREV"
+
+
+def test_oecd_median_income_rejects_incomplete_or_incompatible_inputs():
+    import pytest
+    from europe_data import oecd_income
+
+    for invalid in ("missing-ppp", "zero-ppp", "wrong-currency", "duplicate-income",
+                    "duplicate-ppp", "wrong-measure", "missing-income-year"):
+        income, ppps = _oecd_income_tables()
+        if invalid == "missing-ppp":
+            ppps.pop()
+        elif invalid == "zero-ppp":
+            ppps[0]["OBS_VALUE"] = "0"
+        elif invalid == "wrong-currency":
+            ppps[0]["CURRENCY"] = "EUR"
+        elif invalid == "duplicate-income":
+            income.append(income[0])
+        elif invalid == "duplicate-ppp":
+            ppps.append(ppps[0])
+        elif invalid == "wrong-measure":
+            income[0]["STATISTICAL_OPERATION"] = "MEAN"
+        else:
+            income.pop(0)
+        with pytest.raises(ValueError):
+            oecd_income.build_rows(_income_csv(income), _income_csv(ppps), 2019, 2020, ["GBR", "FRA"])
+
+
+def test_oecd_income_chart_has_recent_annual_observations_without_bridging_definition_breaks(
+    monkeypatch, tmp_path,
+):
+    import pandas as pd
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    from europe_data import oecd_income, plot_uk_decline as plots
+
+    metric = oecd_income.METRIC
+    rows = [{
+        "country": country, "year": year, metric: 30000 + year,
+        f"{metric}__income_definition": (
+            "METH2012/D_PREV" if country == "France" and year < 2020 else "METH2012/D_CUR"
+        ),
+    } for country, *_ in plots.PEERS for year in range(2013, 2024)]
+    captured = []
+    monkeypatch.setattr(plots.plt, "savefig", lambda *args, **kwargs: captured.append(plots.plt.gcf()))
+    plots.fig_median_income_oecd(pd.DataFrame(rows), tmp_path)
+    fig = captured[0]
+    ax = fig.axes[0]
+    assert "2013\u20132023" in ax.get_title()
+    assert ax.get_xlabel() == "Income year (OECD labels)"
+    for line in ax.lines:
+        assert sum(pd.notna(line.get_ydata())) == 11
+    france = next(line for line in ax.lines if line.get_label() == "France")
+    assert pd.isna(france.get_ydata()).any()
+    uk = next(line for line in ax.lines if line.get_label() == "United Kingdom")
+    assert pd.notna(uk.get_ydata()).all()
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    assert fig.texts[0].get_window_extent(renderer).y1 + 5 < ax.xaxis.label.get_window_extent(renderer).y0
 
 
 def test_nominal_gdp_ratio_uses_only_shared_years_and_dates_each_peer(monkeypatch, tmp_path):

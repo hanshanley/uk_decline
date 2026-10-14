@@ -51,6 +51,32 @@ of the 41-point change is attributed to non-volume factors by that accounting sp
 it does **not** identify a causal currency effect or establish a loss of household welfare.
 
 ### Median disposable income (a "typical household" measure)
+![Median disposable income, adjusted for household size and purchasing power](../outputs/gdp_income/median_disposable_income_oecd.png)
+
+The public comparison uses the **OECD Income Distribution Database**, with annual
+observations for the UK, US, Germany, France and Italy from **2013 to 2023**, the
+latest common income year in the downloaded release. Unlike the Eurostat series,
+the UK continues after 2018. The window advances automatically when every country
+has newer observations; later observations for individual countries remain in the CSV.
+
+Income is disposable household income after taxes and transfers, divided by the
+square root of household size. The national-currency medians are divided by
+**same-country, same-year household-consumption purchasing power parities**, not
+GDP PPPs or market exchange rates. The result is current-price purchasing-power
+dollars: useful for same-year comparisons, **not inflation-adjusted income growth**.
+OECD income-year labels are retained, including UK financial years.
+
+The 2012 income methodology is selected throughout. Current definitions take
+priority in overlapping years; earlier definitions are used only before the current
+definition begins, never to fill subsequent holes. France's definition transition
+in 2020 is retained as a line break, not smoothed away. Countries' national survey
+methods still differ. Source status, definition, national-currency income, currency
+and conversion factor are saved with each observation. Missing conversions,
+mismatched currencies, duplicate observations, or lost published 2013–2023 coverage
+stop the refresh instead of silently creating a fragmented comparison.
+
+The older Eurostat and World Bank comparisons remain supplemental:
+
 ![Median disposable income, PPS](../outputs/gdp_income/median_disposable_income_pps.png)
 ![Median income, World Bank PIP](../outputs/gdp_income/median_income_pip.png)
 
@@ -82,6 +108,7 @@ survey year when income is collected retrospectively.
 | `gdp_per_capita_ppp_current` | **World Bank WDI** `NY.GDP.PCAP.PP.CD` | (same) | Nominal — current international $ (PPP); reference only |
 | `gdp_per_capita_ppp_constant` | **World Bank WDI** `NY.GDP.PCAP.PP.KD` | (same) | Real — constant 2021 international $; overview and PPP growth charts |
 | `median_disposable_income` / `mean_disposable_income` | **Eurostat** `ilc_di03` (`MED_EI`/`MEAN_EI`, `unit=PPS`) | `ec.europa.eu/eurostat/api/dissemination/…/ilc_di03` | Current PPS (cross-country comparable; **not** deflated over time) |
+| `median_disposable_income_oecd_ppp` | **OECD** Income Distribution Database; annual household-consumption PPPs | `sdmx.oecd.org/public/rest/v1/data/` flows `OECD.WISE.INE,DSD_WISE_IDD@DF_IDD,1.0` and `OECD.SDD.NAD,DSD_NAMAIN10@DF_TABLE4,1.0` | Current household-consumption purchasing-power US dollars; **not real growth** |
 | `median_income_pip` | **World Bank PIP** (Poverty & Inequality Platform), pinned `ppp_version=2021` | `api.worldbank.org/pip/v1/pip` | **Real** — constant 2021 PPP $ per day |
 
 
@@ -98,7 +125,14 @@ Poland. Spain is fetched but not plotted.
 
 GDP inputs: WDI release updated **8 October 2026**, accessed **12 October 2026**.
 Eurostat and PIP income data: accessed **13 October 2026**. Maddison source:
-accessed **15 August 2026**.
+accessed **15 August 2026**. OECD income and consumption PPPs: accessed **14 October 2026**.
+
+- **OECD** (2026). [Income Distribution Database](https://www.oecd.org/en/data/datasets/income-and-wealth-distribution-database.html):
+  `INC_DISP`, `MEDIAN`, `XDC_HH_EQ`, all ages, `METH2012`.
+  [Annual purchasing power parities](https://data-explorer.oecd.org/s/32a):
+  `PPP_P31S14`, national currency per US dollar.
+  The household-size adjustment and use of private-consumption PPPs follow
+  [Society at a Glance 2024, household income](https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/06/society-at-a-glance-2024_08001b73/918d8db3-en.pdf).
 
 - **World Bank** (2026). *World Development Indicators* — GDP per capita, constant 2015 US$
   (`NY.GDP.PCAP.KD`); GDP per capita, current US$ (`NY.GDP.PCAP.CD`); GDP per capita, PPP
@@ -132,7 +166,9 @@ python3 -m venv .venv && ./.venv/bin/pip install -r ../requirements.txt
 ```
 
 Outputs: per-source CSVs, `europe_combined_long.csv`, `europe_combined_wide.csv`, and
-`manifest.json` in `../data/` (raw data git-ignored); five PNGs in `../outputs/gdp_income/`.
+`manifest.json` in `../data/`; six PNGs in `../outputs/gdp_income/`.
+The derived OECD source table (`oecd_median_income_ppp.csv`) and combined wide table
+are tracked for reproducible offline chart generation; other raw downloads are git-ignored.
 
 ## Source observations and derived measures
 PIP is fetched with `fill_gaps=false` (survey observations only); no
@@ -157,5 +193,5 @@ August 2026 national-accounts analysis.
 
 ## Modules
 `countries.py` (curated countries + US peer + aggregates) · `worldbank.py` · `maddison.py` ·
-`eurostat.py` · `pip.py` · `combine.py` · `_http.py`. Entry points: `-m europe_data.fetch_data`,
+`eurostat.py` · `pip.py` · `oecd_income.py` · `combine.py` · `_http.py`. Entry points: `-m europe_data.fetch_data`,
 `-m europe_data.plot_uk_decline`. Tests: `../tests/test_pipeline.py`.
