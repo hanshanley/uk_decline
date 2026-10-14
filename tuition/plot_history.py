@@ -1,4 +1,4 @@
-"""Plot the historical tuition series (real, constant 2022 USD), 1963/71 -> 2022.
+"""Plot the historical tuition series (real, constant 2022 USD).
 
 Reads ``data/processed/tuition_history.csv`` (built by build_history.py) and writes to
 ``outputs/`` in the shared Substack style. Every value is inflation-adjusted (constant
@@ -11,12 +11,15 @@ Usage:
 from __future__ import annotations
 
 import csv
+import datetime as dt
 import os
 import textwrap
 
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from tuition import config, theme
+from vizstyle import with_year_gaps
 
 # region key -> (label, colour, matplotlib draw style)
 SERIES = {
@@ -25,7 +28,7 @@ SERIES = {
     config.EU: ("Germany — zero-fee reference years only", theme.BLUE, "points"),
 }
 SOURCE_NOTE = (
-    "Real 2022 USD (inflation-adjusted). Sources: US — NCES Digest 2023 Table 330.10 "
+    "Real 2022 USD (inflation-adjusted). Sources: US — NCES Digest 2024 Table 330.10 "
     "(current dollars); UK — England statutory fee caps (legislation.gov.uk / "
     "GOV.UK), converted at market exchange rates and deflated by US CPI (World Bank); "
     "Both US and UK deflated with calendar-year US CPI; fee years are academic start years. "
@@ -34,13 +37,13 @@ SOURCE_NOTE = (
 )
 
 
-def load_history() -> dict[str, list[tuple[int, float]]]:
+def load_history(value_key: str = "real_2022_usd") -> dict[str, list[tuple[int, float]]]:
     by_region: dict[str, list[tuple[int, float]]] = {}
     with open(config.HISTORY_OUT_CSV, newline="") as fh:
         for r in csv.DictReader(fh):
-            if r.get("real_2022_usd") in (None, ""):
+            if r.get(value_key) in (None, ""):
                 continue
-            by_region.setdefault(r["region"], []).append((int(r["year"]), float(r["real_2022_usd"])))
+            by_region.setdefault(r["region"], []).append((int(r["year"]), float(r[value_key])))
     for region in by_region:
         by_region[region].sort()
     return by_region
@@ -58,7 +61,9 @@ def plot(out_path: str) -> None:
         xs = [y for y, _ in pts]
         ys = [v for _, v in pts]
         if region == config.UK:
-            ax.plot(xs, [v if v > 0 else float("nan") for v in ys],
+            series = with_year_gaps(pd.Series(
+                [v if v > 0 else float("nan") for v in ys], index=xs))
+            ax.plot(series.index, series.values,
                     color=color, linewidth=2.4, marker="o", markersize=4,
                     markeredgecolor=theme.BG, markeredgewidth=0.8, label=label)
             zero_years = [y for y, v in pts if v == 0]
@@ -72,7 +77,8 @@ def plot(out_path: str) -> None:
             ax.step(xs, ys, where="post", color=color, linewidth=2.4, label=label)
             ax.plot(xs, ys, "o", color=color, markersize=5, markeredgecolor=theme.BG, markeredgewidth=0.8)
         else:
-            ax.plot(xs, ys, color=color, linewidth=2.4, marker="o", markersize=4,
+            series = with_year_gaps(pd.Series(ys, index=xs))
+            ax.plot(series.index, series.values, color=color, linewidth=2.4, marker="o", markersize=4,
                     markeredgecolor=theme.BG, markeredgewidth=0.8, label=label)
 
     ax.set_ylabel("Annual domestic tuition (constant 2022 USD)")
@@ -98,9 +104,46 @@ def plot(out_path: str) -> None:
     print(f"wrote {out_path}")
 
 
+def plot_nominal_cap(out_path: str) -> None:
+    """Show the current statutory cap without requiring unavailable annual FX/CPI."""
+    theme.apply()
+    points = [(year, value) for year, value in load_history("nominal_local").get(config.UK, [])
+              if value > 0 and year <= dt.date.today().year]
+    if not points:
+        raise ValueError("No current England fee-cap observations to plot")
+    years, values = zip(*points)
+    series = with_year_gaps(pd.Series(values, index=years))
+    fig, ax = plt.subplots(figsize=(11, 6))
+    ax.step(series.index, series.values, where="post", color=theme.ACCENT, linewidth=2.4)
+    ax.plot(years[-1], values[-1], "o", color=theme.ACCENT)
+    ax.set_title(
+        "England's undergraduate tuition cap\n"
+        f"£{values[-1]:,.0f} in {years[-1]}/{str(years[-1] + 1)[-2:]} (nominal pounds)",
+        fontweight="bold", pad=14,
+    )
+    ax.set_xlabel("Academic start year")
+    ax.set_ylabel("Maximum annual fee (GBP, not inflation-adjusted)")
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda value, _: f"£{value:,.0f}"))
+    ax.grid(axis="y", linewidth=0.5)
+    ax.set_axisbelow(True)
+    theme.source_note(
+        fig,
+        "Sources: England statutory caps, legislation.gov.uk / Hansard / GOV.UK; "
+        "per-year citations in tuition_history.csv.\n"
+        "Standard full-time home undergraduate maximum; not average UK tuition. "
+        "The separate real-dollar history requires same-year annual FX and CPI.",
+    )
+    fig.tight_layout()
+    fig.subplots_adjust(bottom=0.17)
+    fig.savefig(out_path, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    print(f"wrote {out_path}")
+
+
 def main() -> None:
     os.makedirs(config.OUTPUTS_DIR, exist_ok=True)
     plot(os.path.join(config.OUTPUTS_DIR, "tuition_history_real_usd.png"))
+    plot_nominal_cap(os.path.join(config.OUTPUTS_DIR, "tuition_england_cap_nominal.png"))
 
 
 if __name__ == "__main__":

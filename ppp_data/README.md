@@ -148,8 +148,9 @@ dollars than in market dollars.
 
 The second figure sidesteps the currency question entirely. Tuition as a share of GDP per
 capita is unit-free — the currency cancels, so the answer is identical at market rates and at
-PPP. On that basis, in **2022** (the last year both fee series cover — the NCES US series
-ends there) a year's fees equalled **24.2% of UK GDP per head against 12.5% in the US**.
+PPP. On that basis, in **2023** (the last year both historical fee series cover — the
+NCES Digest 2024 US series ends in 2023/24) a year's fees equalled **23.0% of UK
+GDP per head against 12.0% in the US**.
 This avoids currency-conversion effects, but GDP per head is not a student's disposable
 income. The ratio is an output-relative fee measure, not a household affordability estimate.
 Germany is shown only at selected zero-fee reference years, not as a continuous

@@ -29,9 +29,11 @@ each year. These periods are not interchangeable annual observations.
 
 The GDP comparison uses **constant-price purchasing-power parity (PPP)**, not
 market-exchange-rate dollars, so sterling movements are not mistaken for relative
-changes in economic output. The tuition panel is an **England undergraduate fee-cap
-series**, converted at annual market exchange rates and deflated with US CPI to
-2022 dollars—not average UK tuition or a domestic UK purchasing-power measure.
+changes in economic output. The tuition panel shows the **England undergraduate
+fee cap in nominal pounds**, through **£9,790 for 2026/27**. It is not
+inflation-adjusted or average UK tuition. The separate
+[tuition analysis](tuition/README.md) retains the real-dollar history, which ends
+earlier because it requires same-year annual exchange rates and US CPI.
 The NHS waiting list counts **entries awaiting consultant-led treatment**, not
 unique patients. It excludes non-consultant-led pathways and estimates for missing
 providers; the latest snapshot is **August 2026**. Trussell figures count **parcels

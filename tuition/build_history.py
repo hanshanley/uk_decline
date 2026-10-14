@@ -1,7 +1,7 @@
 """Build the historical tuition series (back to the early 1970s), in real 2022 USD.
 
 Every figure is traceable to a real primary source:
-  * US   — NCES Digest 2023, Table 330.10 (Public 4-year, in-district tuition & fees),
+  * US   — NCES Digest 2024, Table 330.10 (Public 4-year, in-district tuition & fees),
            current-dollar fees deflated by World Bank US CPI to calendar-2022 dollars.
            The table's academic-year constant-dollar column is retained only in the raw CSV.
   * UK   — England statutory fee caps (Acts / SIs on legislation.gov.uk), nominal GBP,
@@ -53,10 +53,13 @@ def load_nces(cpi: dict[int, float] | None = None) -> list[dict]:
     """Deflate NCES nominal fees on the same calendar-year basis as the UK."""
     with open(config.NCES_CSV, newline="") as fh:
         rows = list(csv.DictReader(fh))
+    if not rows:
+        raise RuntimeError("NCES tuition history contains no observations")
     if cpi is None:
         cpi = fetch_series(
             config.WB_CPI_INDICATOR, ["USA"],
-            min(int(r["year"]) for r in rows), config.REAL_BASE_YEAR,
+            min(config.REAL_BASE_YEAR, min(int(r["year"]) for r in rows)),
+            max(config.REAL_BASE_YEAR, max(int(r["year"]) for r in rows)),
         ).get("USA", {})
     base = cpi.get(config.REAL_BASE_YEAR)
     if not base:

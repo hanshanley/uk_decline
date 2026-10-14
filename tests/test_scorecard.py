@@ -167,13 +167,15 @@ def test_scorecard_trust_preserves_pooled_cadence_and_explains_period_end(monkey
 def test_overview_panels_use_year_only_labels_without_changing_period_selection(monkeypatch):
     import pytest
 
-    for loader in (scorecard.culture_spending, scorecard.tuition_real):
+    for loader in (scorecard.culture_spending, scorecard.tuition_nominal):
         panel = next(p for p in scorecard.PANELS if p[1] is loader)
         monkeypatch.setattr(scorecard, "_rows", lambda path: [
             {"year": "2007", "metric": "functional_spending_real", "category": "recreation_culture",
-             "value": "19.1", "country": "United Kingdom", "real_2022_usd": "8000"},
+             "value": "19.1", "country": "United Kingdom", "nominal_local": "8000",
+             "currency": "GBP"},
             {"year": "2025", "metric": "functional_spending_real", "category": "recreation_culture",
-             "value": "15.1", "country": "United Kingdom", "real_2022_usd": "11000"},
+             "value": "15.1", "country": "United Kingdom", "nominal_local": "11000",
+             "currency": "GBP"},
         ])
         fig, ax = scorecard.plt.subplots()
         try:
@@ -186,6 +188,24 @@ def test_overview_panels_use_year_only_labels_without_changing_period_selection(
             assert "years" in text
         finally:
             scorecard.plt.close(fig)
+
+
+def test_tuition_overview_shows_current_nominal_cap_without_inventing_real_values(monkeypatch):
+    monkeypatch.setattr(scorecard, "_rows", lambda path: [
+        {"country": country, "year": str(year), "currency": currency,
+         "nominal_local": str(value), "real_2022_usd": real}
+        for country, year, currency, value, real in [
+            ("United Kingdom", 2024, "GBP", 9250, "11030"),
+            ("United Kingdom", 2026, "GBP", 9790, ""),
+            ("United Kingdom", 2099, "GBP", 10000, ""),
+            ("United States", 2026, "USD", 11950, ""),
+            ("United Kingdom (Scotland)", 2026, "GBP", 0, "0"),
+        ]
+    ])
+    assert scorecard.tuition_nominal() == ([2024, 2026], [9250, 9790])
+    panel = next(p for p in scorecard.PANELS if p[1] is scorecard.tuition_nominal)
+    assert panel[2](9790) == "£9,790"
+    assert "nominal GBP" in panel[4] and "Not inflation-adjusted" in panel[4]
 
 
 def test_gdp_comparison_uses_constant_ppp_and_shared_years(monkeypatch):

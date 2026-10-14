@@ -93,9 +93,11 @@ def nhs_england():
     return ys, [float(pts[y]["value"]) for y in ys]
 
 
-def tuition_real():
+def tuition_nominal():
     r = _rows(DATA / "processed" / "tuition_history.csv")
-    pts = {int(x["year"]): float(x["real_2022_usd"]) for x in r if x["country"] == "United Kingdom" and x.get("real_2022_usd")}
+    pts = {int(x["year"]): float(x["nominal_local"]) for x in r
+           if x["country"] == "United Kingdom" and x["currency"] == "GBP"
+           and x.get("nominal_local") not in (None, "") and int(x["year"]) <= date.today().year}
     ys = sorted(pts)
     return ys, [pts[y] for y in ys]
 
@@ -173,8 +175,9 @@ PANELS = [
          "rtt_waiting_list_total", "ENG"))),
     ("Recreation, culture & religion", culture_spending, lambda v: f"£{v:.1f}bn", +1,
      "HM Treasury · financial years, inflation-adjusted", 2007),
-    ("England tuition cap (real)", tuition_real, lambda v: f"${v/1e3:.1f}k", -1,
-     "England fee cap · academic years; FX, constant 2022 US$", 2006),
+    ("England tuition cap", tuition_nominal, lambda v: f"£{v:,.0f}", -1,
+     "England statutory maximum · academic years, nominal GBP\n"
+     "Not inflation-adjusted; not average UK tuition", 2006),
     ("Trust in national government", trust_govt, lambda v: f"{v:.0f}%", +1,
      "OECD / Gallup via OWID · 2–3-year pooled averages\n"
      "Years label the end of each survey period", 2007, (), 3),
@@ -272,7 +275,7 @@ def main() -> int:
              "baselines reflect data availability.",
              ha="center", fontsize=11, color=MUTED)
     fig.text(0.5, 0.015,
-             "Baselines vary with data availability. Monetary series are inflation-adjusted. "
+             "Baselines vary. GDP and spending are inflation-adjusted; tuition is nominal GBP. "
              "Lines break at missing observations or definition changes; see each analysis README.",
              ha="center", fontsize=8, color=MUTED)
 

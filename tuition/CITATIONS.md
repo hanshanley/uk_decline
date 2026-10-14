@@ -1,29 +1,43 @@
 # Data citations — tuition sub-analysis
 
 Formal citations for every dataset used, identified by the **organization that collected /
-published** it. Access dates reflect when the data was retrieved for this analysis
-(15 August 2026). Each entry notes which figures it supports.
+published** it. NCES, College Board and the live World Bank inputs below were
+retrieved on **14 October 2026**; earlier historical references retain their
+original retrieval dates. Each entry notes which figures it supports.
 
 ---
 
 ## Primary sources
 
-### United States — tuition, historical series (1963–64 → 2022–23)
+### United States — tuition, historical series (1963–64 → 2023–24)
 **National Center for Education Statistics (NCES), Institute of Education Sciences, U.S.
-Department of Education.** (2023). *Digest of Education Statistics 2023*, Table 330.10:
+Department of Education.** (2024). *Digest of Education Statistics 2024*, Table 330.10:
 “Average undergraduate tuition, fees, room, and board rates charged for full-time students
 in degree-granting postsecondary institutions, by level and control of institution:
-Selected academic years, 1963-64 through 2022-23.” Washington, DC: U.S. Department of
-Education. Retrieved 15 August 2026, from
-<https://nces.ed.gov/programs/digest/d23/tables/dt23_330.10.asp>
+Selected academic years, 1963-64 through 2023-24.” Washington, DC: U.S. Department of
+Education. Retrieved 14 October 2026, from
+<https://nces.ed.gov/programs/digest/d24/tables/dt24_330.10.asp>
 *Underlying collection instruments:* Higher Education General Information Survey (HEGIS)
 and the Integrated Postsecondary Education Data System (IPEDS).
 *Supports:* US line in `tuition_history_real_usd.png`; `data/raw/nces_tuition_public4yr.csv`.
 
 ### United States — Consumer Price Index (used for NCES constant dollars)
 **U.S. Bureau of Labor Statistics (BLS), U.S. Department of Labor.** Consumer Price Index
-(CPI-U). NCES uses the BLS CPI to express Table 330.10 in constant 2022–23 dollars.
+(CPI-U). NCES uses the BLS CPI to express Table 330.10 in constant 2023–24 dollars.
 *Supports:* the inflation adjustment embedded in the NCES constant-dollar column.
+That academic-year column is retained with an explicit base label in the raw
+CSV; the historical comparison instead deflates both countries using the same
+calendar-year World Bank US CPI.
+
+### United States — tuition, 2025/26 snapshot
+**College Board.** (2025). *Trends in College Pricing 2025*, Table CP-1,
+“Average Published Prices (Enrollment-Weighted) for Full-Time Undergraduates,
+2024-25 and 2025-26.” Retrieved 14 October 2026.
+<https://research.collegeboard.org/media/xlsx/Trends-in_College-Pricing-2025-excel-data.xlsx>
+*Supports:* the US snapshot ($11,950 public four-year in-state; $45,000 private
+nonprofit reference) in `data/raw/manual_tuition.csv`. College Board publishes
+this table; the separate historical line remains on NCES rather than splicing
+the two collections.
 
 ### United Kingdom — statutory tuition fee caps (England)
 Primary legislation, published by **The National Archives (legislation.gov.uk) on behalf of
@@ -45,9 +59,17 @@ The table gives each academic year's maximum fee for new entrants, including ann
 upratings from £1,000 to £1,175 (1998–2005) and £3,000 to £3,375 (2006–2011).
 *Supports:* corrected annual caps in `data/raw/tuition_history_manual.csv`.
 
+**Department for Education / Student Finance England.** *Changes to tuition fees:
+2026 to 2027 academic year and 2027 to 2028 academic year*. Retrieved 14 October 2026.
+<https://www.gov.uk/government/publications/tuition-fees-and-student-support-2026-to-2027-academic-year/changes-to-tuition-fees-2026-to-2027-academic-year-and-2027-to-2028-academic-year>
+The standard full-time cap at approved fee-cap providers with a TEF award and
+an access and participation plan is **£9,790 in 2026/27**. The announced
+**£10,050 for 2027/28** is a future policy rate, not a current-year observation.
+*Supports:* the nominal England cap figure and overview endpoint.
+
 ### Inflation and exchange rates
 **The World Bank Group.** (2024). *World Development Indicators.* Washington, DC: The World
-Bank. Retrieved via the World Bank API on 15 August 2026.
+Bank. Retrieved via the World Bank API on 14 October 2026.
 - Consumer price index (2010 = 100) — indicator `FP.CPI.TOTL`: <https://data.worldbank.org/indicator/FP.CPI.TOTL>
 - Official exchange rate (LCU per US$, period average) — indicator `PA.NUS.FCRF`: <https://data.worldbank.org/indicator/PA.NUS.FCRF>
 
@@ -70,13 +92,6 @@ Union. <https://eurydice.eacea.ec.europa.eu/publications/national-student-fee-an
 *Supports:* EU-27 rows in `data/raw/manual_tuition.csv` (rows flagged `APPROXIMATE` are not
 pinned to an exact primary figure and should be verified against the primary report).
 
-### United States — tuition, 2024/25 snapshot
-**College Board.** (2024). *Trends in College Pricing and Student Aid 2024.* New York:
-College Board. <https://research.collegeboard.org/trends/college-pricing>
-*Supports:* the US snapshot figure ($11,610 in-state public, 2024/25) in
-`data/raw/manual_tuition.csv`. (The fully primary-sourced US figure used in the historical
-series is the NCES series above.)
-
 ### Germany — tuition fee history
 **Study.eu** (secondary web reference), *The History of Tuition Fees in Germany*.
 <https://www.study.eu/article/the-history-of-tuition-fees-in-germany> — corroborated by the
@@ -89,4 +104,5 @@ Eurydice report above.
 above (NCES, UK legislation/Hansard, World Bank/IMF). Germany's sparse zero-fee reference
 points use secondary sources and do not imply uninterrupted fee-free education.
 The EU-27 cross-sectional
-snapshot rests on the **Eurydice** summary and College Board (secondary), as noted.
+snapshot rests on the **Eurydice** summary; the current US snapshot is taken
+directly from College Board Table CP-1.

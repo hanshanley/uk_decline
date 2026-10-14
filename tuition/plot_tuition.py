@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import textwrap
 
 import matplotlib.pyplot as plt
 
@@ -26,7 +27,7 @@ REGION_LABELS = {**config.REGION_LABELS, config.UK: "England (fee cap)"}
 REGION_COLOR = {config.UK: theme.ACCENT, config.EU: theme.BLUE, config.US: theme.GOLD}
 SOURCE_NOTE = (
     "Sources: Eurydice National Student Fee 2023/24 (EU-27); College Board Trends in "
-    "College Pricing 2024 (US, in-state public); UK 2026/27 fee cap. "
+    "College Pricing 2025 Table CP-1 (US 2025/26, in-state public); UK 2026/27 fee cap. "
     "Source years differ. FX may use a nearby published year (recorded in the CSV); "
     "constant-dollar values require same-year US CPI. Missing real values are omitted."
 )
@@ -38,9 +39,11 @@ def _money(v: float) -> str:
 
 def _finalize(fig, out_path: str, bottom: float, missing_note: str = "") -> None:
     """Common figure tail: source note, layout, and high-DPI save (shared style)."""
-    theme.source_note(fig, SOURCE_NOTE + missing_note)
+    note = textwrap.fill(SOURCE_NOTE + missing_note, width=155)
+    theme.source_note(fig, note)
     plt.tight_layout()
-    plt.subplots_adjust(bottom=bottom)
+    plt.subplots_adjust(bottom=max(bottom, (10 * len(note.splitlines()) + 42)
+                                   / (72 * fig.get_figheight())))
     fig.savefig(out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {out_path}")
@@ -67,6 +70,7 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
             int(row["year"])
             for row in rows
             if row["region"] == region and row.get("year") not in (None, "")
+            and row.get(value_key) is not None
         ]
         region_year[region] = max(years) if years else None
     labels = [
@@ -102,8 +106,8 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
     ax.set_yticklabels(labels, fontsize=12)
     ax.set_xlabel(f"Annual tuition & fees ({unit})")
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
-    ax.set_xlim(0, max(vals) * 1.4)
-    ax.set_title("Latest published domestic tuition — source years differ\n"
+    ax.set_xlim(0, max([*vals, *means, 1.0]) * 1.4)
+    ax.set_title("Domestic tuition comparison — source years differ\n"
                  "public universities, domestic / in-state students",
                  fontweight="bold", pad=14)
     ax.grid(axis="x", linestyle="-", linewidth=0.5)
@@ -124,8 +128,14 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
     ax.set_yticklabels([name for name, _, _ in data], fontsize=9)
     ax.set_xlabel(f"Annual domestic tuition ({unit})")
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
-    ax.set_title("Latest published annual domestic bachelor's tuition\n"
-                 "EU: 2023/24 · US: 2024 · UK: published 2026/27 cap",
+    periods = sorted({
+        (REGION_LABELS[r["region"]], int(r["year"]))
+        for r in rows if r[value_key] is not None
+    })
+    subtitle = " · ".join(f"{label}: {year}/{(year + 1) % 100:02d}"
+                          for label, year in periods)
+    ax.set_title("Annual domestic bachelor's tuition — dated source comparison\n"
+                 + subtitle,
                  fontweight="bold", pad=14)
     ax.grid(axis="x", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)

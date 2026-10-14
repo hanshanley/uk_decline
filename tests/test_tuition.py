@@ -334,9 +334,10 @@ def test_history_plot_does_not_connect_free_uk_anchor_to_fee_introduction(tmp_pa
     fig = figures[-1]
     try:
         fee_line, zero_anchors = fig.axes[0].lines
-        assert list(fee_line.get_xdata()) == [1971, 1998, 1999]
+        positive = [(x, y) for x, y in zip(fee_line.get_xdata(), fee_line.get_ydata())
+                    if not math.isnan(y)]
+        assert positive == [(1998, 2973), (1999, 3000)]
         assert math.isnan(fee_line.get_ydata()[0])
-        assert list(fee_line.get_ydata()[1:]) == [2973, 3000]
         assert list(zero_anchors.get_xdata()) == [1971]
         assert list(zero_anchors.get_ydata()) == [0]
         assert zero_anchors.get_linestyle() == "None"
@@ -368,3 +369,130 @@ def test_history_missing_exact_base_cpi_is_not_substituted(monkeypatch):
             "year": "2022", "annual_tuition_local": "9250", "currency": "GBP",
             "source": "cap", "source_url": "https://example.com",
         }])
+
+
+def test_nces_default_cpi_range_includes_observations_after_base_year(tmp_path, monkeypatch):
+    csv = tmp_path / "nces.csv"
+    csv.write_text(
+        "year,tuition_current_usd,source,source_url\n"
+        "2022,9750,NCES,https://nces.ed.gov\n"
+        "2023,9872,NCES,https://nces.ed.gov\n"
+    )
+    monkeypatch.setattr(config, "NCES_CSV", csv)
+    calls = []
+
+    def fetch(indicator, iso3s, start, end):
+        calls.append((start, end))
+        return {"USA": {2022: 100, 2023: 110}}
+
+    monkeypatch.setattr(build_history, "fetch_series", fetch)
+    out = build_history.load_nces()
+    assert calls == [(2022, 2023)]
+    assert out[-1]["real_2022_usd"] == round(9872 * 100 / 110, 2)
+
+
+def _nces_html(*, missing_year=None, current_header="Current dollars", invalid_year=None):
+    import pandas as pd
+
+    columns = [("Other", "Other", "Other", str(i)) for i in range(25)]
+    columns[5] = (current_header, "Tuition and required fees2", "4-year", "6")
+    columns[17] = ("Constant 2023-24 dollars1", "Tuition and required fees2", "4-year", "18")
+    rows = []
+    for label in ["All institutions", "Public institutions"]:
+        rows.append([label] + [None] * 24)
+        for year in [1963, *range(1968, 2024)]:
+            if label == "Public institutions" and year == missing_year:
+                continue
+            academic = f"{year}-{str(year + 1)[-2:]}" + ("5" if year == 1985 else "")
+            if year == 1999:
+                academic = "1999-2000"
+            row = [academic] + [None] * 24
+            row[5], row[17] = (9872 if label == "Public institutions" else 50000), 10000
+            if label == "Public institutions" and year == invalid_year:
+                row[5] = "missing"
+            rows.append(row)
+    rows.extend([["Private institutions"] + [None] * 24,
+                 ["2023-24"] + [99999] * 24])
+    return pd.DataFrame(rows, columns=pd.MultiIndex.from_tuples(columns)).to_html(index=False)
+
+
+def test_nces_parse_locates_public_section_and_keeps_latest_academic_year():
+    from tuition import fetch_nces
+
+    rows = fetch_nces.parse(_nces_html())
+    assert len(rows) == 57
+    assert rows[-1]["year"] == 2023
+    assert rows[-1]["tuition_current_usd"] == 9872
+    assert rows[-1]["constant_dollar_academic_year"] == "2023-24"
+    assert "tuition_constant2022_usd" not in rows[-1]
+    assert all(r["tuition_current_usd"] == 9872 for r in rows)
+
+
+def test_nces_invalid_sources_preserve_saved_csv(tmp_path, monkeypatch):
+    import pytest
+    from tuition import fetch_nces
+
+    path = tmp_path / "nces.csv"
+    path.write_text("saved source data\n")
+    monkeypatch.setattr(fetch_nces, "OUT_CSV", str(path))
+    for html in [_nces_html(missing_year=2023), _nces_html(missing_year=2000),
+                 _nces_html(invalid_year=2000), _nces_html(current_header="Room and board")]:
+        monkeypatch.setattr(fetch_nces, "_load_html", lambda **kwargs: html)
+        with pytest.raises(ValueError, match="NCES"):
+            fetch_nces.main([])
+        assert path.read_text() == "saved source data\n"
+
+
+def test_current_nominal_cap_chart_is_not_truncated_by_missing_real_inputs(tmp_path, monkeypatch):
+    from tuition import plot_history
+
+    path = tmp_path / "history.csv"
+    path.write_text(
+        "region,year,nominal_local,real_2022_usd\n"
+        "UK,2024,9250,11030\nUK,2025,9535,\nUK,2026,9790,\nUK,2099,10050,\n"
+    )
+    monkeypatch.setattr(config, "HISTORY_OUT_CSV", path)
+    captured = []
+    monkeypatch.setattr(plot_history.plt.Figure, "savefig",
+                        lambda fig, *a, **k: captured.append(fig))
+    plot_history.plot_nominal_cap(str(tmp_path / "cap.png"))
+    axis = captured[0].axes[0]
+    assert list(axis.lines[0].get_xdata()) == [2024, 2025, 2026]
+    assert list(axis.lines[0].get_ydata()) == [9250, 9535, 9790]
+    assert "£9,790 in 2026/27 (nominal pounds)" in axis.get_title()
+    assert "not inflation-adjusted" in axis.get_ylabel()
+    assert plot_history.load_history()["UK"] == [(2024, 11030)]
+
+
+def test_real_snapshot_with_only_zero_median_eu_remains_readable(tmp_path, monkeypatch):
+    rows = [
+        {"country": country, "region": config.EU, "year": 2023,
+         "annual_tuition_usd_real2022": value}
+        for country, value in [("Germany", 0), ("Denmark", 0), ("France", 170)]
+    ] + [
+        {"country": country, "region": region, "year": year,
+         "annual_tuition_usd_real2022": None}
+        for country, region, year in [
+            ("Italy", config.EU, 2026),
+            ("United States", config.US, 2025), ("England", config.UK, 2026),
+        ]
+    ]
+    captured = []
+    monkeypatch.setattr(plot_tuition.plt.Figure, "savefig",
+                        lambda fig, *a, **k: captured.append(fig))
+    plot_tuition.plot_region_comparison(
+        rows, "annual_tuition_usd_real2022", "constant 2022 USD", str(tmp_path / "real.png"))
+    assert captured[0].axes[0].get_xlim()[0] == 0
+    assert captured[0].axes[0].get_xlim()[1] > 170 / 3
+    assert [text.get_text() for text in captured[0].axes[0].get_yticklabels()] == ["EU-27 (2023)"]
+    note = " ".join(captured[0].texts[0].get_text().split())
+    assert "Not plotted: Italy (2026), United States (2025), England (2026)" in note
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    fig = captured[0]
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    note_bounds = fig.texts[0].get_window_extent(renderer)
+    assert note_bounds.x1 <= fig.bbox.x1
+    assert note_bounds.y1 < fig.axes[0].xaxis.label.get_window_extent(renderer).y0

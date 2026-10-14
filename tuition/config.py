@@ -121,7 +121,7 @@ TUITION_BY_COUNTRY_CSV = os.path.join(PROCESSED_DIR, "tuition_by_country.csv")
 SUMMARY_CSV = os.path.join(PROCESSED_DIR, "summary.csv")
 HISTORY_OUT_CSV = os.path.join(PROCESSED_DIR, "tuition_history.csv")
 
-# Real-terms base year (matches the NCES constant-dollar column: constant 2022-23 $).
+# Calendar-year base for the common US-CPI deflator, not NCES's academic-year base.
 REAL_BASE_YEAR = 2022
 
 # --- Fallback conversion rates (offline only) -------------------------------
