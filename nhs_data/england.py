@@ -180,10 +180,13 @@ def _discover_pages(
     end_year: int,
 ) -> list[str]:
     pages = list(candidate_urls)
+    section = urlsplit(landing_url).path.rstrip("/").rsplit("/", 1)[-1]
     for text, href in _links(landing_url):
         if url_token in href and _fy_overlaps(f"{text} {href}", start_year, end_year):
             slug = urlsplit(href).path.rstrip("/").rsplit("/", 1)[-1]
-            if urlsplit(href).path.rstrip("/") == f"/statistics/{slug}":
+            if urlsplit(href).path.rstrip("/") in {
+                f"/statistics/{slug}", f"/statistics/{section}/{slug}",
+            }:
                 href = urljoin(landing_url.rstrip("/") + "/", slug + "/")
             pages.append(href)
     return _dedupe(pages)

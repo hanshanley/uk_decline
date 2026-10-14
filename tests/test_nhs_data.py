@@ -782,13 +782,14 @@ def test_england_normal_html_discovery_does_not_call_api(monkeypatch):
     assert england._links(page) == [("Monthly data", page + "current.csv")]
 
 
-def test_england_discovery_normalises_old_publication_aliases(monkeypatch):
+@pytest.mark.parametrize("legacy_parent", ["statistics", "statistics/rtt-waiting-times"])
+def test_england_discovery_normalises_old_publication_aliases(monkeypatch, legacy_parent):
     from nhs_data import england
 
     parent = england.LANDING_URLS["rtt"]
     canonical = parent + "rtt-data-2014-15/"
     monkeypatch.setattr(england, "_links", lambda url: [
-        ("2014-15", "https://www.england.nhs.uk/statistics/rtt-data-2014-15/"),
+        ("2014-15", f"https://www.england.nhs.uk/{legacy_parent}/rtt-data-2014-15/"),
         ("2014-15", canonical),
     ])
     assert england._discover_pages(parent, "rtt-data-", [], 2015, 2015) == [canonical]
