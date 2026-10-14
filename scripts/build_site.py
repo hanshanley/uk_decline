@@ -1,4 +1,4 @@
-"""Build the public GitHub Pages site from tracked figures and documentation."""
+"""Build the public website from tracked figures and documentation."""
 
 from __future__ import annotations
 
@@ -21,6 +21,14 @@ import markdown
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = "https://github.com/hanshanley/uk_decline"
 TITLE = "The UK, in context"
+CANONICAL_ROOT = "https://www.themarginoferror.com/uk_decline/"
+
+
+def canonical_url(page: Path) -> str:
+    path = page.as_posix()
+    if page.name == "index.html":
+        path = path.removesuffix("index.html")
+    return CANONICAL_ROOT + path
 
 
 @dataclass(frozen=True)
@@ -164,22 +172,25 @@ def layout(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="{escape(description, quote=True)}">
   <meta name="theme-color" content="#f7f5f0">
-  <title>{escape(title)} | {TITLE}</title>
+  <title>{escape(title)} | {TITLE} | The Margin of Error</title>
+  <link rel="canonical" href="{escape(canonical_url(page), quote=True)}">
   <link rel="stylesheet" href="{css}">
   <script src="{js}" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="masthead">
-    <a class="wordmark" href="{home}">{TITLE}<span>Evidence, not a single story.</span></a>
+    <a class="wordmark" href="https://www.themarginoferror.com/">The Margin of Error<span>Evidence, not a single story.</span></a>
     <nav aria-label="Main navigation">
+      <a href="{home}">UK overview</a>
       <a href="{home}#explore">Explore</a><a href="{methods}">Methods</a>
       <a href="{REPOSITORY}">GitHub <span aria-hidden="true">&#8599;</span></a>
     </nav>
   </header>
   <main id="main">{body}</main>
   <footer>
-    <p><strong>{TITLE}</strong> &middot; Social, economic and political change.</p>
+    <p><strong>{TITLE}</strong> &middot; Published by
+    <a href="https://www.themarginoferror.com/">The Margin of Error</a>.</p>
     <p>Site built <time datetime="{built_at}">{built_at[:10]}</time> (UTC).
     <a href="{REPOSITORY}/commit/{revision}">Source {revision[:7]}</a>.</p>
     <p>Publication date is not the observation date. Each chart carries its own periods,
@@ -319,7 +330,7 @@ def validate_site(output: Path) -> None:
                     raise ValueError(f"{page.relative_to(output)}: missing anchor {value}")
 
 
-def build(root: Path = ROOT) -> Path:
+def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
     root = root.resolve()
     output = root / "_site"
     if output.is_symlink():
@@ -387,6 +398,22 @@ def build(root: Path = ROOT) -> Path:
             target.write_text(layout(title, description, body, page, revision, built_at, refreshed_at))
         (stage / ".nojekyll").touch()
         validate_site(stage)
+        if redirects:
+            for page in pages:
+                target = escape(canonical_url(page), quote=True)
+                (stage / page).write_text(f"""<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The UK, in context is published by The Margin of Error.">
+<meta http-equiv="refresh" content="0; url={target}">
+<link rel="canonical" href="{target}">
+<title>{TITLE} | The Margin of Error</title>
+</head><body><h1>{TITLE}</h1>
+<p><a href="{target}">Continue to The Margin of Error.</a></p>
+</body></html>
+""")
+            validate_site(stage)
         if output.exists():
             shutil.rmtree(output)
         shutil.copytree(stage, output)
@@ -395,8 +422,13 @@ def build(root: Path = ROOT) -> Path:
 
 
 def main() -> None:
-    argparse.ArgumentParser(description=__doc__).parse_args()
-    build()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--redirects", action="store_true",
+        help="Build redirects for the former project-level GitHub Pages address.",
+    )
+    args = parser.parse_args()
+    build(redirects=args.redirects)
 
 
 if __name__ == "__main__":

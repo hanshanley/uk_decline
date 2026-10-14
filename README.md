@@ -4,7 +4,7 @@
     <a href="#uk-since-2007">Overview</a> ·
     <a href="#explore-the-evidence">Analyses</a> ·
     <a href="#setup">Setup</a> ·
-    <a href="https://hanshanley.github.io/uk_decline/">Live site</a>
+    <a href="https://www.themarginoferror.com/uk_decline/">Live site</a>
   </p>
 </div>
 
@@ -106,14 +106,19 @@ See each analysis's README for its exact commands and full source citations.
 
 ### Website and automatic updates
 
-The [public website](https://hanshanley.github.io/uk_decline/) presents all 16 analyses,
+The [public website](https://www.themarginoferror.com/uk_decline/) presents all 16 analyses,
 with searchable topic navigation, full-resolution charts, downloads, and methodology.
 It is built directly from tracked publication figures and documentation, not private
 working files. It works without JavaScript; search, filters and the chart viewer are
 progressive enhancements.
 
-GitHub Actions publishes changes pushed to `master`. Every Monday at **06:37 UTC**,
-the same workflow also refreshes the supported source pipelines, rerenders the figures
+The Margin of Error builds these pages directly into its website, under `/uk_decline/`,
+with charts embedded in the topic pages rather than an iframe or an external image
+viewer. Its deployment checks for updated inputs twice daily, at **09:20 and 21:20 UTC**.
+The former project-level GitHub Pages address redirects to the publication.
+
+Every Monday at **06:37 UTC**, this repository's GitHub Actions workflow
+refreshes the supported source pipelines, rerenders the figures
 and overview, runs the tests, and publishes only if every stage succeeds. Failed source
 requests, reported partial-source warnings, lost NHS series coverage, test failures or
 broken local site links block publication; the previous successful site stays online.
@@ -133,7 +138,8 @@ their documented source vintage.
 
 The small saved inputs required by `scorecard.py` are versioned so the overview can
 also be rebuilt from a fresh checkout without fetching sources. Generated website
-files stay out of Git; Actions uploads them directly to GitHub Pages.
+files stay out of Git. The publication installs `requirements-site.txt` and builds
+the pages from this repository's saved inputs; it does not rerun the source fetches.
 
 After generating the input CSVs, rebuild the overview image without re-fetching data:
 

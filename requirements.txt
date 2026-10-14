@@ -8,8 +8,7 @@ numpy>=1.24
 openpyxl>=3.1
 odfpy>=1.4
 lxml>=5.0
-beautifulsoup4>=4.12
+-r requirements-site.txt
 PyMuPDF>=1.24
 xlrd>=2.0
-Markdown>=3.7
 urllib3>=2.0

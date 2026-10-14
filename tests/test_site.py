@@ -53,8 +53,23 @@ def test_site_builds_nested_pages_and_rewrites_document_links(site_repository):
     assert tuition.find("a", href="../methods/index.html#scope")
     assert tuition.find("a", href="#sources")
     assert tuition.find("img", src="../outputs/tuition/tuition_england_cap_nominal.png")
+    assert home.find("link", rel="canonical")["href"] == "https://www.themarginoferror.com/uk_decline/"
+    assert tuition.find("link", rel="canonical")["href"] == "https://www.themarginoferror.com/uk_decline/tuition/"
+    assert tuition.select_one(".chart-gallery figure img")
+    assert not tuition.find("iframe")
     assert not (output / private_chart.relative_to(root)).exists()
     build_site.validate_site(output)
+
+
+def test_former_pages_addresses_redirect_to_matching_publication_pages(site_repository):
+    output = build_site.build(site_repository, redirects=True)
+    for page in output.rglob("*.html"):
+        soup = BeautifulSoup(page.read_text(), "html.parser")
+        target = build_site.canonical_url(page.relative_to(output))
+        assert soup.find("meta", attrs={"http-equiv": "refresh"})["content"] == f"0; url={target}"
+        assert soup.find("link", rel="canonical")["href"] == target
+        assert soup.find("a", href=target)
+        assert not soup.select(".topic-card, .chart-gallery")
 
 
 def test_invalid_build_keeps_the_previous_site(site_repository):

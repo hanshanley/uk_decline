@@ -37,6 +37,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: requirements*.txt
       - name: Install dependencies
         run: pip install -r requirements.txt pytest
       - name: Run offline tests
@@ -62,6 +63,8 @@ jobs:
       - name: Publish refreshed inputs
         if: env.REFRESH_DATA == 'true'
         run: git push origin HEAD:master
+      - name: Build redirects to The Margin of Error
+        run: python scripts/build_site.py --redirects
       - uses: actions/upload-pages-artifact@v4
         if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
         with:
