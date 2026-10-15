@@ -1,5 +1,5 @@
 {
-  "last_successful_refresh_utc": "2026-10-14T23:34:02+00:00",
+  "last_successful_refresh_utc": "2026-10-15T16:02:12+00:00",
   "automated_analyses": [
     "gdp-income",
     "markets",
@@ -15,13 +15,13 @@
     "migration",
     "public-spending",
     "debt-borrowing",
+    "unemployment",
     "food-banks",
     "tuition",
     "purchasing-power"
   ],
   "curated_inputs": [
-    "LSE monthly factsheet selection and historical coverage",
-    "National tuition schedules and publisher workbook editions",
+    "National tuition schedules and cross-country fee selections",
     "Historical source URLs and manually compiled reference observations"
   ]
 }
