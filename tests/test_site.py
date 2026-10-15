@@ -349,6 +349,24 @@ def test_complete_refresh_runs_debt_borrowing_before_recording_success(monkeypat
     assert "debt-borrowing" in saved["automated_analyses"]
 
 
+def test_unemployment_is_embedded_and_included_in_complete_refresh(
+    site_repository, monkeypatch, tmp_path,
+):
+    output = build_site.build(site_repository)
+    page = BeautifulSoup((output / "unemployment/index.html").read_text(), "html.parser")
+    assert [Path(image["src"]).name for image in page.select("main img")] == [
+        "uk_unemployment.png", "uk_youth_unemployment.png",
+    ]
+    assert "16-24" in page.get_text()
+    commands = []
+    monkeypatch.setattr(refresh_data, "nhs_coverage", lambda _: {})
+    monkeypatch.setattr(refresh_data, "run", lambda command, root: commands.append(command))
+    refresh_data.refresh(tmp_path)
+    assert commands.index(("-m", "unemployment_data")) < commands.index(("scorecard.py",))
+    saved = json.loads((tmp_path / "data/site/refresh.json").read_text())
+    assert "unemployment" in saved["automated_analyses"]
+
+
 def test_failed_plot_exports_do_not_advance_refresh_date(monkeypatch, tmp_path):
     monkeypatch.setattr(refresh_data, "STEPS", {"trade": (("-m", "trade_data"),)})
 

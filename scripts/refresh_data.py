@@ -30,6 +30,7 @@ STEPS = {
     "migration": (("-m", "uk_migration.run"),),
     "public-spending": (("-m", "austerity_data"),),
     "debt-borrowing": (("-m", "debt_data"),),
+    "unemployment": (("-m", "unemployment_data"),),
     "food-banks": (("-m", "foodbank_data", "--refresh"),),
     "tuition": (
         ("-m", "tuition.cpi"),
