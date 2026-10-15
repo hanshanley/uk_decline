@@ -171,7 +171,7 @@ def latest_available_month(end: int | None = None) -> str | None:
     from datetime import timedelta
 
     today = date.today()
-    end = today.year - 1 if end is None else end
+    end = today.year - 2 if end is None else end
     candidate = today.replace(day=1) - timedelta(days=1)
     while candidate.year > end:
         try:
@@ -224,6 +224,11 @@ if __name__ == "__main__":
         parser.error("--latest and --latest-month are mutually exclusive")
     if args.latest:
         args.latest_month = latest_available_month(args.end)
+        if args.end is None and args.latest_month:
+            year, month = map(int, args.latest_month.split("-"))
+            args.end = year if month == 12 else year - 1
+            if month == 12:
+                args.latest_month = None
     out = write_csv(args.csv, args.start, args.end, args.latest_month)
     print(f"[lse_factsheets] wrote {out}")
     if not args.no_chart:

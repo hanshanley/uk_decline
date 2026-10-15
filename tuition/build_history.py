@@ -1,7 +1,7 @@
 """Build the historical tuition series (back to the early 1970s), in real 2022 USD.
 
 Every figure is traceable to a real primary source:
-  * US   — College Board 2025 Table CP-2 (public four-year, in-state tuition & fees),
+  * US   — College Board Table CP-2 (public four-year, in-state tuition & fees),
            complete nominal history deflated by saved BLS annual CPI-U.
            NCES remains a separate reference source, never appended to this series.
   * UK   — England statutory fee caps (Acts / SIs on legislation.gov.uk), nominal GBP,

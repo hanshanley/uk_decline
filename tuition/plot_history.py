@@ -29,7 +29,7 @@ SERIES = {
     config.EU: ("Germany — zero-fee reference years only", theme.BLUE, "points"),
 }
 SOURCE_NOTE = (
-    "Real 2022 US dollars (inflation-adjusted). Sources: US — College Board 2025 Table CP-2 "
+    "Real 2022 US dollars (inflation-adjusted). Sources: US — College Board Table CP-2 "
     "(current dollars); UK — England statutory fee caps (legislation.gov.uk / "
     "GOV.UK), converted at World Bank market exchange rates. "
     "Both deflated with the US Bureau of Labor Statistics' annual consumer price index for urban consumers; "

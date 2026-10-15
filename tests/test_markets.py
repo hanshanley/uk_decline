@@ -137,6 +137,28 @@ def test_lse_refresh_cannot_replace_a_newer_month_with_an_older_snapshot(monkeyp
     assert path.read_text() == "date\n2026-07-31\n"
 
 
+def test_lse_discovery_crosses_new_year_when_december_is_not_published(monkeypatch):
+    from datetime import date
+    import requests
+    from markets_data import lse_factsheets as lse
+
+    class Today(date):
+        @classmethod
+        def today(cls):
+            return cls(2027, 1, 15)
+
+    def download(url):
+        if "December" in url:
+            response = requests.Response()
+            response.status_code = 404
+            raise requests.HTTPError(response=response)
+        return b"workbook"
+
+    monkeypatch.setattr(lse, "date", Today)
+    monkeypatch.setattr(lse, "_download", download)
+    assert lse.latest_available_month() == "2026-11"
+
+
 def test_lse_bad_main_market_counts_do_not_become_zero(monkeypatch):
     import pytest
     from markets_data import lse_factsheets as lse

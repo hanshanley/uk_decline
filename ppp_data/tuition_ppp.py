@@ -310,7 +310,7 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
 
     source_note(fig, note(
         "Sources: UK \u2014 England statutory fee caps (legislation.gov.uk / GOV.UK); US "
-        "\u2014 College Board 2025 Table CP-2. UK fees converted at the World Bank purchasing power parity "
+        "\u2014 College Board Table CP-2. UK fees converted at the World Bank purchasing power parity "
         f"factor (PA.NUS.PPP, {ICP_VINTAGE}) and at the market rate, both deflated by US consumer prices "
         f"to constant {BASE_YEAR} dollars. US prices define the international dollar, so the conversion "
         "leaves its nominal fees unchanged. Both this chart and the market-rate tuition "
@@ -359,7 +359,7 @@ def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | Non
 
     source_note(fig, note(
         "Sources: UK \u2014 England statutory fee caps (legislation.gov.uk / GOV.UK); US "
-        "\u2014 College Board 2025 Table CP-2; GDP per capita from the World Bank "
+        "\u2014 College Board Table CP-2; GDP per capita from the World Bank "
         "(NY.GDP.PCAP.CD, NY.GDP.PCAP.PP.CD). Germany: selected zero-fee policy "
         "reference years, not a continuous history; some states charged general "
         "tuition during 2006\u20132014. Fees and GDP per capita are taken in the same "
