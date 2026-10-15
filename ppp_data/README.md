@@ -58,8 +58,9 @@ This is a genuine qualification of the headline story, and it is reported as suc
 ### The three views side by side
 ![UK vs US at market rates, at PPP and in real volume](../outputs/ppp/ppp_vs_market_fx_uk_us.png)
 
-The GDP page provides separate nominal, real-volume and current-PPP charts with
-**US and EU relative to the UK (UK = 100)**. A supplemental
+The GDP page provides nominal and current-PPP charts with
+**US and EU relative to the UK (UK = 100)**. The separate real-volume comparison is
+retained only as a supplemental export. A supplemental
 [four-panel comparison](../outputs/gdp_income/us_uk_gdp_measures.png) retains the
 UK/US audit alongside actual annual sterling exchange rates.
 In 2025, US GDP per head is 156.3% of the UK in nominal

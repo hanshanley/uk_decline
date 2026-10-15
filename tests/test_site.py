@@ -94,6 +94,15 @@ def test_site_builds_nested_pages_and_rewrites_document_links(site_repository):
     build_site.validate_site(output)
 
 
+def test_public_gdp_comparisons_keep_nominal_and_ppp_without_third_real_volume_chart(site_repository):
+    output = build_site.build(site_repository)
+    page = BeautifulSoup((output / "gdp-income/index.html").read_text(), "html.parser")
+    assert [Path(urlsplit(image["src"]).path).name for image in page.select("main img")] == [
+        "uk_gdp_relative_to_peers_simple.png", "uk_ppp_gdp_relative_to_peers.png",
+        "median_disposable_income_oecd.png",
+    ]
+
+
 def test_supplemental_charts_are_not_automatically_embedded(site_repository):
     chart = site_repository / "outputs/rail/rail_london_new_measure.png"
     chart.write_bytes(b"test image")
@@ -133,7 +142,7 @@ def test_site_rejects_stale_observations_without_replacing_published_build(site_
 
 @pytest.mark.parametrize(("chart", "comparator"), [
     ("gdp_income/uk_gdp_relative_to_peers_simple", "EU average"),
-    ("gdp_income/uk_real_gdp_relative_to_peers", "United States"),
+    ("gdp_income/uk_ppp_gdp_relative_to_peers", "United States"),
     ("nhs/cancer_62day_pct", "Northern Ireland"),
     ("stock_markets/stock_market_cap_pct_gdp", "United Kingdom"),
 ])
@@ -224,7 +233,7 @@ def test_topic_pages_only_embed_curated_charts_without_documentation_duplicates(
         page = BeautifulSoup((output / analysis.slug / "index.html").read_text(), "html.parser")
         images = page.select("main img")
         assert [Path(urlsplit(image["src"]).path).name for image in images] == list(analysis.charts)
-        assert 1 <= len(images) <= (4 if analysis.slug == "gdp-income" else 3)
+        assert 1 <= len(images) <= 3
         assert len({image["src"] for image in images}) == len(images)
         assert not page.select(".methodology, #methodology, .prose, pre")
         assert "Definitions, methods and sources" not in page.get_text()

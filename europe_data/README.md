@@ -22,16 +22,18 @@ longer the headline real-output chart. Its arithmetic is retained for tuition co
 
 ### US and EU relative to the UK: separate measures
 
-The public page uses the same single-panel layout for all three comparisons:
+The public page uses the same single-panel layout for two comparisons:
 **US and EU lines, with the UK fixed at 100**. Germany, France and Poland are not
 separate lines in these public GDP comparisons. The EU is the published World Bank
 aggregate, not an average reconstructed from selected countries.
 
 ![Nominal GDP per person: US and EU relative to the UK](../outputs/gdp_income/uk_gdp_relative_to_peers_simple.png)
-![Real GDP per person: US and EU relative to the UK at fixed 2021 PPPs](../outputs/gdp_income/uk_real_gdp_relative_to_peers.png)
 ![Current-PPP GDP per person: US and EU relative to the UK](../outputs/gdp_income/uk_ppp_gdp_relative_to_peers.png)
 
-The four-panel UK/US and exchange-rate audit remains a supplemental export:
+The separate real-volume comparison and four-panel UK/US exchange-rate audit
+remain supplemental exports, not additional GDP comparisons on the public page:
+
+![Supplemental real GDP per person comparison at fixed 2021 PPPs](../outputs/gdp_income/uk_real_gdp_relative_to_peers.png)
 
 ![US versus UK: nominal GDP, current PPP, real PPP volumes and annual sterling exchange rates](../outputs/gdp_income/us_uk_gdp_measures.png)
 
