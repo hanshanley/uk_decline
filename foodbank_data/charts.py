@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 
-from vizstyle import ACCENT, BG, BLUE, GOLD, GRID, MUTED, TEXT, house_style, source_note
+from vizstyle import ACCENT, BG, BLUE, GOLD, GRID, MUTED, TEXT, house_style, source_note, save_chart
 
 from .sources import ACCESSED_DATE, OUTPUT_DIR
 
@@ -206,7 +206,7 @@ def foodbank_history_chart(
     source_note(
         fig,
         "Sources: Trussell archived reports and official 2023/24 fiscal dataset; "
-        f"{int(latest['year'])} calendar-year workbook. Accessed {ACCESSED_DATE}.\n"
+        f"{int(latest['year'])} calendar-year workbook. Accessed {latest['accessed_date']}.\n"
         f"{historical.iloc[0]['period_label']}–{historical.iloc[-1]['period_label']} "
         f"are financial years; the right-hand panel is calendar-year {int(latest['year'])}. "
         "Counts are distribution instances, not unique people. "
@@ -218,7 +218,7 @@ def foodbank_history_chart(
     fig.subplots_adjust(left=0.075, right=0.975, top=0.8, bottom=0.15)
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=220, bbox_inches="tight", pad_inches=0.15, facecolor=BG)
+    save_chart(fig, out_path, dpi=220, bbox_inches="tight", pad_inches=0.15, facecolor=BG)
     plt.close(fig)
     return out_path
 
@@ -273,7 +273,7 @@ def foodbank_chart(
     )
     note = (
         f"Source: Trussell, {int(latest['year'])} calendar-year parcel-statistics workbook. "
-        f"Accessed {ACCESSED_DATE}. Counts are distribution instances, not unique people; "
+        f"Accessed {latest['accessed_date']}. Counts are distribution instances, not unique people; "
         "Trussell's network, not all UK food banks. From Apr 2020, three- and seven-day "
         "parcels are combined without duration adjustment. Older April-March financial-year "
         "figures are preserved separately on GitHub, not spliced into this series."
@@ -282,7 +282,7 @@ def foodbank_chart(
     fig.subplots_adjust(left=.075, right=.975, top=.83, bottom=.18)
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=220, bbox_inches="tight", pad_inches=.15, facecolor=BG)
+    save_chart(fig, out_path, dpi=220, bbox_inches="tight", pad_inches=.15, facecolor=BG)
     plt.close(fig)
     return out_path
 

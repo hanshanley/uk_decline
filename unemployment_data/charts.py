@@ -9,7 +9,7 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from vizstyle import ACCENT, BG, BLUE, MUTED, TEXT, house_style
+from vizstyle import ACCENT, BG, BLUE, MUTED, TEXT, house_style, save_chart
 
 from .sources import SERIES, validate
 
@@ -91,7 +91,7 @@ def make_charts(frame: pd.DataFrame, out: Path) -> list[Path]:
         fig.text(.10, .025, textwrap.fill(note, width=150), fontsize=8, color=MUTED)
         fig.subplots_adjust(left=.10, right=.97, bottom=.21, top=.79)
         path = out / filename
-        fig.savefig(path, dpi=200, facecolor=BG, bbox_inches="tight", pad_inches=.15)
+        save_chart(fig, path, dpi=200, facecolor=BG, bbox_inches="tight", pad_inches=.15)
         plt.close(fig)
         outputs.append(path)
     return outputs

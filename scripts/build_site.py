@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import hashlib
 from html import escape
 import json
 import os
@@ -17,6 +18,11 @@ from urllib.parse import unquote, urlsplit
 
 from bs4 import BeautifulSoup
 import markdown
+
+if __package__:
+    from .chart_data import load_chart_data
+else:
+    from chart_data import load_chart_data
 
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = "https://github.com/hanshanley/uk_decline"
@@ -280,8 +286,9 @@ def layout(
 ) -> str:
     home = relative_url(Path("index.html"), page)
     methods = relative_url(Path("methods/index.html"), page)
-    css = relative_url(Path("assets/site.css"), page)
-    js = relative_url(Path("assets/site.js"), page)
+    css = relative_url(Path("assets/site.css"), page) + f"?v={revision[:12]}"
+    js = relative_url(Path("assets/site.js"), page) + f"?v={revision[:12]}"
+    hover_js = relative_url(Path("assets/hover.js"), page) + f"?v={revision[:12]}"
     refresh_note = (
         f"Last complete automated refresh: {escape(refreshed_at)} (UTC)."
         if refreshed_at else "Automatic data refreshes run weekly."
@@ -299,6 +306,7 @@ def layout(
   <link rel="apple-touch-icon" href="https://www.themarginoferror.com/apple-touch-icon.png" sizes="180x180">
   <link rel="stylesheet" href="{css}">
   <script src="{js}" defer></script>
+  <script src="{hover_js}" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -434,7 +442,8 @@ def analysis_page(analysis: Analysis) -> str:
     <section class="page-heading"><a class="breadcrumb" href="../#explore">&#8592; All analyses</a>
       <p class="eyebrow">{escape(analysis.group)}</p><h1>{escape(analysis.title)}</h1>
       <p class="standfirst">{escape(analysis.description)}</p>
-      <p class="context">Open any chart for full resolution. Observation periods and source notes
+      <p class="context">Hover or focus a chart to inspect observations; open it for full resolution
+      or tap a point on mobile. Observation periods and source notes
       are printed on each figure; the site's build date does not imply newer observations.</p>
     </section>
     <section class="chart-gallery" aria-label="Charts">{''.join(figures)}</section>
@@ -444,6 +453,37 @@ def analysis_page(analysis: Analysis) -> str:
     </p>"""
 
 
+def chart_interactions(body: str, page: Path, observations: dict[Path, dict]) -> str:
+    soup = BeautifulSoup(body, "html.parser")
+
+    def chart_url(value):
+        url = urlsplit(value)
+        if url.scheme or url.netloc:
+            return None, url
+        chart = Path(os.path.normpath(page.parent / unquote(url.path)))
+        return observations.get(chart), url
+
+    for image in soup.select("img[src]"):
+        data, url = chart_url(image["src"])
+        if data is None:
+            continue
+        chart = Path(os.path.normpath(page.parent / unquote(url.path)))
+        version = data["image_sha256"][:16]
+        image["src"] = url._replace(query=f"v={version}").geturl()
+        if image.find_parent(class_="chart-link") is None and image.find_parent(class_="prose") is None:
+            continue
+        data_version = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
+        image["data-chart-data"] = relative_url(chart.with_suffix(".json"), page) + f"?v={data_version}"
+        image["tabindex"] = "0"
+        image["aria-describedby"] = "chart-point-tooltip"
+        image["aria-label"] = image.get("alt", "Chart") + ". Arrow keys explore observations; Home and End select the first and last point."
+    for link in soup.select("a[href]"):
+        data, url = chart_url(link["href"])
+        if data is not None:
+            link["href"] = url._replace(query=f"v={data['image_sha256'][:16]}").geturl()
+    return str(soup)
+
+
 def validate_site(output: Path) -> None:
     """Reject broken local links or image references before replacing a published build."""
     for page in output.rglob("*.html"):
@@ -451,6 +491,11 @@ def validate_site(output: Path) -> None:
         ids = [node["id"] for node in soup.find_all(id=True)]
         if len(ids) != len(set(ids)):
             raise ValueError(f"{page.relative_to(output)}: duplicate HTML ids")
+        for image in soup.select("img[data-chart-data]"):
+            path = unquote(urlsplit(image["data-chart-data"]).path)
+            target = (page.parent / path).resolve()
+            if not target.is_relative_to(output.resolve()) or not target.is_file():
+                raise ValueError(f"{page.relative_to(output)}: missing chart observations {path}")
         for node in soup.find_all(["a", "img", "script", "link"]):
             value = node.get("href") or node.get("src")
             if not value:
@@ -490,6 +535,16 @@ def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
             raise ValueError(f"{analysis.title}: missing tracked publication inputs: {sorted(missing)}")
     if Path("outputs/uk_decline_scorecard.png") not in files:
         raise ValueError("Missing tracked overview chart")
+    charts = {
+        path for path in files
+        if path.suffix == ".png" and path.parts[0] == "outputs"
+        and not path.is_relative_to("outputs/page_background")
+    }
+    observations = {}
+    for chart in charts:
+        if chart.with_suffix(".json") not in files:
+            raise ValueError(f"{chart}: missing tracked hover observations")
+        observations[chart] = load_chart_data(root, chart)
     revision = subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=root, text=True,
     ).strip()
@@ -506,7 +561,7 @@ def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
         stage = Path(temp)
         shutil.copytree(root / "site_assets", stage / "assets")
         for path in files:
-            if path.suffix.lower() in {".png", ".csv"} and path.parts[0] in {"outputs", "data"}:
+            if path.suffix.lower() in {".png", ".csv", ".json"} and path.parts[0] in {"outputs", "data"}:
                 target = stage / path
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(root / path, target)
@@ -530,6 +585,7 @@ def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
         for page, (title, description, body) in pages.items():
             target = stage / page
             target.parent.mkdir(parents=True, exist_ok=True)
+            body = chart_interactions(body, page, observations)
             target.write_text(layout(title, description, body, page, revision, built_at, refreshed_at))
         (stage / ".nojekyll").touch()
         validate_site(stage)

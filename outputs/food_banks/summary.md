@@ -27,8 +27,8 @@ chart calculates a change across the reporting-basis break.
 - Food banks in Trussell's UK community distributed **2,644,835 emergency
   food parcels in calendar 2025**: 1,732,619 for adults and
   912,216 for children.
-- That was **11.7% lower than 2024**, but still
-  **44.9% above 2019**.
+- That was **11.7% lower than 2024**,
+  and **44.9% above 2019**.
 - The calendar-year series rose from **1,107,806 in 2015** to a
   peak of **3,237,114 in 2023**. The 2025 total was
   **18.3% below that peak**.
@@ -76,4 +76,4 @@ the full-year chart.
   [official 2025 parcel-statistics workbook](https://cms.trussell.org.uk/sites/default/files/2026-03/eys_2025_parcel_stats.xlsx).
 - Trussell, [Mid-year stats](https://www.trussell.org.uk/news-and-research/latest-stats/mid-year-stats) and
   [official April–September 2024 workbook](https://trusselltrustprod.prod.acquia-sites.com/sites/default/files/2024-11/MYS%202024%20parcel%20statistics%20%28web%29.xlsx).
-- Accessed **2026-08-16**.
+- Calendar-year workbook accessed **2026-08-16**.

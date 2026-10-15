@@ -1,6 +1,6 @@
 """Fetch the complete nominal US public four-year history from College Board.
 
-Uses the 2025 edition throughout, not an append to the different NCES collection.
+Uses one complete publisher edition, not an append to the different NCES collection.
 The publisher identifies a collection/enrollment-weighting break in 1987/88.
 """
 
@@ -12,8 +12,10 @@ from io import BytesIO
 import math
 from pathlib import Path
 import re
+from urllib.parse import urljoin, urlsplit
 
 import pandas as pd
+from bs4 import BeautifulSoup
 
 from tuition import config
 from tuition.http import session
@@ -26,9 +28,26 @@ BREAK_YEAR = 1987
 FIRST_YEAR = 1971
 LAST_YEAR = 2025
 FIELDS = ["year", "tuition_current_usd", "source", "source_url"]
+PUBLISHER_PAGE = "https://research.collegeboard.org/trends/college-pricing"
 
 
-def parse(frame: pd.DataFrame) -> list[dict]:
+def latest_workbook(html: str) -> tuple[str, int]:
+    candidates = set()
+    for link in BeautifulSoup(html, "html.parser").select("a[href]"):
+        url = urljoin(PUBLISHER_PAGE, link["href"])
+        match = re.search(r"college[-_]pricing[-_](20\d{2})[-_]excel[-_]data\.xlsx$", urlsplit(url).path, re.I)
+        if match and urlsplit(url).hostname == "research.collegeboard.org":
+            candidates.add((int(match[1]), url))
+    if not candidates:
+        raise ValueError("College Board publisher page has no pricing-data workbook")
+    year = max(year for year, _ in candidates)
+    urls = {url for edition, url in candidates if edition == year}
+    if len(urls) != 1 or year < LAST_YEAR:
+        raise ValueError("College Board pricing workbook is ambiguous or older than saved coverage")
+    return urls.pop(), year
+
+
+def parse(frame: pd.DataFrame, *, edition: int = LAST_YEAR, source_url: str = SOURCE_URL) -> list[dict]:
     """Locate nominal tuition, excluding constant dollars and room/board."""
     sections = [
         i for i in range(len(frame))
@@ -69,11 +88,11 @@ def parse(frame: pd.DataFrame) -> list[dict]:
         )
         rows.append({
             "year": year, "tuition_current_usd": value,
-            "source": f"College Board Trends in College Pricing 2025 Table CP-2; {collection}",
-            "source_url": SOURCE_URL,
+            "source": f"College Board Trends in College Pricing {edition} Table CP-2; {collection}",
+            "source_url": source_url,
         })
     years = [row["year"] for row in rows]
-    if years != list(range(FIRST_YEAR, LAST_YEAR + 1)):
+    if years != list(range(FIRST_YEAR, edition + 1)):
         raise ValueError("College Board nominal history has missing/duplicate/unexpected years")
     return rows
 
@@ -84,12 +103,22 @@ def main(argv: list[str] | None = None) -> None:
     args = ap.parse_args(argv)
     if args.input:
         content = args.input.read_bytes()
+        source_url, edition = SOURCE_URL, LAST_YEAR
     else:
-        response = session().get(SOURCE_URL, timeout=60)
+        client = session()
+        page = client.get(PUBLISHER_PAGE, timeout=60)
+        page.raise_for_status()
+        source_url, edition = latest_workbook(page.text)
+        response = client.get(source_url, timeout=60)
         response.raise_for_status()
         content = response.content
     frame = pd.read_excel(BytesIO(content), sheet_name="Table CP-2", header=None)
-    rows = parse(frame)
+    rows = parse(frame, edition=edition, source_url=source_url)
+    if Path(config.COLLEGEBOARD_CSV).exists():
+        with Path(config.COLLEGEBOARD_CSV).open(newline="") as handle:
+            previous = list(csv.DictReader(handle))
+        if previous and edition < max(int(row["year"]) for row in previous):
+            raise ValueError("College Board refresh would lose the latest published academic year")
     with open(config.COLLEGEBOARD_CSV, "w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=FIELDS, lineterminator="\n")
         writer.writeheader()

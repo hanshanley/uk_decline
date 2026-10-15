@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 from pathlib import Path
 import shutil
 import subprocess
+from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
 import pytest
@@ -31,6 +33,15 @@ def site_repository(tmp_path):
             chart.parent.mkdir(parents=True, exist_ok=True)
             chart.write_bytes(b"test image")
     (root / "outputs/uk_decline_scorecard.png").write_bytes(b"overview")
+    for chart in (root / "outputs").rglob("*.png"):
+        chart.with_suffix(".json").write_text(json.dumps({
+            "version": 1,
+            "image_sha256": hashlib.sha256(chart.read_bytes()).hexdigest(),
+            "series": [{
+                "label": "UK", "x_label": "Year", "y_label": "Rate",
+                "bounds": [.1, .1, .9, .9], "points": [[.5, .5, "2025", "4.9%"]],
+            }],
+        }))
     (root / "README.md").write_text(
         "# About the data\n\n## Scope\n\n[Tuition](tuition/README.md#sources)\n"
     )
@@ -61,7 +72,9 @@ def test_site_builds_nested_pages_and_rewrites_document_links(site_repository):
     assert tuition.find(
         "a", href=f"{build_site.REPOSITORY}/tree/master/outputs/tuition",
     )
-    assert tuition.find("img", src="../outputs/tuition/tuition_england_cap_nominal.png")
+    assert urlsplit(tuition.select_one(".chart-gallery img")["src"]).path == (
+        "../outputs/tuition/tuition_england_cap_nominal.png"
+    )
     assert home.find("link", rel="canonical")["href"] == "https://www.themarginoferror.com/uk_decline/"
     assert tuition.find("link", rel="canonical")["href"] == "https://www.themarginoferror.com/uk_decline/tuition/"
     assert tuition.select_one(".chart-gallery figure img")
@@ -81,10 +94,46 @@ def test_site_builds_nested_pages_and_rewrites_document_links(site_repository):
 def test_supplemental_charts_are_not_automatically_embedded(site_repository):
     chart = site_repository / "outputs/rail/rail_london_new_measure.png"
     chart.write_bytes(b"test image")
-    subprocess.run(["git", "add", str(chart)], cwd=site_repository, check=True)
+    shutil.copyfile(
+        site_repository / "outputs/rail/rail_london_ppm_official.json",
+        chart.with_suffix(".json"),
+    )
+    subprocess.run(["git", "add", str(chart), str(chart.with_suffix(".json"))], cwd=site_repository, check=True)
     output = build_site.build(site_repository)
     rail = BeautifulSoup((output / "rail/index.html").read_text(), "html.parser")
     assert not rail.find("img", src="../outputs/rail/rail_london_new_measure.png")
+
+
+def test_chart_interactions_use_matching_versioned_observations(site_repository):
+    output = build_site.build(site_repository)
+    for analysis in build_site.ANALYSES:
+        page = output / analysis.slug / "index.html"
+        soup = BeautifulSoup(page.read_text(), "html.parser")
+        for image in soup.select(".chart-gallery img"):
+            assert image["tabindex"] == "0"
+            data_url = urlsplit(image["data-chart-data"])
+            image_url = urlsplit(image["src"])
+            payload = json.loads((page.parent / data_url.path).read_text())
+            assert payload["image_sha256"] == hashlib.sha256((page.parent / image_url.path).read_bytes()).hexdigest()
+            assert image_url.query == f"v={payload['image_sha256'][:16]}"
+            assert data_url.query == "v=" + hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def test_site_rejects_stale_observations_without_replacing_published_build(site_repository):
+    output = build_site.build(site_repository)
+    previous = (output / "index.html").read_bytes()
+    (site_repository / "outputs/uk_decline_scorecard.png").write_bytes(b"updated image")
+    with pytest.raises(ValueError, match="do not match"):
+        build_site.build(site_repository)
+    assert (output / "index.html").read_bytes() == previous
+
+
+def test_refresh_cannot_claim_success_when_a_tracked_chart_was_skipped(site_repository, monkeypatch):
+    monkeypatch.setattr(refresh_data, "STEPS", {"trade": (("-m", "trade_data"),)})
+    monkeypatch.setattr(refresh_data, "run", lambda *args: None)
+    with pytest.raises(RuntimeError, match="not regenerated"):
+        refresh_data.refresh(site_repository)
+    assert not (site_repository / "data/site/refresh.json").exists()
 
 
 def test_public_navigation_uses_directory_urls_and_validates_their_anchors(site_repository):
@@ -151,7 +200,7 @@ def test_topic_pages_only_embed_curated_charts_without_documentation_duplicates(
     for analysis in build_site.ANALYSES:
         page = BeautifulSoup((output / analysis.slug / "index.html").read_text(), "html.parser")
         images = page.select("main img")
-        assert [Path(image["src"]).name for image in images] == list(analysis.charts)
+        assert [Path(urlsplit(image["src"]).path).name for image in images] == list(analysis.charts)
         assert 1 <= len(images) <= 3
         assert len({image["src"] for image in images}) == len(images)
         assert not page.select(".methodology, #methodology, .prose, pre")
@@ -323,6 +372,7 @@ def test_complete_refresh_records_success_only_after_scorecard(monkeypatch, tmp_
     status = tmp_path / "data/site/refresh.json"
     commands = []
     monkeypatch.setattr(refresh_data, "STEPS", {"trade": (("-m", "trade_data"),)})
+    monkeypatch.setattr(refresh_data, "validate_refresh", lambda *args: None)
 
     def succeed(command, root):
         assert not status.exists()
@@ -341,6 +391,7 @@ def test_complete_refresh_records_success_only_after_scorecard(monkeypatch, tmp_
 def test_complete_refresh_runs_debt_borrowing_before_recording_success(monkeypatch, tmp_path):
     commands = []
     monkeypatch.setattr(refresh_data, "nhs_coverage", lambda _: {})
+    monkeypatch.setattr(refresh_data, "validate_refresh", lambda *args: None)
     monkeypatch.setattr(refresh_data, "run", lambda command, root: commands.append(command))
     refresh_data.refresh(tmp_path)
     assert ("-m", "debt_data") in commands
@@ -354,12 +405,13 @@ def test_unemployment_is_embedded_and_included_in_complete_refresh(
 ):
     output = build_site.build(site_repository)
     page = BeautifulSoup((output / "unemployment/index.html").read_text(), "html.parser")
-    assert [Path(image["src"]).name for image in page.select("main img")] == [
+    assert [Path(urlsplit(image["src"]).path).name for image in page.select("main img")] == [
         "uk_unemployment_comparison.png",
     ]
     assert "16-24" in page.get_text()
     commands = []
     monkeypatch.setattr(refresh_data, "nhs_coverage", lambda _: {})
+    monkeypatch.setattr(refresh_data, "validate_refresh", lambda *args: None)
     monkeypatch.setattr(refresh_data, "run", lambda command, root: commands.append(command))
     refresh_data.refresh(tmp_path)
     assert commands.index(("-m", "unemployment_data")) < commands.index(("scorecard.py",))

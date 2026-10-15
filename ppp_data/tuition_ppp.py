@@ -286,10 +286,10 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
 
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
     ax.fill_between(uk_years, uk_ppp, uk_fx, color=MUTED, alpha=0.16, zorder=1)
-    ax.plot(uk_years, uk_fx, color=MUTED, linewidth=1.8, linestyle="--", zorder=3)
-    ax.plot(uk_years, uk_ppp, color=ACCENT, linewidth=3.0, zorder=4)
+    ax.plot(uk_years, uk_fx, color=MUTED, linewidth=1.8, linestyle="--", zorder=3, label="England, at market rates")
+    ax.plot(uk_years, uk_ppp, color=ACCENT, linewidth=3.0, zorder=4, label="England, purchasing power")
     if us_years:
-        ax.plot(us_years, us_ppp, color=GOLD, linewidth=2.0, zorder=2)
+        ax.plot(us_years, us_ppp, color=GOLD, linewidth=2.0, zorder=2, label="United States")
 
     labels = [(uk_ppp[-1], "UK, purchasing power", ACCENT),
               (uk_fx[-1], "UK, at market rates", MUTED)]
@@ -331,13 +331,13 @@ def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | Non
         return None
 
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
-    ax.plot(uk_years, uk, color=ACCENT, linewidth=2.8)
+    ax.plot(uk_years, uk, color=ACCENT, linewidth=2.8, label="England fee cap")
     ax.plot(uk_years, uk, "o", color=ACCENT, markersize=5,
             markeredgecolor="white", markeredgewidth=1.0)
     if us_years:
-        ax.plot(us_years, us, color=GOLD, linewidth=2.0)
+        ax.plot(us_years, us, color=GOLD, linewidth=2.0, label="US public four-year, in-state")
     if de_years:
-        ax.plot(de_years, de, "o", color=BLUE, markersize=5)
+        ax.plot(de_years, de, "o", color=BLUE, markersize=5, label="Germany, selected zero-fee reference years")
         ax.text(sum(de_years) / len(de_years), max(uk) * 0.03,
                 "Germany \u2014 selected zero-fee reference years",
                 fontsize=9.5, fontweight="bold",

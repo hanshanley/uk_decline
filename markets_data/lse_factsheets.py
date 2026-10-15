@@ -166,6 +166,26 @@ def build_rows(
     return rows
 
 
+def latest_available_month(end: int | None = None) -> str | None:
+    """Find the latest completed month with both official market factsheets."""
+    from datetime import timedelta
+
+    today = date.today()
+    end = today.year - 1 if end is None else end
+    candidate = today.replace(day=1) - timedelta(days=1)
+    while candidate.year > end:
+        try:
+            for market in ("Main Market", "AIM"):
+                _download(_factsheet_url(market, candidate.year, calendar.month_name[candidate.month]))
+        except requests.HTTPError as error:
+            if error.response is None or error.response.status_code not in (404, 410):
+                raise
+        else:
+            return candidate.strftime("%Y-%m")
+        candidate = candidate.replace(day=1) - timedelta(days=1)
+    return None
+
+
 def write_csv(
     path: Path | str = DEFAULT_CSV, start: int = 2018,
     end: int | None = None, latest_month: str | None = None,
@@ -176,6 +196,11 @@ def write_csv(
     if not rows:
         raise RuntimeError("LSE returned no company counts; existing data was not replaced")
     path = Path(path)
+    if path.exists():
+        with path.open(newline="") as handle:
+            previous = list(csv.DictReader(handle))
+        if previous and max(row["date"] for row in rows) < max(row["date"] for row in previous):
+            raise ValueError("LSE refresh would lose the latest published observation")
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=FIELDS)
@@ -191,9 +216,14 @@ if __name__ == "__main__":
     parser.add_argument("--start", type=int, default=2018)
     parser.add_argument("--end", type=int, default=None)
     parser.add_argument("--latest-month", help="optional later month-end snapshot, YYYY-MM")
+    parser.add_argument("--latest", action="store_true", help="discover the latest available monthly factsheets")
     parser.add_argument("--csv", type=Path, default=DEFAULT_CSV)
     parser.add_argument("--no-chart", action="store_true", help="write data only")
     args = parser.parse_args()
+    if args.latest and args.latest_month:
+        parser.error("--latest and --latest-month are mutually exclusive")
+    if args.latest:
+        args.latest_month = latest_available_month(args.end)
     out = write_csv(args.csv, args.start, args.end, args.latest_month)
     print(f"[lse_factsheets] wrote {out}")
     if not args.no_chart:

@@ -88,6 +88,55 @@ def test_lse_annual_and_partial_year_rows_preserve_dates_and_both_sources(monkey
     assert len(requested) == 4
 
 
+def test_lse_discovers_latest_month_with_both_markets_and_surfaces_server_errors(monkeypatch):
+    from datetime import date
+    import pytest
+    import requests
+    from markets_data import lse_factsheets as lse
+
+    class Today(date):
+        @classmethod
+        def today(cls):
+            return cls(2026, 10, 15)
+
+    monkeypatch.setattr(lse, "date", Today)
+    requested = []
+
+    def download(url):
+        requested.append(url)
+        if "September" in url or ("August" in url and "AIM" in url):
+            response = requests.Response()
+            response.status_code = 404
+            raise requests.HTTPError(response=response)
+        return b"workbook"
+
+    monkeypatch.setattr(lse, "_download", download)
+    assert lse.latest_available_month() == "2026-07"
+    assert all("October" not in url for url in requested)
+    assert any("August" in url and "AIM" in url for url in requested)
+    response = requests.Response()
+    response.status_code = 503
+
+    def server_error(url):
+        raise requests.HTTPError(response=response)
+
+    monkeypatch.setattr(lse, "_download", server_error)
+    with pytest.raises(requests.HTTPError):
+        lse.latest_available_month()
+
+
+def test_lse_refresh_cannot_replace_a_newer_month_with_an_older_snapshot(monkeypatch, tmp_path):
+    import pytest
+    from markets_data import lse_factsheets as lse
+
+    path = tmp_path / "lse.csv"
+    path.write_text("date\n2026-07-31\n")
+    monkeypatch.setattr(lse, "build_rows", lambda *args: [{"date": "2025-12-31"}])
+    with pytest.raises(ValueError, match="lose the latest"):
+        lse.write_csv(path)
+    assert path.read_text() == "date\n2026-07-31\n"
+
+
 def test_lse_bad_main_market_counts_do_not_become_zero(monkeypatch):
     import pytest
     from markets_data import lse_factsheets as lse

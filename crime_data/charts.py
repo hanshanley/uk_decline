@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 
-from vizstyle import ACCENT, BLUE, GRID, MUTED, RC_PARAMS as _THEME, white_stroke
+from vizstyle import ACCENT, BLUE, GRID, MUTED, RC_PARAMS as _THEME, white_stroke, save_chart
 
 _STROKE = white_stroke()
 _CRIME_THEME = {
@@ -143,7 +143,7 @@ def chart_csew_total(df, out_dir):
     x, y = s["date"], s["value"] / 1_000.0  # 1,000s of incidents -> millions
 
     fig, ax = plt.subplots(figsize=(10.5, 5.8))
-    _plot_csew(ax, s, color=ACCENT, linewidth=2.7)
+    _plot_csew(ax, s, color=ACCENT, linewidth=2.7, label="Traditional crime (million incidents)")
 
     peak = y.idxmax()
     ax.plot([x[peak]], [y[peak]], "o", color=ACCENT, markersize=6,
@@ -184,7 +184,7 @@ def chart_csew_21st_century(df, out_dir):
 
     x, y = s["date"], s["value"] / 1_000.0
     fig, ax = plt.subplots(figsize=(10.5, 5.8))
-    _plot_csew(ax, s, color=ACCENT, linewidth=2.7)
+    _plot_csew(ax, s, color=ACCENT, linewidth=2.7, label="Traditional crime (million incidents)")
 
     first_value, latest_value = y.iloc[0], y.iloc[-1]
     ax.plot([x.iloc[0], x.iloc[-1]], [first_value, latest_value], "o", color=ACCENT,
@@ -246,8 +246,8 @@ def chart_fraud_gap(df, out_dir):
             segment["date"], segment["value_incl"] / 1_000.0,
             segment["value_excl"] / 1_000.0, color=ACCENT, alpha=0.075,
         )
-    _plot_csew(ax, incl, color=ACCENT, linewidth=2.7)
-    _plot_csew(ax, excl, color=BLUE, linewidth=2.25)
+    _plot_csew(ax, incl, color=ACCENT, linewidth=2.7, label="Including fraud and computer misuse (million incidents)")
+    _plot_csew(ax, excl, color=BLUE, linewidth=2.25, label="Excluding fraud and computer misuse (million incidents)")
     ax.plot([xi.iloc[-1]], [yi.iloc[-1]], "o", color=ACCENT, markersize=5, zorder=5)
     ax.plot([xe.iloc[-1]], [ye.iloc[-1]], "o", color=BLUE, markersize=5, zorder=5)
     _end_label(ax, xi.iloc[-1], yi.iloc[-1], f"Including fraud &\ncomputer misuse  {yi.iloc[-1]:.1f}M",
@@ -304,12 +304,12 @@ def chart_homicide_peers(df, out_dir):
     eu_mean = eu_grp.mean()[eu_grp.size() >= _MIN_EU_REPORTERS]
     ax.plot(
         eu_mean.index, eu_mean.values, color=MUTED, linewidth=1.6,
-        linestyle=(0, (4, 3)), alpha=0.9,
+        linestyle=(0, (4, 3)), alpha=0.9, label="EU-27 reporting-country mean",
     )
     xus, yus = line("USA")
-    ax.plot(xus, yus, color=BLUE, linewidth=2.2, solid_capstyle="round")
+    ax.plot(xus, yus, color=BLUE, linewidth=2.2, solid_capstyle="round", label="United States")
     xuk, yuk = line("GBR")
-    ax.plot(xuk, yuk, color=ACCENT, linewidth=2.7, solid_capstyle="round")
+    ax.plot(xuk, yuk, color=ACCENT, linewidth=2.7, solid_capstyle="round", label="United Kingdom")
 
     if len(eu_mean):
         _end_label(ax, eu_mean.index[-1], eu_mean.values[-1],
@@ -367,7 +367,7 @@ def chart_homicide_nations(df, out_dir):
             continue
         ax.plot(
             series["year"], series["value"], color=color, linestyle=linestyle,
-            linewidth=width, solid_capstyle="round",
+            linewidth=width, solid_capstyle="round", label=jurisdiction,
         )
         ax.plot([series["year"].iloc[-1]], [series["value"].iloc[-1]], "o",
                 color=color, markersize=5, zorder=5)
@@ -401,7 +401,7 @@ def _save(fig, out_dir, filename, *, bottom=0.075) -> pathlib.Path:
     out_dir = pathlib.Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / filename
-    plt.savefig(out_path, dpi=200, bbox_inches="tight")
+    save_chart(plt.gcf(), out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     return out_path
 

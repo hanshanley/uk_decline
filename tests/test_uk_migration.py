@@ -26,7 +26,7 @@ def test_public_migration_charts_use_readable_labels_and_preserve_missing_years(
         for year, value in [(2005, 100000), (2006, 120000), (2024, 250000), (2025, 260000)]
     ]
     captured = []
-    monkeypatch.setattr(Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
     monkeypatch.setattr(charts, "FIGURES_DIR", tmp_path)
     chart(pd.DataFrame(rows))
     fig = captured[0]

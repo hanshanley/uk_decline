@@ -20,7 +20,7 @@ import pandas as pd
 
 from tuition import config, theme
 from tuition.fetch_collegeboard import BREAK_YEAR
-from vizstyle import with_year_gaps
+from vizstyle import with_year_gaps, save_chart
 
 # region key -> (label, colour, matplotlib draw style)
 SERIES = {
@@ -105,7 +105,7 @@ def plot(out_path: str) -> None:
     theme.source_note(fig, textwrap.fill(SOURCE_NOTE, width=150))
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.18)
-    fig.savefig(out_path, dpi=200, bbox_inches="tight")
+    save_chart(fig, out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {out_path}")
 
@@ -120,7 +120,7 @@ def plot_nominal_cap(out_path: str) -> None:
     years, values = zip(*points)
     series = with_year_gaps(pd.Series(values, index=years))
     fig, ax = plt.subplots(figsize=(11, 6))
-    ax.step(series.index, series.values, where="post", color=theme.ACCENT, linewidth=2.4)
+    ax.step(series.index, series.values, where="post", color=theme.ACCENT, linewidth=2.4, label="England undergraduate tuition cap")
     ax.plot(years[-1], values[-1], "o", color=theme.ACCENT)
     ax.set_title(
         "England's undergraduate tuition cap\n"
@@ -141,7 +141,7 @@ def plot_nominal_cap(out_path: str) -> None:
     )
     fig.tight_layout()
     fig.subplots_adjust(bottom=0.17)
-    fig.savefig(out_path, dpi=200, bbox_inches="tight")
+    save_chart(fig, out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {out_path}")
 

@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import pandas as pd
 
-from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, GRID, MUTED, TEXT, house_style
+from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, GRID, MUTED, TEXT, house_style, save_chart
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "outputs" / "austerity" / "uk_austerity_spending_investment.png"
@@ -174,6 +174,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
             series["year"],
             series["index"],
             color=color,
+            label=_label_text,
             linewidth=2.8,
             zorder=4,
         )
@@ -245,6 +246,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         investment["year"],
         investment["value"],
         color=ACCENT,
+        label="Public sector net investment",
         linewidth=3,
         marker="o",
         markersize=5,
@@ -340,6 +342,6 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     fig.subplots_adjust(left=0.065, right=0.955, top=0.79, bottom=0.16)
-    fig.savefig(output, dpi=220, bbox_inches="tight", facecolor=BG)
+    save_chart(fig, output, dpi=220, bbox_inches="tight", facecolor=BG)
     plt.close(fig)
     return output

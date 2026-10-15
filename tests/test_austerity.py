@@ -153,7 +153,7 @@ def test_investment_annotation_uses_actual_austerity_trough(monkeypatch):
         return original(self, text, *args, **kwargs)
 
     monkeypatch.setattr(Axes, "annotate", capture)
-    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda *a, **k: None)
+    monkeypatch.setattr(charts, "save_chart", lambda *a, **k: None)
     charts.make_chart(frame)
     assert "2012-13 low\n1.0% of GDP" in labels
     assert all("2024-25 low" not in label for label in labels)
@@ -173,7 +173,7 @@ def test_investment_footer_has_separate_lines_and_clears_axis_labels(monkeypatch
     from matplotlib.backends.backend_agg import FigureCanvasAgg
 
     captured = []
-    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
     charts.make_chart(_frame())
     fig = captured[0]
     canvas = FigureCanvasAgg(fig)
@@ -200,7 +200,7 @@ def test_investment_baseline_label_clears_the_published_curve(monkeypatch, font)
         charts.plt.rcParams["font.family"] = font
 
     monkeypatch.setattr(charts, "house_style", style)
-    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
     with charts.plt.rc_context():
         charts.make_chart(pd.read_csv(charts.ROOT / "data/austerity_spending.csv"))
         fig = captured[0]

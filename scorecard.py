@@ -42,7 +42,7 @@ REQUIRED_INPUTS = {
 # ── House style ──────────────────────────────────────────────────────────────
 # Palette from the shared vizstyle house style; scorecard keeps its own minimal
 # rcParams (it hides the left spine for the small-multiples look).
-from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, GREEN  # noqa: E402
+from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, GREEN, save_chart  # noqa: E402
 from nhs_data import metrics as nhs_metrics  # noqa: E402
 
 WORSE, BETTER, NEUTRAL = ACCENT, GREEN, MUTED
@@ -285,7 +285,7 @@ def main() -> int:
                         hspace=1.0, wspace=0.28)
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / "uk_decline_scorecard.png"
-    fig.savefig(path, dpi=200, bbox_inches="tight")
+    save_chart(fig, path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {path}")
     return 0

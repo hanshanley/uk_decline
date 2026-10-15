@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 
-from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, MUTED, TEXT, house_style, source_note
+from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, MUTED, TEXT, house_style, source_note, save_chart
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "outputs" / "trade" / "trade_share_gdp.png"
@@ -42,6 +42,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         ax.plot(
             sub["year"],
             sub["value"],
+            label=label,
             color=color,
             linewidth=width,
             alpha=1 if code == "GBR" else 0.9,
@@ -106,6 +107,6 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
 
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output, dpi=220, bbox_inches="tight", pad_inches=0.15, facecolor=BG)
+    save_chart(fig, output, dpi=220, bbox_inches="tight", pad_inches=0.15, facecolor=BG)
     plt.close(fig)
     return output

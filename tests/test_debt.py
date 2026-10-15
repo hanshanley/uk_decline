@@ -186,7 +186,7 @@ def test_debt_charts_use_year_ticks_and_separate_debt_stock_from_yields(
     debt_frame, monkeypatch, tmp_path,
 ):
     figures = []
-    monkeypatch.setattr(Figure, "savefig", lambda fig, *args, **kwargs: figures.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *args, **kwargs: figures.append(fig))
     paths = charts.make_charts(debt_frame, tmp_path)
     assert [Path(path).name for path in paths] == [
         "uk_public_debt_pct_gdp.png", "government_borrowing_costs.png",
@@ -213,7 +213,7 @@ def test_borrowing_chart_does_not_connect_missing_recent_months(debt_frame, monk
         & debt_frame["date"].eq(pd.Timestamp("2026-04-01"))
     )
     figures = []
-    monkeypatch.setattr(Figure, "savefig", lambda fig, *args, **kwargs: figures.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *args, **kwargs: figures.append(fig))
     charts.make_charts(debt_frame[~missing], tmp_path)
     uk = figures[1].axes[0].lines[0]
     assert pd.isna(uk.get_ydata()).sum() == 1
@@ -224,7 +224,7 @@ def test_daily_chart_is_separate_recent_and_does_not_fill_missing_days(
 ):
     daily_frame = daily_frame[daily_frame["date"] != pd.Timestamp("2026-10-08")]
     figures = []
-    monkeypatch.setattr(Figure, "savefig", lambda fig, *args, **kwargs: figures.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *args, **kwargs: figures.append(fig))
     paths = charts.make_charts(debt_frame, tmp_path, daily=daily_frame)
     assert paths[-1].name == "uk_borrowing_costs_daily.png"
     fig = figures[-1]

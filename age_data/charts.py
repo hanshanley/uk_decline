@@ -22,7 +22,7 @@ import matplotlib.ticker as mtick  # noqa: E402
 from . import config  # noqa: E402
 
 # ── Substack-style theme (matches tax/charts.py + pre1870_reapportionment_package) ──
-from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, house_style
+from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, house_style, save_chart
 
 house_style()
 
@@ -58,7 +58,7 @@ def _finish(fig, ax, out_path: str) -> str:
     fig.text(0.01, 0.01, SOURCE_NOTE, ha="left", fontsize=8, color=MUTED, style="italic")
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.14)
-    fig.savefig(out_path, dpi=200, bbox_inches="tight")
+    save_chart(fig, out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     return out_path
 
@@ -192,7 +192,7 @@ def uk_population_pyramid(rows: list[dict], out_path: str,
     fig.text(0.01, 0.01, SOURCE_NOTE, ha="left", fontsize=8, color=MUTED, style="italic")
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.10)
-    fig.savefig(out_path, dpi=200, bbox_inches="tight")
+    save_chart(fig, out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     return out_path
 

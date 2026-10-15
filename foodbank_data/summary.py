@@ -62,12 +62,12 @@ chart calculates a change across the reporting-basis break.
 ## Headline
 
 - Food banks in Trussell's UK community distributed **{latest['total']:,} emergency
-  food parcels in calendar 2025**: {latest['adults']:,} for adults and
+  food parcels in calendar {int(latest['year'])}**: {latest['adults']:,} for adults and
   {latest['children']:,} for children.
-- That was **{abs(latest['change_vs_previous_pct']):.1f}% lower than 2024**, but still
-  **{latest['change_vs_2019_pct']:.1f}% above 2019**.
+- That was **{abs(latest['change_vs_previous_pct']):.1f}% {'lower' if latest['change_vs_previous_pct'] < 0 else 'higher'} than {int(latest['year']) - 1}**,
+  and **{abs(latest['change_vs_2019_pct']):.1f}% {'below' if latest['change_vs_2019_pct'] < 0 else 'above'} 2019**.
 - The calendar-year series rose from **{first['total']:,} in {int(first['year'])}** to a
-  peak of **{peak['total']:,} in {int(peak['year'])}**. The 2025 total was
+  peak of **{peak['total']:,} in {int(peak['year'])}**. The {int(latest['year'])} total was
   **{abs((latest['total'] / peak['total'] - 1) * 100):.1f}% below that peak**.
 
 ## Latest mid-year release
@@ -110,10 +110,10 @@ the full-year chart.
   (embedded UK table for 2018/19–2023/24) and
   [methodology note]({FISCAL_METHODOLOGY_URL}).
 - Trussell, [End of year food bank stats]({END_YEAR_PAGE}) and
-  [official 2025 parcel-statistics workbook]({CALENDAR_SOURCE.url}).
+  [official {int(latest['year'])} parcel-statistics workbook]({latest['source_url']}).
 - Trussell, [Mid-year stats]({MID_YEAR_PAGE}) and
   [official April–September 2024 workbook]({MIDYEAR_SOURCE.url}).
-- Accessed **{ACCESSED_DATE}**.
+- Calendar-year workbook accessed **{latest['accessed_date']}**.
 """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

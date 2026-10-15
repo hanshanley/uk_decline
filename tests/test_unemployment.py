@@ -166,7 +166,7 @@ def test_rendered_charts_keep_missing_months_and_separate_text(
     unemployment_frame, monkeypatch, tmp_path,
 ):
     figures = []
-    monkeypatch.setattr(Figure, "savefig", lambda fig, *args, **kwargs: figures.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *args, **kwargs: figures.append(fig))
     frame = unemployment_frame[unemployment_frame["date"] != "2026-03-01"]
     outputs = charts.make_charts(frame, tmp_path)
     assert [path.name for path in outputs] == [

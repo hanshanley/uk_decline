@@ -75,7 +75,7 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
             continue
         spans.append(xs)
         ys = [y / 1000.0 for y in ys]
-        ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle,
+        ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle, label=peer.label,
                 linewidth=peer.linewidth,
                 marker="o" if peer.iso3 == peers.UK else None, markersize=4.5,
                 markeredgecolor="white", markeredgewidth=1.0,
@@ -126,7 +126,7 @@ def chart_volume_growth(rows: list[dict], out_dir: Path,
         if peer.iso3 not in plotted:
             continue
         xs, ys = plotted[peer.iso3]
-        ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle,
+        ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle, label=peer.label,
                 linewidth=peer.linewidth)
         labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour))
     ax.axhline(100, color=MUTED, linewidth=0.8, linestyle="--")
@@ -167,7 +167,7 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
             continue
         spans.append(xs)
         ys = [y * 100.0 for y in ys]
-        ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle,
+        ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle, label=peer.label,
                 linewidth=peer.linewidth)
         labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour))
         last_x = xs[-1] if last_x is None else max(last_x, xs[-1])
@@ -232,9 +232,9 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
     plt = _plt()
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
     ax.fill_between(years, fx_pct, ppp_pct, color=MUTED, alpha=0.13, zorder=1)
-    ax.plot(years, fx_pct, color=ACCENT, linewidth=2.8, zorder=4)
-    ax.plot(years, ppp_pct, color=BLUE, linewidth=2.8, zorder=4)
-    ax.plot(years, real_pct, color=GREEN, linewidth=2.2, linestyle="--", zorder=3)
+    ax.plot(years, fx_pct, color=ACCENT, linewidth=2.8, zorder=4, label="At market exchange rates")
+    ax.plot(years, ppp_pct, color=BLUE, linewidth=2.8, zorder=4, label="Purchasing power (current prices)")
+    ax.plot(years, real_pct, color=GREEN, linewidth=2.2, linestyle="--", zorder=3, label="Purchasing power (constant prices)")
 
     labelled_ends(ax, [(fx_pct[-1], "at market\nexchange rates", ACCENT),
                        (ppp_pct[-1], "purchasing power\n(current prices)", BLUE),
@@ -293,7 +293,7 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path | None:
         xs, ys = series.xy(series.series(rows, metric, peer.iso3), START_YEAR)
         if not xs:
             continue
-        ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle,
+        ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle, label=peer.label,
                 linewidth=peer.linewidth,
                 zorder=5 if peer.iso3 == peers.UK else 3)
         labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour))
@@ -397,8 +397,8 @@ def chart_decomposition(rows: list[dict], out_dir: Path,
     ]
     ys = [2.0, 1.0, -0.15]  # the total is set slightly apart, below a divider
 
-    for y, (_, value, colour) in zip(ys, bars):
-        ax.barh(y, value, height=0.55, color=colour, zorder=3)
+    for y, (label, value, colour) in zip(ys, bars):
+        ax.barh(y, value, height=0.55, color=colour, zorder=3, label=label)
         ax.text(value + (0.7 if value >= 0 else -0.7), y, f"{value:+.1f} points",
                 va="center", ha="left" if value >= 0 else "right",
                 fontsize=12.5, fontweight="bold", color=colour,
@@ -467,7 +467,7 @@ def chart_long_run(rows: list[dict], out_dir: Path) -> Path | None:
             continue
         span_years += xs
         ys = [y / 1000.0 for y in ys]
-        ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle,
+        ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle, label=peer.label,
                 linewidth=peer.linewidth, zorder=5 if peer.iso3 == peers.UK else 3)
         labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour))
         last_x = xs[-1] if last_x is None else max(last_x, xs[-1])

@@ -40,6 +40,17 @@ if (viewer && typeof viewer.showModal === "function") {
       const image = viewer.querySelector("img");
       image.src = link.href;
       image.alt = link.querySelector("img").alt;
+      const data = link.querySelector("img").dataset.chartData;
+      if (data) {
+        image.dataset.chartData = data;
+        image.tabIndex = 0;
+        image.setAttribute("aria-describedby", "chart-point-tooltip");
+        image.setAttribute("aria-label", link.querySelector("img").getAttribute("aria-label"));
+      } else {
+        delete image.dataset.chartData;
+        image.removeAttribute("tabindex");
+        image.removeAttribute("aria-describedby");
+      }
       viewer.showModal();
     });
   }

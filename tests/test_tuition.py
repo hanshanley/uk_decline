@@ -187,7 +187,7 @@ def test_region_chart_includes_england_and_one_eu_summary_with_honest_units(monk
         {"country": "Italy", "region": config.EU, "year": 2023, "annual_tuition_usd": 1600},
     ]
     captured = []
-    monkeypatch.setattr(Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    monkeypatch.setattr(plot_tuition, "save_chart", lambda fig, *a, **k: captured.append(fig))
     plot_tuition.plot_region_comparison(rows, "annual_tuition_usd", "current US dollars", str(tmp_path / "chart.png"))
     fig = captured[0]
     ax = fig.axes[0]
@@ -498,6 +498,28 @@ def test_collegeboard_parses_complete_nominal_source_not_housing_or_constant_dol
     assert "Annual Survey" in rows[16]["source"]
 
 
+def test_collegeboard_discovers_and_validates_a_new_complete_publisher_edition():
+    import pandas as pd
+    import pytest
+    from tuition import fetch_collegeboard as source
+
+    url = source.SOURCE_URL.replace("2025", "2026")
+    discovered = source.latest_workbook(
+        f'<a href="{source.SOURCE_URL}">Archive</a><a href="{url}">Latest Excel data</a>'
+    )
+    assert discovered == (url, 2026)
+    frame = _collegeboard_frame()
+    row = ["26-27", 45000, None, 12500] + [None] * 5 + [99999, None, None]
+    frame = pd.concat([frame.iloc[:-1], pd.DataFrame([row]), frame.iloc[-1:]], ignore_index=True)
+    rows = source.parse(frame, edition=2026, source_url=url)
+    assert rows[-1]["year"] == 2026
+    assert rows[-1]["tuition_current_usd"] == 12500
+    assert rows[-1]["source_url"] == url
+    assert "Pricing 2026" in rows[-1]["source"]
+    with pytest.raises(ValueError, match="no pricing-data workbook"):
+        source.latest_workbook('<a href="https://example.invalid/data.xlsx">Not the publisher</a>')
+
+
 def test_collegeboard_missing_or_duplicate_year_does_not_replace_saved_data(tmp_path, monkeypatch):
     import pytest
     from tuition import fetch_collegeboard
@@ -524,7 +546,7 @@ def test_collegeboard_chart_breaks_at_collection_change(tmp_path, monkeypatch):
         config.US: [(1986, 4000), (1987, 4100), (1988, 4200)],
     })
     figures = []
-    monkeypatch.setattr(plot_history.plt.Figure, "savefig",
+    monkeypatch.setattr(plot_history, "save_chart",
                         lambda fig, *a, **k: figures.append(fig))
     plot_history.plot(str(tmp_path / "history.png"))
     line = figures[0].axes[0].lines[0]
@@ -594,7 +616,7 @@ def test_current_nominal_cap_chart_is_not_truncated_by_missing_real_inputs(tmp_p
     )
     monkeypatch.setattr(config, "HISTORY_OUT_CSV", path)
     captured = []
-    monkeypatch.setattr(plot_history.plt.Figure, "savefig",
+    monkeypatch.setattr(plot_history, "save_chart",
                         lambda fig, *a, **k: captured.append(fig))
     plot_history.plot_nominal_cap(str(tmp_path / "cap.png"))
     axis = captured[0].axes[0]
@@ -619,7 +641,7 @@ def test_real_snapshot_with_only_zero_median_eu_remains_readable(tmp_path, monke
         ]
     ]
     captured = []
-    monkeypatch.setattr(plot_tuition.plt.Figure, "savefig",
+    monkeypatch.setattr(plot_tuition, "save_chart",
                         lambda fig, *a, **k: captured.append(fig))
     plot_tuition.plot_region_comparison(
         rows, "annual_tuition_usd_real2022", "constant 2022 USD", str(tmp_path / "real.png"))

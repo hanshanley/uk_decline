@@ -21,7 +21,7 @@ from . import _util, metrics  # noqa: E402
 from .paths import CHART_DIR, DEFAULT_CSV  # noqa: E402
 
 # ── Substack-style theme (matches personal_projects/pre1870_reapportionment_package) ──
-from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, house_style
+from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, house_style, save_chart
 
 house_style()
 
@@ -183,7 +183,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
     out_dir.mkdir(parents=True, exist_ok=True)
     suffix = "_indexed" if indexed else ""
     out_path = out_dir / f"{metric_id}{suffix}.png"
-    fig.savefig(out_path, dpi=200, bbox_inches="tight")
+    save_chart(fig, out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     return out_path
 

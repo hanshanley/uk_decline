@@ -581,7 +581,7 @@ def test_chart_sources_include_only_plotted_nations(
     ]
     notes = []
     monkeypatch.setattr(
-        charts.plt.Figure, "savefig",
+        charts, "save_chart",
         lambda fig, *args, **kwargs: notes.extend(t.get_text() for t in fig.texts),
     )
     charts.chart_metric(combine.to_frame(rows), metric_id, tmp_path)
@@ -639,7 +639,7 @@ def test_nhs_lines_do_not_bridge_definition_changes(monkeypatch, tmp_path, code,
         for date in dates
     ]
     figures = []
-    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: figures.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: figures.append(fig))
     charts.chart_metric(combine.to_frame(rows), metric_id, tmp_path)
     ax = figures[0].axes[0]
     assert len(ax.lines) > 1
@@ -667,7 +667,7 @@ def test_indexed_nhs_growth_uses_baseline_after_last_observed_rollout(monkeypatc
                             ("2025-06-30", 50), ("2026-03-31", 55)]
     ]
     figures = []
-    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: figures.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: figures.append(fig))
     charts.chart_metric(combine.to_frame(rows), "rtt_waiting_list_total", tmp_path, indexed=True)
     ax = figures[0].axes[0]
     labelled = [line for line in ax.lines
@@ -702,7 +702,7 @@ def test_nhs_chart_breaks_at_missing_periods_without_breaking_quarterly_cadence(
         for period, date, value in zip(periods, dates, [50, 60, 70, 80])
     ]
     figures = []
-    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: figures.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: figures.append(fig))
     charts.chart_metric(combine.to_frame(rows), metric_id, tmp_path, indexed=indexed)
     ax = figures[0].axes[0]
     lines = [line for line in ax.lines if line.get_color() == charts.NATION_COLOURS[code]]

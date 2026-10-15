@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 from tuition import config, theme
 from tuition.dataset import load_primary
 from tuition.stats import aggregate_by_region
+from vizstyle import save_chart
 
 REGION_LABELS = {**config.REGION_LABELS, config.UK: "England (fee cap)"}
 REGION_COLOR = {config.UK: theme.ACCENT, config.EU: theme.BLUE, config.US: theme.GOLD}
@@ -50,7 +51,7 @@ def _finalize(
     plt.tight_layout()
     plt.subplots_adjust(bottom=max(bottom, (10 * len(note.splitlines()) + 42)
                                    / (72 * fig.get_figheight())))
-    fig.savefig(out_path, dpi=200, bbox_inches="tight")
+    save_chart(fig, out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {out_path}")
 
@@ -97,7 +98,7 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
 
     fig, ax = plt.subplots(figsize=(11, 5.4))
     ypos = list(range(len(order)))
-    ax.barh(ypos, vals, height=0.62, color=colors, zorder=3)
+    ax.barh(ypos, vals, height=0.62, color=colors, zorder=3, label="Annual tuition and fees")
 
     for i, r in enumerate(order):
         v = vals[i]
@@ -151,7 +152,7 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
     fig, ax = plt.subplots(figsize=(11, 9))
     y = range(len(data))
     colors = [REGION_COLOR[region] for _, _, region in data]
-    ax.barh(list(y), [v for _, v, _ in data], color=colors, edgecolor=theme.BG, linewidth=0.5)
+    ax.barh(list(y), [v for _, v, _ in data], color=colors, edgecolor=theme.BG, linewidth=0.5, label="Annual domestic bachelor's tuition")
 
     ax.set_yticks(list(y))
     ax.set_yticklabels([name for name, _, _ in data], fontsize=9)
@@ -180,7 +181,7 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
             ax.annotate(_money(v), (v, i), ha="left", va="center", fontsize=8,
                         color=theme.TEXT, xytext=(3, 0), textcoords="offset points")
         else:
-            ax.plot(0, i, "o", color=theme.GREEN, markersize=4.5, zorder=4)
+            ax.plot(0, i, "o", color=theme.GREEN, markersize=4.5, zorder=4, label="Annual domestic bachelor's tuition")
             ax.annotate("$0", (0, i), ha="left", va="center", fontsize=8,
                         color=theme.GREEN, fontweight="bold",
                         xytext=(7, 0), textcoords="offset points")

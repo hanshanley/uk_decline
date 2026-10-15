@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 
-from vizstyle import ACCENT, BLUE, MUTED, TEXT, house_style, source_note
+from vizstyle import ACCENT, BLUE, MUTED, TEXT, house_style, source_note, save_chart
 
 LONDON = "London and South East"
 GB = "Great Britain"
@@ -133,7 +133,7 @@ def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
     out_dir = pathlib.Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / filename
-    fig.savefig(out_path, dpi=200, bbox_inches="tight")
+    save_chart(fig, out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     return out_path
 

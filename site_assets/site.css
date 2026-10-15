@@ -87,6 +87,12 @@ figcaption h2 { font: 600 1rem/1.5 system-ui, sans-serif; letter-spacing: 0; }
 figcaption a { flex-shrink: 0; font-size: .8rem; }
 .chart-link { cursor: zoom-in; display: block; }
 .chart-gallery img { width: 100%; }
+img[data-chart-data] { cursor: crosshair; }
+img[data-chart-data]:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+.chart-point-tooltip { position: fixed; z-index: 100; max-width: min(340px, calc(100vw - 24px)); padding: .7rem .9rem; background: var(--ink); color: var(--paper); border-radius: 3px; box-shadow: 0 3px 14px rgb(0 0 0 / .18); font: .85rem/1.5 var(--sans); pointer-events: none; overflow-wrap: anywhere; }
+.chart-point-tooltip strong, .chart-point-tooltip span, .chart-point-tooltip small { display: block; }
+.chart-point-tooltip small { opacity: .75; margin-top: .3rem; }
+.chart-point-marker { position: fixed; z-index: 99; width: 11px; height: 11px; border: 3px solid var(--accent); background: var(--paper); border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 2px var(--paper); pointer-events: none; }
 .methodology { padding: 2rem 0; border-top: 1px solid var(--line); }
 .prose { max-width: 960px; overflow-wrap: anywhere; }
 .prose h2 { margin-top: 2.5rem; }

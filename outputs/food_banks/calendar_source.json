@@ -1,0 +1,9 @@
+{
+  "source": {
+    "key": "calendar",
+    "url": "https://cms.trussell.org.uk/sites/default/files/2026-03/eys_2025_parcel_stats.xlsx",
+    "filename": "food_bank_trussell_eys_2025.xlsx",
+    "description": "Trussell 2025 end-of-year parcel statistics"
+  },
+  "accessed_date": "2026-08-16"
+}

@@ -81,7 +81,7 @@ def test_rolling_series_retains_internal_gaps_for_plotting(monkeypatch, tmp_path
         for date in dates if date != dates[4]
     ])
     captured = []
-    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
     charts._chart(df, "ppm_pct", "Title", "Subtitle", "Percent", "test.png", tmp_path)
     for line in captured[0].axes[0].lines:
         assert pd.isna(line.get_ydata()).sum() == 4
@@ -146,7 +146,7 @@ def test_orr_official_missing_or_duplicate_data_is_not_silently_published():
 def test_official_rail_chart_uses_published_maa_without_smoothing_it_again(monkeypatch, tmp_path):
     df = pd.DataFrame(orr.build_official_rows(_official_workbook()))
     captured = []
-    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
     charts._chart(df, "ppm_official_maa_pct", "Title", "Subtitle", "Percent",
                   "official.png", tmp_path)
     lines = captured[0].axes[0].lines
@@ -164,7 +164,7 @@ def test_rail_charts_explain_delay_thresholds_without_measure_acronyms(monkeypat
             for metric in ("ppm_pct", "casl_pct"):
                 historical.append({"region": region, "date": date, "metric": metric, "value": 90})
     captured = []
-    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
     paths = charts.make_charts(pd.concat([official, pd.DataFrame(historical)]), tmp_path)
     assert len(paths) == 3
     for fig in captured:

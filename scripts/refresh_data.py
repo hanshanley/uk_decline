@@ -10,6 +10,12 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import time
+
+if __package__:
+    from .chart_data import validate_refresh
+else:
+    from chart_data import validate_refresh
 
 ROOT = Path(__file__).resolve().parents[1]
 STEPS = {
@@ -17,7 +23,10 @@ STEPS = {
         ("-m", "europe_data.fetch_data"),
         ("-m", "europe_data.plot_uk_decline"),
     ),
-    "markets": (("-m", "markets_data"),),
+    "markets": (
+        ("-m", "markets_data"),
+        ("-m", "markets_data.lse_factsheets", "--latest"),
+    ),
     "sterling": (("-m", "sterling_data"),),
     "trade": (("-m", "trade_data"),),
     "ageing": (("-m", "age_data.fetch_age"),),
@@ -53,8 +62,7 @@ EXPECTED_NHS_OMISSION = re.compile(
     r"omitting \d+ months without all five trusts"
 )
 CURATED_INPUTS = (
-    "LSE monthly factsheet selection and historical coverage",
-    "National tuition schedules and publisher workbook editions",
+    "National tuition schedules and cross-country fee selections",
     "Historical source URLs and manually compiled reference observations",
 )
 
@@ -94,6 +102,7 @@ def nhs_coverage(root: Path) -> dict[tuple[str, str], set[str]]:
 
 
 def refresh(root: Path = ROOT, only: list[str] | None = None) -> None:
+    started_ns = time.time_ns()
     selected = list(STEPS) if only is None else only
     baseline = nhs_coverage(root) if "nhs" in selected else {}
     for name in selected:
@@ -111,6 +120,7 @@ def refresh(root: Path = ROOT, only: list[str] | None = None) -> None:
     run(("scorecard.py",), root)
     run(("-m", "scripts.export_page_plots"), root)
     if only is None:
+        validate_refresh(root, started_ns)
         status = root / "data/site/refresh.json"
         status.parent.mkdir(parents=True, exist_ok=True)
         status.write_text(json.dumps({

@@ -32,11 +32,12 @@ matplotlib.use("Agg")  # headless: analyses render to PNG, never to a display
 
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
+from .hover import save_chart
 
 __all__ = [
     "PALETTE", "BG", "TEXT", "MUTED", "GRID", "ACCENT", "BLUE", "GOLD", "GREEN",
     "RC_PARAMS", "house_style", "source_note", "end_label", "save_fig", "white_stroke",
-    "with_year_gaps",
+    "with_year_gaps", "save_chart",
 ]
 
 # ── Palette ──────────────────────────────────────────────────────────────────
@@ -121,6 +122,6 @@ def save_fig(fig, out_path, *, dpi: int = 200, bottom: float | None = 0.12,
         fig.subplots_adjust(bottom=bottom)
     out_path = pathlib.Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=dpi, bbox_inches="tight")
+    save_chart(fig, out_path, dpi=dpi, bbox_inches="tight")
     plt.close(fig)
     return out_path

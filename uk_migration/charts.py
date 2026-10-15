@@ -38,7 +38,7 @@ METHOD_BREAK_YEAR = 2012
 from vizstyle import (  # noqa: E402
     BG as SUBSTACK_BG, TEXT as SUBSTACK_TEXT, MUTED as SUBSTACK_MUTED,
     ACCENT as SUBSTACK_ACCENT, BLUE as SUBSTACK_BLUE, GOLD as SUBSTACK_GOLD,
-    GREEN as SUBSTACK_GREEN, GRID as SUBSTACK_GRID, house_style, with_year_gaps,
+    GREEN as SUBSTACK_GREEN, GRID as SUBSTACK_GRID, house_style, with_year_gaps, save_chart,
 )
 
 house_style()
@@ -74,7 +74,7 @@ def _save(fig, name: str, source: str, *, publication: bool = False) -> Path:
         f"Source: {source}", ha="left", va="bottom",
         fontsize=9 if publication else 8, style="italic", color=SUBSTACK_MUTED,
     )
-    fig.savefig(path, dpi=200, bbox_inches="tight")
+    save_chart(fig, path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     return path
 
@@ -210,9 +210,9 @@ def chart_visas_by_category(df: pd.DataFrame) -> Path:
     for category, color in colors.items():
         s = data[category]
         annual = with_year_gaps(s.set_index("period")["value"] / 1000)
-        ax.plot(annual.index, annual.values, color=color, linewidth=2.6)
+        ax.plot(annual.index, annual.values, color=color, linewidth=2.6, label=category.capitalize())
         last = s.iloc[-1]
-        ax.scatter(last["period"], last["value"] / 1000, color=color, s=30, zorder=3)
+        ax.scatter(last["period"], last["value"] / 1000, color=color, s=30, zorder=3, label=category.capitalize())
         ends.append((
             last["value"] / 1000,
             f"{category.capitalize()}: {last['value'] / 1000:,.0f}k ({int(last['period'])})",

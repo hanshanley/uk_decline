@@ -19,7 +19,7 @@ from .paths import CHART_DIR, DEFAULT_CSV
 
 # --- Substack-style theme (matches pre1870_reapportionment_package) ---
 from vizstyle import (
-    BG, TEXT, MUTED, GRID, ACCENT, RC_PARAMS as _THEME, house_style,
+    BG, TEXT, MUTED, GRID, ACCENT, RC_PARAMS as _THEME, house_style, save_chart,
     with_year_gaps as _with_year_gaps,
 )
 
@@ -78,7 +78,7 @@ def _save(fig, out_dir: Path | str, name: str) -> Path:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / name
-    fig.savefig(out_path, dpi=200, bbox_inches="tight")
+    save_chart(fig, out_path, dpi=200, bbox_inches="tight")
     return out_path
 
 

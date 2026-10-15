@@ -63,6 +63,23 @@ def test_parse_calendar_synthetic_workbook() -> None:
     assert frame.loc[1, "change_vs_2019_pct"] == pytest.approx(50)
 
 
+def test_calendar_release_discovery_and_parsing_preserve_the_new_source():
+    url = "https://cms.trussell.org.uk/sites/default/files/2027-03/eys_2026_parcel_stats.xlsx"
+    html = f'<a href="{CALENDAR_SOURCE.url}">Archive</a><a href="{url}">Download full data</a>'
+    source = fetch.discover_calendar_source(get_bytes=lambda _: html.encode())
+    assert source.url == url
+    assert source.filename == "food_bank_trussell_eys_2026.xlsx"
+    payload = _workbook_bytes([(2026, (90, 60, 150, 4))])
+    frame = parse.parse_calendar_years(
+        io.BytesIO(payload), source_url=source.url, accessed_date="2027-03-24",
+    )
+    assert frame.iloc[0]["year"] == 2026
+    assert frame.iloc[0]["source_url"] == url
+    assert frame.iloc[0]["accessed_date"] == "2027-03-24"
+    with pytest.raises(ValueError, match="no calendar-year"):
+        fetch.discover_calendar_source(get_bytes=lambda _: b"<p>Publisher layout changed</p>")
+
+
 def test_parse_midyear_synthetic_workbook() -> None:
     payload = _workbook_bytes(
         [
@@ -116,7 +133,7 @@ def test_chart_keeps_calendar_annotations_separate_and_readable(monkeypatch):
         return fig, ax
 
     monkeypatch.setattr(charts.plt, "subplots", capture)
-    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda *a, **k: None)
+    monkeypatch.setattr(charts, "save_chart", lambda *a, **k: None)
     charts.foodbank_history_chart(fiscal, annual)
     fig, (historical, recent) = captured[0]
     labels = [text.get_text() for text in recent.texts]
@@ -251,7 +268,7 @@ def test_charts_render_from_official_data() -> None:
 def test_public_chart_uses_one_calendar_timeline_and_keeps_2025_comparable(monkeypatch):
     annual = parse.parse_calendar_years(CALENDAR_SOURCE.path(RAW_DIR))
     captured = []
-    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
     charts.foodbank_chart(annual)
     fig = captured[0]
     assert len(fig.axes) == 1

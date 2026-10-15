@@ -11,7 +11,7 @@ import matplotlib.ticker as mtick
 import pandas as pd
 
 from ppp_data.figure import labelled_ends
-from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, MUTED, TEXT, house_style
+from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, MUTED, TEXT, house_style, save_chart
 from . import sources
 
 COLORS = {
@@ -60,7 +60,7 @@ def make_charts(
                 continue
             monthly = sub.set_index("date")["value"]
             monthly = monthly.reindex(pd.date_range(monthly.index.min(), monthly.index.max(), freq="MS"))
-            ax.plot(monthly.index, monthly.values, color=color,
+            ax.plot(monthly.index, monthly.values, color=color, label=country,
                     linewidth=2.8 if country == "United Kingdom" else 1.6)
             last = sub.iloc[-1]
             ax.scatter([last["date"]], [last["value"]], color=color, s=25, zorder=3)
@@ -95,7 +95,7 @@ def make_charts(
                  fontsize=8, color=MUTED, style="italic")
         fig.subplots_adjust(left=0.08, right=0.97, bottom=0.19, top=0.85)
         path = output / filename
-        fig.savefig(path, dpi=200, facecolor=BG, bbox_inches="tight", pad_inches=0.15)
+        save_chart(fig, path, dpi=200, facecolor=BG, bbox_inches="tight", pad_inches=0.15)
         plt.close(fig)
         written.append(path)
     if daily is not None:
@@ -104,7 +104,7 @@ def make_charts(
         fig, ax = plt.subplots(figsize=(13.5, 7.5))
         series = data.set_index("date")["value"]
         series = series.reindex(pd.date_range(series.index.min(), series.index.max(), freq="B"))
-        ax.plot(series.index, series.values, color=ACCENT, linewidth=2)
+        ax.plot(series.index, series.values, color=ACCENT, linewidth=2, label="United Kingdom")
         ax.scatter([latest["date"]], [latest["value"]], color=ACCENT, s=35, zorder=3)
         ax.set_xlim(pd.Timestamp("2020-01-01"), latest["date"] + pd.Timedelta(days=14))
         ax.set_xticks([pd.Timestamp(year=year, month=1, day=1)
@@ -130,7 +130,7 @@ def make_charts(
                  fontsize=8, color=MUTED, style="italic")
         fig.subplots_adjust(left=0.08, right=0.97, bottom=0.19, top=0.85)
         path = output / "uk_borrowing_costs_daily.png"
-        fig.savefig(path, dpi=200, facecolor=BG, bbox_inches="tight", pad_inches=0.15)
+        save_chart(fig, path, dpi=200, facecolor=BG, bbox_inches="tight", pad_inches=0.15)
         plt.close(fig)
         written.append(path)
     return written

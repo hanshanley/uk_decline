@@ -162,9 +162,9 @@ def test_gdp_figures_plot_distinct_volume_and_nominal_series(monkeypatch, tmp_pa
     monkeypatch.setattr(plots.pd, "read_csv", lambda _: data)
     monkeypatch.setattr(plots, "fig_median_income_oecd", lambda *args: None)
     captured = {}
-    def save(path, **kwargs):
+    def save(fig, path, **kwargs):
         captured[Path(path).name] = plots.plt.gcf()
-    monkeypatch.setattr(plots.plt, "savefig", save)
+    monkeypatch.setattr(plots, "save_chart", save)
     assert plots.main(["--out", str(tmp_path)]) == 0
     real = captured["gdp_per_capita_real_over_time.png"].axes[0]
     nominal = captured["gdp_per_capita_nominal_over_time.png"].axes[0]
@@ -284,7 +284,7 @@ def test_oecd_income_chart_has_recent_annual_observations_without_bridging_defin
         ),
     } for country, *_ in plots.PEERS for year in range(2013, 2024)]
     captured = []
-    monkeypatch.setattr(plots.plt, "savefig", lambda *args, **kwargs: captured.append(plots.plt.gcf()))
+    monkeypatch.setattr(plots, "save_chart", lambda *args, **kwargs: captured.append(plots.plt.gcf()))
     plots.fig_median_income_oecd(pd.DataFrame(rows), tmp_path)
     fig = captured[0]
     ax = fig.axes[0]
@@ -315,7 +315,7 @@ def test_nominal_gdp_ratio_uses_only_shared_years_and_dates_each_peer(monkeypatc
         {"country": "Poland", "year": 2023, plots.NOMINAL_GDP_METRIC: 25_000},
     ])
     captured = []
-    monkeypatch.setattr(plots.plt, "savefig", lambda *args, **kwargs:
+    monkeypatch.setattr(plots, "save_chart", lambda *args, **kwargs:
                         captured.append(plots.plt.gcf()))
     plots.fig_uk_relative(data, tmp_path)
     ax = captured[0].axes[0]
@@ -340,7 +340,7 @@ def test_simplified_gdp_ratio_omits_only_germany_and_france(monkeypatch, tmp_pat
         )
     ])
     saved = []
-    monkeypatch.setattr(plots.plt, "savefig", lambda path, **kwargs:
+    monkeypatch.setattr(plots, "save_chart", lambda fig, path, **kwargs:
                         saved.append((path.name, plots.plt.gcf())))
     plots.fig_uk_relative(data, tmp_path)
     plots.fig_uk_relative(data, tmp_path, simplified=True)
@@ -416,7 +416,7 @@ def test_income_chart_preserves_sparse_points_and_source_breaks(monkeypatch, tmp
         for year, value, status in [(1999, 100, "e"), (2001, 120, ""), (2002, 130, "bp")]
     ])
     captured = []
-    monkeypatch.setattr(plots.plt, "savefig", lambda *args, **kwargs:
+    monkeypatch.setattr(plots, "save_chart", lambda *args, **kwargs:
                         captured.append(plots.plt.gcf()))
     plots._line_chart(
         data, metric, "Income", "PPS", lambda value, _: str(value),
@@ -449,7 +449,7 @@ def test_pip_chart_breaks_at_known_survey_and_welfare_changes(monkeypatch, tmp_p
         ]
     ])
     captured = []
-    monkeypatch.setattr(plots.plt, "savefig", lambda *args, **kwargs:
+    monkeypatch.setattr(plots, "save_chart", lambda *args, **kwargs:
                         captured.append(plots.plt.gcf()))
     plots._line_chart(
         data, metric, "Income", "PPP $/day", lambda value, _: str(value),

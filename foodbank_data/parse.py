@@ -53,6 +53,7 @@ def _parse(
     *,
     period_type: str,
     source_url: str,
+    accessed_date: str = ACCESSED_DATE,
 ) -> pd.DataFrame:
     wide = pd.read_excel(source, sheet_name="Nations and regions", header=[0, 1])
     geography_columns = [
@@ -103,7 +104,7 @@ def _parse(
                 "end_date": end_date,
                 **values,
                 "source_url": source_url,
-                "accessed_date": ACCESSED_DATE,
+                "accessed_date": accessed_date,
             }
         )
 
@@ -153,17 +154,21 @@ def add_changes(frame: pd.DataFrame) -> pd.DataFrame:
     return frame[OUTPUT_COLUMNS]
 
 
-def parse_calendar_years(source: Workbook) -> pd.DataFrame:
+def parse_calendar_years(
+    source: Workbook, *, source_url: str = CALENDAR_SOURCE.url,
+    accessed_date: str = ACCESSED_DATE,
+) -> pd.DataFrame:
     return _parse(
         source,
         period_type="calendar_year",
-        source_url=CALENDAR_SOURCE.url,
+        source_url=source_url, accessed_date=accessed_date,
     )
 
 
-def parse_midyear(source: Workbook) -> pd.DataFrame:
+def parse_midyear(source: Workbook, *, accessed_date: str = ACCESSED_DATE) -> pd.DataFrame:
     return _parse(
         source,
         period_type="midyear_apr_sep",
         source_url=MIDYEAR_SOURCE.url,
+        accessed_date=accessed_date,
     )

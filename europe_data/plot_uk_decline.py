@@ -40,7 +40,7 @@ from vizstyle import (  # noqa: E402
     BG as SUBSTACK_BG, CARD as SUBSTACK_CARD, TEXT as SUBSTACK_TEXT,
     MUTED as SUBSTACK_MUTED, ACCENT as SUBSTACK_ACCENT, BLUE as SUBSTACK_BLUE,
     GOLD as SUBSTACK_GOLD, GREEN as SUBSTACK_GREEN, GRID as SUBSTACK_GRID,
-    house_style, with_year_gaps,
+    house_style, with_year_gaps, save_chart,
 )
 
 house_style()
@@ -162,7 +162,7 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
         0.18 if metric == "median_disposable_income" else 0.15
     )
     plt.subplots_adjust(bottom=bottom)
-    plt.savefig(out / filename, dpi=200, bbox_inches="tight")
+    save_chart(fig, out / filename, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -213,7 +213,7 @@ def fig_uk_relative(
             continue
         plotted_years.extend(ratio.index)
         annual = with_year_gaps(ratio)
-        ax.plot(annual.index, annual.values, color=color, linewidth=lw, linestyle=ls,
+        ax.plot(annual.index, annual.values, color=color, linewidth=lw, linestyle=ls, label=label,
                 marker="o", markersize=2.5)
         labels.append((ratio.iloc[-1], f"{label} ({ratio.index[-1]})", color))
     if not plotted_years:
@@ -255,7 +255,7 @@ def fig_uk_relative(
     filename = (
         "uk_gdp_relative_to_peers_simple.png" if simplified else "uk_gdp_relative_to_peers.png"
     )
-    plt.savefig(out / filename, dpi=200, bbox_inches="tight")
+    save_chart(fig, out / filename, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
 

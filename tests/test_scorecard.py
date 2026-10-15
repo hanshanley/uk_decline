@@ -262,7 +262,7 @@ def test_main_rejects_empty_panel_instead_of_saving_incomplete_scorecard(tmp_pat
 @pytest.mark.parametrize("font", ["DejaVu Sans", "DejaVu Sans Mono"])
 def test_scorecard_headers_and_sources_do_not_overlap(monkeypatch, font):
     figures = []
-    monkeypatch.setattr(Figure, "savefig", lambda fig, *args, **kwargs: figures.append(fig))
+    monkeypatch.setattr(scorecard, "save_chart", lambda fig, *args, **kwargs: figures.append(fig))
     with scorecard.plt.rc_context({"font.sans-serif": [font]}):
         assert scorecard.main() == 0
         fig = figures[0]

@@ -13,7 +13,7 @@ import textwrap
 
 from . import countries, metrics
 from .paths import CHART_DIR, DEFAULT_LONG_CSV
-from vizstyle import ACCENT, BLUE, GREEN, house_style
+from vizstyle import ACCENT, BLUE, GREEN, house_style, save_chart
 
 # Group styling: the UK stands out; comparators are muted.
 GROUP_STYLE = {
@@ -119,7 +119,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{metric_id}.png"
-    fig.savefig(out_path, dpi=200, bbox_inches="tight")
+    save_chart(fig, out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     return out_path
 
