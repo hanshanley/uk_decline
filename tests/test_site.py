@@ -355,7 +355,7 @@ def test_unemployment_is_embedded_and_included_in_complete_refresh(
     output = build_site.build(site_repository)
     page = BeautifulSoup((output / "unemployment/index.html").read_text(), "html.parser")
     assert [Path(image["src"]).name for image in page.select("main img")] == [
-        "uk_unemployment.png", "uk_youth_unemployment.png",
+        "uk_unemployment_comparison.png",
     ]
     assert "16-24" in page.get_text()
     commands = []

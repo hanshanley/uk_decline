@@ -169,19 +169,34 @@ def test_rendered_charts_keep_missing_months_and_separate_text(
     monkeypatch.setattr(Figure, "savefig", lambda fig, *args, **kwargs: figures.append(fig))
     frame = unemployment_frame[unemployment_frame["date"] != "2026-03-01"]
     outputs = charts.make_charts(frame, tmp_path)
-    assert [path.name for path in outputs] == ["uk_unemployment.png", "uk_youth_unemployment.png"]
-    for fig in figures:
+    assert [path.name for path in outputs] == [
+        "uk_unemployment_comparison.png", "uk_unemployment.png", "uk_youth_unemployment.png",
+    ]
+    for index, fig in enumerate(figures):
         canvas = FigureCanvasAgg(fig)
         canvas.draw()
         renderer = canvas.get_renderer()
         ax = fig.axes[0]
         assert ax.get_ylim()[0] == 0
-        assert np.isnan(ax.lines[0].get_ydata()).sum() == 1
-        subtitle = next(text for text in fig.texts if text.get_text().startswith("Aged "))
+        assert len(ax.lines) == (2 if index == 0 else 1)
+        for line in ax.lines:
+            assert np.isnan(line.get_ydata()).sum() == 1
+        subtitle = next(text for text in fig.texts if "seasonally adjusted" in text.get_text())
         latest = next(text for text in fig.texts if text.get_text().startswith("Latest: "))
         source = next(text for text in fig.texts if text.get_text().startswith("Source: "))
         assert "May-Jul 2026" in latest.get_text()
         assert "Office for National Statistics" in source.get_text()
+        if index == 0:
+            assert [line.get_label() for line in ax.lines] == ["Overall (16+)", "Youth (16-24)"]
+            assert ax.lines[0].get_color() != ax.lines[1].get_color()
+            assert "Overall: 5.0%" in latest.get_text()
+            assert "Youth: 15.0%" in latest.get_text()
+            for line, expected in zip(ax.lines, (5, 15)):
+                assert np.all(line.get_ydata()[np.isfinite(line.get_ydata())] == expected)
+            assert "overall includes young people" in source.get_text()
+            legend_box = ax.get_legend().get_window_extent(renderer)
+            assert legend_box.y1 <= ax.get_window_extent(renderer).y1
+            assert legend_box.x1 <= ax.get_window_extent(renderer).x1
         title_box = fig._suptitle.get_window_extent(renderer)
         subtitle_box = subtitle.get_window_extent(renderer)
         latest_box = latest.get_window_extent(renderer)

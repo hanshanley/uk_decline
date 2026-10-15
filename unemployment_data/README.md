@@ -1,11 +1,9 @@
 # Unemployment and youth unemployment
 
 Two UK Labour Force Survey measures, published by the Office for National
-Statistics (ONS), are shown separately from 2000 onward:
+Statistics (ONS), are compared on one shared percentage scale from 2000 onward:
 
-![UK unemployment](../outputs/unemployment/uk_unemployment.png)
-
-![UK youth unemployment](../outputs/unemployment/uk_youth_unemployment.png)
+![UK overall and youth unemployment](../outputs/unemployment/uk_unemployment_comparison.png)
 
 - **Overall unemployment:** ages **16 and over**, ONS series **MGSX**.
 - **Youth unemployment:** ages **16-24**, ONS series **MGWY**.
@@ -42,8 +40,12 @@ vintage throughout, without adding forecasts, smoothing observations, or
 interpolating missing values. They do not add an invented confidence interval
 when the source CSV does not provide one.
 
-The public page contains only the two charts and short captions; detailed
-documentation stays here rather than in a duplicated website methods section.
+The public page embeds only this combined chart, with distinct colours and
+explicit age labels; it does not repeat the two measures as separate figures.
+Individual [overall](../outputs/unemployment/uk_unemployment.png) and
+[youth](../outputs/unemployment/uk_youth_unemployment.png) exports are still
+regenerated for reference on GitHub. Detailed documentation stays here rather
+than in a duplicated website methods section.
 
 ## Sources and reproducibility
 

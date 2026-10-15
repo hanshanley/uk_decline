@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import textwrap
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -34,10 +35,10 @@ def _total_label(value: float) -> str:
     return f"{value:,.0f}"
 
 
-def foodbank_chart(
+def foodbank_history_chart(
     fiscal: pd.DataFrame,
     annual: pd.DataFrame,
-    out_path: Path = PRIMARY_OUTPUT,
+    out_path: Path = OUTPUT_DIR / "trussell_food_parcels_history.png",
 ) -> Path:
     """Render one long-run bar chart with age composition where available."""
     fiscal = fiscal.sort_values("end_year").copy()
@@ -222,6 +223,70 @@ def foodbank_chart(
     return out_path
 
 
+def foodbank_chart(
+    annual: pd.DataFrame,
+    out_path: Path = PRIMARY_OUTPUT,
+) -> Path:
+    """Compare complete January-December years without a reporting-basis break."""
+    if annual.empty or not annual["period_type"].eq("calendar_year").all():
+        raise ValueError("Primary food-bank chart requires calendar-year data")
+    annual = annual.sort_values("year")
+    first, latest = annual.iloc[0], annual.iloc[-1]
+    peak = annual.loc[annual["total"].idxmax()]
+    fig, ax = plt.subplots(figsize=(13.6, 7.8))
+    ax.bar(
+        annual["year"], annual["adults"], width=.72, color=ADULT,
+        edgecolor=BG, linewidth=.8, label="Adults", zorder=3,
+    )
+    ax.bar(
+        annual["year"], annual["children"], bottom=annual["adults"],
+        width=.72, color=CHILD, edgecolor=BG, linewidth=.8,
+        label="Children", zorder=3,
+    )
+    for year in sorted({int(first["year"]), int(peak["year"]), int(latest["year"])}):
+        row = annual.loc[annual["year"] == year].iloc[0]
+        ax.text(
+            year, row["total"] + 65_000, _total_label(float(row["total"])),
+            ha="center", va="bottom", fontsize=11, fontweight="bold",
+            color=ACCENT if year == int(latest["year"]) else TEXT,
+        )
+    ax.set_xlim(first["year"] - .7, latest["year"] + .7)
+    ax.set_ylim(0, float(annual["total"].max()) * 1.17)
+    ax.set_xticks(annual["year"])
+    ax.yaxis.set_major_locator(mtick.MultipleLocator(500_000))
+    ax.yaxis.set_major_formatter(mtick.FuncFormatter(_millions))
+    ax.set_ylabel("Emergency food parcels distributed")
+    ax.set_xlabel("Calendar year (January-December)")
+    ax.grid(axis="y")
+    ax.set_axisbelow(True)
+    ax.spines["left"].set_visible(False)
+    ax.legend(loc="upper left", frameon=False, ncol=2)
+    fig.suptitle(
+        "Emergency food parcels distributed by Trussell food banks",
+        x=.075, y=.965, ha="left", fontsize=20, fontweight="bold", color=TEXT,
+    )
+    fig.text(
+        .075, .91,
+        f"UK calendar years {int(first['year'])}-{int(latest['year'])}; "
+        "every bar covers January-December.",
+        fontsize=11, color=MUTED,
+    )
+    note = (
+        f"Source: Trussell, {int(latest['year'])} calendar-year parcel-statistics workbook. "
+        f"Accessed {ACCESSED_DATE}. Counts are distribution instances, not unique people; "
+        "Trussell's network, not all UK food banks. From Apr 2020, three- and seven-day "
+        "parcels are combined without duration adjustment. Older April-March financial-year "
+        "figures are preserved separately on GitHub, not spliced into this series."
+    )
+    source_note(fig, textwrap.fill(note, width=155), x=.075, y=.025)
+    fig.subplots_adjust(left=.075, right=.975, top=.83, bottom=.18)
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, dpi=220, bbox_inches="tight", pad_inches=.15, facecolor=BG)
+    plt.close(fig)
+    return out_path
+
+
 def make_charts(
     annual: pd.DataFrame,
     midyear: pd.DataFrame,
@@ -232,4 +297,7 @@ def make_charts(
     if fiscal is None:
         raise ValueError("fiscal history is required for the long-run food-bank chart")
     out_dir = Path(out_dir)
-    return [foodbank_chart(fiscal, annual, out_dir / PRIMARY_OUTPUT.name)]
+    return [
+        foodbank_chart(annual, out_dir / PRIMARY_OUTPUT.name),
+        foodbank_history_chart(fiscal, annual, out_dir / "trussell_food_parcels_history.png"),
+    ]

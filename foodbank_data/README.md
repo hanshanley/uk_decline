@@ -12,8 +12,11 @@ earliest exact nationwide annual count located in Trussell's archive is **2005/0
 2,814 people fed**, where the report describes each recipient as receiving three days'
 emergency food.
 
-The primary chart therefore begins its timeline in 2000, treats 2000–04 as
-**unreported rather than zero**, and starts its quantitative line in 2005/06.
+The [historical supplement](../outputs/food_banks/trussell_food_parcels_history.png)
+starts its observations in 2005/06 and treats
+2000–04 as **unreported rather than zero**. The public chart instead uses the
+complete **2015–2025 calendar-year series**, so every bar covers January–December
+and 2025 is not isolated from its comparable earlier observations.
 
 There are three deliberately separate statistical series in the data:
 
@@ -25,9 +28,10 @@ There are three deliberately separate statistical series in the data:
    its modern figures are comparable from 2017/18 and notes revisions to older data.
    From April 2020, three-day and seven-day parcels are combined.
 3. **Calendar years, 2015–2025.** Trussell changed its headline reporting basis to
-   calendar years for the 2025 release. It remains a separate dataset; the chart displays
-   the latest calendar-year bar after a visual separator, not as a comparable next
-   financial year, and computes no change across that reporting-basis break.
+   calendar years for the 2025 release and supplied earlier calendar-year observations.
+   The public chart uses this full comparable timeline. The historical supplement
+   keeps financial years and the latest calendar year in explicitly separate panels,
+   and computes no change across that reporting-basis break.
 
 ## Headline
 
@@ -60,9 +64,10 @@ reporting. The analysis therefore never joins the six-month and full-year series
 - `data/food_bank_midyear.csv` — like-for-like April–September series, 2018–2024.
 - `data/food_bank_fiscal_year.csv` — sourced fiscal history, 2005/06–2023/24,
   including source-vintage and comparability fields.
-- `outputs/food_banks/trussell_food_parcels.png` — the single primary chart:
-  a long-run bar series. Early bars show totals only; from 2018/19 onward the bars
-  split into adult and child recipients. The latest bar is calendar-year 2025.
+- `outputs/food_banks/trussell_food_parcels.png` — the single public chart:
+  calendar years 2015–2025, with adult and child parcels stacked on the same timeline.
+- `outputs/food_banks/trussell_food_parcels_history.png` — supplemental financial-year
+  history from 2005/06, with the latest calendar year explicitly separated.
 - `outputs/food_banks/summary.md` — exact headline values, definitions, and citations.
 
 The raw official XLSX/PPTX files are preserved under `data/raw/food_bank_*`. The fetcher

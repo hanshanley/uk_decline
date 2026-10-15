@@ -185,3 +185,33 @@ def test_investment_footer_has_separate_lines_and_clears_axis_labels(monkeypatch
     assert footer.get_window_extent(renderer).y1 + 5 < min(
         tick.get_window_extent(renderer).y0 for tick in fig.axes[-1].get_xticklabels()
     )
+
+
+@pytest.mark.parametrize("font", ["DejaVu Serif", "DejaVu Sans"])
+def test_investment_baseline_label_clears_the_published_curve(monkeypatch, font):
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    from matplotlib.text import Text
+
+    captured = []
+    original_style = charts.house_style
+
+    def style():
+        original_style()
+        charts.plt.rcParams["font.family"] = font
+
+    monkeypatch.setattr(charts, "house_style", style)
+    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    with charts.plt.rc_context():
+        charts.make_chart(pd.read_csv(charts.ROOT / "data/austerity_spending.csv"))
+        fig = captured[0]
+        canvas = FigureCanvasAgg(fig)
+        canvas.draw()
+        renderer = canvas.get_renderer()
+        ax = fig.axes[-1]
+        annotation = next(text for text in ax.texts if text.get_text().startswith("2010\u201311\n"))
+        # Exclude the intentional leader-line contact with the observation.
+        box = Text.get_window_extent(annotation, renderer).padded(6)
+        curve = ax.lines[0].get_path().transformed(ax.lines[0].get_transform())
+        assert not curve.intersects_bbox(box, filled=False)
+        assert ax.bbox.contains(box.x0, box.y0)
+        assert ax.bbox.contains(box.x1, box.y1)

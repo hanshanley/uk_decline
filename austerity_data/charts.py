@@ -262,9 +262,9 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     ax_invest.annotate(
         f"2010–11\n{start['value']:.1f}% of GDP",
         xy=(start["year"], start["value"]),
-        xytext=(-14, 18),
+        xytext=(22, 22),
         textcoords="offset points",
-        ha="center",
+        ha="left",
         va="bottom",
         fontsize=10.5,
         color=TEXT,

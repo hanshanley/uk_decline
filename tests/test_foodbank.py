@@ -117,7 +117,7 @@ def test_chart_keeps_calendar_annotations_separate_and_readable(monkeypatch):
 
     monkeypatch.setattr(charts.plt, "subplots", capture)
     monkeypatch.setattr(charts.plt.Figure, "savefig", lambda *a, **k: None)
-    charts.foodbank_chart(fiscal, annual)
+    charts.foodbank_history_chart(fiscal, annual)
     fig, (historical, recent) = captured[0]
     labels = [text.get_text() for text in recent.texts]
     assert "912k parcels\nfor children" in labels
@@ -239,9 +239,42 @@ def test_charts_render_from_official_data() -> None:
         written = charts.make_charts(annual, midyear, fiscal, test_dir)
         assert {path.name for path in written} == {
             "trussell_food_parcels.png",
+            "trussell_food_parcels_history.png",
         }
         assert all(path.stat().st_size > 50_000 for path in written)
     finally:
         for path in test_dir.glob("*"):
             path.unlink()
         test_dir.rmdir()
+
+
+def test_public_chart_uses_one_calendar_timeline_and_keeps_2025_comparable(monkeypatch):
+    annual = parse.parse_calendar_years(CALENDAR_SOURCE.path(RAW_DIR))
+    captured = []
+    monkeypatch.setattr(charts.plt.Figure, "savefig", lambda fig, *a, **k: captured.append(fig))
+    charts.foodbank_chart(annual)
+    fig = captured[0]
+    assert len(fig.axes) == 1
+    ax = fig.axes[0]
+    adults, children = ax.containers
+    assert ax.get_xticks().tolist() == annual["year"].tolist()
+    assert [bar.get_x() + bar.get_width() / 2 for bar in adults] == annual["year"].tolist()
+    assert [bar.get_height() for bar in adults] == annual["adults"].tolist()
+    assert [bar.get_height() + bar.get_y() for bar in children] == annual["total"].tolist()
+    assert ax.get_xlabel() == "Calendar year (January-December)"
+    assert "every bar covers January-December" in " ".join(text.get_text() for text in fig.texts)
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    footer = next(text for text in fig.texts if text.get_text().startswith("Source:"))
+    assert footer.get_window_extent(renderer).y1 + 5 < ax.xaxis.label.get_window_extent(renderer).y0
+    for text in (*fig.texts, *ax.texts):
+        box = text.get_window_extent(renderer)
+        assert 0 <= box.x0 < box.x1 <= fig.bbox.width
+
+
+def test_public_chart_rejects_non_calendar_reporting_periods():
+    annual = parse.parse_calendar_years(CALENDAR_SOURCE.path(RAW_DIR))
+    annual.loc[annual.index[-1], "period_type"] = "financial_year"
+    with pytest.raises(ValueError, match="calendar-year"):
+        charts.foodbank_chart(annual)

@@ -17,8 +17,10 @@ Grey historical bars lack an age breakdown; adult/child colours do not identify
 source vintages. Trussell's 2023/24 methodology says
 its modern financial-year figures are comparable from 2017/18, notes revisions to
 earlier releases, and says that releases from April 2020 combine three-day and
-seven-day parcels. The datasets remain separate; the chart shows the latest calendar-year bar after
-a visual separator and does not calculate a change across the reporting-basis break.
+seven-day parcels. The public chart uses the complete 2015–2025
+calendar-year series, so every bar covers January–December. The historical supplement
+shows financial years and the latest calendar year in separate panels; neither
+chart calculates a change across the reporting-basis break.
 
 ## Headline
 
