@@ -23,7 +23,7 @@ _Data: World Federation of Exchanges (WFE), via World Bank World Development Ind
 
 > Caveat: Compiled by the World Bank from S&P Global / World Federation of Exchanges data. Denominated in current (nominal) US$, so it blends local-currency valuation, USD exchange-rate moves, and inflation. The WDI series has tail-year gaps -- the UK is missing after 2022 -- so recent years may be blank; values are not spliced. See the real series for the inflation-adjusted view.
 
-## Stock-market capitalisation (real) (constant 2024 US$)
+## Stock-market capitalisation (US-CPI adjusted) (constant 2024 US$)
 
 The nominal market-cap series deflated by US CPI to constant US dollars, so sizes are comparable across years after removing US-dollar inflation. Values stay at market exchange rates (constant dollars, not PPP).
 
