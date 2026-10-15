@@ -124,49 +124,6 @@ Each analysis runs as a module from the repo root, e.g.:
 
 See each analysis's README for its exact commands and full source citations.
 
-### Website and automatic updates
-
-The [public website](https://www.themarginoferror.com/uk_decline/) presents all 18 analyses,
-with searchable topic navigation, full-resolution charts, downloads, and methodology.
-It is built directly from tracked publication figures and documentation, not private
-working files. It works without JavaScript; search, filters and the chart viewer are
-progressive enhancements.
-
-The Margin of Error builds these pages directly into its website, under `/uk_decline/`,
-with charts embedded in the topic pages rather than an iframe or an external image
-viewer. Its deployment checks for updated inputs twice daily, at **09:20 and 21:20 UTC**.
-The former project-level GitHub Pages address redirects to the publication.
-
-Every Monday at **06:37 UTC**, this repository's GitHub Actions workflow
-refreshes the supported source pipelines, rerenders the figures
-and overview, runs the tests, and publishes only if every stage succeeds. Failed source
-requests, reported partial-source warnings, lost NHS series coverage, test failures or
-broken local site links block publication; the previous successful site stays online.
-The **Update site** workflow can also be run manually, with an optional data refresh.
-
-Automatic refreshes do not discover or substitute new source definitions. LSE monthly
-factsheet selection, national tuition schedules, publisher editions and historical
-source URLs still require review. Charts retain their observation dates; rebuilding
-the website does not make older data current. Method notes may quote results from
-their documented source vintage.
-
-```bash
-./.venv/bin/python scripts/build_site.py     # offline build + link checks -> _site/
-./.venv/bin/python -m http.server 8000 --directory _site
-./.venv/bin/python scripts/refresh_data.py   # live refresh; may take some time
-```
-
-The small saved inputs required by `scorecard.py` are versioned so the overview can
-also be rebuilt from a fresh checkout without fetching sources. Generated website
-files stay out of Git. The publication installs `requirements-site.txt` and builds
-the pages from this repository's saved inputs; it does not rerun the source fetches.
-
-After generating the input CSVs, rebuild the overview image without re-fetching data:
-
-```bash
-./.venv/bin/python scorecard.py
-```
-
 ## Data integrity
 No API keys are required. Derived measures, source-published estimates, method breaks and coverage limitations 
 are documented in each analysis. Downloaded/intermediate data generally lives under `data/`
