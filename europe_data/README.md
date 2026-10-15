@@ -28,12 +28,17 @@ separate lines in these public GDP comparisons. The EU is the published World Ba
 aggregate, not an average reconstructed from selected countries.
 
 ![Nominal GDP per person: US and EU relative to the UK](../outputs/gdp_income/uk_gdp_relative_to_peers_simple.png)
-![Current-PPP GDP per person: US and EU relative to the UK](../outputs/gdp_income/uk_ppp_gdp_relative_to_peers.png)
+![Real GDP per person: US and EU relative to the UK at fixed 2021 PPPs](../outputs/gdp_income/uk_real_gdp_relative_to_peers.png)
 
-The separate real-volume comparison and four-panel UK/US exchange-rate audit
-remain supplemental exports, not additional GDP comparisons on the public page:
+For the article's historical comparison, the second public chart uses **real
+GDP at fixed 2021 PPPs**, not current-price PPPs. Its changes track benchmark-valued
+output volumes rather than changes in each year's international price weights.
+The benchmark remains explicit because cross-country level gaps depend on it.
 
-![Supplemental real GDP per person comparison at fixed 2021 PPPs](../outputs/gdp_income/uk_real_gdp_relative_to_peers.png)
+The current-price PPP comparison and four-panel UK/US exchange-rate audit remain
+supplemental exports, not additional GDP comparisons on the public page:
+
+![Supplemental GDP per person comparison at current PPPs](../outputs/gdp_income/uk_ppp_gdp_relative_to_peers.png)
 
 ![US versus UK: nominal GDP, current PPP, real PPP volumes and annual sterling exchange rates](../outputs/gdp_income/us_uk_gdp_measures.png)
 

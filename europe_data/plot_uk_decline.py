@@ -203,7 +203,7 @@ def fig_uk_relative(
             SOURCE_NOMINAL_GDP, "uk_gdp_relative_to_peers_simple.png",
         ),
         "real": (
-            "gdp_per_capita_ppp_constant", "Real GDP per person relative to the UK",
+            "gdp_per_capita_ppp_constant", "Real GDP per person at fixed 2021 PPPs relative to the UK",
             "Data: World Bank WDI, NY.GDP.PCAP.PP.KD. Constant 2021 international dollars "
             "(ICP 2021 PPP benchmark): benchmark-valued output volumes, not current market dollars. "
             "Real output growth at fixed purchasing power parities; annual market FX is not applied. "

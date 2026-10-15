@@ -148,6 +148,8 @@ def test_single_panel_comparisons_retain_us_and_eu_with_correct_measure(
     ax = fig.axes[0]
     assert [line.get_label() for line in ax.lines[:2]] == ["United States", "EU average"]
     assert len(fig.axes) == 1 and len(ax.lines) == 3
+    if basis == "real":
+        assert "fixed 2021 PPPs" in ax.get_title()
     uk = frame.loc[frame.country == "United Kingdom", metric].iloc[0]
     for line, country in zip(ax.lines[:2], ("United States", "European Union")):
         value = frame.loc[frame.country == country, metric].iloc[0]

@@ -54,9 +54,10 @@ class Analysis:
 
 ANALYSES = (
     Analysis("gdp-income", "GDP & incomes", "Economy", "europe_data", "gdp_income",
-             ("uk_gdp_relative_to_peers_simple.png", "uk_ppp_gdp_relative_to_peers.png",
+             ("uk_gdp_relative_to_peers_simple.png", "uk_real_gdp_relative_to_peers.png",
               "median_disposable_income_oecd.png"),
-             "Nominal and purchasing-power GDP comparisons, alongside median disposable household income."),
+             "Nominal GDP at market exchange rates and real GDP at fixed 2021 purchasing power parities, "
+             "alongside median disposable household income."),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
              ("ppp_gdp_per_capita_growth.png", "ppp_gdp_relative_to_peers.png",
               "ppp_gap_decomposition_uk_us.png"),

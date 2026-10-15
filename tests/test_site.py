@@ -94,11 +94,11 @@ def test_site_builds_nested_pages_and_rewrites_document_links(site_repository):
     build_site.validate_site(output)
 
 
-def test_public_gdp_comparisons_keep_nominal_and_ppp_without_third_real_volume_chart(site_repository):
+def test_public_gdp_comparisons_keep_nominal_and_fixed_ppp_without_third_measure(site_repository):
     output = build_site.build(site_repository)
     page = BeautifulSoup((output / "gdp-income/index.html").read_text(), "html.parser")
     assert [Path(urlsplit(image["src"]).path).name for image in page.select("main img")] == [
-        "uk_gdp_relative_to_peers_simple.png", "uk_ppp_gdp_relative_to_peers.png",
+        "uk_gdp_relative_to_peers_simple.png", "uk_real_gdp_relative_to_peers.png",
         "median_disposable_income_oecd.png",
     ]
 
@@ -142,7 +142,7 @@ def test_site_rejects_stale_observations_without_replacing_published_build(site_
 
 @pytest.mark.parametrize(("chart", "comparator"), [
     ("gdp_income/uk_gdp_relative_to_peers_simple", "EU average"),
-    ("gdp_income/uk_ppp_gdp_relative_to_peers", "United States"),
+    ("gdp_income/uk_real_gdp_relative_to_peers", "United States"),
     ("nhs/cancer_62day_pct", "Northern Ireland"),
     ("stock_markets/stock_market_cap_pct_gdp", "United Kingdom"),
 ])
