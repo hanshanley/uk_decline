@@ -43,7 +43,7 @@ def site_repository(tmp_path):
             }],
         }))
     (root / "README.md").write_text(
-        "# About the data\n\n## Scope\n\n[Tuition](tuition/README.md#sources)\n"
+        "# Social, economic and political change\n\n## Scope\n\n[Tuition](tuition/README.md#sources)\n"
     )
     subprocess.run(["git", "add", "."], cwd=root, check=True)
     subprocess.run([
@@ -88,6 +88,9 @@ def test_site_builds_nested_pages_and_rewrites_document_links(site_repository):
     assert rail.select_one(".chart-gallery img")["alt"] == rail.select_one("figcaption h2").get_text()
     assert not tuition.find("iframe")
     assert not (output / private_chart.relative_to(root)).exists()
+    methods = BeautifulSoup((output / "methods/index.html").read_text(), "html.parser")
+    assert methods.select_one(".page-heading") is None
+    assert methods.select_one(".prose h2").get_text() == "Social, economic and political change"
     build_site.validate_site(output)
 
 

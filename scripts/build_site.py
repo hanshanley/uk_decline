@@ -578,7 +578,10 @@ def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
         for source, page in documents.items():
             rendered = render_document(source, page, root, files, documents)
             title = "About the data" if source == Path("README.md") else source.stem.replace("_", " ").title()
-            body = f'<section class="page-heading"><h1>{escape(title)}</h1></section><article class="prose">{rendered}</article>'
+            heading = "" if source == Path("README.md") else (
+                f'<section class="page-heading"><h1>{escape(title)}</h1></section>'
+            )
+            body = f'{heading}<article class="prose">{rendered}</article>'
             description = f"Definitions, methodology and source documentation. {source.as_posix()}."
             pages[page] = (title, description, body)
         for page, (title, description, body) in pages.items():
