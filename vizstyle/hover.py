@@ -24,7 +24,10 @@ def _number(value: float) -> str:
 
 
 def _coordinate(axis, value: float, *, categorical=False) -> str:
-    if isinstance(axis.get_major_locator(), mdates.DateLocator):
+    if isinstance(axis.get_major_locator(), mdates.DateLocator) or isinstance(
+        axis.get_major_formatter(),
+        (mdates.DateFormatter, mdates.AutoDateFormatter, mdates.ConciseDateFormatter),
+    ):
         return mdates.num2date(value).strftime("%Y-%m-%d")
     ticks = list(zip(axis.get_ticklocs(), axis.get_ticklabels()))
     for position, label in ticks:

@@ -38,9 +38,9 @@ def site_repository(tmp_path):
             "version": 1,
             "image_sha256": hashlib.sha256(chart.read_bytes()).hexdigest(),
             "series": [{
-                "label": "UK", "x_label": "Year", "y_label": "Rate",
+                "label": label, "x_label": "Year", "y_label": "Rate",
                 "bounds": [.1, .1, .9, .9], "points": [[.5, .5, "2025", "4.9%"]],
-            }],
+            } for label in sorted(build_site.CHART_COMPARATORS.get(chart.stem, {"UK"}))],
         }))
     (root / "README.md").write_text(
         "# Social, economic and political change\n\n## Scope\n\n[Tuition](tuition/README.md#sources)\n"
@@ -129,6 +129,26 @@ def test_site_rejects_stale_observations_without_replacing_published_build(site_
     with pytest.raises(ValueError, match="do not match"):
         build_site.build(site_repository)
     assert (output / "index.html").read_bytes() == previous
+
+
+@pytest.mark.parametrize(("chart", "comparator"), [
+    ("gdp_income/uk_gdp_relative_to_peers_simple", "EU average"),
+    ("gdp_income/uk_real_gdp_relative_to_peers", "United States"),
+    ("nhs/cancer_62day_pct", "Northern Ireland"),
+    ("stock_markets/stock_market_cap_pct_gdp", "United Kingdom"),
+])
+def test_missing_comparator_cannot_silently_replace_published_site(
+    site_repository, chart, comparator,
+):
+    output = build_site.build(site_repository)
+    before = (output / "index.html").read_bytes()
+    path = site_repository / "outputs" / f"{chart}.json"
+    data = json.loads(path.read_text())
+    data["series"] = [series for series in data["series"] if series["label"] != comparator]
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match="missing required comparator"):
+        build_site.build(site_repository)
+    assert (output / "index.html").read_bytes() == before
 
 
 def test_refresh_cannot_claim_success_when_a_tracked_chart_was_skipped(site_repository, monkeypatch):

@@ -22,7 +22,7 @@ import matplotlib.ticker as mtick  # noqa: E402
 from . import config  # noqa: E402
 
 # ── Substack-style theme (matches tax/charts.py + pre1870_reapportionment_package) ──
-from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, house_style, save_chart
+from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, house_style, save_chart, with_year_gaps
 
 house_style()
 
@@ -79,9 +79,12 @@ def uk_age_structure_over_time(rows: list[dict], out_path: str) -> Optional[str]
     stacks = [[uk[m][y] for y in years] for m, _, _ in bands]
     colors = [c for _, _, c in bands]
     labels = [lbl for _, lbl, _ in bands]
+    import pandas as pd
+    annual = [with_year_gaps(pd.Series(values, index=years)) for values in stacks]
 
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
-    ax.stackplot(years, *stacks, colors=colors, labels=labels, edgecolor=BG, linewidth=0.4)
+    ax.stackplot(annual[0].index, *[values.values for values in annual],
+                 colors=colors, labels=labels, edgecolor=BG, linewidth=0.4)
     ax.set_ylim(0, 100)
     ax.margins(x=0)
     ax.yaxis.set_major_formatter(mtick.PercentFormatter())
@@ -107,8 +110,9 @@ def share_65plus_over_time(rows: list[dict], out_path: str) -> Optional[str]:
     fig, ax = plt.subplots(figsize=(11, 6))
     markers = {"uk": "o", "europe_median": "s", "us": "^"}
     for key in ("uk", "europe_median", "us"):
-        xs = [y for y, v in zip(years, series[key]) if v is not None]
-        ys = [v for v in series[key] if v is not None]
+        import pandas as pd
+        annual = with_year_gaps(pd.Series(series[key], index=years, dtype=float))
+        xs, ys = annual.index, annual.values
         ax.plot(xs, ys, color=SERIES_COLORS[key], linewidth=2.6, marker=markers[key],
                 markersize=5, markeredgecolor="white", markeredgewidth=1.0,
                 markevery=max(1, len(xs) // 12), label=SERIES_LABELS[key])
@@ -131,8 +135,9 @@ def median_age_over_time(rows: list[dict], out_path: str) -> Optional[str]:
     fig, ax = plt.subplots(figsize=(11, 6))
     markers = {"uk": "o", "europe_median": "s", "us": "^"}
     for key in ("uk", "europe_median", "us"):
-        xs = [y for y, v in zip(years, series[key]) if v is not None]
-        ys = [v for v in series[key] if v is not None]
+        import pandas as pd
+        annual = with_year_gaps(pd.Series(series[key], index=years, dtype=float))
+        xs, ys = annual.index, annual.values
         ax.plot(xs, ys, color=SERIES_COLORS[key], linewidth=2.6, marker=markers[key],
                 markersize=5, markeredgecolor="white", markeredgewidth=1.0,
                 markevery=max(1, len(xs) // 12), label=SERIES_LABELS[key])
@@ -163,8 +168,11 @@ def uk_population_pyramid(rows: list[dict], out_path: str,
     ypos = range(len(bands))
 
     def share(year: int, sex: str) -> list[float]:
-        d = {r["age_band"]: r["value"] for r in recs if r["year"] == year and r["sex"] == sex}
-        return [d.get(b, 0.0) for b in bands]
+        selected = [r for r in recs if r["year"] == year and r["sex"] == sex]
+        d = {r["age_band"]: r["value"] for r in selected}
+        if len(d) != len(selected) or set(d) != set(bands):
+            raise ValueError(f"Incomplete or duplicate UK population pyramid profile: {year}/{sex}")
+        return [d[b] for b in bands]
 
     male_new = share(y_new, "male")
     female_new = share(y_new, "female")

@@ -17,7 +17,7 @@ ISO3S = ("GBR", "USA", "DEU", "FRA", "ITA")
 METRIC = "median_disposable_income_oecd_ppp"
 UNIT = "current household-consumption PPP US$ per equivalised household"
 SOURCE = "OECD Income Distribution Database; OECD annual household-consumption PPPs"
-COMPARISON_START = 2013
+COVERAGE_BASELINE_START = 2013
 
 
 def _records(
@@ -98,7 +98,7 @@ def build_rows(
             "currency": row["CURRENCY"],
         })
     # The five-country comparison already has annual coverage throughout this window.
-    expected = set(range(max(start, COMPARISON_START), min(end, 2023) + 1))
+    expected = set(range(max(start, COVERAGE_BASELINE_START), min(end, 2023) + 1))
     for country in codes:
         years = {row["year"] for row in rows if row["iso3"] == country}
         if missing := expected - years:

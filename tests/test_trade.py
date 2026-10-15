@@ -98,3 +98,15 @@ def test_chart_renders(monkeypatch, tmp_path) -> None:
     assert output.exists()
     assert output.stat().st_size > 20_000
     assert figures[0].axes[0].get_xlim()[1] - 2024 <= 0.36
+    for line in figures[0].axes[0].lines:
+        assert pd.isna(line.get_ydata()[1:-1]).all()
+
+
+def test_trade_above_100_percent_is_not_clipped(monkeypatch, tmp_path):
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    charts.make_chart(pd.DataFrame([
+        {"country_code": "GBR", "year": 2025, "value": 62.},
+        {"country_code": "DEU", "year": 2025, "value": 125.},
+    ]), tmp_path / "trade.png")
+    assert captured[0].axes[0].get_ylim()[1] > 125

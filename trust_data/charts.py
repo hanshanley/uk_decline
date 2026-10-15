@@ -13,7 +13,7 @@ import textwrap
 
 from . import countries, metrics
 from .paths import CHART_DIR, DEFAULT_LONG_CSV
-from vizstyle import ACCENT, BLUE, GREEN, house_style, save_chart
+from vizstyle import ACCENT, BLUE, GREEN, house_style, save_chart, with_year_gaps
 
 # Group styling: the UK stands out; comparators are muted.
 GROUP_STYLE = {
@@ -36,6 +36,8 @@ def _load(source):
 def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     """Render a single metric's trend chart. Returns the output path or None if no data."""
     import matplotlib.pyplot as plt
+    import pandas as pd
+    from matplotlib.ticker import PercentFormatter
 
     house_style()
     meta = metrics.METRICS[metric_id]
@@ -55,10 +57,13 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     if not eu.empty:
         g = eu.groupby("year")["value"]
         med, q1, q3 = g.median(), g.quantile(0.25), g.quantile(0.75)
+        if meta.family == "governance":
+            med, q1, q3 = (with_year_gaps(values) for values in (med, q1, q3))
         eu_color = GROUP_STYLE[countries.EU]["color"]
         ax.fill_between(med.index, q1.values, q3.values, color=eu_color, alpha=0.15,
                         zorder=2, label="EU-27 reporters (middle 50%)")
         ax.plot(med.index, med.values, color=eu_color, linewidth=2.0, linestyle="--",
+                marker="o" if meta.family == "governance" else None, markersize=2,
                 zorder=3, label="EU-27 reporters median")
         plotted_vals += list(q1.values) + list(q3.values)
 
@@ -67,7 +72,11 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         if gg.empty:
             continue
         st = GROUP_STYLE[grp]
-        ax.plot(gg["year"], gg["value"], marker="o" if grp == countries.UK else None,
+        values = pd.Series(gg["value"].values, index=gg["year"])
+        if meta.family == "governance":
+            values = with_year_gaps(values)
+        ax.plot(values.index, values.values,
+                marker="o" if grp == countries.UK or meta.family == "governance" else None,
                 markersize=3, linewidth=st["lw"], color=st["color"],
                 zorder=st["zorder"], label=lab)
         plotted_vals += list(gg["value"].astype(float))
@@ -83,6 +92,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         lo, hi = min(plotted_vals), max(plotted_vals)
         pad = max((hi - lo) * 0.12, 1.0)
         ax.set_ylim(max(0.0, lo - pad), min(100.0, hi + pad))
+        ax.yaxis.set_major_formatter(PercentFormatter())
     from matplotlib.ticker import MaxNLocator
     ax.xaxis.set_major_locator(MaxNLocator(integer=True, nbins=8))
     ax.grid(True, axis="y", alpha=1.0)
@@ -101,6 +111,8 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     caption = f"Source: {cites}. Data: {year_lo}\u2013{year_hi}."
     if meta.family == "survey":
         caption += "\nSurvey values are 2- or 3-year pooled averages, labelled by period end."
+    else:
+        caption += "\nLines break at missing annual observations; isolated estimates are shown as points."
     if not eu.empty:
         counts = eu.groupby("year")["iso3"].nunique()
         coverage = str(counts.min()) if counts.min() == counts.max() else f"{counts.min()}\u2013{counts.max()}"

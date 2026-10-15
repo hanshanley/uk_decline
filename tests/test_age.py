@@ -274,3 +274,16 @@ def test_charts_render(tmp_path):
     written = charts.render_all(rows, str(tmp_path))
     assert len(written) == 4
     assert all(os.path.exists(p) and os.path.getsize(p) > 0 for p in written)
+
+
+def test_pyramid_missing_band_is_not_plotted_as_zero(tmp_path):
+    from age_data import charts
+
+    rows = [
+        combine.make_row("GBR", year, "pop_band_share_pct", 1., "source", band, sex)
+        for year in (1960, 2025) for band in config.BAND_ORDER for sex in ("male", "female")
+    ]
+    rows.pop()
+    with pytest.raises(ValueError, match="Incomplete or duplicate"):
+        charts.uk_population_pyramid(rows, str(tmp_path / "pyramid.png"))
+    assert not (tmp_path / "pyramid.png").exists()

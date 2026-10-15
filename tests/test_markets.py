@@ -14,6 +14,27 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from markets_data import charts, combine, markets, regions, worldbank  # noqa: E402
 
 
+def test_cpi_adjusted_market_captions_are_explicit_and_clear_the_axis(monkeypatch, tmp_path):
+    import pandas as pd
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    rows = [markets.make_row(regions.name_for_code(code), code, year,
+                             "market_cap_usd_real", value)
+            for code, value in (("GBR", 2e12), ("USA", 20e12)) for year in (2020, 2024)]
+    frame = pd.DataFrame(rows)
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    charts.chart_metric(frame, "market_cap_usd_real", tmp_path)
+    charts.chart_uk_us_ratio(frame, "market_cap_usd_real", tmp_path)
+    for fig in captured:
+        FigureCanvasAgg(fig).draw()
+        renderer = fig.canvas.get_renderer()
+        assert "us-cpi adjusted" in fig.axes[0].get_title().lower()
+        note = fig.texts[0]
+        assert "exchange-rate movements" in " ".join(note.get_text().split())
+        assert note.get_window_extent(renderer).y1 < fig.axes[0].xaxis.label.get_window_extent(renderer).y0
+
+
 def _lse_workbook(sheet, month, year, rows):
     import io
     import openpyxl

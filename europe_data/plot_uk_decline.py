@@ -87,7 +87,7 @@ SOURCE_OECD = (
     "Data: OECD Income Distribution Database (2012 methodology); OECD annual household-consumption "
     "purchasing power parities. Median disposable household income divided by the square root of household size. "
     "Current-price purchasing-power dollars, not a real-income-growth index. OECD income-year labels retained "
-    "(UK financial years); latest common year across five countries. "
+    "(UK financial years); all available years shown, with different country coverage. "
     "Missing years and definition changes are not joined; not spliced to Eurostat."
 )
 
@@ -178,17 +178,16 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
 
 
 def fig_median_income_oecd(df: pd.DataFrame, out: pathlib.Path) -> None:
-    income = df[(df["year"] >= oecd_income.COMPARISON_START) & df[oecd_income.METRIC].notna()]
-    endpoints = []
+    income = df[df[oecd_income.METRIC].notna()]
     for country, *_ in PEERS:
         series = income[income["country"] == country]
         if series.empty:
             raise ValueError(f"Missing OECD median disposable income: {country}")
-        endpoints.append(int(series["year"].max()))
-    end = min(endpoints)
+    selected = income[income["country"].isin([country for country, *_ in PEERS])]
+    start, end = int(selected["year"].min()), int(selected["year"].max())
     _line_chart(
-        income[income["year"] <= end], oecd_income.METRIC,
-        f"Median disposable income: UK vs peers, {oecd_income.COMPARISON_START}\u2013{end}",
+        selected, oecd_income.METRIC,
+        f"Median disposable income: UK vs peers, {start}\u2013{end}",
         "Annual household-size-adjusted income\n(current purchasing-power dollars)",
         lambda value, _: f"${value / 1000:.0f}k", SOURCE_OECD,
         "median_disposable_income_oecd.png", out, xlabel="Income year (OECD labels)",

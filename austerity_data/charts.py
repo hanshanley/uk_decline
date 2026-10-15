@@ -10,13 +10,12 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import pandas as pd
 
-from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, GRID, MUTED, TEXT, house_style, save_chart
+from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, GRID, MUTED, TEXT, house_style, save_chart, with_year_gaps
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "outputs" / "austerity" / "uk_austerity_spending_investment.png"
 BASE_YEAR = "2010-11"
 END_YEAR = "2019-20"
-LATEST_YEAR = "2025-26"
 START_YEAR = "2000-01"
 
 SERIES = {
@@ -38,7 +37,7 @@ def indexed_function_series(
     category: str,
     start_year: str = START_YEAR,
     base_year: str = BASE_YEAR,
-    end_year: str = LATEST_YEAR,
+    end_year: str | None = None,
 ) -> pd.DataFrame:
     """Return a linked official-vintage index with ``base_year=100``.
 
@@ -50,7 +49,7 @@ def indexed_function_series(
         (df["metric"] == "functional_spending_real")
         & (df["category"] == category)
         & (df["financial_year"] >= start_year)
-        & (df["financial_year"] <= end_year)
+        & (True if end_year is None else df["financial_year"] <= end_year)
     ].sort_values("year")
     if current.empty or base_year not in set(current["financial_year"]):
         raise ValueError(f"missing {category!r} base year {base_year}")
@@ -123,6 +122,11 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     """Render the combined austerity spending/investment figure."""
     df = _load(source)
     house_style()
+    latest_year = int(df.loc[
+        df["metric"].isin(["functional_spending_real", "public_sector_net_investment_pct_gdp"]),
+        "year",
+    ].max())
+    ticks = sorted(set([*range(2000, latest_year + 1, 5), latest_year]))
 
     fig = plt.figure(figsize=(14.2, 9.6), facecolor=BG)
     grid = fig.add_gridspec(
@@ -170,9 +174,10 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         _label_text, color, _width = SERIES[category]
         series = indexed_function_series(df, category)
         ax.axvspan(2010, 2019.9, color=ACCENT, alpha=0.055, linewidth=0)
+        annual = with_year_gaps(series.set_index("year")["index"])
         ax.plot(
-            series["year"],
-            series["index"],
+            annual.index,
+            annual.values,
             color=color,
             label=_label_text,
             linewidth=2.8,
@@ -202,10 +207,11 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
             va="top",
             linespacing=1.25,
         )
-        ax.set_xlim(1999.7, 2025.4)
-        ax.set_ylim(45, 170)
-        ax.set_xticks([2000, 2010, 2020, 2025])
-        ax.set_xticklabels(["2000", "2010", "2020", "2025"])
+        ax.set_xlim(1999.7, latest_year + .4)
+        ax.set_ylim(min(45, series["index"].min() - 5), max(170, series["index"].max() + 5))
+        panel_ticks = sorted(set([*range(2000, latest_year + 1, 10), latest_year]))
+        ax.set_xticks(panel_ticks)
+        ax.set_xticklabels([str(year) for year in panel_ticks])
         ax.set_yticks([50, 75, 100, 125, 150])
         ax.grid(axis="y")
         ax.set_axisbelow(True)
@@ -219,7 +225,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     fig.text(
         0.062,
         0.862,
-        "Real public spending by function, 2000–01 to 2025–26",
+        f"Real public spending by function, 2000–01 to {latest_year}–{(latest_year + 1) % 100:02d}",
         fontsize=15.5,
         fontweight="bold",
         color=TEXT,
@@ -237,14 +243,14 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     investment = df[
         (df["metric"] == "public_sector_net_investment_pct_gdp")
         & (df["year"] >= 2000)
-        & (df["financial_year"] <= LATEST_YEAR)
     ].sort_values("year")
     ax_invest.axvspan(2010, 2019.9, color=ACCENT, alpha=0.07, linewidth=0)
-    ax_invest.fill_between(investment["year"], investment["value"], 0,
+    annual_investment = with_year_gaps(investment.set_index("year")["value"])
+    ax_invest.fill_between(annual_investment.index, annual_investment.values, 0,
                            color=ACCENT, alpha=0.13)
     ax_invest.plot(
-        investment["year"],
-        investment["value"],
+        annual_investment.index,
+        annual_investment.values,
         color=ACCENT,
         label="Public sector net investment",
         linewidth=3,
@@ -299,11 +305,12 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         color=MUTED,
         fontsize=10,
     )
-    ax_invest.set_xlim(1999.7, 2025.4)
-    ax_invest.set_ylim(0, float(investment["value"].max()) * 1.08)
-    ax_invest.set_xticks([2000, 2005, 2010, 2015, 2020, 2025])
+    ax_invest.set_xlim(1999.7, latest_year + .4)
+    ax_invest.set_ylim(min(0, float(investment["value"].min()) * 1.08),
+                      float(investment["value"].max()) * 1.08)
+    ax_invest.set_xticks(ticks)
     ax_invest.set_xticklabels(
-        ["2000–01", "2005–06", "2010–11", "2015–16", "2020–21", "2025–26"]
+        [f"{year}–{(year + 1) % 100:02d}" for year in ticks]
     )
     ax_invest.yaxis.set_major_formatter(
         mticker.FuncFormatter(
@@ -318,17 +325,16 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         0.018,
         textwrap.fill(
             "Note: 2000–01 to 2002–03 use Public Expenditure Statistical Analyses 2012; "
-            "later years use Public Spending Statistics 2026. Each "
-            "vintage is indexed to its own 2010–11 value; at the 2003–04 seam the "
-            "panels differ by up to 3 index points, and by up to 7 across the full overlap. "
+            "later years use the saved Public Spending Statistics vintage. Each "
+            "vintage is indexed to its own 2010–11 value; revision and definition "
+            "differences remain at the seam. Missing years are not joined. "
             "Education is omitted because of an accounting "
             "break. Net investment is after depreciation and includes net capital grants.",
             width=185,
         )
         + "\n"
         + textwrap.fill(
-            "Source: HM Treasury, Public Expenditure Statistical Analyses 2012 Table 4.3 and "
-            "Public Spending Statistics July 2026, Tables 4.1 and 4.3.",
+            "Source: " + "; ".join(sorted(df["source"].dropna().unique())) + ".",
             width=185,
         )
         + "\nContext: New York Times / Institute for Fiscal Studies, 2019.",

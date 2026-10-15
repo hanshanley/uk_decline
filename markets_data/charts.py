@@ -64,14 +64,24 @@ def _source_note(metric_id: str) -> str:
     the World Bank indicator that redistributes it. Cached inputs do not establish
     a new source-access date.
     """
-    return markets.citation_short(metric_id)
+    note = markets.citation_short(metric_id)
+    if metric_id == "market_cap_usd_real":
+        note += (
+            " Current-dollar market values deflated by US CPI, not national-accounts "
+            "real output or PPP. Non-US markets retain exchange-rate movements. "
+            "A common CPI deflator cancels from same-year UK/US ratios."
+        )
+    return note
 
 
-def _footnote(fig, note: str = SOURCE_NOTE) -> None:
+def _footnote(fig, note: str = SOURCE_NOTE) -> float:
     import textwrap
 
     note = "\n".join(textwrap.fill(line, width=145) for line in note.splitlines())
-    fig.text(0.01, 0.005, note, ha="left", fontsize=8, color=MUTED, style="italic")
+    caption = fig.text(0.01, 0.005, note, ha="left", fontsize=8, color=MUTED, style="italic")
+    fig.canvas.draw()
+    top = caption.get_window_extent(fig.canvas.get_renderer()).transformed(fig.transFigure.inverted()).y1
+    return max(.02, top + .025)
 
 
 def _save(fig, out_dir: Path | str, name: str) -> Path:
@@ -165,8 +175,8 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ax.set_axisbelow(True)
     ax.margins(x=0.02)
     ax.legend(loc="upper left", frameon=False, labelcolor="linecolor", fontsize=10)
-    _footnote(fig, _source_note(metric_id))
-    fig.tight_layout(rect=[0, 0.02, 1, 1])
+    bottom = _footnote(fig, _source_note(metric_id))
+    fig.tight_layout(rect=[0, bottom, 1, 1])
 
     out = _save(fig, out_dir, f"stock_{metric_id}.png")
     plt.close(fig)
@@ -220,8 +230,8 @@ def chart_uk_us_ratio(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ax.set_axisbelow(True)
     ax.margins(x=0.03)
     _annotate_year_gaps(ax, pct)
-    _footnote(fig, _source_note(metric_id))
-    fig.tight_layout(rect=[0, 0.02, 1, 1])
+    bottom = _footnote(fig, _source_note(metric_id))
+    fig.tight_layout(rect=[0, bottom, 1, 1])
 
     out = _save(fig, out_dir, f"stock_uk_us_ratio_{metric_id}.png")
     plt.close(fig)
@@ -279,14 +289,14 @@ def chart_lse_companies(source, out_dir: Path | str = CHART_DIR) -> Path:
     ax.grid(axis="y")
     ax.set_axisbelow(True)
     ax.margins(x=0.07)
-    _footnote(
+    bottom = _footnote(
         fig,
         "Source: London Stock Exchange Main Market and Alternative Investment Market factsheets. December snapshots, "
         "except latest partial year.\n"
         "Includes investment companies; not the World Bank / World Federation of Exchanges definition. "
         "Starts after the May 2018 Main Market coverage change.",
     )
-    fig.tight_layout(rect=[0, 0.05, 1, 1])
+    fig.tight_layout(rect=[0, max(.05, bottom), 1, 1])
     out = _save(fig, out_dir, "stock_lse_uk_companies.png")
     plt.close(fig)
     return out

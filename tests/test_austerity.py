@@ -114,6 +114,48 @@ def test_index_and_trough_math() -> None:
     assert year == "2012-13"
 
 
+def test_new_spending_year_and_high_value_are_not_silently_dropped(monkeypatch, tmp_path):
+    frame = _frame()
+    newer = frame.loc[
+        (frame["financial_year"] == "2019-20") &
+        (frame["metric"] == "functional_spending_real")
+    ].copy()
+    newer["financial_year"], newer["year"] = "2027-28", 2027
+    newer["value"] *= 3
+    newer["source"] = "HM Treasury, Public Spending Statistics, July 2028"
+    frame = pd.concat([frame, newer, pd.DataFrame([
+        treasury._row("2027-28", "public_sector_net_investment_pct_gdp",
+                      "United Kingdom", 4., "percent of GDP")
+    ])], ignore_index=True)
+    figures = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: figures.append(fig))
+    charts.make_chart(frame, tmp_path / "spending.png")
+    fig = figures[0]
+    assert all(ax.get_xlim()[1] > 2027 for ax in fig.axes)
+    for ax in fig.axes[:4]:
+        line = ax.lines[0]
+        assert line.get_xdata()[-1] == 2027
+        assert line.get_ydata()[-1] <= ax.get_ylim()[1]
+    text = " ".join(item.get_text() for item in fig.texts)
+    assert "2027" in text and "July 2028" in text
+
+
+def test_spending_rows_retain_discovered_release_source():
+    rows = treasury.build_rows({
+        "4_1": _aggregate_sheet(), "4_3": _functions_sheet(),
+        "source": "HM Treasury, Public Spending Statistics, July 2027",
+    })
+    assert all("July 2027" in row["source"] for row in rows)
+
+
+def test_missing_release_discovery_does_not_silently_use_old_pinned_vintage(monkeypatch):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(treasury, "_get", lambda *a: SimpleNamespace(text="<html>No releases</html>"))
+    with pytest.raises(RuntimeError, match="refusing a stale pinned refresh"):
+        treasury.resolve_release_url()
+
+
 def test_release_and_workbook_link_parsing() -> None:
     html = """
     <a href="/government/statistics/public-spending-statistics-release-july-2025">x</a>

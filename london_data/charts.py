@@ -48,13 +48,14 @@ def _line_chart(df, metric, title, subtitle_fn, ylabel, filename, out_dir,
     s = _series(df, "London", metric)
     if s.empty:
         return None
+    annual = vs.with_year_gaps(s.set_index("year")["value"])
     x, y = s["year"], s["value"]
     y0, y1 = y.iloc[0], y.iloc[-1]
     yr0, yr1 = int(x.iloc[0]), int(x.iloc[-1])
 
     fig, ax = plt.subplots(figsize=(11, 6))
     decorate(ax, x, y)
-    ax.plot(x, y, color=vs.ACCENT, linewidth=2.8)
+    ax.plot(annual.index, annual.values, color=vs.ACCENT, linewidth=2.8)
 
     ax.set_title(title, pad=30)
     ax.text(0.5, 1.015, subtitle_fn(y0, y1, yr0, yr1),

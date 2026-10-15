@@ -50,6 +50,23 @@ def test_hover_positions_match_saved_tight_crop_pixels(tmp_path):
     plt.close(fig)
 
 
+def test_manual_date_ticks_do_not_export_dates_as_year_labels_or_day_numbers(tmp_path):
+    import matplotlib.dates as mdates
+
+    fig, ax = plt.subplots()
+    dates = [datetime(2025, 1, 1), datetime(2025, 2, 1), datetime(2025, 3, 1)]
+    ax.plot(dates, [4., 5., 6.], label="UK")
+    ax.set_xticks([dates[0], dates[-1]])
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    path = tmp_path / "monthly.png"
+    save_chart(fig, path, bbox_inches="tight")
+    payload = json.loads(path.with_suffix(".json").read_text())
+    assert [point[2] for point in payload["series"][0]["points"]] == [
+        "2025-01-01", "2025-02-01", "2025-03-01",
+    ]
+    plt.close(fig)
+
+
 def test_stacked_and_horizontal_bars_report_segment_not_cumulative_values(tmp_path):
     fig, (vertical, horizontal) = plt.subplots(1, 2)
     vertical.bar(["2025"], [20], label="Adults")

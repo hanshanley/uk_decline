@@ -424,3 +424,37 @@ def test_tax_chart_rejects_disjoint_years_instead_of_mislabeling(tmp_path):
     ]
     with pytest.raises(ValueError, match="no common comparison year"):
         charts.tax_wedge_by_earnings(rows, str(tmp_path / "wedge.png"))
+
+
+def test_tax_comparison_does_not_drop_us_when_uk_has_newer_year():
+    from tax import charts
+
+    rows = [
+        combine.make_row(iso3, year, "tax_wedge_pct", 30., "s", "single_nokids", "100aw")
+        for iso3 in ("GBR", "USA", "FRA") for year in (2023, 2024)
+    ]
+    rows.extend([
+        combine.make_row(iso3, 2025, "tax_wedge_pct", 35., "s", "single_nokids", "100aw")
+        for iso3 in ("GBR", "FRA")
+    ])
+    assert charts._comparison_year([rows], None) == 2024
+
+
+def test_tax_trend_breaks_missing_years_and_headline_names_denominators(monkeypatch, tmp_path):
+    from tax import charts
+    import numpy as np
+
+    rows = [
+        combine.make_row(iso3, year, "tax_to_gdp_pct", 30., "s")
+        for iso3 in ("GBR", "USA", "FRA") for year in (2023, 2025)
+    ]
+    captured = []
+    monkeypatch.setattr(charts, "_finish", lambda fig, ax, out: captured.append(ax))
+    charts.tax_to_gdp_over_time(rows, str(tmp_path / "trend.png"))
+    assert all(np.isnan(line.get_ydata()[1]) for line in captured[-1].lines)
+    for iso3 in ("GBR", "USA", "FRA"):
+        for metric in ("tax_wedge_pct", "net_personal_avg_tax_rate_pct"):
+            rows.append(combine.make_row(iso3, 2023, metric, 25., "s", "single_nokids", "100aw"))
+    charts.headline_bars(rows, str(tmp_path / "headline.png"))
+    labels = " ".join(label.get_text() for label in captured[-1].get_xticklabels())
+    assert "% of employer cost" in labels and "% of gross wage" in labels

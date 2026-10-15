@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 
-from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, MUTED, TEXT, house_style, source_note, save_chart
+from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, MUTED, TEXT, house_style, source_note, save_chart, with_year_gaps
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "outputs" / "sterling" / "sterling_currency_strength_v2.png"
@@ -64,9 +64,10 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     for currency, (label, color) in SERIES.items():
         sub = frame[frame["currency"] == currency].sort_values("year")
         last = sub.iloc[-1]
+        annual = with_year_gaps(sub.set_index("year")["change_pct"])
         ax.plot(
-            sub["year"],
-            sub["change_pct"],
+            annual.index,
+            annual.values,
             label=label,
             color=color,
             linewidth=2.8,
@@ -97,8 +98,8 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     lo = math.floor((float(frame["change_pct"].min()) - 5) / 10) * 10
     hi = math.ceil((float(frame["change_pct"].max()) + 5) / 10) * 10
     ax.set_ylim(lo, hi)
-    ax.set_xticks([2000, 2005, 2010, 2015, 2020, 2025])
-    ax.set_yticks([-20, 0, 20, 40, 60, 80, 100, 120, 140])
+    ax.set_xticks(list(range(2000, latest_year + 1, 5)))
+    ax.yaxis.set_major_locator(mtick.MaxNLocator(nbins=9))
     ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=100, decimals=0))
     ax.set_ylabel("Change in value against the pound since 2000")
     ax.grid(axis="y")

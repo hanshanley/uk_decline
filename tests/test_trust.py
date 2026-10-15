@@ -44,6 +44,30 @@ def test_metric_schema() -> None:
         raise AssertionError("expected KeyError for unknown metric")
 
 
+def test_governance_missing_years_break_but_pooled_survey_periods_remain_explicit(
+    monkeypatch, tmp_path,
+):
+    import pandas as pd
+    import numpy as np
+    from trust_data import charts
+    from matplotlib.ticker import PercentFormatter
+
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    for metric, years in (
+        ("wgi_government_effectiveness", (1996, 1998, 2000)),
+        ("trust_national_govt_pct", (2007, 2010, 2013)),
+    ):
+        rows = [metrics.make_row(iso3, countries.name_for_iso3(iso3), year, metric,
+                                40. if metric.startswith("trust") else 1., "World Bank WGI")
+                for iso3 in ("GBR", "USA", "FRA") for year in years]
+        charts.chart_metric(pd.DataFrame(rows), metric, tmp_path)
+    governance, survey = [fig.axes[0] for fig in captured]
+    assert all(np.isnan(line.get_ydata()).sum() == 2 for line in governance.lines)
+    assert all(len(line.get_xdata()) == 3 for line in survey.lines)
+    assert isinstance(survey.yaxis.get_major_formatter(), PercentFormatter)
+
+
 def test_oecd_decoder() -> None:
     # Minimal SDMX-JSON v2: REF_AREA x MEASURE x SCALE x TIME.
     payload = {

@@ -117,6 +117,49 @@ ANALYSES = (
              "Survey trust and governance indicators, respecting collection and methodology changes."),
 )
 
+CHART_COMPARATORS = {
+    **dict.fromkeys(
+        ("uk_gdp_relative_to_peers_simple", "uk_real_gdp_relative_to_peers",
+         "uk_ppp_gdp_relative_to_peers"),
+        {"United States", "EU average"},
+    ),
+    "median_disposable_income_oecd": {"United Kingdom", "United States", "Germany", "France", "Italy"},
+    "ppp_gdp_per_capita_growth": {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
+    "ppp_gdp_relative_to_peers": {"United States", "Germany", "France", "EU average", "Poland"},
+    **dict.fromkeys(
+        ("stock_listed_domestic_companies", "stock_market_cap_pct_gdp"),
+        {"United Kingdom", "United States", "European Union", "Japan", "China"},
+    ),
+    "sterling_currency_strength_v2": {"US dollar", "Euro", "Japanese yen", "Swiss franc"},
+    "trade_share_gdp": {"United Kingdom", "United States", "Germany", "France", "Japan"},
+    "government_borrowing_costs": {"United Kingdom", "United States", "Germany", "France", "Italy"},
+    **dict.fromkeys(
+        ("ae_4hr_pct", "cancer_62day_pct", "rtt_waiting_list_per_1000"),
+        {"England", "Scotland", "Wales", "Northern Ireland"},
+    ),
+    **dict.fromkeys(
+        ("rail_london_ppm_official", "rail_london_casl"), {"Great Britain", "London & South East"},
+    ),
+    **dict.fromkeys(
+        ("tax_to_gdp_over_time", "tax_wedge_by_earnings", "share_65plus_over_time"),
+        {"United Kingdom", "United States", "Europe (median)"},
+    ),
+    **dict.fromkeys(
+        ("trust_national_govt_pct", "wgi_government_effectiveness"),
+        {"United Kingdom", "United States", "EU-27 reporters median"},
+    ),
+    "crime_homicide_peers": {"United Kingdom", "United States", "EU-27 reporting-country mean"},
+    "uk_unemployment": {"UK (16+)", "EU (15-74)", "US (16+)"},
+    "uk_youth_unemployment": {"UK (16-24)", "EU (15-24)", "US (16-24)"},
+}
+
+
+def validate_comparators(chart: Path, observations: dict) -> None:
+    expected = CHART_COMPARATORS.get(chart.stem, set())
+    actual = {series["label"] for series in observations["series"] if series["points"]}
+    if missing := expected - actual:
+        raise ValueError(f"{chart}: missing required comparator observations: {sorted(missing)}")
+
 
 def tracked_files(root: Path) -> set[Path]:
     result = subprocess.run(
@@ -548,6 +591,7 @@ def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
         if chart.with_suffix(".json") not in files:
             raise ValueError(f"{chart}: missing tracked hover observations")
         observations[chart] = load_chart_data(root, chart)
+        validate_comparators(chart, observations[chart])
     revision = subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=root, text=True,
     ).strip()

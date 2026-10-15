@@ -21,7 +21,7 @@ import matplotlib.ticker as mtick  # noqa: E402
 from . import config  # noqa: E402
 
 # ── Substack-style theme (matches pre1870_reapportionment_package) ──────────
-from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, house_style, white_stroke, save_chart
+from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, house_style, white_stroke, save_chart, with_year_gaps
 
 house_style()
 
@@ -58,7 +58,7 @@ def _region_values(recs: list[dict]) -> dict[str, Optional[float]]:
 
 
 def _comparison_year(groups: list[list[dict]], year: Optional[int]) -> Optional[int]:
-    """Latest year shared by the plotted variants, preferring UK coverage in each."""
+    """Latest year shared by every available comparator and plotted variant."""
     if year is not None:
         return year
     year_sets = []
@@ -68,10 +68,13 @@ def _comparison_year(groups: list[list[dict]], year: Optional[int]) -> Optional[
         for iso3 in (config.UK_COUNTRY.iso3, config.US_COUNTRY.iso3):
             years = {r["year"] for r in recs if r["iso3"] == iso3}
             if years:
-                break
-        else:
-            years = {r["year"] for r in recs}
-        year_sets.append(years)
+                year_sets.append(years)
+        european_years = {r["year"] for r in recs if r["region"] == config.EUR}
+        if european_years:
+            year_sets.append(european_years)
+        if not any(r["iso3"] in (config.UK_COUNTRY.iso3, config.US_COUNTRY.iso3)
+                   or r["region"] == config.EUR for r in recs):
+            year_sets.append({r["year"] for r in recs})
     if not year_sets:
         return None
     common = set.intersection(*year_sets)
@@ -97,8 +100,8 @@ def headline_bars(rows: list[dict], out_path: str, year: Optional[int] = None) -
     """Grouped bars: UK / Europe median / US across the three headline metrics."""
     variants = [
         ("tax_to_gdp_pct", "", "", "Total tax\n(% of GDP)"),
-        ("tax_wedge_pct", "single_nokids", "100aw", "Taxes on labour\n(average-wage worker)"),
-        ("net_personal_avg_tax_rate_pct", "single_nokids", "100aw", "Net personal\navg tax rate"),
+        ("tax_wedge_pct", "single_nokids", "100aw", "Labour tax wedge\n(% of employer cost)"),
+        ("net_personal_avg_tax_rate_pct", "single_nokids", "100aw", "Net personal tax\n(% of gross wage)"),
     ]
     variant_rows = [
         (_variant_rows(rows, metric, hh, aw), label)
@@ -170,11 +173,12 @@ def tax_to_gdp_over_time(rows: list[dict], out_path: str) -> Optional[str]:
 
     fig, ax = plt.subplots(figsize=(11, 6))
     markers = {"uk": "o", "europe_median": "s", "us": "^"}
+    import pandas as pd
+
     for key in ("uk", "europe_median", "us"):
-        xs = [y for y, v in zip(years, series[key]) if v is not None]
-        ys = [v for v in series[key] if v is not None]
+        annual = with_year_gaps(pd.Series(series[key], index=years, dtype=float))
         ax.plot(
-            xs, ys, color=SERIES_COLORS[key], linewidth=2.6, marker=markers[key],
+            annual.index, annual.values, color=SERIES_COLORS[key], linewidth=2.6, marker=markers[key],
             markersize=6, markeredgecolor="white", markeredgewidth=1.1,
             label=SERIES_LABELS[key],
         )

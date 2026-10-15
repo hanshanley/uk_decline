@@ -107,13 +107,10 @@ def resolve_release_url(
     collection_url: str = COLLECTION_URL, timeout: int = 60
 ) -> str:
     """Return the newest annual July PSS release listed on GOV.UK."""
-    try:
-        links = _release_links(_get(collection_url, timeout).text)
-        if links:
-            return max(links)[1]
-    except Exception as exc:  # pragma: no cover - network fallback
-        print(f"[austerity_data] could not resolve latest release ({exc}); using pinned.")
-    return PINNED_RELEASE_URL
+    links = _release_links(_get(collection_url, timeout).text)
+    if not links:
+        raise RuntimeError("No July Public Spending Statistics releases found; refusing a stale pinned refresh")
+    return max(links)[1]
 
 
 def _chapter4_links(html: str) -> list[str]:
@@ -142,7 +139,14 @@ def download_workbook(
     timeout: int = 120,
 ) -> dict:
     """Download current PSS tables plus the historical functional-spending table."""
-    url = url or resolve_workbook_url(timeout=timeout)
+    source = "HM Treasury, Public Spending Statistics, Tables 4.1 and 4.3"
+    if url is None:
+        release = resolve_release_url(timeout=timeout)
+        match = re.search(r"release-july-(\d{4})", release)
+        if match is None:
+            raise ValueError(f"Cannot identify the Public Spending Statistics release year: {release}")
+        source = f"HM Treasury, Public Spending Statistics, July {match[1]}, Tables 4.1 and 4.3"
+        url = resolve_workbook_url(release, timeout=timeout)
     response = _get(url, timeout)
     workbook = pd.read_excel(
         io.BytesIO(response.content),
@@ -155,6 +159,7 @@ def download_workbook(
         sheet_name="TABLE 4.3",
         header=None,
     )
+    workbook["source"] = source
     return workbook
 
 
@@ -290,6 +295,8 @@ def build_rows(workbook: dict | None = None) -> list[dict]:
     """Return a sorted tidy dataset from the official PSS workbook."""
     workbook = workbook or download_workbook()
     rows = parse_aggregates(workbook["4_1"]) + parse_functions(workbook["4_3"])
+    for row in rows:
+        row["source"] = workbook.get("source", SOURCE)
     if "historical_4_3" in workbook:
         rows += parse_historical_functions(workbook["historical_4_3"])
     rows.sort(key=lambda row: (row["metric"], row["category"], row["year"]))

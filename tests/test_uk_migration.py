@@ -45,6 +45,28 @@ def test_public_migration_charts_use_readable_labels_and_preserve_missing_years(
     assert fig.texts[-1].get_window_extent(renderer).y1 + 5 < ax.xaxis.label.get_window_extent(renderer).y0
 
 
+def test_log_chart_labels_survive_shared_style_reset(monkeypatch, tmp_path):
+    from vizstyle import house_style
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    house_style()
+    frame = pd.DataFrame([
+        {"metric": metric, "category": "all", "period": year, "value": value}
+        for metric, value in (("immigration", 1_000_000), ("irregular_arrivals", 40_000))
+        for year in (2024, 2025)
+    ])
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    monkeypatch.setattr(charts, "FIGURES_DIR", tmp_path)
+    charts.chart_legal_vs_irregular(frame)
+    fig = captured[0]
+    FigureCanvasAgg(fig).draw()
+    labels = [label.get_text() for label in fig.axes[0].get_yticklabels()]
+    assert "1,000,000" in labels
+    assert not any("$" in label or "\\mathdefault" in label for label in labels)
+    assert "not disjoint categories" in fig.texts[-1].get_text()
+
+
 def test_empty_fetch_preserves_saved_migration_data(monkeypatch, tmp_path):
     from uk_migration import combine
 

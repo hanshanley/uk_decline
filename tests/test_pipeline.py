@@ -332,6 +332,31 @@ def test_nominal_gdp_ratio_uses_only_shared_years_and_dates_each_peer(monkeypatc
     assert "2023\u20132025" in ax.get_title()
 
 
+def test_income_chart_preserves_early_history_and_latest_country_observations(monkeypatch, tmp_path):
+    import pandas as pd
+    from europe_data import oecd_income, plot_uk_decline as plots
+
+    rows = [
+        {"country": country, "year": year, oecd_income.METRIC: value}
+        for country, *_ in plots.PEERS
+        for year, value in ((2013, 20000.), (2023, 30000.))
+    ]
+    rows.extend([
+        {"country": "United Kingdom", "year": 2002, oecd_income.METRIC: 12000.},
+        {"country": "United States", "year": 2024, oecd_income.METRIC: 45000.},
+    ])
+    captured = []
+    monkeypatch.setattr(plots, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    plots.fig_median_income_oecd(pd.DataFrame(rows), tmp_path)
+    ax = captured[0].axes[0]
+    assert "2002\u20132024" in ax.get_title()
+    uk, us = ax.lines[:2]
+    assert uk.get_xdata()[0] == 2002
+    assert uk.get_ydata()[0] == 12000.
+    assert us.get_xdata()[-1] == 2024 and us.get_ydata()[-1] == 45000.
+    assert pd.isna(uk.get_ydata()[1:11]).all()
+
+
 def test_simplified_gdp_ratio_shows_only_us_and_eu(monkeypatch, tmp_path):
     import pandas as pd
     from europe_data import plot_uk_decline as plots

@@ -42,11 +42,6 @@ from vizstyle import (  # noqa: E402
 )
 
 house_style()
-# This analysis draws a log-scale axis whose tick labels use mathtext (10^6); the shared
-# house style disables mathtext (to protect literal "$" labels elsewhere), so re-enable it
-# here — uk_migration has no "$" labels, matching its original default behaviour.
-plt.rcParams["text.parse_math"] = True
-
 
 def _load(source: pd.DataFrame | str | Path | None) -> pd.DataFrame:
     if isinstance(source, pd.DataFrame):
@@ -83,6 +78,8 @@ def _style_axes(ax, thousands: bool = True, logy: bool = False) -> None:
     """Apply the house axes styling: integer year ticks, y grid, thousands separator."""
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     if thousands and not logy:
+        ax.yaxis.set_major_formatter(lambda v, _pos: f"{v:,.0f}")
+    if logy:
         ax.yaxis.set_major_formatter(lambda v, _pos: f"{v:,.0f}")
     which = "both" if logy else "major"
     ax.grid(which=which, axis="y", linestyle="-", linewidth=0.5)
@@ -306,7 +303,11 @@ def chart_legal_vs_irregular(df: pd.DataFrame) -> Path:
     ax.set_ylabel("People per year (log)")
     ax.legend(loc="upper left", frameon=False)
     _style_axes(ax, thousands=False, logy=True)
-    return _save(fig, "legal_vs_irregular.png", f"{SOURCE_ONS}; {SOURCE_HO}")
+    return _save(
+        fig, "legal_vs_irregular.png", f"{SOURCE_ONS}; {SOURCE_HO}\n"
+        "Different measures: long-term migration estimates and arrival detections are not "
+        "disjoint categories and must not be added or interpreted as a legal/illegal split.",
+    )
 
 
 def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:

@@ -54,7 +54,7 @@ METRICS: dict[str, Metric] = {
     ),
     "market_cap_usd_real": Metric(
         "market_cap_usd_real",
-        "Stock-market capitalisation (real)",
+        "Stock-market capitalisation (US-CPI adjusted)",
         "constant US$",
         None,  # derived: market_cap_usd deflated by US CPI (see combine/deflator)
         description=(

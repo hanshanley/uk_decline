@@ -113,10 +113,14 @@ it does **not** identify a causal currency effect or establish a loss of househo
 ![Median disposable income, adjusted for household size and purchasing power](../outputs/gdp_income/median_disposable_income_oecd.png)
 
 The public comparison uses the **OECD Income Distribution Database**, with annual
-observations for the UK, US, Germany, France and Italy from **2013 to 2023**, the
-latest common income year in the downloaded release. Unlike the Eurostat series,
-the UK continues after 2018. The window advances automatically when every country
-has newer observations; later observations for individual countries remain in the CSV.
+observations for the UK, US, Germany, France and Italy across **all available
+years**, currently **2002–2023** overall. Coverage starts in 2002 for the UK, 2003
+for Italy, 2008 for Germany, 2011 for France and 2012 for the US. The earlier
+2013–2023 display window unnecessarily hid available observations; it is no longer
+used. Unlike the Eurostat series, the UK continues after 2018. Each country's
+latest observation is retained even when peers have not published the same year.
+Missing years and definition changes remain visible breaks; no older methodology
+is spliced in to manufacture a longer continuous history.
 
 Income is disposable household income after taxes and transfers, divided by the
 square root of household size. The national-currency medians are divided by
