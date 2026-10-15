@@ -11,7 +11,9 @@ Figures:
   - gdp_per_capita_real_over_time.png  National-accounts real growth, 2007 = 100
   - gdp_per_capita_nominal_over_time.png  Nominal valuations at annual market FX
   - uk_gdp_relative_to_peers.png       Peer nominal GDP/capita as a share of the UK
-  - uk_gdp_relative_to_peers_simple.png  US, EU and Poland only
+  - uk_gdp_relative_to_peers_simple.png  US and EU nominal GDP, UK = 100
+  - uk_real_gdp_relative_to_peers.png    US and EU real PPP volumes, UK = 100
+  - uk_ppp_gdp_relative_to_peers.png     US and EU current-price PPP GDP, UK = 100
   - median_disposable_income_pps.png   Median income (Eurostat PPS), UK ends ~2018
   - median_disposable_income_oecd.png  Median income (OECD, household-consumption PPP)
   - median_income_pip.png              PIP median income (2021 PPP $/day), UK to ~2021
@@ -194,16 +196,36 @@ def fig_median_income_oecd(df: pd.DataFrame, out: pathlib.Path) -> None:
 
 
 def fig_uk_relative(
-    df: pd.DataFrame, out: pathlib.Path, *, simplified: bool = False,
+    df: pd.DataFrame, out: pathlib.Path, *, simplified: bool = False, basis: str = "nominal",
 ) -> None:
-    metric = NOMINAL_GDP_METRIC
+    metric, title, source, comparison_filename = {
+        "nominal": (
+            NOMINAL_GDP_METRIC, "Nominal GDP per capita relative to the UK",
+            SOURCE_NOMINAL_GDP, "uk_gdp_relative_to_peers_simple.png",
+        ),
+        "real": (
+            "gdp_per_capita_ppp_constant", "Real GDP per person relative to the UK",
+            "Data: World Bank WDI, NY.GDP.PCAP.PP.KD. Constant 2021 international dollars "
+            "(ICP 2021 PPP benchmark): benchmark-valued output volumes, not current market dollars. "
+            "Real output growth at fixed purchasing power parities; annual market FX is not applied. "
+            "Country levels depend on the fixed benchmark; the EU aggregate uses PPP valuation weights.",
+            "uk_real_gdp_relative_to_peers.png",
+        ),
+        "ppp": (
+            "gdp_per_capita_ppp_current", "GDP per person at current PPPs relative to the UK",
+            "Data: World Bank WDI, NY.GDP.PCAP.PP.CD. Current international dollars (ICP 2021 vintage). "
+            "Each year's purchasing power parities and prices, not annual market exchange rates. "
+            "Same-year output comparisons; movements include changing price weights and parity estimates, "
+            "not just real growth. GDP is not household income.",
+            "uk_ppp_gdp_relative_to_peers.png",
+        ),
+    }[basis]
     # Match the coverage of the companion World Bank PPP comparison.
     start = 1990
     uk = _series(df, "United Kingdom", metric).set_index("year")[metric]
     uk = uk[uk.index >= start]
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
-    # These are dollar-valued GDP ratios, not household-income or real-growth ratios.
     refs = [
         ("United States", SUBSTACK_TEXT, "-", 2.8, "United States"),
         ("Germany", SUBSTACK_BLUE, "-", 2.0, "Germany"),
@@ -211,45 +233,52 @@ def fig_uk_relative(
         ("European Union", SUBSTACK_MUTED, "--", 2.0, "EU average"),
         ("Poland", SUBSTACK_GREEN, "-", 2.0, "Poland"),
     ]
-    if simplified:
-        refs = [ref for ref in refs if ref[0] not in {"Germany", "France"}]
+    if simplified or basis != "nominal":
+        refs = [ref for ref in refs if ref[0] in {"United States", "European Union"}]
     plotted_years = []
     labels = []
+    ratios = {}
     for country, color, ls, lw, label in refs:
         ref = _series(df, country, metric).set_index("year")[metric]
         ratio = (ref / uk).dropna() * 100.0  # peer as % of the UK
         if ratio.empty:
+            if simplified or basis != "nominal":
+                raise ValueError(f"Missing {country} observations for the {basis} UK comparison")
             continue
         plotted_years.extend(ratio.index)
+        ratios[country] = ratio
         annual = with_year_gaps(ratio)
         ax.plot(annual.index, annual.values, color=color, linewidth=lw, linestyle=ls, label=label,
-                marker="o", markersize=2.5)
+                marker="o" if len(ratio) == 1 else None, markersize=2.5)
         labels.append((ratio.iloc[-1], f"{label} ({ratio.index[-1]})", color))
     if not plotted_years:
         plt.close(fig)
-        raise ValueError("no overlapping nominal GDP observations from 1990 onward")
+        raise ValueError(f"no overlapping {basis} GDP observations from 1990 onward")
     labelled_ends(ax, labels, min_gap=5.0, x=max(plotted_years), fontsize=10)
 
     ax.axhline(100, color=SUBSTACK_ACCENT, linewidth=1.4, linestyle="-")
     ax.text(ax.get_xlim()[0], 102, "United Kingdom = 100", fontsize=9.5,
             color=SUBSTACK_ACCENT, style="italic", fontweight="bold", va="bottom")
 
-    us = ((_series(df, "United States", metric).set_index("year")[metric] / uk).dropna() * 100)
-    pl = ((_series(df, "Poland", metric).set_index("year")[metric] / uk).dropna() * 100)
-
     ax.set_xlabel("Year", labelpad=2)
+    ax.xaxis.set_major_locator(mtick.MaxNLocator(nbins=9, integer=True))
     ax.set_ylabel("GDP per capita as % of the UK (UK = 100)", labelpad=2)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v:.0f}%"))
     # Centered title + centered subtitle (the subtitle carries the two turning-point facts,
     # so it stays aligned under the headline instead of drifting to a corner).
-    ax.set_title(f"Nominal GDP per capita relative to the UK, "
+    ax.set_title(f"{title}, "
                  f"{min(plotted_years)}\u2013{max(plotted_years)}",
                  fontweight="bold", pad=30)
     facts = []
-    if not us.empty:
-        facts.append(f"US: {us.iloc[-1]:.0f}% of the UK in {us.index[-1]}")
-    if not pl.empty:
-        facts.append(f"Poland: {pl.iloc[-1]:.0f}% in {pl.index[-1]}")
+    fact_peers = (
+        (("United States", "US"), ("European Union", "EU"))
+        if simplified or basis != "nominal" else
+        (("United States", "US"), ("Poland", "Poland"))
+    )
+    for country, label in fact_peers:
+        ratio = ratios.get(country)
+        if ratio is not None:
+            facts.append(f"{label}: {ratio.iloc[-1]:.1f}% of the UK in {ratio.index[-1]}")
     if facts:
         ax.text(0.5, 1.015, "; ".join(facts),
                 transform=ax.transAxes, ha="center", va="bottom",
@@ -258,11 +287,11 @@ def fig_uk_relative(
     ax.set_axisbelow(True)
     ax.tick_params(axis="both", pad=2)
     ax.margins(x=0.04)
-    _source_note(fig, SOURCE_NOMINAL_GDP)
+    _source_note(fig, source)
     plt.tight_layout(pad=0.5)
-    plt.subplots_adjust(bottom=0.15)
+    plt.subplots_adjust(bottom=0.17)
     filename = (
-        "uk_gdp_relative_to_peers_simple.png" if simplified else "uk_gdp_relative_to_peers.png"
+        comparison_filename if simplified or basis != "nominal" else "uk_gdp_relative_to_peers.png"
     )
     save_chart(fig, out / filename, dpi=200, bbox_inches="tight")
     plt.close(fig)
@@ -299,6 +328,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     fig_uk_relative(df, out)
     fig_uk_relative(df, out, simplified=True)
+    fig_uk_relative(df, out, simplified=True, basis="real")
+    fig_uk_relative(df, out, simplified=True, basis="ppp")
     fig_median_income_oecd(df, out)
     _line_chart(
         df, "median_disposable_income",

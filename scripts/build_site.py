@@ -54,8 +54,8 @@ class Analysis:
 
 ANALYSES = (
     Analysis("gdp-income", "GDP & incomes", "Economy", "europe_data", "gdp_income",
-             ("us_uk_gdp_measures.png", "gdp_per_capita_nominal_over_time.png",
-              "gdp_per_capita_real_over_time.png",
+             ("uk_gdp_relative_to_peers_simple.png", "uk_real_gdp_relative_to_peers.png",
+              "uk_ppp_gdp_relative_to_peers.png",
               "median_disposable_income_oecd.png"),
              "Real output, nominal valuations and household incomes answer different questions."),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
@@ -159,7 +159,9 @@ CHART_TITLES = {
     "median_disposable_income_oecd": "Median disposable income, adjusted for household size and purchasing power",
     "median_income_pip": "Median daily income or consumption, adjusted for purchasing power",
     "uk_gdp_relative_to_peers": "Other countries' nominal GDP per person relative to the UK at market exchange rates",
-    "uk_gdp_relative_to_peers_simple": "US, EU and Polish GDP per person relative to the UK at market exchange rates",
+    "uk_gdp_relative_to_peers_simple": "Nominal GDP per person: US and EU relative to the UK",
+    "uk_real_gdp_relative_to_peers": "Real GDP per person: US and EU relative to the UK at fixed 2021 purchasing power parities",
+    "uk_ppp_gdp_relative_to_peers": "GDP per person at current purchasing power parities: US and EU relative to the UK",
     "london_gdp_per_head_vs_uk": "London GDP per person relative to the UK",
     "london_share_of_uk_gdp": "London's share of UK GDP",
     "asylum_applications": "Applications for asylum",

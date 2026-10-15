@@ -150,12 +150,15 @@ def test_gdp_figures_plot_distinct_volume_and_nominal_series(monkeypatch, tmp_pa
     for country, volumes, nominal in [
         ("United Kingdom", [40_000, 44_000], [50_000, 100_000]),
         ("United States", [80_000, 96_000], [60_000, 120_000]),
+        ("European Union", [60_000, 70_000], [55_000, 110_000]),
     ]:
         for i, year in enumerate([2007, 2025]):
             row = {metric: None for metric in combine.METRIC_ORDER}
             row.update(country=country, year=year,
                        gdp_per_capita_constant_usd=volumes[i],
                        gdp_per_capita_nominal_usd=nominal[i],
+                       gdp_per_capita_ppp_constant=volumes[i] * 1.1,
+                       gdp_per_capita_ppp_current=nominal[i] * 1.3,
                        gdp_per_capita_real_usd=999_000 + i)
             rows.append(row)
     data = pd.DataFrame(rows)
@@ -329,7 +332,7 @@ def test_nominal_gdp_ratio_uses_only_shared_years_and_dates_each_peer(monkeypatc
     assert "2023\u20132025" in ax.get_title()
 
 
-def test_simplified_gdp_ratio_omits_only_germany_and_france(monkeypatch, tmp_path):
+def test_simplified_gdp_ratio_shows_only_us_and_eu(monkeypatch, tmp_path):
     import pandas as pd
     from europe_data import plot_uk_decline as plots
 
@@ -351,11 +354,11 @@ def test_simplified_gdp_ratio_omits_only_germany_and_france(monkeypatch, tmp_pat
     ]
     original, simplified = [figure.axes[0] for _, figure in saved]
     assert len(original.lines) == 6
-    assert len(simplified.lines) == 4
-    assert [line.get_ydata()[0] for line in simplified.lines[:-1]] == [160, 82, 50]
+    assert len(simplified.lines) == 3
+    assert [line.get_ydata()[0] for line in simplified.lines[:-1]] == [160, 82]
     labels = " ".join(text.get_text() for text in simplified.texts)
     assert "United States (2025)" in labels
-    assert "EU average (2025)" in labels and "Poland (2025)" in labels
+    assert "EU average (2025)" in labels and "Poland" not in labels
     assert "Germany" not in labels and "France" not in labels
     assert simplified.get_title() == original.get_title()
 

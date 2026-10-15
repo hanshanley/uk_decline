@@ -20,7 +20,18 @@ longer the headline real-output chart. Its arithmetic is retained for tuition co
 
 ## Headline results (figures in [`../outputs/`](../outputs))
 
-### US versus UK: the measures side by side
+### US and EU relative to the UK: separate measures
+
+The public page uses the same single-panel layout for all three comparisons:
+**US and EU lines, with the UK fixed at 100**. Germany, France and Poland are not
+separate lines in these public GDP comparisons. The EU is the published World Bank
+aggregate, not an average reconstructed from selected countries.
+
+![Nominal GDP per person: US and EU relative to the UK](../outputs/gdp_income/uk_gdp_relative_to_peers_simple.png)
+![Real GDP per person: US and EU relative to the UK at fixed 2021 PPPs](../outputs/gdp_income/uk_real_gdp_relative_to_peers.png)
+![Current-PPP GDP per person: US and EU relative to the UK](../outputs/gdp_income/uk_ppp_gdp_relative_to_peers.png)
+
+The four-panel UK/US and exchange-rate audit remains a supplemental export:
 
 ![US versus UK: nominal GDP, current PPP, real PPP volumes and annual sterling exchange rates](../outputs/gdp_income/us_uk_gdp_measures.png)
 
@@ -61,7 +72,7 @@ constant-PPP and national-accounts volumes must have the same growth within 0.2%
 ### Real GDP per person growth, 2007 = 100 (national-accounts volumes)
 ![Real GDP per person growth, each economy indexed to 2007](../outputs/gdp_income/gdp_per_capita_real_over_time.png)
 
-The chart now indexes each economy to its own 2007 observation. This removes the
+This supplemental chart indexes each economy to its own 2007 observation. This removes the
 arbitrary fixed-base dollar-level gap and makes the real-growth question explicit:
 **it is an index, not nominal dollars or a cross-country living-standard level**.
 
@@ -79,9 +90,9 @@ That much larger relative change includes GDP-price and exchange-rate effects.
 These current-dollar levels are explicitly not inflation-adjusted.
 
 ### UK relative to its peers (US, Germany, France, EU average, Poland)
-The supplemental simplified version shows the US, EU average and Poland:
+The public simplified version shows only the US and EU aggregate:
 
-![US, EU and Polish nominal GDP per person relative to the UK](../outputs/gdp_income/uk_gdp_relative_to_peers_simple.png)
+![US and EU nominal GDP per person relative to the UK](../outputs/gdp_income/uk_gdp_relative_to_peers_simple.png)
 
 The full comparison remains available:
 
@@ -218,7 +229,7 @@ python3 -m venv .venv && ./.venv/bin/pip install -r ../requirements.txt
 ```
 
 Outputs: per-source CSVs, `europe_combined_long.csv`, `europe_combined_wide.csv`, and
-`manifest.json` in `../data/`; eight PNGs in `../outputs/gdp_income/`.
+`manifest.json` in `../data/`; ten PNGs in `../outputs/gdp_income/`.
 The derived OECD source table (`oecd_median_income_ppp.csv`) and combined wide table
 are tracked for reproducible offline chart generation; other raw downloads are git-ignored.
 

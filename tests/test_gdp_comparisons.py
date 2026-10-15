@@ -112,3 +112,54 @@ def test_failed_currency_check_preserves_saved_europe_inputs(frame, tmp_path, mo
         fetch_data.main(["--sources", "worldbank", "--out", str(tmp_path)])
     assert saved.read_text() == "preserved published inputs\n"
     assert not (tmp_path / "gdp_per_capita_ppp.csv").exists()
+
+
+@pytest.mark.parametrize(("basis", "metric", "filename"), [
+    ("nominal", gdp.NOMINAL, "uk_gdp_relative_to_peers_simple"),
+    ("real", gdp.CONSTANT_PPP, "uk_real_gdp_relative_to_peers"),
+    ("ppp", gdp.CURRENT_PPP, "uk_ppp_gdp_relative_to_peers"),
+])
+def test_single_panel_comparisons_retain_us_and_eu_with_correct_measure(
+    tmp_path, monkeypatch, basis, metric, filename,
+):
+    from europe_data import plot_uk_decline as plots
+
+    frame = pd.DataFrame([
+        {"country": country, "year": year, gdp.NOMINAL: nominal,
+         gdp.CONSTANT_PPP: real, gdp.CURRENT_PPP: ppp}
+        for country, nominal, real, ppp in (
+            ("United Kingdom", 50_000, 60_000, 70_000),
+            ("United States", 80_000, 90_000, 100_000),
+            ("European Union", 40_000, 50_000, 60_000),
+            ("Germany", 1, 1, 1), ("France", 1, 1, 1), ("Poland", 1, 1, 1),
+        )
+        for year in (2023, 2025)
+    ])
+    captured = []
+    original = plots.save_chart
+
+    def save(fig, *args, **kwargs):
+        captured.append(fig)
+        original(fig, *args, **kwargs)
+
+    monkeypatch.setattr(plots, "save_chart", save)
+    plots.fig_uk_relative(frame, tmp_path, simplified=True, basis=basis)
+    fig = captured[0]
+    ax = fig.axes[0]
+    assert [line.get_label() for line in ax.lines[:2]] == ["United States", "EU average"]
+    assert len(fig.axes) == 1 and len(ax.lines) == 3
+    uk = frame.loc[frame.country == "United Kingdom", metric].iloc[0]
+    for line, country in zip(ax.lines[:2], ("United States", "European Union")):
+        value = frame.loc[frame.country == country, metric].iloc[0]
+        assert line.get_ydata()[[0, -1]] == pytest.approx([100 * value / uk] * 2)
+        assert np.isnan(line.get_ydata()[1])
+    assert list(ax.lines[-1].get_ydata()) == [100, 100]
+    data = json.loads((tmp_path / f"{filename}.json").read_text())
+    assert [item["label"] for item in data["series"]] == ["United States", "EU average"]
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    assert fig.texts[0].get_window_extent(renderer).y1 < ax.xaxis.label.get_window_extent(renderer).y0
+    missing_eu = frame.loc[frame.country != "European Union"]
+    with pytest.raises(ValueError, match="European Union"):
+        plots.fig_uk_relative(missing_eu, tmp_path, simplified=True, basis=basis)
