@@ -59,7 +59,7 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
     metric = "gdp_per_capita_ppp_constant"
     meta = metrics.require_over_time(metric)
     plotted = {p.iso3: series.xy(series.series(rows, metric, p.iso3), START_YEAR)
-               for p in peers.PEERS}
+               for p in peers.GDP_PEERS}
     if not any(xs for xs, _ in plotted.values()):
         return None  # a partial fetch: skip rather than publish an empty figure
     plt = _plt()
@@ -69,7 +69,7 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
     spans: list[list[int]] = []
     labels: list[tuple[float, str, str]] = []
     last_x = None
-    for peer in peers.PEERS:
+    for peer in peers.GDP_PEERS:
         xs, ys = plotted[peer.iso3]
         if not xs:
             continue
@@ -111,7 +111,7 @@ def chart_volume_growth(rows: list[dict], out_dir: Path,
     metric = "gdp_per_capita_ppp_constant"
     metrics.require_over_time(metric)
     plotted = {}
-    growth_peers = list({p.iso3: p for p in [*peers.PEERS, *peers.PRICE_LEVEL_PEERS]}.values())
+    growth_peers = peers.GDP_PEERS
     for peer in growth_peers:
         data = series.series(rows, metric, peer.iso3)
         if start_year in data and data[start_year] > 0:
@@ -134,7 +134,7 @@ def chart_volume_growth(rows: list[dict], out_dir: Path,
                   x=max(xs[-1] for xs, _ in plotted.values()), fontsize=10)
     ax.set_title(f"Real GDP per head growth since {start_year}",
                  fontweight="bold", pad=30)
-    _subtitle(ax, "Each country starts at 100; this compares growth, not starting GDP levels")
+    _subtitle(ax, "Each economy starts at 100; this compares growth, not starting GDP levels")
     _tidy(ax, ylabel=f"Real GDP per capita index ({start_year} = 100)")
     ax.margins(x=0.14)
     source_note(fig, _note(
@@ -503,7 +503,8 @@ def chart_long_run(rows: list[dict], out_dir: Path) -> Path | None:
         f"\u2014 {meta.unit}. On the International Comparison Program's 2011 benchmark, "
         "so its levels are not comparable with the World Bank's 2021 benchmark shown "
         "elsewhere in this analysis, and the "
-        "spacing between countries should be read as indicative rather than exact."))
+        "spacing between countries should be read as indicative rather than exact. "
+        "No comparable EU aggregate is included in this source series; none is synthesised."))
     return save_fig(fig, out_dir / "ppp_gdp_long_run_maddison.png", bottom=0.17)
 
 

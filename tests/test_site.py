@@ -143,6 +143,7 @@ def test_site_rejects_stale_observations_without_replacing_published_build(site_
 @pytest.mark.parametrize(("chart", "comparator"), [
     ("gdp_income/uk_gdp_relative_to_peers_simple", "EU average"),
     ("gdp_income/uk_real_gdp_relative_to_peers", "United States"),
+    ("gdp_income/uk_real_gdp_relative_to_peers", "Poland"),
     ("nhs/cancer_62day_pct", "Northern Ireland"),
     ("stock_markets/stock_market_cap_pct_gdp", "United Kingdom"),
 ])

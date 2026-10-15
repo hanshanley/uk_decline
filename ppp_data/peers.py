@@ -23,18 +23,20 @@ class Peer(NamedTuple):
 
 UK = "GBR"
 US = "USA"
+POLAND = Peer("POL", "Poland", "#7B6D8D", "--", 2.1)
+EU_AVERAGE = Peer("EUU", "EU average", MUTED, "--", 2.0)
 
 # The UK is always terracotta and heavier than everything else; the US is near-black as
-# the primary comparator. These five are the countries with a full World Bank PPP series
-# back to 1990; Poland joins the charts where its convergence is the point (RELATIVE_PEERS,
-# PRICE_LEVEL_PEERS).
+# the primary comparator. These countries have World Bank PPP series back to 1990.
 PEERS: list[Peer] = [
     Peer("GBR", "United Kingdom", ACCENT, "-", 2.8),
     Peer("USA", "United States", TEXT, "-", 1.9),
     Peer("DEU", "Germany", BLUE, "-", 1.9),
     Peer("FRA", "France", GOLD, "-", 1.9),
     Peer("ITA", "Italy", GREEN, "-", 1.9),
+    POLAND,
 ]
+GDP_PEERS = [*PEERS, EU_AVERAGE]
 
 # Peers used on the "relative to the UK" chart. The UK itself is the 100% baseline there,
 # so it is not in this list; Poland is added because its convergence is the headline.
@@ -42,8 +44,8 @@ RELATIVE_PEERS: list[Peer] = [
     Peer("USA", "United States", TEXT, "-", 2.8),
     Peer("DEU", "Germany", BLUE, "-", 2.0),
     Peer("FRA", "France", GOLD, "-", 2.0),
-    Peer("EUU", "EU average", MUTED, "--", 2.0),
-    Peer("POL", "Poland", GREEN, "-", 2.0),
+    EU_AVERAGE,
+    POLAND,
 ]
 
 # Peers on the price-level-index chart. The US is the numeraire (a flat 1.00 reference),
@@ -53,7 +55,7 @@ PRICE_LEVEL_PEERS: list[Peer] = [
     Peer("DEU", "Germany", BLUE, "-", 1.9),
     Peer("FRA", "France", GOLD, "-", 1.9),
     Peer("ITA", "Italy", GREEN, "-", 1.9),
-    Peer("POL", "Poland", MUTED, "-", 1.9),
+    POLAND,
 ]
 
 # Every ISO3 the fetchers need, de-duplicated and stably ordered.

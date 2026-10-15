@@ -863,6 +863,37 @@ def test_growth_chart_plots_country_growth_not_levels_or_current_prices(monkeypa
     assert any("Poland (2025)" in t.get_text() for t in ax.texts)
 
 
+@pytest.mark.parametrize(("chart_name", "metric"), [
+    ("chart_gdp_per_capita", "gdp_per_capita_ppp_constant"),
+    ("chart_volume_growth", "gdp_per_capita_ppp_constant"),
+    ("chart_long_run", "gdp_per_capita_real_maddison"),
+])
+def test_gdp_exports_keep_poland_and_eu_where_the_source_provides_them(
+    monkeypatch, tmp_path, chart_name, metric,
+):
+    from ppp_data import charts
+
+    rows = [
+        _row(code, year, metric, value)
+        for code, values in (
+            ("GBR", (40_000, 44_000)), ("USA", (80_000, 100_000)),
+            ("POL", (20_000, 40_000)), ("EUU", (36_000, 42_000)),
+        )
+        if chart_name != "chart_long_run" or code != "EUU"
+        for year, value in zip((2007, 2025), values)
+    ]
+    captured = []
+    monkeypatch.setattr(charts, "save_fig", lambda fig, path, **kwargs: captured.append(fig) or path)
+    getattr(charts, chart_name)(rows, tmp_path)
+    labels = {line.get_label() for line in captured[0].axes[0].lines}
+    assert {"United Kingdom", "United States", "Poland"} <= labels
+    if chart_name != "chart_long_run":
+        assert "EU average" in labels
+    else:
+        assert "EU average" not in labels
+        assert "No comparable EU aggregate" in " ".join(captured[0].texts[-1].get_text().split())
+
+
 @pytest.mark.parametrize("chart_name", [
     "chart_gdp_per_capita", "chart_price_level_index", "chart_ppp_vs_market_fx",
     "chart_volume_growth", "chart_relative_to_peers", "chart_long_run",

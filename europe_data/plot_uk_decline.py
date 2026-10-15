@@ -56,8 +56,9 @@ PEERS = [
     ("Germany", SUBSTACK_BLUE, "-", 1.8),
     ("France", SUBSTACK_GOLD, "-", 1.8),
     ("Italy", SUBSTACK_GREEN, "-", 1.8),
+    ("Poland", "#7B6D8D", "--", 2.1),
 ]
-INCOME_PEERS = [*PEERS, ("Poland", "#7B6D8D", "--", 2.1)]
+INCOME_PEERS = list(PEERS)
 EU_WB = ("European Union", SUBSTACK_BLUE, "--", 2.0)                    # World Bank EU aggregate, for GDP
 EU_EUROSTAT = ("European Union (27, 2020)", SUBSTACK_MUTED, "--", 1.6)  # Eurostat, income
 
@@ -233,10 +234,10 @@ def fig_uk_relative(
         ("Germany", SUBSTACK_BLUE, "-", 2.0, "Germany"),
         ("France", SUBSTACK_GOLD, "-", 2.0, "France"),
         ("European Union", SUBSTACK_MUTED, "--", 2.0, "EU average"),
-        ("Poland", SUBSTACK_GREEN, "-", 2.0, "Poland"),
+        ("Poland", "#7B6D8D", "--", 2.1, "Poland"),
     ]
     if simplified or basis != "nominal":
-        refs = [ref for ref in refs if ref[0] in {"United States", "European Union"}]
+        refs = [ref for ref in refs if ref[0] in {"United States", "European Union", "Poland"}]
     plotted_years = []
     labels = []
     ratios = {}
@@ -273,7 +274,7 @@ def fig_uk_relative(
                  fontweight="bold", pad=30)
     facts = []
     fact_peers = (
-        (("United States", "US"), ("European Union", "EU"))
+        (("United States", "US"), ("European Union", "EU"), ("Poland", "Poland"))
         if simplified or basis != "nominal" else
         (("United States", "US"), ("Poland", "Poland"))
     )

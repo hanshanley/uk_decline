@@ -20,15 +20,15 @@ longer the headline real-output chart. Its arithmetic is retained for tuition co
 
 ## Headline results (figures in [`../outputs/`](../outputs))
 
-### US and EU relative to the UK: separate measures
+### US, EU and Poland relative to the UK: separate measures
 
 The public page uses the same single-panel layout for two comparisons:
-**US and EU lines, with the UK fixed at 100**. Germany, France and Poland are not
+**US, EU and Poland lines, with the UK fixed at 100**. Germany and France are not
 separate lines in these public GDP comparisons. The EU is the published World Bank
 aggregate, not an average reconstructed from selected countries.
 
-![Nominal GDP per person: US and EU relative to the UK](../outputs/gdp_income/uk_gdp_relative_to_peers_simple.png)
-![Real GDP per person: US and EU relative to the UK at fixed 2021 PPPs](../outputs/gdp_income/uk_real_gdp_relative_to_peers.png)
+![Nominal GDP per person: US, EU and Poland relative to the UK](../outputs/gdp_income/uk_gdp_relative_to_peers_simple.png)
+![Real GDP per person: US, EU and Poland relative to the UK at fixed 2021 PPPs](../outputs/gdp_income/uk_real_gdp_relative_to_peers.png)
 
 For the article's historical comparison, the second public chart uses **real
 GDP at fixed 2021 PPPs**, not current-price PPPs. Its changes track benchmark-valued
@@ -97,9 +97,9 @@ That much larger relative change includes GDP-price and exchange-rate effects.
 These current-dollar levels are explicitly not inflation-adjusted.
 
 ### UK relative to its peers (US, Germany, France, EU average, Poland)
-The public simplified version shows only the US and EU aggregate:
+The public simplified version shows the US, EU aggregate and Poland:
 
-![US and EU nominal GDP per person relative to the UK](../outputs/gdp_income/uk_gdp_relative_to_peers_simple.png)
+![US, EU and Polish nominal GDP per person relative to the UK](../outputs/gdp_income/uk_gdp_relative_to_peers_simple.png)
 
 The full comparison remains available:
 
@@ -196,8 +196,8 @@ accounts volumes measure growth; annual market dollars measure dollar valuations
 PPP conversion supports output-volume comparisons across economies. GDP per capita is
 not median household income, and GDP PPPs are not household consumption PPPs.
 
-**Countries plotted:** United Kingdom (focus), **United States**, Germany, France, Italy.
-Income charts additionally include **Poland** (US availability differs by source as noted above).
+**Countries plotted:** United Kingdom (focus), **United States**, **Poland**, Germany,
+France and Italy (US income availability differs by source as noted above).
 GDP charts also include the World Bank EU aggregate; the nominal peer-ratio chart includes
 Poland. Spain is fetched but not plotted.
 

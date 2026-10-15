@@ -59,7 +59,7 @@ This is a genuine qualification of the headline story, and it is reported as suc
 ![UK vs US at market rates, at PPP and in real volume](../outputs/ppp/ppp_vs_market_fx_uk_us.png)
 
 The GDP page provides nominal and **real GDP at fixed 2021 PPPs** with
-**US and EU relative to the UK (UK = 100)**. The current-price PPP comparison is
+**US, EU and Poland relative to the UK (UK = 100)**. The current-price PPP comparison is
 retained only as a supplemental export. A supplemental
 [four-panel comparison](../outputs/gdp_income/us_uk_gdp_measures.png) retains the
 UK/US audit alongside actual annual sterling exchange rates.
@@ -134,6 +134,11 @@ measurement in that year.
 The World Bank's PPP series starts in 1990. The Maddison Project reaches back to 1970 but is
 benchmarked on **2011** international dollars rather than the World Bank's 2021, so it gets
 its own chart and is never spliced onto the World Bank line.
+
+World Bank level and growth comparisons include the US, EU aggregate and Poland.
+The Maddison chart includes the US and Poland but does not invent an EU aggregate
+that is not supplied in its source series. Substack copies retain exactly the same
+series as their originals; the background conversion never changes comparator coverage.
 
 Constant-PPP World Bank levels support **benchmark-valued volume comparisons** as well as
 growth comparisons. They are not annually repriced PPP levels. Maddison remains separate,

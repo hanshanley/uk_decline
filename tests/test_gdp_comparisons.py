@@ -146,18 +146,18 @@ def test_single_panel_comparisons_retain_us_and_eu_with_correct_measure(
     plots.fig_uk_relative(frame, tmp_path, simplified=True, basis=basis)
     fig = captured[0]
     ax = fig.axes[0]
-    assert [line.get_label() for line in ax.lines[:2]] == ["United States", "EU average"]
-    assert len(fig.axes) == 1 and len(ax.lines) == 3
+    assert [line.get_label() for line in ax.lines[:3]] == ["United States", "EU average", "Poland"]
+    assert len(fig.axes) == 1 and len(ax.lines) == 4
     if basis == "real":
         assert "fixed 2021 PPPs" in ax.get_title()
     uk = frame.loc[frame.country == "United Kingdom", metric].iloc[0]
-    for line, country in zip(ax.lines[:2], ("United States", "European Union")):
+    for line, country in zip(ax.lines[:3], ("United States", "European Union", "Poland")):
         value = frame.loc[frame.country == country, metric].iloc[0]
         assert line.get_ydata()[[0, -1]] == pytest.approx([100 * value / uk] * 2)
         assert np.isnan(line.get_ydata()[1])
     assert list(ax.lines[-1].get_ydata()) == [100, 100]
     data = json.loads((tmp_path / f"{filename}.json").read_text())
-    assert [item["label"] for item in data["series"]] == ["United States", "EU average"]
+    assert [item["label"] for item in data["series"]] == ["United States", "EU average", "Poland"]
     canvas = FigureCanvasAgg(fig)
     canvas.draw()
     renderer = canvas.get_renderer()
@@ -165,3 +165,5 @@ def test_single_panel_comparisons_retain_us_and_eu_with_correct_measure(
     missing_eu = frame.loc[frame.country != "European Union"]
     with pytest.raises(ValueError, match="European Union"):
         plots.fig_uk_relative(missing_eu, tmp_path, simplified=True, basis=basis)
+    with pytest.raises(ValueError, match="Poland"):
+        plots.fig_uk_relative(frame.loc[frame.country != "Poland"], tmp_path, simplified=True, basis=basis)

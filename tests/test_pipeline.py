@@ -172,6 +172,7 @@ def test_gdp_figures_plot_distinct_volume_and_nominal_series(monkeypatch, tmp_pa
         ("United Kingdom", [40_000, 44_000], [50_000, 100_000]),
         ("United States", [80_000, 96_000], [60_000, 120_000]),
         ("European Union", [60_000, 70_000], [55_000, 110_000]),
+        ("Poland", [20_000, 30_000], [25_000, 50_000]),
     ]:
         for i, year in enumerate([2007, 2025]):
             row = {metric: None for metric in combine.METRIC_ORDER}
@@ -380,7 +381,7 @@ def test_income_chart_preserves_early_history_and_latest_country_observations(mo
     assert pd.isna(uk.get_ydata()[1:11]).all()
 
 
-def test_simplified_gdp_ratio_shows_only_us_and_eu(monkeypatch, tmp_path):
+def test_simplified_gdp_ratio_shows_us_eu_and_poland(monkeypatch, tmp_path):
     import pandas as pd
     from europe_data import plot_uk_decline as plots
 
@@ -402,11 +403,11 @@ def test_simplified_gdp_ratio_shows_only_us_and_eu(monkeypatch, tmp_path):
     ]
     original, simplified = [figure.axes[0] for _, figure in saved]
     assert len(original.lines) == 6
-    assert len(simplified.lines) == 3
-    assert [line.get_ydata()[0] for line in simplified.lines[:-1]] == [160, 82]
+    assert len(simplified.lines) == 4
+    assert [line.get_ydata()[0] for line in simplified.lines[:-1]] == [160, 82, 50]
     labels = " ".join(text.get_text() for text in simplified.texts)
     assert "United States (2025)" in labels
-    assert "EU average (2025)" in labels and "Poland" not in labels
+    assert "EU average (2025)" in labels and "Poland (2025)" in labels
     assert "Germany" not in labels and "France" not in labels
     assert simplified.get_title() == original.get_title()
 
