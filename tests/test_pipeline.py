@@ -70,6 +70,27 @@ def test_pip_selected_survey_metadata_survives_long_and_wide(monkeypatch, tmp_pa
     assert [float(r["median_income_pip"]) for r in wide] == [50, 55]
 
 
+def test_default_pip_income_scope_includes_poland_and_us_without_filling_gaps(monkeypatch):
+    from europe_data import pip
+
+    calls = []
+    monkeypatch.setattr(pip, "_valid_codes", {"POL", "USA"})
+
+    def download(url, params=None):
+        calls.append(params)
+        return [
+            {"country_code": code, "reporting_year": 2023, "reporting_level": "national",
+             "welfare_type": "income", "median": value, "survey_comparability": 1}
+            for code, value in (("POL", 30.), ("USA", 70.))
+        ]
+
+    monkeypatch.setattr(pip, "get_json", download)
+    rows = pip.fetch(2000, 2026)
+    assert set(calls[0]["country"].split(",")) == {"POL", "USA"}
+    assert calls[0]["fill_gaps"] == "false"
+    assert {row["country"] for row in rows} == {"Poland", "United States"}
+
+
 def test_empty_source_preserves_europe_outputs_after_another_source_succeeds(monkeypatch, tmp_path):
     import pytest
     from europe_data import fetch_data
@@ -287,7 +308,7 @@ def test_oecd_income_chart_has_recent_annual_observations_without_bridging_defin
         f"{metric}__income_definition": (
             "METH2012/D_PREV" if country == "France" and year < 2020 else "METH2012/D_CUR"
         ),
-    } for country, *_ in plots.PEERS for year in range(2013, 2024)]
+    } for country, *_ in plots.INCOME_PEERS for year in range(2013, 2024)]
     captured = []
     monkeypatch.setattr(plots, "save_chart", lambda *args, **kwargs: captured.append(plots.plt.gcf()))
     plots.fig_median_income_oecd(pd.DataFrame(rows), tmp_path)
@@ -295,6 +316,8 @@ def test_oecd_income_chart_has_recent_annual_observations_without_bridging_defin
     ax = fig.axes[0]
     assert "2013\u20132023" in ax.get_title()
     assert ax.get_xlabel() == "Income year (OECD labels)"
+    assert {line.get_label() for line in ax.lines} >= {"United States", "Poland"}
+    assert len(ax.lines) == 6
     for line in ax.lines:
         assert sum(pd.notna(line.get_ydata())) == 11
     france = next(line for line in ax.lines if line.get_label() == "France")
@@ -338,7 +361,7 @@ def test_income_chart_preserves_early_history_and_latest_country_observations(mo
 
     rows = [
         {"country": country, "year": year, oecd_income.METRIC: value}
-        for country, *_ in plots.PEERS
+        for country, *_ in plots.INCOME_PEERS
         for year, value in ((2013, 20000.), (2023, 30000.))
     ]
     rows.extend([

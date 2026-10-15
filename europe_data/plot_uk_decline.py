@@ -57,6 +57,7 @@ PEERS = [
     ("France", SUBSTACK_GOLD, "-", 1.8),
     ("Italy", SUBSTACK_GREEN, "-", 1.8),
 ]
+INCOME_PEERS = [*PEERS, ("Poland", "#7B6D8D", "--", 2.1)]
 EU_WB = ("European Union", SUBSTACK_BLUE, "--", 2.0)                    # World Bank EU aggregate, for GDP
 EU_EUROSTAT = ("European Union (27, 2020)", SUBSTACK_MUTED, "--", 1.6)  # Eurostat, income
 
@@ -77,7 +78,8 @@ SOURCE_EUROSTAT = ("Data: Eurostat (European Commission), European Community Hou
                    "EU Statistics on Income and Living Conditions \u2014 median household-size-adjusted "
                    "net income, current purchasing power standards (ilc_di03). Survey year; income usually refers "
                    "to the preceding year, with country exceptions including the UK. "
-                   "Missing years and flagged method breaks are not connected. UK ends 2018.")
+                   "Missing years and flagged method breaks are not connected. UK ends 2018. "
+                   "US data are unavailable in this Eurostat dataset; use the OECD comparison.")
 SOURCE_PIP = ("Data: World Bank Group, Poverty and Inequality Platform \u2014 median "
               f"per-person income/consumption, {pip.PPP_VERSION} international dollars per day "
               "(purchasing power parity). Survey observations only; "
@@ -121,7 +123,8 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
     ``scale``
     divides the values (e.g. 1000 to show GDP in 000s).
     """
-    series = [*PEERS, eu_agg] if eu_agg is not None else list(PEERS)
+    peers = INCOME_PEERS if metric.startswith("median") else PEERS
+    series = [*peers, eu_agg] if eu_agg is not None else list(peers)
     fig, ax = plt.subplots(figsize=(11, 6))
     plotted = False
     for country, color, ls, lw in series:
@@ -156,7 +159,7 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
                 markeredgecolor="white", markeredgewidth=1.0 if is_uk else 0)
 
     ax.set_xlabel(xlabel or ("Survey year" if metric == "median_disposable_income" else "Year"), labelpad=2)
-    if baseline_year is not None:
+    if baseline_year is not None or metric.startswith("median"):
         ax.xaxis.set_major_locator(mtick.MaxNLocator(nbins=9, integer=True))
     ax.set_ylabel(ylabel, labelpad=2)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(yfmt))
@@ -179,11 +182,11 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
 
 def fig_median_income_oecd(df: pd.DataFrame, out: pathlib.Path) -> None:
     income = df[df[oecd_income.METRIC].notna()]
-    for country, *_ in PEERS:
+    for country, *_ in INCOME_PEERS:
         series = income[income["country"] == country]
         if series.empty:
             raise ValueError(f"Missing OECD median disposable income: {country}")
-    selected = income[income["country"].isin([country for country, *_ in PEERS])]
+    selected = income[income["country"].isin([country for country, *_ in INCOME_PEERS])]
     start, end = int(selected["year"].min()), int(selected["year"].max())
     _line_chart(
         selected, oecd_income.METRIC,

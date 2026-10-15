@@ -47,7 +47,7 @@ def fetch(
 
     Returns tidy rows with the source's comparability identifier and welfare type.
     """
-    requested = list(iso3s) if iso3s is not None else countries.iso3_codes()
+    requested = list(iso3s) if iso3s is not None else [*countries.iso3_codes(), "USA"]
     # PIP returns a 404 if *any* requested code is absent, so pre-filter to valid codes.
     valid = valid_country_codes()
     iso3_list = [c for c in requested if c in valid]

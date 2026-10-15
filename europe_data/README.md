@@ -120,9 +120,9 @@ it does **not** identify a causal currency effect or establish a loss of househo
 ![Median disposable income, adjusted for household size and purchasing power](../outputs/gdp_income/median_disposable_income_oecd.png)
 
 The public comparison uses the **OECD Income Distribution Database**, with annual
-observations for the UK, US, Germany, France and Italy across **all available
+observations for the UK, US, **Poland**, Germany, France and Italy across **all available
 years**, currently **2002–2023** overall. Coverage starts in 2002 for the UK, 2003
-for Italy, 2008 for Germany, 2011 for France and 2012 for the US. The earlier
+for Italy, 2005 for Poland, 2008 for Germany, 2011 for France and 2012 for the US. The earlier
 2013–2023 display window unnecessarily hid available observations; it is no longer
 used. Unlike the Eurostat series, the UK continues after 2018. Each country's
 latest observation is retained even when peers have not published the same year.
@@ -167,6 +167,12 @@ not eliminate differences in national survey methods or welfare definitions.
 PIP labels observations by the **welfare reporting year**, which can precede the
 survey year when income is collected retrospectively.
 
+Poland is included in all three income exports, with a consistent dashed purple line.
+The supplemental PIP chart now also includes genuine US survey observations.
+Eurostat's income dataset does not publish a US series, so that export does not invent
+one; the OECD and PIP figures provide the US comparison. The OECD chart uses
+household-consumption PPPs, not GDP PPPs or market exchange rates.
+
 ## Data sources (all free, no API key)
 
 | Metric (column) | Source & citation | Endpoint | Inflation basis |
@@ -191,6 +197,7 @@ PPP conversion supports output-volume comparisons across economies. GDP per capi
 not median household income, and GDP PPPs are not household consumption PPPs.
 
 **Countries plotted:** United Kingdom (focus), **United States**, Germany, France, Italy.
+Income charts additionally include **Poland** (US availability differs by source as noted above).
 GDP charts also include the World Bank EU aggregate; the nominal peer-ratio chart includes
 Poland. Spain is fetched but not plotted.
 
@@ -198,7 +205,8 @@ Poland. Spain is fetched but not plotted.
 
 GDP inputs: WDI release updated **8 October 2026**, re-fetched and independently
 checked against annual FX and PPP conversion inputs **15 October 2026**.
-Eurostat and PIP income data: accessed **13 October 2026**. Maddison source:
+Eurostat and PIP income data: accessed **13 October 2026**; US PIP and Poland OECD
+additions checked **15 October 2026**. Maddison source:
 accessed **15 August 2026**. OECD income and consumption PPPs: accessed **14 October 2026**.
 
 - **OECD** (2026). [Income Distribution Database](https://www.oecd.org/en/data/datasets/income-and-wealth-distribution-database.html):

@@ -123,7 +123,9 @@ CHART_COMPARATORS = {
          "uk_ppp_gdp_relative_to_peers"),
         {"United States", "EU average"},
     ),
-    "median_disposable_income_oecd": {"United Kingdom", "United States", "Germany", "France", "Italy"},
+    "median_disposable_income_oecd": {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
+    "median_income_pip": {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
+    "median_disposable_income_pps": {"United Kingdom", "Germany", "France", "Italy", "Poland", "EU-27"},
     "ppp_gdp_per_capita_growth": {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
     "ppp_gdp_relative_to_peers": {"United States", "Germany", "France", "EU average", "Poland"},
     **dict.fromkeys(

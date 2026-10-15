@@ -13,7 +13,7 @@ from ._http import get_text
 BASE = "https://sdmx.oecd.org/public/rest/v1/data"
 INCOME_FLOW = "OECD.WISE.INE,DSD_WISE_IDD@DF_IDD,1.0"
 PPP_FLOW = "OECD.SDD.NAD,DSD_NAMAIN10@DF_TABLE4,1.0"
-ISO3S = ("GBR", "USA", "DEU", "FRA", "ITA")
+ISO3S = ("GBR", "USA", "DEU", "FRA", "ITA", "POL")
 METRIC = "median_disposable_income_oecd_ppp"
 UNIT = "current household-consumption PPP US$ per equivalised household"
 SOURCE = "OECD Income Distribution Database; OECD annual household-consumption PPPs"
@@ -97,7 +97,7 @@ def build_rows(
             "national_currency_income": income, "consumption_ppp": ppp,
             "currency": row["CURRENCY"],
         })
-    # The five-country comparison already has annual coverage throughout this window.
+    # Preserve annual coverage in the established comparison window for every peer.
     expected = set(range(max(start, COVERAGE_BASELINE_START), min(end, 2023) + 1))
     for country in codes:
         years = {row["year"] for row in rows if row["iso3"] == country}
