@@ -23,6 +23,7 @@ data/processed/*.csv
 !data/debt_borrowing_long.csv
 !data/uk_gilt_yields_daily.csv
 !data/unemployment_long.csv
+!data/unemployment_references.csv
 !data/uk_listed_companies_lse.csv
 !data/austerity_spending.csv
 !data/food_bank_calendar_year.csv

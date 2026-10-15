@@ -66,8 +66,9 @@ including fraud and computer misuse.
 [purchasing power parity](ppp_data/README.md).
 [Government debt and borrowing costs](debt_data/README.md) distinguish the UK
 public-debt stock relative to GDP from market yields on government bonds.
-[Unemployment and youth unemployment](unemployment_data/README.md) show UK rates
-for ages 16+ and 16-24, with explicit labour-force denominators and three-month periods.
+[Unemployment and youth unemployment](unemployment_data/README.md) compare the UK
+with EU and US reference rates in separate charts, with explicit age bands,
+labour-force denominators and reference periods.
 
 **Public services and infrastructure:** [austerity](austerity_data/README.md),
 [NHS performance](nhs_data/README.md), and [rail performance](rail_data/README.md).

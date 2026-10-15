@@ -1,4 +1,4 @@
-"""Compare overall and youth unemployment; retain separate exports for reference."""
+"""Separate overall and youth unemployment charts, with EU and US references."""
 
 from __future__ import annotations
 
@@ -9,8 +9,9 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from vizstyle import ACCENT, BG, BLUE, MUTED, TEXT, house_style, save_chart
+from vizstyle import ACCENT, BG, BLUE, GOLD, MUTED, TEXT, house_style, save_chart
 
+from . import references
 from .sources import SERIES, validate
 
 
@@ -20,73 +21,68 @@ def period_label(start: pd.Timestamp, end: pd.Timestamp) -> str:
     return f"{start:%b %Y}-{end:%b %Y}"
 
 
-def make_charts(frame: pd.DataFrame, out: Path) -> list[Path]:
+def make_charts(frame: pd.DataFrame, out: Path, reference_frame: pd.DataFrame) -> list[Path]:
     frame = validate(frame)
+    reference_frame = references.validate(reference_frame)
     out.mkdir(parents=True, exist_ok=True)
     house_style()
     outputs = []
-    styles = {
-        "unemployment_rate": ("Overall (16+)", BLUE),
-        "youth_unemployment_rate": ("Youth (16-24)", ACCENT),
-    }
-    for metrics, title, ages, filename in (
-        (
-            tuple(SERIES), "UK unemployment: overall and youth",
-            "Overall ages 16+; youth ages 16-24", "uk_unemployment_comparison.png",
-        ),
-        (("unemployment_rate",), "UK unemployment", "Aged 16 and over", "uk_unemployment.png"),
-        (("youth_unemployment_rate",), "UK youth unemployment", "Aged 16-24", "uk_youth_unemployment.png"),
+    for metric, title, filename in (
+        ("unemployment_rate", "Unemployment: UK, EU and US", "uk_unemployment.png"),
+        ("youth_unemployment_rate", "Youth unemployment: UK, EU and US", "uk_youth_unemployment.png"),
     ):
-        data = frame.loc[frame["metric"].isin(metrics)]
-        latest = data.sort_values("date").iloc[-1]
-        label = period_label(latest["period_start"], latest["period_end"])
-        combined = len(metrics) > 1
+        uk = frame.loc[frame["metric"] == metric]
+        peers = reference_frame.loc[reference_frame["metric"] == metric]
         fig, ax = plt.subplots(figsize=(12.5, 7), facecolor=BG)
         latest_values = []
-        for metric in metrics:
-            part = data.loc[data["metric"] == metric].sort_values("date")
+        for country, part, color, style in (
+            ("UK", uk, ACCENT, "-"),
+            ("EU", peers.loc[peers["country"] == "EU"], BLUE, "--"),
+            ("US", peers.loc[peers["country"] == "US"], GOLD, "-."),
+        ):
+            part = part.sort_values("date")
             last = part.iloc[-1]
             values = part.set_index("date")["value"]
             values = values.reindex(pd.date_range(values.index.min(), values.index.max(), freq="MS"))
-            name, color = styles[metric]
-            color = color if combined else ACCENT
-            ax.plot(values.index, values, color=color, linewidth=2.5, label=name)
-            ax.scatter([last["date"]], [last["value"]], color=color, s=25, zorder=4)
-            latest_values.append(f"{name.split(' (')[0]}: {last['value']:.1f}%")
-        ax.set_xlim(data["date"].min(), latest["date"] + pd.DateOffset(months=3))
-        ax.set_ylim(0, max(1, data["value"].max() * 1.18))
+            age = last["age_group"]
+            ax.plot(
+                values.index, values, color=color, linewidth=2.7 if country == "UK" else 2.1,
+                linestyle=style, label=f"{country} ({age})",
+                marker="o", markersize=5, markevery=[len(values) - 1], markeredgewidth=0,
+            )
+            period = (
+                period_label(last["period_start"], last["period_end"])
+                if country == "UK" else f"{last['date']:%b %Y}"
+            )
+            latest_values.append(f"{country}: {last['value']:.1f}% ({period})")
+        dates = pd.concat([uk["date"], peers["date"]])
+        ax.set_xlim(dates.min(), dates.max() + pd.DateOffset(months=3))
+        ax.set_ylim(0, max(1, max(uk["value"].max(), peers["value"].max()) * 1.18))
         ax.set_ylabel("Unemployed / economically active (%)")
-        ax.set_xlabel("Centre month of each three-month estimate")
+        ax.set_xlabel("Reference month (UK: centre of three-month estimate)")
         ax.xaxis.set_major_locator(mdates.YearLocator(5))
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
         ax.grid(axis="x", visible=False)
-        if combined:
-            ax.legend(loc="upper left", ncol=2, frameon=False, fontsize=11)
+        ax.legend(loc="upper left", ncol=3, frameon=False, fontsize=11)
         fig.suptitle(title, x=.10, y=.98, ha="left", fontsize=22, color=TEXT, fontweight="bold")
         fig.text(
-            .10, .91,
-            f"{ages}; seasonally adjusted three-month survey estimates",
+            .10, .91, "Seasonally adjusted | UK: rolling three months; EU and US: monthly",
             fontsize=11, color=MUTED,
         )
-        summary = " | ".join(latest_values) if combined else f"{latest['value']:.1f}%"
-        fig.text(
-            .10, .855, f"Latest: {label} | {summary}",
-            fontsize=14, color=TEXT if combined else ACCENT,
+        fig.text(.10, .855, "Latest: " + " | ".join(latest_values), fontsize=12, color=TEXT)
+        code = SERIES[metric][0]
+        ages = (
+            "UK and US: ages 16+; EU: ages 15-74."
+            if metric == "unemployment_rate" else
+            "UK and US: ages 16-24; EU: ages 15-24. Includes students seeking and available for work."
         )
-        codes = ", ".join(SERIES[metric][0] for metric in metrics)
         note = (
-            f"Source: Office for National Statistics, Labour Force Survey "
-            f"({codes}); released {latest['release_date']:%d %b %Y}. "
-            "Economically active = employed + unemployed; this is not the share of "
-            "all people without work. Adjacent estimates overlap. "
-        )
-        if combined:
-            note += "Each rate uses its own age group; overall includes young people. "
-        if "youth_unemployment_rate" in metrics:
-            note += "Includes students seeking and available for work. "
-        note += (
-            "Recent survey estimates are volatile; collection and weighting changes "
-            "affect comparisons over time. Missing observations are not filled."
+            f"Source: Office for National Statistics (ONS LFS, {code}); "
+            "Eurostat une_rt_m (EU); US Bureau of Labor Statistics via Eurostat (US). "
+            f"{ages} EU is the fixed 27-country aggregate, excluding the UK. "
+            "Rates use each age group's labour force (employed + unemployed), not its whole population. "
+            "National definitions and reference periods differ; UK estimates overlap and are subject to survey uncertainty. "
+            "Missing observations are not filled; the US October 2025 gap reflects the federal shutdown."
         )
         fig.text(.10, .025, textwrap.fill(note, width=150), fontsize=8, color=MUTED)
         fig.subplots_adjust(left=.10, right=.97, bottom=.21, top=.79)
