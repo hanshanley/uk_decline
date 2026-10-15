@@ -204,7 +204,7 @@ def test_topic_pages_only_embed_curated_charts_without_documentation_duplicates(
         page = BeautifulSoup((output / analysis.slug / "index.html").read_text(), "html.parser")
         images = page.select("main img")
         assert [Path(urlsplit(image["src"]).path).name for image in images] == list(analysis.charts)
-        assert 1 <= len(images) <= 3
+        assert 1 <= len(images) <= (4 if analysis.slug == "gdp-income" else 3)
         assert len({image["src"] for image in images}) == len(images)
         assert not page.select(".methodology, #methodology, .prose, pre")
         assert "Definitions, methods and sources" not in page.get_text()

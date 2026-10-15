@@ -1,4 +1,4 @@
-# europe_data — UK GDP per capita & median income (real)
+# europe_data — UK GDP per person: nominal, real, PPP and household income
 
 Reproducible pipeline documenting the **UK's relative economic performance** vs. the US and
 European peers, using public source observations and explicitly labelled derived measures.
@@ -20,8 +20,50 @@ longer the headline real-output chart. Its arithmetic is retained for tuition co
 
 ## Headline results (figures in [`../outputs/`](../outputs))
 
-### Real GDP per capita, 1970–2025 (national-accounts volumes)
-![Real GDP per capita, fixed-base dollar conversion](../outputs/gdp_income/gdp_per_capita_real_over_time.png)
+### US versus UK: the measures side by side
+
+![US versus UK: nominal GDP, current PPP, real PPP volumes and annual sterling exchange rates](../outputs/gdp_income/us_uk_gdp_measures.png)
+
+Every GDP panel uses **US / UK × 100**, not its reciprocal. A reading of 166%
+means **66% higher**, not 166% higher. The World Bank's October 8, 2026 release,
+re-fetched on October 15, gives:
+
+| Year | UK nominal GDP/person, current US$ | US nominal GDP/person, current US$ | US as % of UK |
+|---|---:|---:|---:|
+| 2022 | $47,035 | $78,009 | 165.9% |
+| 2023 | $49,920 | $82,587 | 165.4% |
+| 2024 | $53,341 | $86,170 | 161.5% |
+| 2025 | $57,602 | $90,027 | 156.3% |
+
+The remembered **166%** is consistent with 2022, not the latest 2025 observation
+in this release. Recent source estimates and historical observations can be revised.
+For the same 2025 observations, the US is **139.3%** of the UK at current PPPs
+and **142.5%** on the fixed-2021-PPP real-volume benchmark. These are different
+valuation bases, not contradictory nominal estimates.
+
+The fourth panel shows annual-average **US dollars per pound**, the reciprocal
+of WDI `PA.NUS.FCRF` (GBP per USD). Nominal GDP uses **each observation year's**
+conversion, not today's rate or one fixed conversion across history:
+
+```
+UK nominal GDP/person in USD = UK GDP/person in current GBP / annual GBP per USD
+UK current-PPP GDP/person = UK GDP/person in current GBP / GBP per international dollar
+```
+
+The pipeline independently fetches current-local-currency GDP (`NY.GDP.PCAP.CN`),
+annual market FX (`PA.NUS.FCRF`) and GDP PPPs (`PA.NUS.PPP`) for both countries,
+and checks both equations against WDI's published converted GDP, by country and
+year. Misalignment or a discrepancy exceeding 0.5% stops publication. No extra
+market-FX conversion is applied to an already dollar-denominated GDP series, PPP
+series or fixed-base volume measure. Their growth is also cross-checked:
+constant-PPP and national-accounts volumes must have the same growth within 0.2%.
+
+### Real GDP per person growth, 2007 = 100 (national-accounts volumes)
+![Real GDP per person growth, each economy indexed to 2007](../outputs/gdp_income/gdp_per_capita_real_over_time.png)
+
+The chart now indexes each economy to its own 2007 observation. This removes the
+arbitrary fixed-base dollar-level gap and makes the real-growth question explicit:
+**it is an index, not nominal dollars or a cross-country living-standard level**.
 
 From 2007 to 2025, UK real output per head increased **7.9%**, against **25.5%** in
 the US. This is slower growth, not an absolute loss of output over the entire interval.
@@ -37,7 +79,7 @@ That much larger relative change includes GDP-price and exchange-rate effects.
 These current-dollar levels are explicitly not inflation-adjusted.
 
 ### UK relative to its peers (US, Germany, France, EU average, Poland)
-The simplified public version shows the US, EU average and Poland:
+The supplemental simplified version shows the US, EU average and Poland:
 
 ![US, EU and Polish nominal GDP per person relative to the UK](../outputs/gdp_income/uk_gdp_relative_to_peers_simple.png)
 
@@ -113,6 +155,9 @@ survey year when income is collected retrospectively.
 | `gdp_per_capita_real_maddison` | **Maddison Project Database 2023** (Bolt & van Zanden), via Our World in Data | `ourworldindata.org/grapher/gdp-per-capita-maddison.csv?csvType=full` | Real — constant 2011 international $ (**PPP**); reference only |
 | `gdp_per_capita_ppp_current` | **World Bank WDI** `NY.GDP.PCAP.PP.CD` | (same) | Nominal — current international $ (PPP); reference only |
 | `gdp_per_capita_ppp_constant` | **World Bank WDI** `NY.GDP.PCAP.PP.KD` | (same) | Real — constant 2021 international $; overview and PPP growth charts |
+| `gdp_per_capita_current_lcu` | **World Bank WDI** `NY.GDP.PCAP.CN`, UK and US | (same) | Current local-currency GDP, independent conversion check |
+| `market_exchange_rate` | **World Bank WDI** `PA.NUS.FCRF`, UK and US | (same) | Annual-average local currency per US$; not a spot or year-end rate |
+| `ppp_conversion_factor` | **World Bank WDI** `PA.NUS.PPP`, UK and US | (same) | Local currency per current international dollar; not market FX |
 | `median_disposable_income` / `mean_disposable_income` | **Eurostat** `ilc_di03` (`MED_EI`/`MEAN_EI`, `unit=PPS`) | `ec.europa.eu/eurostat/api/dissemination/…/ilc_di03` | Current PPS (cross-country comparable; **not** deflated over time) |
 | `median_disposable_income_oecd_ppp` | **OECD** Income Distribution Database; annual household-consumption PPPs | `sdmx.oecd.org/public/rest/v1/data/` flows `OECD.WISE.INE,DSD_WISE_IDD@DF_IDD,1.0` and `OECD.SDD.NAD,DSD_NAMAIN10@DF_TABLE4,1.0` | Current household-consumption purchasing-power US dollars; **not real growth** |
 | `median_income_pip` | **World Bank PIP** (Poverty & Inequality Platform), pinned `ppp_version=2021` | `api.worldbank.org/pip/v1/pip` | **Real** — constant 2021 PPP $ per day |
@@ -129,7 +174,8 @@ Poland. Spain is fetched but not plotted.
 
 ## Citations
 
-GDP inputs: WDI release updated **8 October 2026**, accessed **12 October 2026**.
+GDP inputs: WDI release updated **8 October 2026**, re-fetched and independently
+checked against annual FX and PPP conversion inputs **15 October 2026**.
 Eurostat and PIP income data: accessed **13 October 2026**. Maddison source:
 accessed **15 August 2026**. OECD income and consumption PPPs: accessed **14 October 2026**.
 
@@ -172,7 +218,7 @@ python3 -m venv .venv && ./.venv/bin/pip install -r ../requirements.txt
 ```
 
 Outputs: per-source CSVs, `europe_combined_long.csv`, `europe_combined_wide.csv`, and
-`manifest.json` in `../data/`; seven PNGs in `../outputs/gdp_income/`.
+`manifest.json` in `../data/`; eight PNGs in `../outputs/gdp_income/`.
 The derived OECD source table (`oecd_median_income_ppp.csv`) and combined wide table
 are tracked for reproducible offline chart generation; other raw downloads are git-ignored.
 

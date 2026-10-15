@@ -7,7 +7,8 @@ the pre1870_reapportionment_package figures (warm tan background, serif fonts, m
 palette, italic source note, no top/right spines).
 
 Figures:
-  - gdp_per_capita_real_over_time.png  National-accounts volumes, fixed-base dollars
+  - us_uk_gdp_measures.png            Nominal, PPP, real-volume ratios and annual FX
+  - gdp_per_capita_real_over_time.png  National-accounts real growth, 2007 = 100
   - gdp_per_capita_nominal_over_time.png  Nominal valuations at annual market FX
   - uk_gdp_relative_to_peers.png       Peer nominal GDP/capita as a share of the UK
   - uk_gdp_relative_to_peers_simple.png  US, EU and Poland only
@@ -32,7 +33,7 @@ matplotlib.use("Agg")  # headless: no display required
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
-from europe_data import combine, oecd_income, pip
+from europe_data import combine, gdp_comparisons, oecd_income, pip
 from ppp_data.figure import labelled_ends
 
 # ── Professional house style (shared vizstyle house style) ───────────────────
@@ -110,7 +111,7 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
                 source: str, filename: str, out: pathlib.Path, *,
                 eu_agg: tuple | None = None, eu_label: str | None = None,
                 scale: float = 1.0, source_ha: str = "left",
-                xlabel: str | None = None) -> None:
+                xlabel: str | None = None, baseline_year: int | None = None) -> None:
     """Draw a UK-vs-peers line chart for one metric and save it to ``out/filename``.
 
     ``eu_agg``/``eu_label`` optionally add an EU reference series (Eurostat
@@ -125,6 +126,12 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
         s = _series(df, country, metric)
         if s.empty:
             continue
+        if baseline_year is not None:
+            baseline = s.loc[s["year"] == baseline_year, metric]
+            if baseline.empty or baseline.iloc[0] <= 0:
+                raise ValueError(f"{country}: missing positive {baseline_year} real-GDP baseline")
+            s = s.loc[s["year"] >= baseline_year].copy()
+            s[metric] = 100 * s[metric] / baseline.iloc[0]
         plotted = True
         status_column = f"{metric}__status"
         breaks = (
@@ -147,6 +154,8 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
                 markeredgecolor="white", markeredgewidth=1.0 if is_uk else 0)
 
     ax.set_xlabel(xlabel or ("Survey year" if metric == "median_disposable_income" else "Year"), labelpad=2)
+    if baseline_year is not None:
+        ax.xaxis.set_major_locator(mtick.MaxNLocator(nbins=9, integer=True))
     ax.set_ylabel(ylabel, labelpad=2)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(yfmt))
     ax.set_title(title, fontweight="bold", pad=14)
@@ -269,14 +278,16 @@ def main(argv: list[str] | None = None) -> int:
     out = pathlib.Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     df = pd.read_csv(args.data)
+    gdp_comparisons.make_chart(df, out)
 
     _line_chart(
         df, GDP_METRIC,
-        "Real GDP per capita (national-accounts volumes)",
-        "GDP per capita (000s, constant 2015 US$)",
-        lambda v, _: f"${v:.0f}k", SOURCE_GDP,
+        "Real GDP per person: growth since 2007",
+        "Real GDP per person index (each economy: 2007 = 100)",
+        lambda v, _: f"{v:.0f}", SOURCE_GDP + " Each economy divided by its own observed "
+        "2007 value: compares real growth, not countries' starting GDP levels.",
         "gdp_per_capita_real_over_time.png", out,
-        eu_agg=EU_WB, eu_label="EU average", scale=1000.0, source_ha="left",
+        eu_agg=EU_WB, eu_label="EU average", source_ha="left", baseline_year=2007,
     )
     _line_chart(
         df, NOMINAL_GDP_METRIC,

@@ -1,4 +1,4 @@
-"""World Bank WDI client: GDP per capita, PPP (nominal + constant international $).
+"""World Bank WDI client: nominal/real GDP, PPP and UK/US conversion checks.
 
 Endpoint: https://api.worldbank.org/v2/country/{codes}/indicator/{indicator}
 No API key required. Country codes are joined with ``;``; the API pages results.
@@ -19,6 +19,9 @@ INDICATORS: dict[str, tuple[str, str]] = {
     "NY.GDP.PCAP.CD": ("gdp_per_capita_nominal_usd", "nominal, current US$"),
     "NY.GDP.PCAP.PP.CD": ("gdp_per_capita_ppp_current", "current international $"),
     "NY.GDP.PCAP.PP.KD": ("gdp_per_capita_ppp_constant", "constant 2021 international $"),
+    "NY.GDP.PCAP.CN": ("gdp_per_capita_current_lcu", "current local currency"),
+    "PA.NUS.FCRF": ("market_exchange_rate", "LCU per US$ (period average)"),
+    "PA.NUS.PPP": ("ppp_conversion_factor", "LCU per international $"),
 }
 
 SOURCE = "World Bank WDI"
@@ -70,7 +73,7 @@ def fetch(
     iso3s: Iterable[str] | None = None,
     indicators: Iterable[str] | None = None,
 ) -> list[dict]:
-    """Fetch WDI GDP-per-capita PPP rows for the given years and countries.
+    """Fetch WDI GDP measures and independent UK/US conversion inputs.
 
     Returns tidy dict rows: iso3, country, year, metric, value, unit, source.
     """
@@ -78,7 +81,12 @@ def fetch(
     ind_list = list(indicators) if indicators is not None else list(INDICATORS)
     out: list[dict] = []
     for indicator in ind_list:
-        out.extend(_fetch_indicator(indicator, iso3_list, start, end))
+        codes = (
+            [code for code in iso3_list if code in {"GBR", "USA"}]
+            if indicator in {"NY.GDP.PCAP.CN", "PA.NUS.FCRF", "PA.NUS.PPP"} else iso3_list
+        )
+        if codes:
+            out.extend(_fetch_indicator(indicator, codes, start, end))
     return out
 
 

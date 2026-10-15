@@ -58,6 +58,13 @@ This is a genuine qualification of the headline story, and it is reported as suc
 ### The three views side by side
 ![UK vs US at market rates, at PPP and in real volume](../outputs/ppp/ppp_vs_market_fx_uk_us.png)
 
+The GDP page also provides a [four-panel comparison](../outputs/gdp_income/us_uk_gdp_measures.png)
+using the **opposite, explicitly labelled direction (US / UK)** alongside actual annual
+sterling exchange rates. In 2025, US GDP per head is 156.3% of the UK in nominal
+market dollars, 139.3% at current PPPs and 142.5% on the fixed-2021 volume benchmark.
+The 165.9% nominal comparison refers to 2022. Do not mix these years, valuation
+bases or reciprocal ratios; 156.3% of the UK means 56.3% higher, not 156.3% higher.
+
 The shaded gap between the market-rate and PPP-level lines reflects relative price
 levels **and** exchange rates, not currency alone. The UK's
 2007 dollar-valued "parity with the US" is not evidence of output-volume parity: in that

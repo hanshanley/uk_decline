@@ -131,7 +131,7 @@ def test_headline_gdp_is_national_accounts_volume_and_legacy_cpi_is_retained() -
     assert plot_uk_decline.GDP_METRIC == "gdp_per_capita_constant_usd"
     assert "PPP" not in plot_uk_decline.GDP_METRIC.upper()
     assert "gdp_per_capita_real_usd" in combine.METRIC_ORDER
-    # The deflation helper produces a real, constant-2015-US$ series from nominal + US CPI.
+    # US-CPI deflation retains market FX and is not national-accounts real output.
     nominal = [{"iso3": "GBR", "country": "United Kingdom", "year": 2000,
                 "metric": "gdp_per_capita_nominal_usd", "value": 100.0,
                 "unit": "nominal, current US$", "source": "x"}]
@@ -161,6 +161,7 @@ def test_gdp_figures_plot_distinct_volume_and_nominal_series(monkeypatch, tmp_pa
     data = pd.DataFrame(rows)
     monkeypatch.setattr(plots.pd, "read_csv", lambda _: data)
     monkeypatch.setattr(plots, "fig_median_income_oecd", lambda *args: None)
+    monkeypatch.setattr(plots.gdp_comparisons, "make_chart", lambda *args: None)
     captured = {}
     def save(fig, path, **kwargs):
         captured[Path(path).name] = plots.plt.gcf()
@@ -168,7 +169,8 @@ def test_gdp_figures_plot_distinct_volume_and_nominal_series(monkeypatch, tmp_pa
     assert plots.main(["--out", str(tmp_path)]) == 0
     real = captured["gdp_per_capita_real_over_time.png"].axes[0]
     nominal = captured["gdp_per_capita_nominal_over_time.png"].axes[0]
-    assert list(real.lines[0].get_ydata()[pd.notna(real.lines[0].get_ydata())]) == pytest.approx([40, 44])
+    assert list(real.lines[0].get_ydata()[pd.notna(real.lines[0].get_ydata())]) == pytest.approx([100, 110])
+    assert list(real.lines[1].get_ydata()[pd.notna(real.lines[1].get_ydata())]) == pytest.approx([100, 120])
     assert list(nominal.lines[0].get_ydata()[pd.notna(nominal.lines[0].get_ydata())]) == pytest.approx([50, 100])
     ratio = captured["uk_gdp_relative_to_peers.png"].axes[0]
     assert list(ratio.lines[0].get_ydata()[pd.notna(ratio.lines[0].get_ydata())]) == pytest.approx([120, 120])

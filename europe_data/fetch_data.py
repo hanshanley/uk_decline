@@ -19,8 +19,9 @@ import pathlib
 import sys
 
 from tqdm import tqdm
+import pandas as pd
 
-from europe_data import combine, eurostat, maddison, oecd_income, pip, worldbank
+from europe_data import combine, eurostat, gdp_comparisons, maddison, oecd_income, pip, worldbank
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCES = ("worldbank", "maddison", "eurostat", "pip", "oecd-income")
@@ -78,6 +79,10 @@ def main(argv: list[str] | None = None) -> int:
             cpi = worldbank.us_cpi(args.start, args.end)
             real_rows = worldbank.deflate_to_real_usd(rows, cpi)
             rows = rows + real_rows
+            comparison = pd.DataFrame(rows).pivot(
+                index=["iso3", "year"], columns="metric", values="value",
+            ).reset_index()
+            gdp_comparisons.validate_conversions(comparison)
         tqdm.write(f"  {name}: {len(rows)} rows")
         grouped.append((stem, rows))
 
