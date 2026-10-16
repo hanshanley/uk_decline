@@ -46,7 +46,10 @@ every output row carries a `source` field.
 WPP 2024 distinguishes estimates for **1950–2023** from projections for **2024–2100**.
 The 2024/2025 age distributions therefore contain projection assumptions, not newly
 observed census counts. World Bank age-band counts combine those distributions with its
-total-population estimates. The figures disclose this distinction.
+total-population estimates. The trend charts shade the projection years and draw
+projected age shares as dashed lines; the stacked view hatches those years.
+The pyramid labels and hatches projected age shares, and keeps the legend outside
+the data area. No source observations or published projections are removed or invented.
 
 **Primary source (data collector):**
 

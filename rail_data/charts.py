@@ -1,7 +1,8 @@
 """House-style charts for the London rail-performance analysis.
 
-Two figures, both London-highlighted against a Great Britain reference, drawn as a
-4-quarter moving average (the standard way to read seasonal rail stats):
+Historical figures highlight London against Great Britain, weighting four consecutive
+quarters by their planned-train counts. The current official figure uses ORR's published
+moving annual average without recomputing it.
 
   - ``rail_london_casl.png`` — Cancellations & Significant Lateness (the disruption
     story: it has roughly doubled since the late 2000s).
@@ -37,16 +38,23 @@ def _load(source) -> pd.DataFrame:
 
 
 def _maa(df: pd.DataFrame, region: str, metric: str) -> pd.DataFrame:
-    """Mean of four consecutive calendar quarters, dated at quarter end."""
+    """Planned-train-weighted share over four consecutive quarters, dated at quarter end."""
     sub = df[(df["region"] == region) & (df["metric"] == metric)].copy()
     sub["date"] = pd.to_datetime(sub["date"])
     sub = sub.sort_values("date")
     if sub.empty:
         return sub.assign(maa=pd.Series(dtype=float))
+    if "trains_planned" not in sub:
+        raise ValueError("Rail annual shares require planned-train counts; refresh the ORR CSV")
+    weights = pd.to_numeric(sub["trains_planned"], errors="coerce")
+    if not (weights.notna() & weights.gt(0) & weights.lt(float("inf"))).all():
+        raise ValueError("Rail annual shares require finite, positive planned-train counts")
+    sub["trains_planned"] = weights
     sub = sub.set_index("date").reindex(
         pd.date_range(sub["date"].min(), sub["date"].max(), freq="QE")
     ).rename_axis("date").reset_index()
-    sub["maa"] = sub["value"].rolling(4, min_periods=4).mean()
+    weighted = (sub["value"] * sub["trains_planned"]).rolling(4, min_periods=4).sum()
+    sub["maa"] = weighted / sub["trains_planned"].rolling(4, min_periods=4).sum()
     valid = sub.index[sub["maa"].notna()]
     if valid.empty:
         return sub.iloc[:0]
@@ -117,8 +125,8 @@ def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
         "not joined to the earlier reconstructed series."
         if official else
         "Source: Office of Rail and Road (ORR), Data Portal Table 3103. "
-        "Approximate trains-weighted aggregates; four-quarter arithmetic means, "
-        "not official moving annual averages."
+        "Reconstructed sector aggregates; percentages weighted by planned trains "
+        "across four consecutive quarters, not official sector moving annual averages."
     )
     definition = (
         "Counts full or part cancellations and trains arriving more than 30 minutes late."
@@ -144,7 +152,7 @@ def make_charts(source, out_dir="outputs/rail") -> list[pathlib.Path]:
     p = _chart(
         df, "casl_pct",
         "Rail disruption \u2014 London & South East",
-        "Cancelled or more than 30 minutes late; four-quarter arithmetic average",
+        "Cancelled or more than 30 minutes late; four-quarter trains-weighted share",
         "Share of trains (%)\n(higher = worse)",
         "rail_london_casl.png", out_dir,
     )
@@ -153,7 +161,7 @@ def make_charts(source, out_dir="outputs/rail") -> list[pathlib.Path]:
     p = _chart(
         df, "ppm_pct",
         "Rail punctuality \u2014 London & South East",
-        "Arrivals within 5 or 10 minutes; four-quarter arithmetic average",
+        "Arrivals within 5 or 10 minutes; four-quarter trains-weighted share",
         "Arrivals within 5 / 10 minutes (%)",
         "rail_london_ppm.png", out_dir,
     )

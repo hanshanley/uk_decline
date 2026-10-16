@@ -186,8 +186,9 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
                         color=theme.GREEN, fontweight="bold",
                         xytext=(7, 0), textcoords="offset points")
 
-    handles = [plt.Rectangle((0, 0), 1, 1, color=REGION_COLOR[r]) for r in (config.UK, config.EU, config.US)]
-    ax.legend(handles, [REGION_LABELS[r] for r in (config.UK, config.EU, config.US)],
+    present = [r for r in (config.UK, config.EU, config.US) if any(region == r for _, _, region in data)]
+    handles = [plt.Rectangle((0, 0), 1, 1, color=REGION_COLOR[r]) for r in present]
+    ax.legend(handles, [REGION_LABELS[r] for r in present],
               loc="lower right", frameon=False)
     _finalize(fig, out_path, bottom=0.08, missing_note=_missing_note(rows, value_key))
 

@@ -661,3 +661,21 @@ def test_real_snapshot_with_only_zero_median_eu_remains_readable(tmp_path, monke
     note_bounds = fig.texts[0].get_window_extent(renderer)
     assert note_bounds.x1 <= fig.bbox.x1
     assert note_bounds.y1 < fig.axes[0].xaxis.label.get_window_extent(renderer).y0
+
+
+def test_tuition_country_legend_does_not_claim_an_unplotted_england_series(monkeypatch, tmp_path):
+    rows = [
+        dict(country=country, region=region, year=year, annual_tuition_usd_real2022=value)
+        for country, region, year, value in (
+            ("England", config.UK, 2026, None), ("Germany", config.EU, 2023, 0),
+            ("United States", config.US, 2025, 10000),
+        )
+    ]
+    captured = []
+    monkeypatch.setattr(plot_tuition, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    plot_tuition.plot_by_country(
+        rows, "annual_tuition_usd_real2022", "constant 2022 USD", str(tmp_path / "real.png"),
+    )
+    labels = [text.get_text() for text in captured[0].axes[0].get_legend().get_texts()]
+    assert labels == ["EU-27", "US"]
+    assert "Not plotted: England (2026)" in " ".join(captured[0].texts[0].get_text().split())

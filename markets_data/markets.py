@@ -92,6 +92,7 @@ METRICS: dict[str, Metric] = {
 BY_INDICATOR: dict[str, str] = {
     m.wb_indicator: m.id for m in METRICS.values() if m.wb_indicator
 }
+LISTING_COVERAGE_BREAKS = {"CHN": (2019,)}
 
 # Short, per-metric caveats surfaced in the README and the trend summary.
 CAVEATS: dict[str, str] = {
@@ -121,7 +122,10 @@ CAVEATS: dict[str, str] = {
         "Counts domestic and exclusively listed foreign firms, excluding funds and "
         "pure holding/investment companies; delistings, M&A, and take-private activity "
         "reduce the count even as market value rises. Compare trends, not raw counts, "
-        "across exchanges with different listing rules."
+        "across exchanges with different listing rules. China's 2019 reporting coverage "
+        "expands: its WDI total reconciles to SSE/SZSE plus NEEQ companies in the CSRC "
+        "2019 annual report, whereas 2018 matches SSE/SZSE alone. Do not interpret that "
+        "jump as like-for-like company growth."
     ),
 }
 

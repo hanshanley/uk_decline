@@ -20,7 +20,7 @@ from .paths import CHART_DIR, DEFAULT_CSV
 # --- Substack-style theme (matches pre1870_reapportionment_package) ---
 from vizstyle import (
     BG, TEXT, MUTED, GRID, ACCENT, RC_PARAMS as _THEME, house_style, save_chart,
-    with_year_gaps as _with_year_gaps,
+    with_year_gaps as _with_year_gaps, mark_year_breaks,
 )
 
 # World Bank "World" is a super-aggregate (the sum of every market), so it always
@@ -70,6 +70,12 @@ def _source_note(metric_id: str) -> str:
             " Current-dollar market values deflated by US CPI, not national-accounts "
             "real output or PPP. Non-US markets retain exchange-rate movements. "
             "A common CPI deflator cancels from same-year UK/US ratios."
+        )
+    if metric_id == "listed_domestic_companies":
+        note += (
+            " China is shown separately: its 2019 total reconciles to exchange-listed "
+            "plus NEEQ companies, unlike 2018 (CSRC Annual Report 2019, pp. 25, 29-30). "
+            "The coverage jump is not like-for-like growth; dotted links mark this change."
         )
     return note
 
@@ -143,12 +149,18 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         return None
     sub = sub.dropna(subset=["value"]).sort_values("year")
 
-    fig, ax = plt.subplots(figsize=(11, 6))
-    legend_labels = []
+    split = metric_id == "listed_domestic_companies" and "CHN" in set(sub["region_code"]) and sub["region_code"].nunique() > 1
+    fig, grid = plt.subplots(1, 2 if split else 1, figsize=(13.5 if split else 11, 6),
+                             squeeze=False, width_ratios=[1.5, 1] if split else [1])
+    axes = grid[0]
+    legend_labels = [[] for _ in axes]
     for code, g in sub.groupby("region_code"):
-        region = regions.BY_CODE.get(code)
+        panel = 1 if split and code == "CHN" else 0
+        ax = axes[panel]
         is_uk = code == "GBR"
-        annual = _with_year_gaps(g.set_index("year")["value"])
+        observed = g.set_index("year")["value"]
+        breaks = markets.LISTING_COVERAGE_BREAKS.get(code, ()) if metric_id == "listed_domestic_companies" else ()
+        annual = _with_year_gaps(observed, breaks=breaks)
         ax.plot(
             annual.index,
             annual.values,
@@ -163,25 +175,38 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         )
         if is_uk:
             _annotate_year_gaps(ax, annual)
-        legend_labels.append(
+        if breaks:
+            mark_year_breaks(ax, observed, breaks=breaks, color=regions.COLOURS.get(code), linewidth=1.8)
+        legend_labels[panel].append(
             f"{regions.name_for_code(code)} ({int(g['year'].min())}\u2013{int(g['year'].max())})"
         )
 
-    ax.set_title(meta.label, fontweight="bold", pad=14)
-    ax.set_xlabel("Year", labelpad=2)
     plotted_unit = str(sub["unit"].dropna().iloc[0]) if sub["unit"].notna().any() else meta.unit
-    ax.set_ylabel(plotted_unit, labelpad=2)
-    if "US$" in meta.unit:
-        ax.get_yaxis().set_major_formatter(
-            mticker.FuncFormatter(lambda v, _p: markets.format_usd(v))
+    for panel, ax in enumerate(axes):
+        ax.set_title(
+            ("UK and international peers" if panel == 0 else "China: separate scale and coverage")
+            if split else meta.label, fontweight="bold", pad=14,
+            fontsize=14 if split else plt.rcParams["axes.titlesize"],
         )
-    ax.grid(axis="y")
-    ax.set_axisbelow(True)
-    ax.margins(x=0.02)
-    handles, _ = ax.get_legend_handles_labels()
-    ax.legend(handles, legend_labels, loc="upper left", frameon=False, labelcolor="linecolor", fontsize=10)
+        ax.set_xlabel("Year", labelpad=2)
+        ax.xaxis.set_major_locator(mticker.MaxNLocator(nbins=6 if split else 9, integer=True))
+        ax.set_ylabel(plotted_unit, labelpad=2)
+        if "US$" in meta.unit:
+            ax.get_yaxis().set_major_formatter(
+                mticker.FuncFormatter(lambda v, _p: markets.format_usd(v))
+            )
+        ax.grid(axis="y")
+        ax.set_axisbelow(True)
+        ax.margins(x=0.02)
+        handles, _ = ax.get_legend_handles_labels()
+        ax.legend(handles, legend_labels[panel], loc="upper left", frameon=False,
+                  labelcolor="linecolor", fontsize=9 if split else 10)
+    if split:
+        fig.suptitle(meta.label, fontsize=20, fontweight="bold", y=.99)
+        axes[1].text(.03, .78, "2019: wider reporting coverage\nNot like-for-like company growth",
+                     transform=axes[1].transAxes, va="top", fontsize=9, color=MUTED)
     bottom = _footnote(fig, _source_note(metric_id))
-    fig.tight_layout(rect=[0, bottom, 1, 1])
+    fig.tight_layout(rect=[0, bottom, 1, .91 if split else 1])
 
     out = _save(fig, out_dir, f"stock_{metric_id}.png")
     plt.close(fig)

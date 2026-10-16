@@ -33,6 +33,63 @@ def test_make_row_rejects_unknown_metric():
         combine.make_row("GBR", 2024, "not_a_metric", 1.0, "s")
 
 
+@pytest.mark.parametrize("metric,renderer", [
+    ("pop_share_65plus_pct", "share_65plus_over_time"),
+    ("median_age_years", "median_age_over_time"),
+])
+def test_age_trends_distinguish_projections_without_duplicating_values(metric, renderer, monkeypatch, tmp_path):
+    from age_data import charts
+    from vizstyle.hover import observations
+
+    rows = [combine.make_row(code, year, metric, 10 + i + year - 2022, "s")
+            for i, code in enumerate(("GBR", "USA", "FRA")) for year in range(2022, 2026)]
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    getattr(charts, renderer)(rows, str(tmp_path / "age.png"))
+    fig = captured[0]
+    ax = fig.axes[0]
+    projected = [line for line in ax.lines if line.get_linestyle() == "--"]
+    assert len(projected) == 3
+    assert all(list(line.get_xdata()) == [2024, 2025] for line in projected)
+    assert "projected age distributions" in " ".join(t.get_text() for t in ax.texts)
+    assert len(ax.collections) == 3
+    points = [(series["label"], point[2]) for series in observations(fig, dpi=200)
+              for point in series["points"]]
+    assert len(points) == len(set(points)) == 12
+    assert {year for _, year in points} == {"2022", "2023", "2024", "2025"}
+
+
+def test_age_projection_bridge_does_not_fill_missing_years(monkeypatch, tmp_path):
+    from age_data import charts
+
+    rows = [combine.make_row("GBR", year, "pop_share_65plus_pct", 20., "s")
+            for year in (2022, 2024, 2025)]
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    charts.share_65plus_over_time(rows, str(tmp_path / "age.png"))
+    assert not captured[0].axes[0].collections
+
+
+def test_population_pyramid_labels_projections_and_keeps_legend_off_the_bars(monkeypatch, tmp_path):
+    from age_data import charts
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    rows = [_band_rows("GBR", year, {band: 100 / len(config.BAND_ORDER) for band in config.BAND_ORDER})
+            for year in (1960, 2025)]
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    charts.uk_population_pyramid([row for profile in rows for row in profile], str(tmp_path / "age.png"))
+    fig = captured[0]
+    ax = fig.axes[0]
+    assert all(bar.get_hatch() == "//" for container in ax.containers for bar in container.patches)
+    assert "2025 age shares use UN-based projections" in " ".join(t.get_text() for t in ax.texts)
+    labels = [text.get_text() for text in fig.legends[0].get_texts()]
+    assert "Male 1960 (outline)" in labels and "Female 1960 (outline)" in labels
+    assert all("projected age shares" in label for label in labels if "2025" in label)
+    FigureCanvasAgg(fig).draw()
+    assert not fig.legends[0].get_window_extent(fig.canvas.get_renderer()).overlaps(ax.bbox)
+
+
 # --- World Bank parsing (monkeypatched network) -----------------------------
 
 def _wb_payload(rows):

@@ -121,8 +121,8 @@ def _parse_period(label: str) -> tuple[str, int, int, str] | None:
 
 
 def _weighted_series(trains: pd.DataFrame, values: pd.DataFrame,
-                     franchises: frozenset | None) -> list[tuple[str, float]]:
-    """Trains-weighted mean of ``values`` per period, over ``franchises`` (all if None)."""
+                     franchises: frozenset | None) -> list[tuple[str, float, float]]:
+    """Return each period's weighted percentage and its planned-train denominator."""
     if trains.shape != values.shape:
         raise ValueError("ORR trains and metric table shapes differ")
     # Positional weighting is safe only when the operator and period axes agree.
@@ -132,7 +132,7 @@ def _weighted_series(trains: pd.DataFrame, values: pd.DataFrame,
         raise ValueError("ORR period columns differ between trains and metric tables")
     periods = {j: str(trains.iloc[_HEADER_ROW, j]) for j in range(_FIRST_DATA_ROW, trains.shape[1])
                if str(trains.iloc[_HEADER_ROW, j]) != "nan"}
-    out: list[tuple[str, float]] = []
+    out: list[tuple[str, float, float]] = []
     for j, label in periods.items():
         weight_sum = weighted = 0.0
         for i in range(_FIRST_DATA_ROW, trains.shape[0]):
@@ -149,7 +149,7 @@ def _weighted_series(trains: pd.DataFrame, values: pd.DataFrame,
                 weight_sum += t
                 weighted += t * v
         if weight_sum:
-            out.append((label, weighted / weight_sum))
+            out.append((label, weighted / weight_sum, weight_sum))
     return out
 
 
@@ -164,7 +164,7 @@ def build_rows(workbook: dict | None = None) -> list[dict]:
     rows: list[dict] = []
     for metric, values in metric_sheets.items():
         for region, franchises in regions.items():
-            for label, value in _weighted_series(trains, values, franchises):
+            for label, value, planned in _weighted_series(trains, values, franchises):
                 parsed = _parse_period(label)
                 if parsed is None:
                     continue
@@ -177,6 +177,7 @@ def build_rows(workbook: dict | None = None) -> list[dict]:
                     "quarter": q_index,
                     "metric": metric,
                     "value": round(value, 4),
+                    "trains_planned": planned,
                     "unit": "percent",
                     "source": SOURCE,
                 })

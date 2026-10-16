@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import statistics
+from math import isfinite
 from typing import Iterable, Optional
 
 import matplotlib
@@ -17,6 +18,7 @@ import matplotlib
 matplotlib.use("Agg")  # headless: no display required
 
 import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.collections import LineCollection  # noqa: E402
 import matplotlib.ticker as mtick  # noqa: E402
 
 from . import config  # noqa: E402
@@ -32,6 +34,39 @@ SOURCE_NOTE = config.FIGURE_SOURCE_NOTE
 
 
 # --- helpers ----------------------------------------------------------------
+
+def _projection_note(ax, years, *, hatched=False):
+    if max(years) < config.PROJECTION_START_YEAR:
+        return
+    ax.axvspan(max(min(years), config.PROJECTION_START_YEAR - .5), max(years),
+               facecolor="none" if hatched else MUTED, edgecolor=MUTED,
+               hatch="////" if hatched else None, linewidth=0, alpha=.3 if hatched else .10)
+    ax.text(.5, 1.015,
+            f"{'Hatched' if hatched else 'Dashed / shaded'} from {config.PROJECTION_START_YEAR}: "
+            "UN-based projected age distributions",
+            transform=ax.transAxes, ha="center", va="bottom", fontsize=10, color=MUTED)
+
+
+def _plot_age_trend(ax, annual, key, marker):
+    start = config.PROJECTION_START_YEAR
+    historical = annual[annual.index < start]
+    projected = annual[annual.index >= start]
+    style = dict(color=SERIES_COLORS[key], linewidth=2.6, marker=marker,
+                 markersize=5, markeredgecolor="white", markeredgewidth=1.0,
+                 markevery=max(1, len(annual) // 12))
+    if historical.notna().any():
+        ax.plot(historical.index, historical.values, label=SERIES_LABELS[key], **style)
+    if projected.notna().any():
+        ax.plot(projected.index, projected.values, linestyle="--",
+                label="_nolegend_" if historical.notna().any() else SERIES_LABELS[key],
+                **{**style, "markevery": max(1, len(projected) // 12)})
+    if (start - 1 in annual.index and start in annual.index
+            and all(isfinite(annual.loc[year]) for year in (start - 1, start))):
+        ax.add_collection(LineCollection(
+            [[(start - 1, annual.loc[start - 1]), (start, annual.loc[start])]],
+            colors=[SERIES_COLORS[key]], linewidths=2.6, linestyles="--",
+        ))
+
 
 def _rows(rows: Iterable[dict], metric: str, age_band: str = "", sex: str = "") -> list[dict]:
     return [
@@ -53,6 +88,7 @@ def _region_series(recs: list[dict], years: list[int]) -> dict[str, list[Optiona
 
 
 def _finish(fig, ax, out_path: str) -> str:
+    ax.xaxis.set_major_locator(mtick.MaxNLocator(nbins=8, integer=True))
     ax.grid(axis="y", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)
     fig.text(0.01, 0.01, SOURCE_NOTE, ha="left", fontsize=8, color=MUTED, style="italic")
@@ -92,6 +128,7 @@ def uk_age_structure_over_time(rows: list[dict], out_path: str) -> Optional[str]
     ax.set_ylabel("Share of UK population")
     ax.set_title("The UK is getting older: population by age group over time",
                  fontweight="bold", pad=38)
+    _projection_note(ax, years, hatched=True)
     handles, lbls = ax.get_legend_handles_labels()
     ax.legend(
         handles[::-1], lbls[::-1], loc="center left",
@@ -112,15 +149,13 @@ def share_65plus_over_time(rows: list[dict], out_path: str) -> Optional[str]:
     for key in ("uk", "europe_median", "us"):
         import pandas as pd
         annual = with_year_gaps(pd.Series(series[key], index=years, dtype=float))
-        xs, ys = annual.index, annual.values
-        ax.plot(xs, ys, color=SERIES_COLORS[key], linewidth=2.6, marker=markers[key],
-                markersize=5, markeredgecolor="white", markeredgewidth=1.0,
-                markevery=max(1, len(xs) // 12), label=SERIES_LABELS[key])
+        _plot_age_trend(ax, annual, key, markers[key])
     ax.yaxis.set_major_formatter(mtick.PercentFormatter())
     ax.set_xlabel("Year")
     ax.set_ylabel("Population aged 65+")
     ax.set_title("Share of the population aged 65+: UK vs Europe vs US",
                  fontweight="bold", pad=14)
+    _projection_note(ax, years)
     ax.legend(loc="upper left", frameon=False)
     return _finish(fig, ax, out_path)
 
@@ -137,14 +172,12 @@ def median_age_over_time(rows: list[dict], out_path: str) -> Optional[str]:
     for key in ("uk", "europe_median", "us"):
         import pandas as pd
         annual = with_year_gaps(pd.Series(series[key], index=years, dtype=float))
-        xs, ys = annual.index, annual.values
-        ax.plot(xs, ys, color=SERIES_COLORS[key], linewidth=2.6, marker=markers[key],
-                markersize=5, markeredgecolor="white", markeredgewidth=1.0,
-                markevery=max(1, len(xs) // 12), label=SERIES_LABELS[key])
+        _plot_age_trend(ax, annual, key, markers[key])
     ax.set_xlabel("Year")
     ax.set_ylabel("Median age (years, derived)")
     ax.set_title("Median age over time: UK vs Europe vs US",
                  fontweight="bold", pad=14)
+    _projection_note(ax, years)
     ax.legend(loc="upper left", frameon=False)
     return _finish(fig, ax, out_path)
 
@@ -180,12 +213,17 @@ def uk_population_pyramid(rows: list[dict], out_path: str,
     female_old = share(y_old, "female")
 
     fig, ax = plt.subplots(figsize=(10.5, 8))
-    ax.barh(ypos, [-v for v in male_new], color=BLUE, alpha=0.85, label=f"Male {y_new}")
-    ax.barh(ypos, female_new, color=ACCENT, alpha=0.85, label=f"Female {y_new}")
+    projected = y_new >= config.PROJECTION_START_YEAR
+    suffix = " (projected age shares)" if projected else ""
+    bar_style = dict(alpha=.85, hatch="//" if projected else None, edgecolor=BG)
+    ax.barh(ypos, [-v for v in male_new], color=BLUE, label=f"Male {y_new}{suffix}", **bar_style)
+    ax.barh(ypos, female_new, color=ACCENT, label=f"Female {y_new}{suffix}", **bar_style)
     # Outline the earlier year for comparison.
+    old_suffix = " (projected age shares; outline)" if y_old >= config.PROJECTION_START_YEAR else " (outline)"
     ax.step([-v for v in male_old], ypos, where="mid", color=TEXT, linewidth=1.3,
-            linestyle="--", label=f"{y_old} outline")
-    ax.step(female_old, ypos, where="mid", color=TEXT, linewidth=1.3, linestyle="--")
+            linestyle="--", label=f"Male {y_old}{old_suffix}")
+    ax.step(female_old, ypos, where="mid", color=TEXT, linewidth=1.3,
+            linestyle="--", label=f"Female {y_old}{old_suffix}")
 
     ax.set_yticks(list(ypos))
     ax.set_yticklabels(bands)
@@ -193,13 +231,18 @@ def uk_population_pyramid(rows: list[dict], out_path: str,
     ax.set_ylabel("Age band")
     ax.xaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{abs(v):.0f}%"))
     ax.set_title(f"UK population pyramid: {y_old} vs {y_new}", fontweight="bold", pad=14)
+    if projected:
+        ax.text(.5, 1.015, f"{y_new} age shares use UN-based projections (hatched bars)",
+                transform=ax.transAxes, ha="center", va="bottom", fontsize=10, color=MUTED)
     ax.axvline(0, color=MUTED, linewidth=0.8)
-    ax.legend(loc="upper right", frameon=False, fontsize=9)
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower center", bbox_to_anchor=(.5, .075),
+               ncol=2, frameon=False, fontsize=9)
     ax.grid(axis="x", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)
     fig.text(0.01, 0.01, SOURCE_NOTE, ha="left", fontsize=8, color=MUTED, style="italic")
     plt.tight_layout()
-    plt.subplots_adjust(bottom=0.10)
+    plt.subplots_adjust(bottom=0.21)
     save_chart(fig, out_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     return out_path

@@ -35,6 +35,21 @@ exchange rates, not PPP). Series have tail-year gaps (the UK is missing after 20
 are never spliced or interpolated. Full per-metric citations are in
 [`../outputs/stock_markets/stock_market_size_summary.md`](../outputs/stock_markets/stock_market_size_summary.md).
 
+### China's company-count coverage break
+
+The company-count figure puts China in a separate, explicitly scaled panel rather
+than letting its changed coverage compress the UK and peer histories. Its 2018–2019
+transition is dotted and must not be read as like-for-like growth.
+
+The WDI API reports **3,584** companies in 2018 and **12,730** in 2019, independently
+rechecked on **16 October 2026**. The
+[CSRC Annual Report 2019](https://www.csrc.gov.cn/csrc_en/c102063/c1606308/1606308/files/CSRC%20Annual%20Report%202019.pdf),
+printed pages 25 and 29–30, reports **3,584 SSE/SZSE-listed companies in 2018**,
+**3,777 in 2019**, and **8,953 NEEQ-admitted companies in 2019**. The latter two sum
+exactly to WDI's **12,730**. This reconciliation indicates expanded reporting
+coverage, not an overnight tripling of exchange-listed firms. The original WDI
+values are retained unchanged; no NEEQ counts are subtracted or spliced into earlier years.
+
 > **Why there is no PPP twin of these charts.** The repository has a parallel PPP analysis
 > ([`../ppp_data/`](../ppp_data/README.md)), but it deliberately **excludes** stock markets.
 > Equity market capitalisation is the value of claims on globally-traded cash flows, priced by

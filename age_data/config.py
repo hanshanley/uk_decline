@@ -183,6 +183,7 @@ CITATIONS: dict[str, str] = {
 # Short attribution stamped on every output row's ``source`` field.
 SOURCE_WB = "World Bank WDI (UN World Population Prospects)"
 SOURCE_WB_DERIVED = "World Bank WDI (derived: median from 5-year age bands)"
+PROJECTION_START_YEAR = 2024
 
 # One-line proper citation for figure source-notes.
 FIGURE_SOURCE_NOTE = (

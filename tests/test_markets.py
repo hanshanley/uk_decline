@@ -52,6 +52,35 @@ def test_market_legends_date_each_country_without_changing_export_labels(monkeyp
     assert [line.get_label() for line in ax.lines] == ["United Kingdom", "United States"]
 
 
+def test_china_listing_coverage_break_is_separate_and_keeps_actual_points(monkeypatch, tmp_path):
+    import pandas as pd
+    from vizstyle.hover import observations
+
+    frame = pd.DataFrame([
+        markets.make_row(regions.name_for_code(code), code, year, "listed_domestic_companies", value)
+        for code, values in (("GBR", (2000, 1900, 1800)), ("USA", (4000, 4100, 4200)),
+                             ("CHN", (3584, 12730, 12341)))
+        for year, value in zip((2018, 2019, 2020), values)
+    ])
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    charts.chart_metric(frame, "listed_domestic_companies", tmp_path)
+    fig = captured[0]
+    left, right = fig.axes
+    assert {line.get_label() for line in left.lines} == {"United Kingdom", "United States"}
+    assert [line.get_label() for line in right.lines] == ["China"]
+    china = right.lines[0]
+    assert pd.isna(china.get_ydata()[list(china.get_xdata()).index(2018.5)])
+    assert [segment.tolist() for collection in right.collections for segment in collection.get_segments()] == [
+        [[2018., 3584.], [2019., 12730.]],
+    ]
+    points = [(series["label"], point[2]) for series in observations(fig, dpi=200)
+              for point in series["points"]]
+    assert len(points) == len(set(points)) == 9
+    assert all(year in {"2018", "2019", "2020"} for _, year in points)
+    assert "Not like-for-like" in " ".join(t.get_text() for t in right.texts)
+
+
 def _lse_workbook(sheet, month, year, rows):
     import io
     import openpyxl

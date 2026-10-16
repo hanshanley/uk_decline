@@ -37,6 +37,7 @@ def test_orr_weighting_excludes_blank_weights_and_uses_calendar_quarters():
     wb = {"3103a": trains, "3103b": values, "3103c": values}
     rows = orr.build_rows(wb)
     assert all(r["value"] == 95 for r in rows)
+    assert all(r["trains_planned"] == 40 for r in rows)
     assert {(r["date"], r["quarter"]) for r in rows} == {
         ("2020-03-31", 1), ("2020-06-30", 2)
     }
@@ -65,18 +66,35 @@ def test_rolling_mean_does_not_bridge_missing_quarters():
         "metric": ["ppm_pct"] * 5,
         "date": ["2020-03-31", "2020-06-30", "2020-12-31", "2021-03-31", "2021-06-30"],
         "value": [80, 80, 80, 80, 80],
+        "trains_planned": [100] * 5,
     })
     assert charts._maa(df, charts.LONDON, "ppm_pct").empty
-    df.loc[5] = [charts.LONDON, "ppm_pct", "2021-09-30", 80]
+    df.loc[5] = [charts.LONDON, "ppm_pct", "2021-09-30", 80, 100]
     result = charts._maa(df, charts.LONDON, "ppm_pct")
     assert result["date"].tolist() == [pd.Timestamp("2021-09-30")]
     assert result["maa"].tolist() == [80]
 
 
+def test_annual_share_weights_quarters_by_planned_trains():
+    df = pd.DataFrame({
+        "region": [charts.LONDON] * 4, "metric": ["casl_pct"] * 4,
+        "date": pd.date_range("2020-03-31", periods=4, freq="QE"),
+        "value": [0., 0., 0., 20.], "trains_planned": [100., 100., 100., 700.],
+    })
+    assert charts._maa(df, charts.LONDON, "casl_pct")["maa"].tolist() == [14.]
+    for invalid in (None, 0, -1, float("inf")):
+        bad = df.copy()
+        bad.loc[0, "trains_planned"] = invalid
+        with pytest.raises(ValueError, match="planned-train counts"):
+            charts._maa(bad, charts.LONDON, "casl_pct")
+    with pytest.raises(ValueError, match="refresh the ORR CSV"):
+        charts._maa(df.drop(columns="trains_planned"), charts.LONDON, "casl_pct")
+
+
 def test_rolling_series_retains_internal_gaps_for_plotting(monkeypatch, tmp_path):
     dates = pd.date_range("2020-03-31", periods=10, freq="QE")
     df = pd.DataFrame([
-        {"region": region, "metric": "ppm_pct", "date": date, "value": 80}
+        {"region": region, "metric": "ppm_pct", "date": date, "value": 80, "trains_planned": 100}
         for region in (charts.LONDON, charts.GB)
         for date in dates if date != dates[4]
     ])
@@ -162,7 +180,8 @@ def test_rail_charts_explain_delay_thresholds_without_measure_acronyms(monkeypat
     for region in (charts.LONDON, charts.GB):
         for date in pd.date_range("2020-03-31", periods=4, freq="QE"):
             for metric in ("ppm_pct", "casl_pct"):
-                historical.append({"region": region, "date": date, "metric": metric, "value": 90})
+                historical.append({"region": region, "date": date, "metric": metric,
+                                   "value": 90, "trains_planned": 100})
     captured = []
     monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
     paths = charts.make_charts(pd.concat([official, pd.DataFrame(historical)]), tmp_path)

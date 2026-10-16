@@ -16,7 +16,8 @@ from . import charts, orr
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_CSV = ROOT / "data" / "rail_performance.csv"
 DEFAULT_CHARTS = ROOT / "outputs" / "rail"
-_FIELDS = ["region", "period", "date", "year", "quarter", "metric", "value", "unit", "source"]
+_FIELDS = ["region", "period", "date", "year", "quarter", "metric", "value",
+           "trains_planned", "unit", "source"]
 
 
 def _write_csv(rows: list[dict], path: pathlib.Path) -> None:

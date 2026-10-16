@@ -18,7 +18,7 @@ hidden by joining the lines.
 ## The story
 
 The longer historical figures below use two reconstructed metrics, both drawn
-as a four-quarter arithmetic mean. Their Table 3103 source currently ends in
+as a four-quarter share weighted by planned-train counts. Their Table 3103 source currently ends in
 **January–March 2026**; a newer rail release does not extend that historical workbook.
 
 | Metric | What it is | Trend |
@@ -29,8 +29,10 @@ as a four-quarter arithmetic mean. Their Table 3103 source currently ends in
 CaSL includes full/part cancellations and arrivals at the final destination more
 than 30 minutes late. Neither measure is a count of delayed passengers or all
 station stops. The GB comparator includes different PPM thresholds.
-The plotted smoother is an arithmetic mean of **four consecutive quarters**, not
-ORR's trains-weighted annual moving average; it is omitted across missing quarters.
+The plotted annual share weights **four consecutive quarters** by each quarter's
+planned-train denominator. It is not a simple average of percentages: quieter
+quarters must not receive the same weight as busier quarters. Missing quarters
+invalidate the whole annual window.
 
 ## Data source & method
 
@@ -63,8 +65,10 @@ ORR's trains-weighted annual moving average; it is omitted across missing quarte
   2019 to January–March 2026**, the maximum absolute difference from official
   Table 3113 PPM is **0.51 percentage points for London and South East** and
   **0.19 points for Great Britain**.
-- Charts smooth each reconstructed percentage with an **arithmetic mean of four
-  consecutive quarters**, not ORR's trains-weighted moving annual average.
+- Charts retain each reconstructed quarter's planned-train denominator and calculate
+  `sum(quarter_percentage * trains_planned) / sum(trains_planned)` over four consecutive
+  quarters. This corrects the former equal-quarter arithmetic mean. These remain
+  reconstructed sector shares, not ORR's published sector moving annual averages.
   Missing quarters invalidate the window and remain gaps in plotted lines.
 
 ## Run
@@ -80,7 +84,10 @@ ORR's trains-weighted annual moving average; it is omitted across missing quarte
 ## Outputs
 
 - `data/rail_performance.csv` — tidy long table: `region, period, date, year, quarter,
-  metric, value, unit, source` (git-ignored, regenerable).
+  metric, value, trains_planned, unit, source` (git-ignored, regenerable).
+  Planned-train counts accompany reconstructed quarters; official Table 3113
+  percentages do not need these weights and leave that field blank. Regenerate
+  older CSVs without the denominators before using `--from-csv`.
 - `outputs/rail/rail_london_casl.png` — cancellations & significant lateness (the
   disruption story; London highlighted vs GB).
 - `outputs/rail/rail_london_ppm.png` — PPM "on time" (the broadly-flat headline).
