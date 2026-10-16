@@ -84,6 +84,9 @@ def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
         gb = _maa(df, GB, metric)
     if lon.empty or gb.empty:
         return None
+    if not official:
+        latest = max(lon["date"].max(), gb["date"].max())
+        subtitle += f" \u00b7 through {latest:%b %Y}"
 
     fig, ax = plt.subplots(figsize=(11, 6))
     line_style = {
@@ -100,7 +103,7 @@ def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
     ax.set_title(title, fontweight="bold", pad=18)
     ax.text(0.5, 1.01, subtitle, transform=ax.transAxes, ha="center", va="bottom",
             fontsize=10.5, color=MUTED)
-    ax.set_xlabel("Quarter ending" if official else "Period", labelpad=4)
+    ax.set_xlabel("Quarter ending", labelpad=4)
     ax.set_ylabel(ylabel, labelpad=4)
     ax.yaxis.set_major_locator(mtick.MaxNLocator(integer=True))
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _p: f"{v:.0f}%"))

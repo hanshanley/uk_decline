@@ -11,7 +11,8 @@ against a **Great Britain** reference.
 ORR **Table 3113** supplies the published London & South East and Great Britain
 PPM aggregates through **April–June 2026 (provisional)**. This figure uses ORR's
 published, trains-weighted **moving annual averages**, without smoothing them again.
-Its history starts in April–June 2019 and is kept separate from the longer
+The quarterly source starts in April–June 2019; its published moving annual
+averages begin in January–March 2020. These are kept separate from the longer
 reconstructed series below: different sector coverage and weighting must not be
 hidden by joining the lines.
 

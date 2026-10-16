@@ -166,6 +166,8 @@ def observations(fig, *, dpi: float, bbox_inches="tight", pad_inches=.1) -> list
         for ax in fig.axes:
             if not ax.get_visible():
                 continue
+            # Tolerate transform-rounding noise at the border, not genuinely clipped data.
+            clip_bounds = ax.bbox.padded(1e-6)
             def entry(artist, *, horizontal=False):
                 x0, y1 = position(ax.bbox.x0, ax.bbox.y0)
                 x1, y0 = position(ax.bbox.x1, ax.bbox.y1)
@@ -178,7 +180,7 @@ def observations(fig, *, dpi: float, bbox_inches="tight", pad_inches=.1) -> list
                 }
 
             def point(target, xy, x, y, *, horizontal=False, bounds=None):
-                if not np.isfinite([*xy, x, y]).all() or not ax.bbox.contains(*xy):
+                if not np.isfinite([*xy, x, y]).all() or not clip_bounds.contains(*xy):
                     return
                 px, py = position(*xy)
                 if not 0 <= px <= 1 or not 0 <= py <= 1:

@@ -108,7 +108,7 @@ def _load(source):
     return pd.read_csv(source)
 
 
-def _annotate_year_gaps(ax, series, label: str = "UK data unavailable") -> None:
+def _annotate_year_gaps(ax, series, label: str = "UK data unavailable", *, at_top=False) -> None:
     """Shade and label contiguous missing-year runs in an annual series."""
     missing = [int(year) for year, value in series.items() if value != value]
     if not missing:
@@ -126,11 +126,11 @@ def _annotate_year_gaps(ax, series, label: str = "UK data unavailable") -> None:
         ax.axvspan(start - 0.5, end + 0.5, color=MUTED, alpha=0.07, linewidth=0)
         ax.text(
             (start + end) / 2,
-            0.035,
+            .98 if at_top else .035,
             f"{label}\n{start}\u2013{str(end)[-2:]}",
             transform=ax.get_xaxis_transform(),
             ha="center",
-            va="bottom",
+            va="top" if at_top else "bottom",
             fontsize=8.2,
             color=MUTED,
             style="italic",
@@ -174,7 +174,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
             zorder=5 if is_uk else 3,
         )
         if is_uk:
-            _annotate_year_gaps(ax, annual)
+            _annotate_year_gaps(ax, annual, at_top=split)
         if breaks:
             mark_year_breaks(ax, observed, breaks=breaks, color=regions.COLOURS.get(code), linewidth=1.8)
         legend_labels[panel].append(
@@ -182,6 +182,8 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         )
 
     plotted_unit = str(sub["unit"].dropna().iloc[0]) if sub["unit"].notna().any() else meta.unit
+    legend_handles = []
+    combined_labels = []
     for panel, ax in enumerate(axes):
         ax.set_title(
             ("UK and international peers" if panel == 0 else "China: separate scale and coverage")
@@ -189,7 +191,9 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
             fontsize=14 if split else plt.rcParams["axes.titlesize"],
         )
         ax.set_xlabel("Year", labelpad=2)
-        ax.xaxis.set_major_locator(mticker.MaxNLocator(nbins=6 if split else 9, integer=True))
+        ax.xaxis.set_major_locator(mticker.MaxNLocator(
+            nbins=6 if split else 9, steps=[1, 2, 5, 10], integer=True,
+        ))
         ax.set_ylabel(plotted_unit, labelpad=2)
         if "US$" in meta.unit:
             ax.get_yaxis().set_major_formatter(
@@ -199,14 +203,24 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         ax.set_axisbelow(True)
         ax.margins(x=0.02)
         handles, _ = ax.get_legend_handles_labels()
-        ax.legend(handles, legend_labels[panel], loc="upper left", frameon=False,
-                  labelcolor="linecolor", fontsize=9 if split else 10)
+        if split:
+            legend_handles.extend(handles)
+            combined_labels.extend(legend_labels[panel])
+        else:
+            ax.legend(handles, legend_labels[panel], loc="upper left", frameon=False,
+                      labelcolor="linecolor", fontsize=10)
     if split:
         fig.suptitle(meta.label, fontsize=20, fontweight="bold", y=.99)
+        fig.legend(legend_handles, combined_labels, loc="upper center", bbox_to_anchor=(.5, .94),
+                   ncol=3, frameon=False, labelcolor="linecolor", fontsize=9)
         axes[1].text(.03, .78, "2019: wider reporting coverage\nNot like-for-like company growth",
                      transform=axes[1].transAxes, va="top", fontsize=9, color=MUTED)
     bottom = _footnote(fig, _source_note(metric_id))
-    fig.tight_layout(rect=[0, bottom, 1, .91 if split else 1])
+    if split:
+        fig.subplots_adjust(left=.065, right=.99, bottom=max(.20, bottom + .08),
+                            top=.79, wspace=.18)
+    else:
+        fig.tight_layout(rect=[0, bottom, 1, 1])
 
     out = _save(fig, out_dir, f"stock_{metric_id}.png")
     plt.close(fig)

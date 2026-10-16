@@ -78,7 +78,7 @@ Number of domestic companies and foreign companies exclusively listed on the cou
 
 _Data: World Federation of Exchanges (WFE), via World Bank World Development Indicators (CM.MKT.LDOM.NO)._
 
-> Caveat: Counts domestic and exclusively listed foreign firms, excluding funds and pure holding/investment companies; delistings, M&A, and take-private activity reduce the count even as market value rises. Compare trends, not raw counts, across exchanges with different listing rules.
+> Caveat: Counts domestic and exclusively listed foreign firms, excluding funds and pure holding/investment companies; delistings, M&A, and take-private activity reduce the count even as market value rises. Compare trends, not raw counts, across exchanges with different listing rules. China's 2019 reporting coverage expands: its WDI total reconciles to SSE/SZSE plus NEEQ companies in the CSRC 2019 annual report, whereas 2018 matches SSE/SZSE alone. Do not interpret that jump as like-for-like company growth.
 
 ## Data citations
 

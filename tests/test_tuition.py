@@ -678,4 +678,5 @@ def test_tuition_country_legend_does_not_claim_an_unplotted_england_series(monke
     )
     labels = [text.get_text() for text in captured[0].axes[0].get_legend().get_texts()]
     assert labels == ["EU-27", "US"]
+    assert "EU sample (1/27 countries)" in captured[0].axes[0].get_title()
     assert "Not plotted: England (2026)" in " ".join(captured[0].texts[0].get_text().split())

@@ -5,7 +5,7 @@ time** (1960–2025) — the population-ageing story — benchmarked against the
 **European countries**.
 
 > **Short answer:** the UK **is ageing, but more slowly than continental Europe.** The
-> share aged **65+ rose from ~11.7% (1960) to ~19.7% (2025)**; the derived **median age
+> share aged **65+ rose from ~11.7% (1960) to ~19.7% (2025; UN-based projected age shares)**; the derived **median age
 > rose to ~41**. Yet the UK remains **younger than the European median** (65+: 21.0%,
 > median age ~44) and **older than the US** (65+: 18.4%, median age ~40).
 
@@ -21,7 +21,7 @@ time** (1960–2025) — the population-ageing story — benchmarked against the
 "**Median** country" is the cross-country median of each metric — UK vs the median
 European country vs US, computed in `age_data/stats.py`.
 
-## Results (latest live run, 1960–2025; 2025 headline)
+## Results (1960–2025; 2025 age shares use UN-based projections)
 
 | Metric | UK | Europe median | Europe mean | US |
 |---|---:|---:|---:|---:|

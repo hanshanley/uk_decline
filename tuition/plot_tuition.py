@@ -159,9 +159,14 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
     ax.set_xlabel(f"Annual domestic tuition ({unit})")
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
     periods = {}
+    eu_count = len({row["country"] for row in rows
+                    if row["region"] == config.EU and row[value_key] is not None})
     for row in rows:
         if row[value_key] is not None:
-            periods.setdefault(REGION_LABELS[row["region"]], set()).add(int(row["year"]))
+            label = REGION_LABELS[row["region"]]
+            if row["region"] == config.EU and eu_count < len(config.EU27):
+                label = f"EU sample ({eu_count}/{len(config.EU27)} countries)"
+            periods.setdefault(label, set()).add(int(row["year"]))
     def academic(year):
         return f"{year}/{(year + 1) % 100:02d}"
     subtitle = " · ".join(

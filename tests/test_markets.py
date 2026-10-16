@@ -54,11 +54,13 @@ def test_market_legends_date_each_country_without_changing_export_labels(monkeyp
 
 def test_china_listing_coverage_break_is_separate_and_keeps_actual_points(monkeypatch, tmp_path):
     import pandas as pd
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
     from vizstyle.hover import observations
 
     frame = pd.DataFrame([
         markets.make_row(regions.name_for_code(code), code, year, "listed_domestic_companies", value)
         for code, values in (("GBR", (2000, 1900, 1800)), ("USA", (4000, 4100, 4200)),
+                             ("EUU", (5000, 5100, 5200)), ("JPN", (3000, 3100, 3200)),
                              ("CHN", (3584, 12730, 12341)))
         for year, value in zip((2018, 2019, 2020), values)
     ])
@@ -67,7 +69,9 @@ def test_china_listing_coverage_break_is_separate_and_keeps_actual_points(monkey
     charts.chart_metric(frame, "listed_domestic_companies", tmp_path)
     fig = captured[0]
     left, right = fig.axes
-    assert {line.get_label() for line in left.lines} == {"United Kingdom", "United States"}
+    assert {line.get_label() for line in left.lines} == {
+        "United Kingdom", "United States", "European Union", "Japan",
+    }
     assert [line.get_label() for line in right.lines] == ["China"]
     china = right.lines[0]
     assert pd.isna(china.get_ydata()[list(china.get_xdata()).index(2018.5)])
@@ -76,9 +80,16 @@ def test_china_listing_coverage_break_is_separate_and_keeps_actual_points(monkey
     ]
     points = [(series["label"], point[2]) for series in observations(fig, dpi=200)
               for point in series["points"]]
-    assert len(points) == len(set(points)) == 9
+    assert len(points) == len(set(points)) == 15
     assert all(year in {"2018", "2019", "2020"} for _, year in points)
     assert "Not like-for-like" in " ".join(t.get_text() for t in right.texts)
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    bounds = fig.legends[0].get_window_extent(canvas.get_renderer())
+    assert not any(bounds.overlaps(ax.bbox) for ax in fig.axes)
+    assert not bounds.overlaps(fig._suptitle.get_window_extent(canvas.get_renderer()))
+    assert all((bounds.y0 - ax.title.get_window_extent(canvas.get_renderer()).y1)
+               * 72 / fig.dpi >= 5 for ax in fig.axes)
 
 
 def _lse_workbook(sheet, month, year, rows):

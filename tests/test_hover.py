@@ -50,6 +50,28 @@ def test_hover_positions_match_saved_tight_crop_pixels(tmp_path):
     plt.close(fig)
 
 
+@pytest.mark.parametrize("boundary", ["x", "y"])
+@pytest.mark.parametrize("edge", ["lower", "upper"])
+def test_hover_keeps_floating_point_edge_values_but_excludes_clipped_points(tmp_path, boundary, edge):
+    fig, ax = plt.subplots()
+    lo, hi = (0, 1) if edge == "upper" else (1, 2)
+    near = np.nextafter(1., float("inf") if edge == "upper" else -float("inf"))
+    far = 1.01 if edge == "upper" else .99
+    center = (lo + hi) / 2
+    xs, ys = ([near, far], [center, center]) if boundary == "x" else ([center, center], [near, far])
+    ax.plot(xs, ys, "o", label="UK")
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(lo, hi)
+    path = tmp_path / "edge.png"
+    save_chart(fig, path, dpi=150, bbox_inches="tight")
+    series = chart_data.load_chart_data(tmp_path, path.relative_to(tmp_path))["series"]
+    assert len(series) == 1 and len(series[0]["points"]) == 1
+    assert [float(value) for value in series[0]["points"][0][2:4]] == pytest.approx(
+        [1., center] if boundary == "x" else [center, 1.],
+    )
+    plt.close(fig)
+
+
 @pytest.mark.parametrize("layout", ["left-panel", "figure"])
 def test_save_chart_separates_tight_titles_and_subtitles_without_moving_data(tmp_path, layout):
     fig, ax = plt.subplots(figsize=(6, 4))
