@@ -144,6 +144,7 @@ def test_site_rejects_stale_observations_without_replacing_published_build(site_
     ("gdp_income/uk_gdp_relative_to_peers_simple", "EU average"),
     ("gdp_income/uk_real_gdp_relative_to_peers", "United States"),
     ("gdp_income/uk_real_gdp_relative_to_peers", "Poland"),
+    ("investment/military_expenditure", "Poland"),
     ("nhs/cancer_62day_pct", "Northern Ireland"),
     ("stock_markets/stock_market_cap_pct_gdp", "United Kingdom"),
 ])
@@ -450,6 +451,28 @@ def test_unemployment_is_embedded_and_included_in_complete_refresh(
     assert commands.index(("-m", "unemployment_data")) < commands.index(("scorecard.py",))
     saved = json.loads((tmp_path / "data/site/refresh.json").read_text())
     assert "unemployment" in saved["automated_analyses"]
+
+
+def test_investment_research_and_military_pages_share_one_complete_refresh(
+    site_repository, monkeypatch, tmp_path,
+):
+    output = build_site.build(site_repository)
+    for slug, charts in {
+        "infrastructure": ["inland_transport_investment.png", "public_capital_investment.png"],
+        "research-funding": ["government_research_funding.png", "total_research_spending.png"],
+        "military-spending": ["military_expenditure.png"],
+    }.items():
+        page = BeautifulSoup((output / slug / "index.html").read_text(), "html.parser")
+        assert [Path(urlsplit(image["src"]).path).name for image in page.select("main img")] == charts
+    commands = []
+    monkeypatch.setattr(refresh_data, "nhs_coverage", lambda _: {})
+    monkeypatch.setattr(refresh_data, "validate_refresh", lambda *args: None)
+    monkeypatch.setattr(refresh_data, "run", lambda command, root: commands.append(command))
+    refresh_data.refresh(tmp_path)
+    assert commands.count(("-m", "investment_data")) == 1
+    assert commands.index(("-m", "investment_data")) < commands.index(("scorecard.py",))
+    saved = json.loads((tmp_path / "data/site/refresh.json").read_text())
+    assert "investment-funding" in saved["automated_analyses"]
 
 
 def test_failed_plot_exports_do_not_advance_refresh_date(monkeypatch, tmp_path):

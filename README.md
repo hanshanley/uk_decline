@@ -72,6 +72,8 @@ labour-force denominators and reference periods.
 
 **Public services and infrastructure:** [austerity](austerity_data/README.md),
 [NHS performance](nhs_data/README.md), and [rail performance](rail_data/README.md).
+[Infrastructure investment, research funding and defence](investment_data/README.md)
+compare five distinct spending measures as shares of GDP, with source limitations explicit.
 
 **Household pressure:** [tax](tax/README.md), [tuition](tuition/README.md), and
 [food-bank use](foodbank_data/README.md).

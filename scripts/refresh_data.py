@@ -40,6 +40,7 @@ STEPS = {
     "public-spending": (("-m", "austerity_data"),),
     "debt-borrowing": (("-m", "debt_data"),),
     "unemployment": (("-m", "unemployment_data"),),
+    "investment-funding": (("-m", "investment_data"),),
     "food-banks": (("-m", "foodbank_data", "--refresh"),),
     "tuition": (
         ("-m", "tuition.cpi"),

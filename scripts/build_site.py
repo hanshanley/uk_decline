@@ -83,6 +83,19 @@ ANALYSES = (
     Analysis("public-spending", "Public spending", "Public services", "austerity_data", "austerity",
              ("uk_austerity_spending_investment.png",),
              "Public spending and investment, with financial years and inflation adjustments stated."),
+    Analysis("infrastructure", "Infrastructure & investment", "Public services",
+             "investment_data", "investment",
+             ("inland_transport_investment.png", "public_capital_investment.png"),
+             "Inland transport investment and broader public fixed investment as shares of GDP. "
+             "Coverage differs: infrastructure is not all government capital spending."),
+    Analysis("research-funding", "Research funding", "Economy", "investment_data", "investment",
+             ("government_research_funding.png", "total_research_spending.png"),
+             "Government research budgets and total R&D expenditure as separate GDP shares, "
+             "with reporting-period differences, source gaps and definition breaks explicit."),
+    Analysis("military-spending", "Military spending", "Public services",
+             "investment_data", "investment", ("military_expenditure.png",),
+             "SIPRI-based military expenditure as a share of GDP: UK, US, EU and Poland. "
+             "Not NATO budget estimates, announced targets or military capability."),
     Analysis("debt-borrowing", "Debt & borrowing costs", "Economy", "debt_data", "debt",
              ("uk_public_debt_pct_gdp.png", "uk_borrowing_costs_daily.png",
               "government_borrowing_costs.png"),
@@ -118,6 +131,12 @@ ANALYSES = (
 )
 
 CHART_COMPARATORS = {
+    "inland_transport_investment": {"United Kingdom", "United States", "Poland"},
+    **dict.fromkeys(
+        ("public_capital_investment", "government_research_funding", "total_research_spending"),
+        {"United Kingdom", "United States", "EU-27", "Poland"},
+    ),
+    "military_expenditure": {"United Kingdom", "United States", "European Union", "Poland"},
     **dict.fromkeys(
         ("uk_gdp_relative_to_peers_simple", "uk_real_gdp_relative_to_peers",
          "uk_ppp_gdp_relative_to_peers"),
@@ -185,6 +204,11 @@ SUBSCRIBE_URL = (
 )
 
 CHART_TITLES = {
+    "inland_transport_investment": "Inland transport infrastructure investment: published national GDP shares",
+    "public_capital_investment": "Public fixed investment: all general-government assets, not infrastructure alone",
+    "government_research_funding": "Government R&D budget allocations: not actual expenditure or tax relief",
+    "total_research_spending": "Total R&D expenditure: research performed across all sectors",
+    "military_expenditure": "Military expenditure: SIPRI-based GDP shares, not NATO budget estimates",
     "uk_public_debt_pct_gdp": "UK public-sector net debt as a share of GDP",
     "uk_borrowing_costs_daily": "UK 10-year borrowing rates: latest daily observations",
     "government_borrowing_costs": "Government borrowing rates: 10-year bond yields",
