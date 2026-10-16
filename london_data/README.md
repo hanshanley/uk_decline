@@ -31,15 +31,16 @@ real-output concentration. Raw £ levels are emitted in the CSV for transparency
 - Tables used: **Table 5** (GDP at current market prices, £m) and **Table 7** (GDP per head
   at current market prices, £). London is the **ITL1** region (ONS code `TLI`); the UK total
   is the workbook's `UK` row.
-- `ons.py` resolves the newest `.xlsx` edition on the dataset page automatically (falling
-  back to a pinned URL), so re-running picks up future ONS revisions.
+- `ons.py` resolves the newest dated `.xlsx` edition on the dataset page automatically.
+  Discovery failures abort the refresh; an older pinned workbook is not substituted.
 - Full citation: [`CITATIONS.md`](CITATIONS.md).
 
 **Availability checked 12 October 2026:** ONS published the **1998–2024** edition on
 **23 September 2026**. Its notice suppresses some ITL2 and lower-level estimates while
 correcting geography conversion, but explicitly says **ITL1 countries and regions are
-unaffected**, including London. The resolver uses the latest dated edition; the pinned
-1998–2023 workbook is only a network-failure fallback. No values are nowcast or fabricated.
+unaffected**, including London. The resolver uses the latest dated edition. Refreshes
+also preserve the years already present in published chart sidecars, even on a clean
+checkout without a saved CSV. No values are nowcast or fabricated.
 
 ## Run
 
@@ -58,8 +59,8 @@ unaffected**, including London. The resolver uses the latest dated edition; the 
 ```
 
 The resolver selects the highest `1998toYYYY` edition linked by ONS, so no code change is
-needed for new editions. `--require-year` turns stale data into an
-explicit failure rather than silently rebuilding a chart that still ends in 2023.
+needed for new editions. Published-year coverage is protected automatically;
+`--require-year` can impose an additional minimum year.
 
 ## Outputs
 

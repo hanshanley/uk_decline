@@ -12,11 +12,34 @@ import csv
 import pathlib
 
 from . import charts, ons
+from scripts.chart_data import load_chart_data
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_CSV = ROOT / "data" / "london_gdp.csv"
 DEFAULT_CHARTS = ROOT / "outputs" / "london"
 _FIELDS = ["region", "year", "metric", "value", "unit", "source"]
+
+_PUBLISHED_CHARTS = {
+    "share_of_uk_gdp_pct": "london_share_of_uk_gdp.png",
+    "gdp_per_head_index_uk100": "london_gdp_per_head_vs_uk.png",
+}
+
+
+def _require_published_coverage(rows: list[dict], directory: pathlib.Path) -> None:
+    for metric, filename in _PUBLISHED_CHARTS.items():
+        chart = pathlib.Path(filename)
+        if not (directory / chart.with_suffix(".json")).exists():
+            continue
+        data = load_chart_data(directory, chart)
+        years = {float(point[2].replace(",", ""))
+                 for series in data["series"] for point in series["points"]}
+        if any(not year.is_integer() for year in years):
+            raise ValueError(f"London {metric} chart has non-annual observation labels")
+        expected = {int(year) for year in years}
+        current = {int(row["year"]) for row in rows
+                   if row["region"] == "London" and row["metric"] == metric}
+        if missing := expected - current:
+            raise ValueError(f"London {metric} refresh lost published years: {sorted(missing)}")
 
 
 def _write_csv(rows: list[dict], path: pathlib.Path) -> None:
@@ -76,6 +99,9 @@ def main(argv: list[str] | None = None) -> int:
             _require_year(years, args.require_year)
     else:
         rows = ons.build_rows()
+        if not rows:
+            raise RuntimeError("ONS regional-GDP source returned no observations")
+        _require_published_coverage(rows, pathlib.Path(args.charts_dir))
         if args.require_year is not None:
             years = [int(r["year"]) for r in rows
                      if r["metric"] == "share_of_uk_gdp_pct"]

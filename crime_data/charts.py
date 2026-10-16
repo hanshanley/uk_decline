@@ -313,13 +313,13 @@ def chart_homicide_peers(df, out_dir):
 
     if len(eu_mean):
         _end_label(ax, eu_mean.index[-1], eu_mean.values[-1],
-                   f"EU-27  {eu_mean.values[-1]:.1f}", MUTED, dy=-13)
+                   f"EU-27  {eu_mean.values[-1]:.1f} ({int(eu_mean.index[-1])})", MUTED, dy=-13)
     if len(xus):
         _end_label(ax, xus.iloc[-1], yus.iloc[-1],
-                   f"United States  {yus.iloc[-1]:.1f}", BLUE)
+                   f"United States  {yus.iloc[-1]:.1f} ({int(xus.iloc[-1])})", BLUE)
     if len(xuk):
         _end_label(ax, xuk.iloc[-1], yuk.iloc[-1],
-                   f"United Kingdom  {yuk.iloc[-1]:.1f}", ACCENT, dy=11)
+                   f"United Kingdom  {yuk.iloc[-1]:.1f} ({int(xuk.iloc[-1])})", ACCENT, dy=11)
     for xs, ys, color in ((xus, yus, BLUE), (xuk, yuk, ACCENT)):
         if len(xs):
             ax.plot([xs.iloc[-1]], [ys.iloc[-1]], "o", color=color, markersize=5,
@@ -372,7 +372,8 @@ def chart_homicide_nations(df, out_dir):
         ax.plot([series["year"].iloc[-1]], [series["value"].iloc[-1]], "o",
                 color=color, markersize=5, zorder=5)
         _end_label(ax, series["year"].iloc[-1], series["value"].iloc[-1],
-                   f"{jurisdiction}  {series['value'].iloc[-1]:.1f}",
+                   f"{jurisdiction}  {series['value'].iloc[-1]:.1f}"
+                   f" ({int(series['year'].iloc[-1])})",
                    color, dy=label_offset)
 
     _heading(

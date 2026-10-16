@@ -26,6 +26,12 @@
     marker.hidden = true;
   };
 
+  const selectionFor = (image, data) => {
+    const saved = selections.get(image);
+    return saved && saved.data === data ? saved : null;
+  };
+  const isCurrent = (image, url) => activeImage === image && image.dataset.chartData === url;
+
   const dataFor = (image) => {
     const url = new URL(image.dataset.chartData, document.baseURI).href;
     if (!requests.has(url)) {
@@ -76,14 +82,15 @@
     if (top + size.height > window.innerHeight - 8) top = clientY - size.height - 16;
     tooltip.style.left = `${Math.max(8, Math.min(left, window.innerWidth - size.width - 8))}px`;
     tooltip.style.top = `${Math.max(8, Math.min(top, window.innerHeight - size.height - 8))}px`;
-    selections.set(image, { seriesIndex, pointIndex });
+    selections.set(image, { data, seriesIndex, pointIndex });
   };
 
   const inspect = async (image, clientX, clientY) => {
+    const url = image.dataset.chartData;
     activeImage = image;
     try {
       const data = await dataFor(image);
-      if (activeImage !== image) return;
+      if (!isCurrent(image, url)) return;
       const bounds = image.getBoundingClientRect();
       const x = (clientX - bounds.left) / bounds.width;
       const y = (clientY - bounds.top) / bounds.height;
@@ -111,7 +118,7 @@
         marker.hidden = true;
       }
     } catch (error) {
-      if (activeImage === image) report(image, error);
+      if (isCurrent(image, url)) report(image, error);
     }
   };
 
@@ -128,19 +135,20 @@
   document.addEventListener("focusin", async (event) => {
     const image = event.target.closest("img[data-chart-data]");
     if (!image) return;
+    const url = image.dataset.chartData;
     activeImage = image;
     try {
       const data = await dataFor(image);
-      if (activeImage !== image) return;
+      if (!isCurrent(image, url)) return;
       const bounds = image.getBoundingClientRect();
-      const { seriesIndex, pointIndex } = selections.get(image) || {
+      const { seriesIndex, pointIndex } = selectionFor(image, data) || {
         seriesIndex: 0, pointIndex: data.series[0].points.length - 1,
       };
       const point = data.series[seriesIndex].points[pointIndex];
       show(image, data, seriesIndex, pointIndex,
         bounds.left + point[0] * bounds.width, bounds.top + point[1] * bounds.height);
     } catch (error) {
-      report(image, error);
+      if (isCurrent(image, url)) report(image, error);
     }
   });
   document.addEventListener("keydown", async (event) => {
@@ -148,11 +156,12 @@
     const image = event.target.closest("img[data-chart-data]");
     if (!image || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
+    const url = image.dataset.chartData;
     activeImage = image;
     try {
       const data = await dataFor(image);
-      if (activeImage !== image) return;
-      let { seriesIndex, pointIndex } = selections.get(image) || { seriesIndex: 0, pointIndex: 0 };
+      if (!isCurrent(image, url)) return;
+      let { seriesIndex, pointIndex } = selectionFor(image, data) || { seriesIndex: 0, pointIndex: 0 };
       if (event.key === "ArrowUp") seriesIndex = Math.max(0, seriesIndex - 1);
       if (event.key === "ArrowDown") seriesIndex = Math.min(data.series.length - 1, seriesIndex + 1);
       const points = data.series[seriesIndex].points;
@@ -166,7 +175,7 @@
       show(image, data, seriesIndex, pointIndex, bounds.left + points[pointIndex][0] * bounds.width,
         bounds.top + points[pointIndex][1] * bounds.height);
     } catch (error) {
-      report(image, error);
+      if (isCurrent(image, url)) report(image, error);
     }
   });
   document.addEventListener("focusout", hide);

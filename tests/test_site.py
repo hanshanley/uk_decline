@@ -14,6 +14,79 @@ import pytest
 from scripts import build_site, refresh_data
 
 
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node is needed to execute the browser event handlers")
+@pytest.mark.parametrize("scenario", ["fewer-series", "fewer-points", "late-response", "late-error"])
+def test_hover_selection_tracks_the_current_chart_and_request(scenario):
+    script = r"""
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const vm = require("node:vm");
+const handlers = new Map();
+const elements = [];
+const errors = [];
+const element = () => ({
+  style: {}, children: [], append(...nodes) { this.children.push(...nodes); },
+  setAttribute() {}, querySelector() { return null; },
+  getBoundingClientRect() { return {left: 0, top: 0, width: 100, height: 100}; }
+});
+const parent = element();
+const image = {dataset: {chartData: "/old.json"}, parentElement: parent,
+  closest(selector) { return selector === "img[data-chart-data]" ? this : null; },
+  getBoundingClientRect: parent.getBoundingClientRect};
+global.document = {baseURI: "https://example.invalid/", body: parent, activeElement: image,
+  createElement() { const node = element(); elements.push(node); return node; },
+  addEventListener(name, handler) { handlers.set(name, handler); }};
+global.window = {innerWidth: 1200, innerHeight: 800, addEventListener() {}};
+console.error = (...args) => errors.push(args.map(String).join(" "));
+const series = (label, n) => ({label, x_label: "Year", y_label: "Rate",
+  bounds: [0, 0, 1, 1],
+  points: Array.from({length: n}, (_, i) => [.5, .5, String(2020+i), String(i+1)])});
+const scenario = process.argv[2];
+const old = {version: 1, series: scenario === "fewer-series"
+  ? [series("Old first", 3), series("Old second", 3)] : [series("Old first", 3)]};
+const fresh = {version: 1, series: [series("New chart", 1)]};
+let settle;
+global.fetch = async (url) => {
+  if (url.endsWith("/old.json") && scenario.startsWith("late-")) {
+    return await new Promise(resolve => { settle = resolve; });
+  }
+  return {ok: true, json: async () => url.endsWith("/old.json") ? old : fresh};
+};
+vm.runInThisContext(fs.readFileSync(process.argv[1], "utf8"));
+const focus = () => handlers.get("focusin")({target: image});
+const key = name => handlers.get("keydown")({target: image, key: name, preventDefault() {}});
+(async () => {
+  let pending;
+  if (scenario.startsWith("late-")) {
+    pending = focus();
+  } else {
+    await focus();
+    if (scenario === "fewer-series") await key("ArrowDown");
+    await key("End");
+  }
+  image.dataset.chartData = "/new.json";
+  await focus();
+  assert.equal(elements[1].textContent, "New chart");
+  assert.equal(elements[2].textContent, "Year: 2020");
+  if (pending) {
+    settle(scenario === "late-error"
+      ? {ok: false, status: 503} : {ok: true, json: async () => old});
+    await pending;
+  }
+  assert.equal(elements[1].textContent, "New chart");
+  assert.equal(elements[0].hidden, false);
+  await key("End");
+  assert.equal(elements[3].textContent, "Rate: 1");
+  assert.deepEqual(errors, []);
+})().catch(error => { process.stderr.write(String(error)); process.exitCode = 1; });
+"""
+    result = subprocess.run(
+        ["node", "-e", script, str(build_site.ROOT / "site_assets/hover.js"), scenario],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+
 @pytest.fixture
 def site_repository(tmp_path):
     root = tmp_path / "repository"

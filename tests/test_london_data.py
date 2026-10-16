@@ -140,13 +140,46 @@ def test_build_rows_skips_suppressed_denominator():
     assert 2000 in shares and 2001 not in shares
 
 
-def test_resolve_xlsx_url_prefers_pinned_when_no_dated_edition(monkeypatch):
+def test_resolve_xlsx_url_rejects_missing_release_instead_of_using_an_old_edition(monkeypatch):
     class _Resp:
         text = '<a href="/file?uri=/some/other/notanedition.xlsx">x</a>'
 
     monkeypatch.setattr(ons, "_get", lambda url, timeout=60: _Resp())
-    # No /1998toYYYY/ edition link -> must fall back to the pinned URL, not the stray xlsx.
-    assert ons.resolve_xlsx_url() == ons.PINNED_XLSX
+    with pytest.raises(RuntimeError, match="no dated workbook"):
+        ons.resolve_xlsx_url()
+
+
+def test_resolve_xlsx_url_propagates_discovery_failure(monkeypatch):
+    import requests
+
+    def fail(*args, **kwargs):
+        raise requests.ConnectionError("ONS unavailable")
+
+    monkeypatch.setattr(ons, "_get", fail)
+    with pytest.raises(requests.ConnectionError, match="ONS unavailable"):
+        ons.resolve_xlsx_url()
+
+
+def test_refresh_preserves_published_years_even_without_a_saved_csv(monkeypatch, tmp_path):
+    import matplotlib.pyplot as plt
+    from london_data import __main__ as cli
+    from vizstyle import save_chart
+
+    output = tmp_path / "charts"
+    output.mkdir()
+    chart = output / "london_share_of_uk_gdp.png"
+    fig, ax = plt.subplots()
+    ax.plot([2000, 2001], [20, 23], label="London")
+    save_chart(fig, chart)
+    plt.close(fig)
+    before = chart.read_bytes()
+    rows = [row for row in ons.build_rows(_fake_workbook()) if row["year"] == 2000]
+    monkeypatch.setattr(ons, "build_rows", lambda: rows)
+    csv_path = tmp_path / "new.csv"
+    with pytest.raises(ValueError, match="lost published"):
+        cli.main(["--csv", str(csv_path), "--charts-dir", str(output)])
+    assert not csv_path.exists()
+    assert chart.read_bytes() == before
 
 
 def test_edition_links_and_latest_year(monkeypatch):

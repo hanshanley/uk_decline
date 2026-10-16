@@ -44,6 +44,35 @@ def test_country_mappings() -> None:
     assert sum(1 for c in countries.COUNTRIES if c.group == countries.EU) == 27
 
 
+@pytest.mark.parametrize("national", [False, True])
+def test_homicide_endpoint_labels_identify_each_series_actual_year(monkeypatch, tmp_path, national):
+    import matplotlib.pyplot as plt
+
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    if national:
+        frame = pd.DataFrame([
+            {"jurisdiction": name, "year": year, "value": value,
+             "metric": "homicide_rate_per_million", "source": "Official source"}
+            for name, year, value in (("England & Wales", 2025, 8.6),
+                                     ("Scotland", 2025, 8.1), ("Northern Ireland", 2024, 9.3))
+        ])
+        charts.chart_homicide_nations(frame, tmp_path)
+        expected = {"England & Wales  8.6 (2025)", "Scotland  8.1 (2025)",
+                    "Northern Ireland  9.3 (2024)"}
+    else:
+        frame = pd.DataFrame([
+            {"iso3": code, "year": year, "value": value,
+             "metric": "homicide_rate_per_100k", "source": "Official source"}
+            for code, year, value in (("GBR", 2021, 1.1), ("USA", 2023, 5.8))
+        ])
+        charts.chart_homicide_peers(frame, tmp_path)
+        expected = {"United Kingdom  1.1 (2021)", "United States  5.8 (2023)"}
+    actual = {text.get_text() for text in captured[0].axes[0].texts}
+    assert expected <= actual
+    plt.close("all")
+
+
 def _synthetic_a1a() -> pd.DataFrame:
     """A tiny header-less frame shaped like ONS Table_A1a (2 periods x a few rows)."""
     return pd.DataFrame([

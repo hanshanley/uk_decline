@@ -34,13 +34,6 @@ DATASET_PAGE = (
     "https://www.ons.gov.uk/economy/grossdomesticproductgdp/datasets/"
     "regionalgrossdomesticproductallnutslevelregions"
 )
-# Pinned fallback edition (used if the dataset page can't be scraped). The resolver below
-# prefers the newest edition actually listed on the page.
-PINNED_XLSX = (
-    "https://www.ons.gov.uk/file?uri=/economy/grossdomesticproductgdp/datasets/"
-    "regionalgrossdomesticproductallnutslevelregions/1998to2023/"
-    "regionalgrossdomesticproductgdpbyallinternationalterritoriallevelitlregions.xlsx"
-)
 SOURCE = ("Office for National Statistics (ONS), Regional economic activity by gross "
           "domestic product, UK: Regional GDP, all ITL regions (current market prices)")
 RELEASE_SEARCH_URL = "https://api.beta.ons.gov.uk/v1/search"
@@ -120,22 +113,14 @@ def availability_status(target_year: int = 2024, timeout: int = 60) -> dict:
 
 
 def resolve_xlsx_url(page_url: str = DATASET_PAGE, timeout: int = 60) -> str:
-    """Return the newest ``.xlsx`` edition linked on the ONS dataset page.
-
-    Falls back to :data:`PINNED_XLSX` if the page can't be scraped or has no dated edition.
-    Editions are named ``.../1998toYYYY/...`` so we pick the highest end year; hrefs that
-    don't carry an edition year are ignored (they can't win over the pinned fallback).
-    """
+    """Return the newest dated workbook; never silently substitute an old edition."""
     _ensure_ons_host(page_url)
-    try:
-        resp = _get(page_url, timeout=timeout)
-        links = _edition_links(resp.text)
-        if links:
-            _year, best = max(links)
-            return f"https://{ONS_HOST}{best}"
-    except Exception as exc:  # pragma: no cover - network/parse failure path
-        print(f"[london_data] could not resolve latest xlsx ({exc}); using pinned URL.")
-    return PINNED_XLSX
+    resp = _get(page_url, timeout=timeout)
+    links = _edition_links(resp.text)
+    if not links:
+        raise RuntimeError("ONS regional-GDP page has no dated workbook; refusing a stale fallback")
+    _year, best = max(links)
+    return f"https://{ONS_HOST}{best}"
 
 
 def _get(url: str, timeout: int) -> requests.Response:
