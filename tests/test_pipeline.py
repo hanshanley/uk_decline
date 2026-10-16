@@ -549,23 +549,55 @@ def test_non_oecd_income_views_keep_recent_values_and_explicit_source_end_dates(
         captured = []
         monkeypatch.setattr(plots, "save_chart", lambda fig, *args, **kwargs: captured.append(fig))
         plots.fig_median_income_non_oecd(frame, tmp_path, source=source)
-        ax = captured[0].axes[0]
-        for line in ax.lines:
-            country = plots.EU_EUROSTAT[0] if line.get_label() == "EU-27" else line.get_label()
+        fig = captured[0]
+        actual_by_country = {}
+        for ax in fig.axes:
+            for line in ax.lines:
+                country = plots.EU_EUROSTAT[0] if line.get_label() == "EU-27" else line.get_label()
+                actual = [(int(x), y) for x, y in zip(line.get_xdata(), line.get_ydata()) if pd.notna(y)]
+                actual_by_country.setdefault(country, []).extend(actual)
+        for country, actual in actual_by_country.items():
             expected = frame.loc[(frame.country == country) & (frame.year >= first)]
-            actual = [(int(x), y) for x, y in zip(line.get_xdata(), line.get_ydata()) if pd.notna(y)]
             assert actual == list(zip(expected.year, expected[metric]))
             assert min(x for x, _ in actual) >= first
-        assert len(ax.lines) == len(peers)
-        text = " ".join(item.get_text() for item in ax.texts)
-        assert f"United Kingdom ({2018 if source == 'eurostat' else 2021})" in text
+        assert set(actual_by_country) == set(peers)
+        text = " ".join(item.get_text() for item in [*fig.texts, *(t for ax in fig.axes for t in ax.texts)])
         if source == "eurostat":
             assert "US not covered" in text and "2018" in text
-            assert not any(line.get_label() == "United States" for line in ax.lines)
-        france = next(line for line in ax.lines if line.get_label() == "France")
+            left, right = fig.axes
+            assert "2011\u20132018" in left.get_title()
+            assert "2019\u20132025" in right.get_title()
+            assert right.get_shared_y_axes().joined(left, right)
+            assert len(left.lines) == 6 and len(right.lines) == 5
+            assert not any(line.get_label() == "United Kingdom" for line in right.lines)
+            assert max(x for line in left.lines for x in line.get_xdata()) == 2018
+            assert min(x for line in right.lines for x in line.get_xdata()) == 2019
+        else:
+            assert len(fig.axes) == 1 and len(fig.axes[0].lines) == len(peers)
+            assert "United Kingdom (2021)" in text
+            assert (2021, 2021.) in [item.xy for item in fig.axes[0].texts if hasattr(item, "xy")]
+        france = next(line for line in fig.axes[0].lines if line.get_label() == "France")
         assert pd.isna(france.get_ydata()[list(france.get_xdata()).index(2014)])
         assert pd.isna(france.get_ydata()[list(france.get_xdata()).index(2016.5)])
         pd.testing.assert_frame_equal(frame, saved)
+
+
+def test_eurostat_does_not_create_an_empty_post_uk_panel(monkeypatch, tmp_path):
+    import pandas as pd
+    from europe_data import plot_uk_decline as plots
+
+    countries = [country for country, *_ in plots.INCOME_PEERS if country != "United States"]
+    countries.append(plots.EU_EUROSTAT[0])
+    frame = pd.DataFrame([
+        dict(country=country, year=year, median_disposable_income=10000 + year)
+        for country in countries for year in range(2011, 2019)
+    ])
+    captured = []
+    monkeypatch.setattr(plots, "save_chart", lambda fig, *args, **kwargs: captured.append(fig))
+    plots.fig_median_income_non_oecd(frame, tmp_path, source="eurostat")
+    assert len(captured[0].axes) == 1
+    assert len(captured[0].axes[0].lines) == 6
+    assert "2011\u20132018" in captured[0].axes[0].get_title()
 
 
 def test_pip_does_not_turn_interpolations_or_invalid_welfare_data_into_surveys(monkeypatch):

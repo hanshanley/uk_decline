@@ -291,10 +291,10 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
     if us_years:
         ax.plot(us_years, us_ppp, color=GOLD, linewidth=2.0, zorder=2, label="United States")
 
-    labels = [(uk_ppp[-1], "UK, purchasing power", ACCENT),
-              (uk_fx[-1], "UK, at market rates", MUTED)]
+    labels = [(uk_ppp[-1], "UK, purchasing power", ACCENT, uk_years[-1]),
+              (uk_fx[-1], "UK, at market rates", MUTED, uk_years[-1])]
     if us_years:
-        labels.append((us_ppp[-1], "United States", GOLD))
+        labels.append((us_ppp[-1], "United States", GOLD, us_years[-1]))
     labelled_ends(ax, labels, min_gap=max(uk_ppp) * 0.085,
                   x=max(uk_years[-1], us_years[-1] if us_years else uk_years[-1]),
                   fontsize=10)
@@ -343,9 +343,9 @@ def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | Non
                 fontsize=9.5, fontweight="bold",
                 color=BLUE, ha="center", va="bottom", path_effects=white_stroke())
 
-    labels = [(uk[-1], "England fee cap / UK GDP per head", ACCENT)]
+    labels = [(uk[-1], "England fee cap / UK GDP per head", ACCENT, uk_years[-1])]
     if us_years:
-        labels.append((us[-1], "United States", GOLD))
+        labels.append((us[-1], "United States", GOLD, us_years[-1]))
     labelled_ends(ax, labels, min_gap=max(uk) * 0.09,
                   x=max(uk_years[-1], us_years[-1] if us_years else uk_years[-1]),
                   fontsize=9.5)

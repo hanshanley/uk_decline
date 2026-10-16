@@ -144,6 +144,7 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     sub = sub.dropna(subset=["value"]).sort_values("year")
 
     fig, ax = plt.subplots(figsize=(11, 6))
+    legend_labels = []
     for code, g in sub.groupby("region_code"):
         region = regions.BY_CODE.get(code)
         is_uk = code == "GBR"
@@ -162,6 +163,9 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
         )
         if is_uk:
             _annotate_year_gaps(ax, annual)
+        legend_labels.append(
+            f"{regions.name_for_code(code)} ({int(g['year'].min())}\u2013{int(g['year'].max())})"
+        )
 
     ax.set_title(meta.label, fontweight="bold", pad=14)
     ax.set_xlabel("Year", labelpad=2)
@@ -174,7 +178,8 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     ax.grid(axis="y")
     ax.set_axisbelow(True)
     ax.margins(x=0.02)
-    ax.legend(loc="upper left", frameon=False, labelcolor="linecolor", fontsize=10)
+    handles, _ = ax.get_legend_handles_labels()
+    ax.legend(handles, legend_labels, loc="upper left", frameon=False, labelcolor="linecolor", fontsize=10)
     bottom = _footnote(fig, _source_note(metric_id))
     fig.tight_layout(rect=[0, bottom, 1, 1])
 

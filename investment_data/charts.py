@@ -97,6 +97,7 @@ def make_charts(frame: pd.DataFrame, output: Path) -> list[Path]:
             ends.append((
                 float(latest["value"]),
                 f"{country} {latest['value']:.2f}%\n  {int(latest['year'])}{status}", color,
+                int(latest["year"]),
             ))
         spread = max(float(data["value"].max() - data["value"].min()), .1)
         ymin = 0 if metric == sources.MILITARY else max(0, float(data["value"].min()) - spread * .15)

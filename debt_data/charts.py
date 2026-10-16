@@ -68,6 +68,7 @@ def make_charts(
             ends.append((
                 float(last["value"]),
                 f"{country} {last['value']:.{precision}f}%\n  {last['date']:%b %Y}", color,
+                mdates.date2num(last["date"]),
             ))
         labelled_ends(
             ax, ends, min_gap=1.0 if metric == sources.DEBT_METRIC else 0.65,

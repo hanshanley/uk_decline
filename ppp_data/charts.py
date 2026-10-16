@@ -67,7 +67,7 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
 
     uk_latest = None
     spans: list[list[int]] = []
-    labels: list[tuple[float, str, str]] = []
+    labels: list[tuple[float, str, str, float]] = []
     last_x = None
     for peer in peers.GDP_PEERS:
         xs, ys = plotted[peer.iso3]
@@ -80,7 +80,7 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
                 marker="o" if peer.iso3 == peers.UK else None, markersize=4.5,
                 markeredgecolor="white", markeredgewidth=1.0,
                 zorder=5 if peer.iso3 == peers.UK else 3)
-        labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour))
+        labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour, xs[-1]))
         last_x = xs[-1] if last_x is None else max(last_x, xs[-1])
         if peer.iso3 == peers.UK:
             uk_latest = (xs[-1], ys[-1])
@@ -90,7 +90,7 @@ def chart_gdp_per_capita(rows: list[dict], out_dir: Path) -> Path | None:
     if uk_latest:
         _subtitle(ax, f"The UK reached ${uk_latest[1]:,.0f}k per head in {uk_latest[0]}, "
                       f"valued at the 2021 purchasing power parity benchmark")
-    labelled_ends(ax, labels, min_gap=max(v for v, _, _ in labels) * 0.045, x=last_x,
+    labelled_ends(ax, labels, min_gap=max(item[0] for item in labels) * 0.045, x=last_x,
                   fontsize=10)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"${v:,.0f}k"))
     _tidy(ax, ylabel=f"GDP per capita (000s, {meta.unit})")
@@ -128,7 +128,7 @@ def chart_volume_growth(rows: list[dict], out_dir: Path,
         xs, ys = plotted[peer.iso3]
         ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle, label=peer.label,
                 linewidth=peer.linewidth)
-        labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour))
+        labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour, xs[-1]))
     ax.axhline(100, color=MUTED, linewidth=0.8, linestyle="--")
     labelled_ends(ax, labels, min_gap=3.0,
                   x=max(xs[-1] for xs, _ in plotted.values()), fontsize=10)
@@ -159,7 +159,7 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
 
     facts: list[str] = []
     spans: list[list[int]] = []
-    labels: list[tuple[float, str, str]] = []
+    labels: list[tuple[float, str, str, float]] = []
     last_x = None
     for peer in peers.RELATIVE_PEERS:
         xs, ys = plotted[peer.iso3]
@@ -169,7 +169,7 @@ def chart_relative_to_peers(rows: list[dict], out_dir: Path) -> Path | None:
         ys = [y * 100.0 for y in ys]
         ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle, label=peer.label,
                 linewidth=peer.linewidth)
-        labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour))
+        labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour, xs[-1]))
         last_x = xs[-1] if last_x is None else max(last_x, xs[-1])
         if peer.iso3 == "POL":
             # Retain the documented reporting window without claiming survey provenance.
@@ -236,9 +236,9 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
     ax.plot(years, ppp_pct, color=BLUE, linewidth=2.8, zorder=4, label="Purchasing power (current prices)")
     ax.plot(years, real_pct, color=GREEN, linewidth=2.2, linestyle="--", zorder=3, label="Purchasing power (constant prices)")
 
-    labelled_ends(ax, [(fx_pct[-1], "at market\nexchange rates", ACCENT),
-                       (ppp_pct[-1], "purchasing power\n(current prices)", BLUE),
-                       (real_pct[-1], "output volumes\n(2021 price benchmark)", GREEN)],
+    labelled_ends(ax, [(fx_pct[-1], "at market\nexchange rates", ACCENT, years[-1]),
+                       (ppp_pct[-1], "purchasing power\n(current prices)", BLUE, years[-1]),
+                       (real_pct[-1], "output volumes\n(2021 price benchmark)", GREEN, years[-1])],
                   min_gap=4.5, x=years[-1], fontsize=9.5)
 
     peak_year = max(years, key=lambda y: fx[y])
@@ -287,7 +287,7 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path | None:
     plt = _plt()
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
-    labels: list[tuple[float, str, str]] = []
+    labels: list[tuple[float, str, str, float]] = []
     last_x = None
     for peer in peers.PRICE_LEVEL_PEERS:
         xs, ys = series.xy(series.series(rows, metric, peer.iso3), START_YEAR)
@@ -296,7 +296,7 @@ def chart_price_level_index(rows: list[dict], out_dir: Path) -> Path | None:
         ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle, label=peer.label,
                 linewidth=peer.linewidth,
                 zorder=5 if peer.iso3 == peers.UK else 3)
-        labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour))
+        labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour, xs[-1]))
         last_x = xs[-1] if last_x is None else max(last_x, xs[-1])
     if last_x is not None:
         labelled_ends(ax, labels, min_gap=0.035, x=last_x, fontsize=9.5)
@@ -458,7 +458,7 @@ def chart_long_run(rows: list[dict], out_dir: Path) -> Path | None:
     plt = _plt()
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
-    labels: list[tuple[float, str, str]] = []
+    labels: list[tuple[float, str, str, float]] = []
     last_x = None
     span_years: list[int] = []
     for peer in peers.PEERS:
@@ -469,9 +469,9 @@ def chart_long_run(rows: list[dict], out_dir: Path) -> Path | None:
         ys = [y / 1000.0 for y in ys]
         ax.plot(xs, ys, color=peer.colour, linestyle=peer.linestyle, label=peer.label,
                 linewidth=peer.linewidth, zorder=5 if peer.iso3 == peers.UK else 3)
-        labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour))
+        labels.append((ys[-1], f"{peer.label} ({xs[-1]})", peer.colour, xs[-1]))
         last_x = xs[-1] if last_x is None else max(last_x, xs[-1])
-    labelled_ends(ax, labels, min_gap=max(v for v, _, _ in labels) * 0.05, x=last_x,
+    labelled_ends(ax, labels, min_gap=max(item[0] for item in labels) * 0.05, x=last_x,
                   fontsize=10)
 
     # Compare growth on common observed endpoints without assuming a direction or steady trend.

@@ -213,7 +213,7 @@ def chart_visas_by_category(df: pd.DataFrame) -> Path:
         ends.append((
             last["value"] / 1000,
             f"{category.capitalize()}: {last['value'] / 1000:,.0f}k ({int(last['period'])})",
-            color,
+            color, int(last["period"]),
         ))
     labelled_ends(ax, ends, min_gap=60, x=latest + 0.3, fontsize=11)
     ax.set_xlim(first - 0.3, latest + 0.3)
@@ -251,7 +251,7 @@ def chart_asylum(df: pd.DataFrame) -> Path:
     last = s.iloc[-1]
     ax.scatter(last["period"], last["value"] / 1000, color=SUBSTACK_ACCENT, s=35, zorder=3)
     labelled_ends(
-        ax, [(last["value"] / 1000, f"{last['value']:,.0f} in {latest}", SUBSTACK_ACCENT)],
+        ax, [(last["value"] / 1000, f"{last['value']:,.0f} in {latest}", SUBSTACK_ACCENT, latest)],
         min_gap=1, x=latest + 0.3, fontsize=11,
     )
     ax.set_xlim(first - 0.3, latest + 0.3)

@@ -497,6 +497,24 @@ def test_end_labels_are_pushed_apart_when_they_collide() -> None:
     assert connectors == [((2024, 99.5), (2024.4, 96.0))]
 
 
+def test_end_label_connectors_follow_actual_dates_after_collision_sorting() -> None:
+    connectors = []
+
+    class _Ax:
+        def text(self, *args, **kwargs):
+            pass
+
+        def annotate(self, text, *, xy, xytext, **kwargs):
+            connectors.append((xy, xytext))
+
+    figure.labelled_ends(
+        _Ax(), [(99.5, "UK (2021)", "#000", 2021), (50., "Germany (2022)", "#000", 2022),
+                (100., "US (2024)", "#000", 2024)],
+        min_gap=4., x=2024,
+    )
+    assert connectors == [((2021, 99.5), (2024.4, 96.)), ((2022, 50.), (2024, 50.))]
+
+
 def test_source_notes_are_wrapped() -> None:
     # An unwrapped note sets the width of a tight-cropped figure.
     text = figure.note("word " * 200)

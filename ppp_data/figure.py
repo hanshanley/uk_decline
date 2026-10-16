@@ -8,6 +8,7 @@ tidy-up, and right-hand end labels that do not sit on top of each other.
 from __future__ import annotations
 
 import textwrap
+from collections.abc import Sequence
 
 from vizstyle import MUTED, house_style, white_stroke
 
@@ -59,16 +60,22 @@ def span(*year_lists: list[int]) -> str:
     return f"{min(years)}\u2013{max(years)}" if years else ""
 
 
-def labelled_ends(ax, items: list[tuple[float, str, str]], *, min_gap: float,
+def labelled_ends(ax, items: Sequence[tuple[float, str, str] | tuple[float, str, str, float]], *, min_gap: float,
                   x: float, fontsize: float = 10.5) -> None:
     """Draw right-hand end labels, nudged apart so near-identical values stay readable.
 
-    ``items`` is ``(y_value, text, colour)``. Each label is placed at its true y where
+    ``items`` is ``(y_value, text, colour[, endpoint_x])``. Each label is placed at its true y where
     possible; where two series end within ``min_gap`` of each other, the lower label is
     pushed down just far enough to clear the one above, with a connector to the true value.
+    An earlier endpoint gets an arrow back to the actual observation, not the panel's last year.
     """
     placed: list[float] = []
-    for value, text, colour in sorted(items, key=lambda item: -item[0]):
+    for item in sorted(items, key=lambda item: -item[0]):
+        if len(item) == 3:
+            value, text, colour = item
+            endpoint_x = x
+        else:
+            value, text, colour, endpoint_x = item
         y = value
         if placed and placed[-1] - y < min_gap:
             y = placed[-1] - min_gap
@@ -76,8 +83,10 @@ def labelled_ends(ax, items: list[tuple[float, str, str]], *, min_gap: float,
         label_x = x
         if y != value:
             label_x += 0.4
-            ax.annotate("", xy=(x, value), xytext=(label_x, y),
-                        arrowprops={"arrowstyle": "-", "color": colour, "lw": 0.8,
+        if y != value or endpoint_x != x:
+            ax.annotate("", xy=(endpoint_x, value), xytext=(label_x, y),
+                        arrowprops={"arrowstyle": "->" if endpoint_x != x else "-",
+                                    "color": colour, "lw": 0.8,
                                     "shrinkA": 0, "shrinkB": 0},
                         annotation_clip=False)
         ax.text(label_x, y, f"  {text}", fontsize=fontsize, fontweight="bold", color=colour,

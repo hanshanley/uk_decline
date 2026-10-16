@@ -118,6 +118,32 @@ def _source_note(fig, text: str, ha: str = "left") -> None:
              fontsize=8, color=SUBSTACK_MUTED, style="italic")
 
 
+def _plot_annual_series(ax, s, metric, country, color, ls, lw, *, label=None, scale=1.0):
+    status_column = f"{metric}__status"
+    breaks = (
+        s.loc[s[status_column].fillna("").astype(str).str.lower().str.contains("b", regex=False), "year"].tolist()
+        if status_column in s.columns else []
+    )
+    welfare_breaks = set()
+    for field in ("survey_comparability", "welfare_type", "income_definition"):
+        column = f"{metric}__{field}"
+        if column in s.columns:
+            metadata = s[column]
+            known = metadata.notna() & metadata.ne("")
+            changed = known & known.shift(fill_value=False) & metadata.ne(metadata.shift())
+            breaks.extend(s.loc[changed, "year"])
+            if field == "welfare_type":
+                welfare_breaks.update(s.loc[changed, "year"])
+    observed = s.set_index("year")[metric] / scale
+    annual = with_year_gaps(observed, breaks=breaks)
+    is_uk = country == "United Kingdom"
+    ax.plot(annual.index, annual.values, color=color, linestyle=ls, linewidth=lw,
+            label=label or country, marker="o" if is_uk or metric.startswith("median") else None,
+            markersize=5 if is_uk else 2.5,
+            markeredgecolor="white", markeredgewidth=1.0 if is_uk else 0)
+    mark_year_breaks(ax, observed, breaks=set(breaks) - welfare_breaks, color=color, linewidth=lw)
+
+
 def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
                 source: str, filename: str, out: pathlib.Path, *,
                 eu_agg: tuple | None = None, eu_label: str | None = None,
@@ -148,35 +174,11 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
             s = s.loc[s["year"] >= baseline_year].copy()
             s[metric] = 100 * s[metric] / baseline.iloc[0]
         plotted = True
-        status_column = f"{metric}__status"
-        breaks = (
-            s.loc[s[status_column].fillna("").astype(str).str.lower().str.contains("b", regex=False), "year"].tolist()
-            if status_column in s.columns else []
-        )
-        welfare_breaks = set()
-        for field in ("survey_comparability", "welfare_type", "income_definition"):
-            column = f"{metric}__{field}"
-            if column in s.columns:
-                metadata = s[column]
-                known = metadata.notna() & metadata.ne("")
-                changed = known & known.shift(fill_value=False) & metadata.ne(metadata.shift())
-                breaks.extend(s.loc[changed, "year"])
-                if field == "welfare_type":
-                    welfare_breaks.update(s.loc[changed, "year"])
-        annual = with_year_gaps(s.set_index("year")[metric] / scale, breaks=breaks)
-        is_uk = country == "United Kingdom"
         label = eu_label if country.startswith("European Union") else country
-        ax.plot(annual.index, annual.values, color=color, linestyle=ls, linewidth=lw,
-                label=label, marker="o" if is_uk or metric.startswith("median") else None,
-                markersize=5 if is_uk else 2.5,
-                markeredgecolor="white", markeredgewidth=1.0 if is_uk else 0)
-        mark_year_breaks(
-            ax, s.set_index("year")[metric] / scale,
-            breaks=set(breaks) - welfare_breaks, color=color, linewidth=lw,
-        )
+        _plot_annual_series(ax, s, metric, country, color, ls, lw, label=label, scale=scale)
         if end_labels:
             last = s.iloc[-1]
-            ends.append((last[metric] / scale, f"{label} ({int(last['year'])})", color))
+            ends.append((last[metric] / scale, f"{label} ({int(last['year'])})", color, int(last["year"])))
             last_year = max(int(last["year"]), last_year or int(last["year"]))
 
     ax.set_xlabel(xlabel or ("Survey year" if metric == "median_disposable_income" else "Year"), labelpad=2)
@@ -210,16 +212,56 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
     plt.close(fig)
 
 
+def _eurostat_income_chart(selected: pd.DataFrame, out: pathlib.Path) -> None:
+    metric = "median_disposable_income"
+    start, end = int(selected["year"].min()), int(selected["year"].max())
+    uk_end = int(selected.loc[selected["country"] == "United Kingdom", "year"].max())
+    split = end > uk_end
+    fig, axes = plt.subplots(1, 2 if split else 1, figsize=(13.5 if split else 11, 6.8),
+                             sharey=True, squeeze=False)
+    peers = [peer for peer in INCOME_PEERS if peer[0] != "United States"] + [EU_EUROSTAT]
+    for i, ax in enumerate(axes[0]):
+        first, last = (start, uk_end) if i == 0 else (uk_end + 1, end)
+        panel = selected.loc[selected["year"].between(first, last)]
+        for country, color, ls, lw in peers:
+            s = _series(panel, country, metric)
+            if not s.empty:
+                _plot_annual_series(
+                    ax, s, metric, country, color, ls, lw,
+                    label="EU-27" if country == EU_EUROSTAT[0] else country,
+                )
+        ax.set_title(
+            f"UK and Europe, {first}\u2013{last}" if i == 0 else f"Europe only, {first}\u2013{last}",
+            fontsize=14, fontweight="bold", pad=12,
+        )
+        ax.set_xlabel("Survey year")
+        ax.xaxis.set_major_locator(mtick.MaxNLocator(nbins=5, integer=True))
+        ax.yaxis.set_major_locator(mtick.MaxNLocator(nbins=5, steps=[1, 2, 5, 10]))
+        ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda value, _: f"{value / 1000:g}k"))
+        ax.grid(axis="y", linewidth=.5)
+        ax.set_axisbelow(True)
+        ax.margins(x=.04, y=.08)
+    axes[0, 0].set_ylabel("Household-size-adjusted income\n(current purchasing power standards)")
+    fig.suptitle("Median disposable income: Eurostat", fontsize=20, fontweight="bold", y=.985)
+    fig.text(.5, .925, f"UK observations end in {uk_end}; US not covered \u2014 use OECD for current UK/US comparisons",
+             ha="center", fontsize=10.5, color=SUBSTACK_MUTED)
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(.5, .89), ncol=3,
+               frameon=False, labelcolor="linecolor", fontsize=10)
+    _source_note(fig, SOURCE_EUROSTAT)
+    fig.subplots_adjust(left=.08, right=.985, top=.73, bottom=.25, wspace=.12)
+    save_chart(fig, out / "median_disposable_income_pps.png", dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
 def fig_median_income_non_oecd(df: pd.DataFrame, out: pathlib.Path, *, source: str) -> None:
     if source == "eurostat":
         metric = "median_disposable_income"
         required = [country for country, *_ in INCOME_PEERS if country != "United States"]
         required.append(EU_EUROSTAT[0])
-        title = "Median disposable income: Eurostat"
     elif source == "pip":
         metric = pip.METRIC
         required = [country for country, *_ in INCOME_PEERS]
-        title = "Median daily income or consumption: PIP"
     else:
         raise ValueError(f"Unknown income comparison source: {source}")
     selected = df.loc[df["country"].isin(required) & df[metric].notna()].copy()
@@ -233,25 +275,17 @@ def fig_median_income_non_oecd(df: pd.DataFrame, out: pathlib.Path, *, source: s
     selected = selected.loc[selected["year"] >= start]
     if not set(required) <= set(selected["country"]):
         raise ValueError(f"Missing {source} income observations in the recent comparison")
+    if source == "eurostat":
+        _eurostat_income_chart(selected, out)
+        return
     end = int(selected["year"].max())
-    uk_end = int(selected.loc[selected["country"] == "United Kingdom", "year"].max())
-    subtitle = (
-        f"UK observations end in {uk_end}; US not covered \u2014 use OECD for the current UK/US comparison"
-        if source == "eurostat" else
-        "Per-person survey measure; dated end labels \u2014 not household-equivalised disposable income"
-    )
     _line_chart(
-        selected, metric, f"{title}, {start}\u2013{end}",
-        ("Household-size-adjusted income\n(current purchasing power standards)"
-         if source == "eurostat" else f"Per person per day ({pip.PPP_VERSION} international dollars)"),
-        (lambda value, _: f"{value / 1000:.0f}k") if source == "eurostat" else
-        (lambda value, _: f"${value:.0f}"),
-        SOURCE_EUROSTAT if source == "eurostat" else SOURCE_PIP,
-        "median_disposable_income_pps.png" if source == "eurostat" else "median_income_pip.png",
-        out, eu_agg=EU_EUROSTAT if source == "eurostat" else None,
-        eu_label="EU-27" if source == "eurostat" else None,
-        xlabel="Survey year" if source == "eurostat" else "Income reporting year",
-        subtitle=subtitle, end_labels=True,
+        selected, metric, f"Median daily income or consumption: PIP, {start}\u2013{end}",
+        f"Per person per day ({pip.PPP_VERSION} international dollars)",
+        lambda value, _: f"${value:.0f}", SOURCE_PIP, "median_income_pip.png", out,
+        xlabel="Income reporting year",
+        subtitle="Per-person survey measure; dated end labels \u2014 not household-equivalised disposable income",
+        end_labels=True,
     )
 
 
@@ -327,7 +361,7 @@ def fig_uk_relative(
         annual = with_year_gaps(ratio)
         ax.plot(annual.index, annual.values, color=color, linewidth=lw, linestyle=ls, label=label,
                 marker="o" if len(ratio) == 1 else None, markersize=2.5)
-        labels.append((ratio.iloc[-1], f"{label} ({ratio.index[-1]})", color))
+        labels.append((ratio.iloc[-1], f"{label} ({ratio.index[-1]})", color, ratio.index[-1]))
     if not plotted_years:
         plt.close(fig)
         raise ValueError(f"no overlapping {basis} GDP observations from 1990 onward")

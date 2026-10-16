@@ -35,6 +35,23 @@ def test_cpi_adjusted_market_captions_are_explicit_and_clear_the_axis(monkeypatc
         assert note.get_window_extent(renderer).y1 < fig.axes[0].xaxis.label.get_window_extent(renderer).y0
 
 
+def test_market_legends_date_each_country_without_changing_export_labels(monkeypatch, tmp_path):
+    import pandas as pd
+
+    frame = pd.DataFrame([
+        markets.make_row(regions.name_for_code(code), code, year, "market_cap_usd", 1e12)
+        for code, years in (("GBR", (2020, 2022)), ("USA", (2019, 2024))) for year in years
+    ])
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *args, **kwargs: captured.append(fig))
+    charts.chart_metric(frame, "market_cap_usd", tmp_path)
+    ax = captured[0].axes[0]
+    assert [text.get_text() for text in ax.get_legend().get_texts()] == [
+        "United Kingdom (2020\u20132022)", "United States (2019\u20132024)",
+    ]
+    assert [line.get_label() for line in ax.lines] == ["United Kingdom", "United States"]
+
+
 def _lse_workbook(sheet, month, year, rows):
     import io
     import openpyxl
