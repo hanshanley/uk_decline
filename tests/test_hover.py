@@ -50,6 +50,66 @@ def test_hover_positions_match_saved_tight_crop_pixels(tmp_path):
     plt.close(fig)
 
 
+@pytest.mark.parametrize("layout", ["left-panel", "figure"])
+def test_save_chart_separates_tight_titles_and_subtitles_without_moving_data(tmp_path, layout):
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.plot([2024, 2025], [2, 3], label="UK")
+    ax.set_xticks([2024, 2025], ["2024", "2025"])
+    if layout == "left-panel":
+        title = ax.set_title("Public sector net investment", loc="left", fontsize=16, pad=12)
+        subtitle = ax.text(0, 1.01, "Percent of GDP", transform=ax.transAxes, fontsize=10)
+    else:
+        title = fig.suptitle("Main title", fontsize=20, y=.98)
+        subtitle = fig.text(.5, .93, "Subtitle", ha="center", fontsize=12)
+    subtitle_position = subtitle.get_position()
+    bounds = ax.get_position().bounds
+    path = tmp_path / "spaced.png"
+    save_chart(fig, path, dpi=180, bbox_inches="tight")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    gap = (
+        title.get_window_extent(renderer).y0 - subtitle.get_window_extent(renderer).y1
+    ) * 72 / fig.dpi
+    assert 4.5 <= gap <= 6
+    first = title.get_window_extent(renderer).bounds
+    save_chart(fig, path, dpi=180, bbox_inches="tight")
+    fig.canvas.draw()
+    assert title.get_window_extent(fig.canvas.get_renderer()).bounds == pytest.approx(first)
+    assert ax.get_position().bounds == pytest.approx(bounds)
+    assert subtitle.get_position() == subtitle_position
+    points = json.loads(path.with_suffix(".json").read_text())["series"][0]["points"]
+    assert [point[2:4] for point in points] == [["2024", "2"], ["2025", "3"]]
+    plt.close(fig)
+
+
+def test_save_chart_preserves_already_generous_title_spacing(tmp_path):
+    fig, ax = plt.subplots()
+    ax.plot([2025], [2], "o")
+    title = ax.set_title("Title", pad=45)
+    ax.text(.5, 1.01, "Subtitle", transform=ax.transAxes, ha="center", fontsize=10)
+    fig.canvas.draw()
+    before = title.get_window_extent(fig.canvas.get_renderer()).bounds
+    save_chart(fig, tmp_path / "unchanged.png", dpi=150, bbox_inches="tight")
+    fig.canvas.draw()
+    assert title.get_window_extent(fig.canvas.get_renderer()).bounds == pytest.approx(before)
+    plt.close(fig)
+
+
+def test_save_chart_gently_increases_multiline_title_leading(tmp_path):
+    fig, ax = plt.subplots()
+    ax.plot([2025], [2], "o")
+    title = ax.set_title("Main title\nSecond line", fontsize=18, linespacing=1.2)
+    fig.canvas.draw()
+    before = title.get_window_extent(fig.canvas.get_renderer()).height
+    save_chart(fig, tmp_path / "multiline.png", dpi=150, bbox_inches="tight")
+    fig.canvas.draw()
+    increase = (
+        title.get_window_extent(fig.canvas.get_renderer()).height - before
+    ) * 72 / fig.dpi
+    assert 1 <= increase <= 4
+    plt.close(fig)
+
+
 def test_manual_date_ticks_do_not_export_dates_as_year_labels_or_day_numbers(tmp_path):
     import matplotlib.dates as mdates
 

@@ -62,6 +62,11 @@ Access as module constants (`vizstyle.ACCENT`) or via the `PALETTE` dict
 - **Titles** are bold; add a muted one-line subtitle with
   `ax.text(0.5, 1.015, subtitle, transform=ax.transAxes, ha="center", va="bottom",
   color=vizstyle.MUTED)` when a chart needs a takeaway line.
+- **Title/subtitle clearance** is checked at the actual export DPI by `save_chart`
+  (also used by `save_fig`). Tight headings are moved up only enough to leave a
+  five-point visible gap; already well-spaced headings stay in place. Multiline
+  titles use slightly more leading. Data, axes, subtitles and source notes are not
+  moved, and hover coordinates are generated after this final layout adjustment.
 - **Save at `dpi=200`, `bbox_inches="tight"`** (handled by `save_fig`).
 - Charts render headless (`matplotlib.use("Agg")` is set on import) — no display needed.
 

@@ -1,4 +1,4 @@
-"""Export plotted observations and their positions alongside the unchanged PNG."""
+"""Save readable figures and export their actual plotted observations and positions."""
 
 from __future__ import annotations
 
@@ -16,7 +16,59 @@ from matplotlib.category import StrCategoryFormatter
 from matplotlib.collections import PathCollection, PolyCollection
 from matplotlib.colors import to_rgba
 from matplotlib.container import BarContainer
+from matplotlib.transforms import ScaledTranslation
 import numpy as np
+
+
+def _separate_titles(fig, *, dpi: float) -> None:
+    """Ensure a modest visible heading gap without changing axes or plotted data."""
+    original_dpi, original_canvas = fig.dpi, fig.canvas
+    try:
+        fig.set_dpi(dpi)
+        canvas = FigureCanvasAgg(fig)
+        titles = [
+            title for ax in fig.axes for title in (ax.title, ax._left_title, ax._right_title)
+            if title.get_visible() and title.get_text()
+        ]
+        titles += [
+            text for text in fig.texts
+            if text.get_visible() and text.get_text()
+            and (text is fig._suptitle or (
+                text.get_fontweight() in ("bold", "heavy", 700, 800, 900)
+                and text.get_fontsize() >= 14
+            ))
+        ]
+        for title in titles:
+            if "\n" in title.get_text():
+                spacing = title._linespacing
+                title.set_linespacing(max(1.3, 1.2 if spacing == "normal" else spacing))
+        canvas.draw()
+        texts = [*fig.texts, *(text for ax in fig.axes for text in ax.texts), *titles]
+        renderer = canvas.get_renderer()
+        for title in sorted(titles, key=lambda text: text.get_window_extent(renderer).y0):
+            bounds = title.get_window_extent(renderer)
+            shift = 0
+            for text in texts:
+                if (
+                    text is title or not text.get_visible() or not text.get_text()
+                    or text.get_fontsize() > title.get_fontsize() or text.get_rotation() != 0
+                ):
+                    continue
+                other = text.get_window_extent(renderer)
+                if (
+                    other.x0 < bounds.x1 and other.x1 > bounds.x0
+                    and (other.y0 + other.y1) < (bounds.y0 + bounds.y1)
+                    and other.height <= bounds.height * 1.5
+                ):
+                    shift = max(shift, other.y1 + 5 * dpi / 72 - bounds.y0)
+            if shift > .25:
+                title.set_transform(
+                    title.get_transform() + ScaledTranslation(0, shift / dpi, fig.dpi_scale_trans)
+                )
+                canvas.draw()
+    finally:
+        fig.set_dpi(original_dpi)
+        fig.set_canvas(original_canvas)
 
 
 def _number(value: float) -> str:
@@ -202,9 +254,10 @@ def observations(fig, *, dpi: float, bbox_inches="tight", pad_inches=.1) -> list
 def save_chart(fig, out_path, **kwargs) -> None:
     """Save a PNG and a hash-bound hover sidecar from the very same figure."""
     path = Path(out_path)
-    fig.savefig(path, **kwargs)
     dpi = kwargs.get("dpi") or rcParams["savefig.dpi"]
     dpi = fig.dpi if dpi == "figure" else dpi
+    _separate_titles(fig, dpi=dpi)
+    fig.savefig(path, **kwargs)
     series = observations(
         fig, dpi=dpi,
         bbox_inches=kwargs.get("bbox_inches") or rcParams["savefig.bbox"],
