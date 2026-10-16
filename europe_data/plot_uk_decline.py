@@ -43,7 +43,7 @@ from vizstyle import (  # noqa: E402
     BG as SUBSTACK_BG, CARD as SUBSTACK_CARD, TEXT as SUBSTACK_TEXT,
     MUTED as SUBSTACK_MUTED, ACCENT as SUBSTACK_ACCENT, BLUE as SUBSTACK_BLUE,
     GOLD as SUBSTACK_GOLD, GREEN as SUBSTACK_GREEN, GRID as SUBSTACK_GRID,
-    house_style, with_year_gaps, save_chart,
+    house_style, with_year_gaps, mark_year_breaks, save_chart,
 )
 
 house_style()
@@ -80,13 +80,14 @@ SOURCE_EUROSTAT = ("Data: Eurostat (European Commission), "
                    "net income, current purchasing power standards (ilc_di03). Survey year; income usually refers "
                    "to the preceding year, with country exceptions including the UK. "
                    "Current-price PPS, not real-income growth. Missing years and flagged method breaks "
-                   "are not connected. The display starts when all plotted series have begun; "
+                   "remain explicit. Dotted links mark methodology changes; missing years remain blank. "
+                   "The display starts when all plotted series have begun; "
                    "earlier observations remain in the CSV. "
                    "US data are unavailable in this Eurostat dataset; use the OECD comparison.")
 SOURCE_PIP = ("Data: World Bank Group, Poverty and Inequality Platform \u2014 median "
               f"per-person income/consumption, {pip.PPP_VERSION} international dollars per day "
               "(purchasing power parity). Survey observations only; "
-              "gaps and known survey/welfare-definition breaks are not connected. "
+              "missing years and welfare-definition changes are not connected; dotted links mark survey-method changes. "
               "Recent comparison since 2000; sparse earlier surveys remain in the CSV. "
               "No comparable EU aggregate is supplied. Not household-equivalised disposable income. "
               "Multiply by 365 for an annual figure.")
@@ -95,7 +96,8 @@ SOURCE_OECD = (
     "purchasing power parities. Median disposable household income divided by the square root of household size. "
     "Current-price purchasing-power dollars, not a real-income-growth index. OECD income-year labels retained "
     "(UK financial years); all available years shown, with different country coverage. "
-    "Missing years and definition changes are not joined; not spliced to Eurostat."
+    "Missing years remain blank; dotted links mark definition changes, not like-for-like growth. "
+    "Not spliced to Eurostat."
 )
 
 
@@ -151,6 +153,7 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
             s.loc[s[status_column].fillna("").astype(str).str.lower().str.contains("b", regex=False), "year"].tolist()
             if status_column in s.columns else []
         )
+        welfare_breaks = set()
         for field in ("survey_comparability", "welfare_type", "income_definition"):
             column = f"{metric}__{field}"
             if column in s.columns:
@@ -158,6 +161,8 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
                 known = metadata.notna() & metadata.ne("")
                 changed = known & known.shift(fill_value=False) & metadata.ne(metadata.shift())
                 breaks.extend(s.loc[changed, "year"])
+                if field == "welfare_type":
+                    welfare_breaks.update(s.loc[changed, "year"])
         annual = with_year_gaps(s.set_index("year")[metric] / scale, breaks=breaks)
         is_uk = country == "United Kingdom"
         label = eu_label if country.startswith("European Union") else country
@@ -165,6 +170,10 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
                 label=label, marker="o" if is_uk or metric.startswith("median") else None,
                 markersize=5 if is_uk else 2.5,
                 markeredgecolor="white", markeredgewidth=1.0 if is_uk else 0)
+        mark_year_breaks(
+            ax, s.set_index("year")[metric] / scale,
+            breaks=set(breaks) - welfare_breaks, color=color, linewidth=lw,
+        )
         if end_labels:
             last = s.iloc[-1]
             ends.append((last[metric] / scale, f"{label} ({int(last['year'])})", color))
@@ -183,6 +192,9 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
     ax.set_axisbelow(True)
     ax.tick_params(axis="both", pad=2)
     ax.margins(x=0.02)
+    if ax.collections and end_labels:
+        ax.text(.015, .975, "Dotted segments: survey or definition change", transform=ax.transAxes,
+                va="top", fontsize=8.5, color=SUBSTACK_MUTED)
     if end_labels and ends:
         low, high = ax.get_ylim()
         labelled_ends(ax, ends, min_gap=(high - low) * .055, x=last_year, fontsize=9)

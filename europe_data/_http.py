@@ -53,3 +53,16 @@ def get_text(
     resp = session().get(url, params=params, timeout=timeout, headers=headers)
     resp.raise_for_status()
     return resp.text
+
+
+@retry(
+    retry=retry_if_exception_type((requests.RequestException,)),
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=1, max=30),
+    reraise=True,
+)
+def get_bytes(url: str, timeout: int = 60) -> bytes:
+    """Download a binary source workbook with the shared retry policy."""
+    resp = session().get(url, timeout=timeout, headers={"Accept": "*/*"})
+    resp.raise_for_status()
+    return resp.content

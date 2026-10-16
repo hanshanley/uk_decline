@@ -30,12 +30,6 @@ CURRENCIES = {"GBR": "GBP", "USA": "USD", "POL": "PLN", "EU27_2020": "EUR"}
 AREA = "GBR+USA+POL+EU27_2020"
 NATIONAL_AREA = "GBR+USA+POL"
 FLOWS = {
-    "transport": (
-        "OECD.ITF,DSD_INDICATORS@DF_INFRASTRUCTURE,1.0",
-        dict(REF_AREA=AREA, FREQ="A", MEASURE="INVESTMENT", UNIT_MEASURE="PT_B1GQ",
-             TRANSPORT_MODE="TOT_INL", VEHICLE_TYPE="_Z", INFRASTRUCTURE_TYPE="_Z",
-             PRICE_BASE="_Z"),
-    ),
     "capital": (
         "OECD.SDD.NAD,DSD_NASEC10@DF_TABLE12,1.1",
         dict(FREQ="A", REF_AREA=AREA, SECTOR="S13", COUNTERPART_SECTOR="_Z",
@@ -74,10 +68,6 @@ FIELDS = [
 ]
 # Initial published coverage, not a requirement to fill genuine missing observations.
 BASELINES = {
-    TRANSPORT: {
-        "GBR": (2000, 2019, ()), "USA": (2000, 2021, (2004, 2005, 2006, 2007)),
-        "POL": (2000, 2024, ()),
-    },
     CAPITAL: {code: (2000, 2024 if code == "USA" else 2025, ()) for code in CURRENCIES},
     BUDGET: {
         "GBR": (2000, 2023, ()), "USA": (2000, 2025, ()),
@@ -256,9 +246,8 @@ def validate(frame: pd.DataFrame, previous: pd.DataFrame | None = None) -> pd.Da
         raise ValueError("Invalid, duplicate or out-of-range investment/funding observations")
     frame["year"] = frame["year"].astype(int)
     allowed = {(metric, code) for metric, codes in BASELINES.items() for code in codes}
-    allowed.add((TRANSPORT, "EU27_2020"))
     actual = set(zip(frame["metric"], frame["iso3"]))
-    if actual - allowed or (allowed - {(TRANSPORT, "EU27_2020")}) - actual:
+    if actual != allowed:
         raise ValueError("Missing or unexpected investment/funding country series")
     for row in frame.itertuples():
         if row.country != COUNTRIES[row.iso3] or flags(row.status) != row.status or "F" in row.status:
@@ -306,9 +295,8 @@ def fetch() -> pd.DataFrame:
         )
         data[name] = parse_oecd(text, name, end)
     rows = [
-        _record(metric, code, year, raw, retrieved)
-        for name, metric in (("transport", TRANSPORT), ("research", RESEARCH))
-        for (code, year), raw in data[name].items()
+        _record(RESEARCH, code, year, raw, retrieved)
+        for (code, year), raw in data["research"].items()
     ]
     rows += ratio_rows(CAPITAL, data["capital"], data["gdp"], retrieved)
     rows += ratio_rows(BUDGET, data["budget"], data["gdp"], retrieved)

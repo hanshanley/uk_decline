@@ -126,8 +126,9 @@ for Italy, 2005 for Poland, 2008 for Germany, 2011 for France and 2012 for the U
 2013–2023 display window unnecessarily hid available observations; it is no longer
 used. Unlike the Eurostat series, the UK continues after 2018. Each country's
 latest observation is retained even when peers have not published the same year.
-Missing years and definition changes remain visible breaks; no older methodology
-is spliced in to manufacture a longer continuous history.
+Missing years remain blank; dotted links explicitly identify definition changes,
+not like-for-like growth. No older methodology is spliced in to manufacture
+additional annual observations.
 
 Income is disposable household income after taxes and transfers, divided by the
 square root of household size. The national-currency medians are divided by
@@ -160,10 +161,11 @@ are different; they are not interchangeable household-income measures.*
 Eurostat observations are labelled by **survey year**. Income usually refers to the
 preceding calendar year, with exceptions including the UK. The ECHP-to-EU-SILC
 transition and later national survey changes introduce method breaks. Source status
-flags are retained in the data; charts do not connect observations across a flagged
-break or a missing year. PIP's sparse early surveys are shown as points, not an
+flags are retained in the data; dotted links identify adjacent observations across
+method changes, while genuinely missing years stay unconnected. PIP's sparse early surveys are retained as points, not an
 interpolated annual history in the saved data. Its comparability-spell identifiers and welfare types
-are retained, and lines also stop at known changes in either. PPP adjustment does
+are retained. Dotted links identify known comparability changes; welfare-type changes
+remain unconnected. PPP adjustment does
 not eliminate differences in national survey methods or welfare definitions.
 PIP labels observations by the **welfare reporting year**, which can precede the
 survey year when income is collected retrospectively.

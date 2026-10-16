@@ -145,6 +145,7 @@ def test_site_rejects_stale_observations_without_replacing_published_build(site_
     ("gdp_income/uk_real_gdp_relative_to_peers", "United States"),
     ("gdp_income/uk_real_gdp_relative_to_peers", "Poland"),
     ("investment/military_expenditure", "Poland"),
+    ("investment/uk_infrastructure_investment", "UK general government"),
     ("nhs/cancer_62day_pct", "Northern Ireland"),
     ("stock_markets/stock_market_cap_pct_gdp", "United Kingdom"),
 ])
@@ -458,7 +459,7 @@ def test_investment_research_and_military_pages_share_one_complete_refresh(
 ):
     output = build_site.build(site_repository)
     for slug, charts in {
-        "infrastructure": ["inland_transport_investment.png", "public_capital_investment.png"],
+        "infrastructure": ["uk_infrastructure_investment.png", "public_capital_investment.png"],
         "research-funding": ["government_research_funding.png", "total_research_spending.png"],
         "military-spending": ["military_expenditure.png"],
     }.items():
@@ -473,6 +474,15 @@ def test_investment_research_and_military_pages_share_one_complete_refresh(
     assert commands.index(("-m", "investment_data")) < commands.index(("scorecard.py",))
     saved = json.loads((tmp_path / "data/site/refresh.json").read_text())
     assert "investment-funding" in saved["automated_analyses"]
+
+
+def test_research_comparator_scope_cannot_silently_reintroduce_poland(site_repository):
+    chart = site_repository / "outputs/investment/government_research_funding.json"
+    payload = json.loads(chart.read_text())
+    payload["series"].append({**payload["series"][0], "label": "Poland"})
+    chart.write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match="Poland is excluded"):
+        build_site.build(site_repository)
 
 
 def test_failed_plot_exports_do_not_advance_refresh_date(monkeypatch, tmp_path):

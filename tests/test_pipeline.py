@@ -485,6 +485,9 @@ def test_income_chart_preserves_sparse_points_and_source_breaks(monkeypatch, tmp
     assert list(ys[pd.notna(ys)]) == [100, 120, 130]
     assert line.get_marker() == "o"
     assert ax.get_xlabel() == "Survey year"
+    assert [segment.tolist() for collection in ax.collections for segment in collection.get_segments()] == [
+        [[2001., 120.], [2002., 130.]],
+    ]
 
 
 def test_pip_chart_breaks_at_known_survey_and_welfare_changes(monkeypatch, tmp_path):
@@ -516,6 +519,8 @@ def test_pip_chart_breaks_at_known_survey_and_welfare_changes(monkeypatch, tmp_p
     assert list(xs[pd.notna(ys)]) == list(range(2000, 2007))
     assert list(ys[pd.notna(ys)]) == [100, 110, 120, 130, 140, 150, 160]
     assert line.get_marker() == "o"
+    assert [segment.tolist() for collection in captured[0].axes[0].collections
+            for segment in collection.get_segments()] == [[[2001., 110.], [2002., 120.]]]
 
 
 def test_non_oecd_income_views_keep_recent_values_and_explicit_source_end_dates(monkeypatch, tmp_path):

@@ -1,36 +1,49 @@
 # Infrastructure investment, research funding and defence
 
-Five separate time-series comparisons, all expressed as **percentages of GDP**.
+Five separate investment/funding charts. International comparisons use
+**percentages of GDP**; the ONS infrastructure chart separates real market-sector
+investment in pounds from government investment relative to GDP.
 They measure different things and must not be added together. In particular, military
 R&D is included in military expenditure, government research budgets can finance R&D
 performed in other sectors, and public fixed investment includes some capitalised R&D.
 
-The UK, US, Poland and an official EU aggregate are included wherever the source
-supplies comparable observations. Each line ends at its own last observation, with
-the year shown in its end label. Missing years and source-flagged methodology breaks
-are not connected. There is no extrapolation, interpolation or substitution of a
-different measure to make a country appear up to date.
+The UK, US and official EU aggregates are compared over **complete shared annual
+periods**, with at least ten years of observations for every displayed line.
+Poland is included in **military spending**, but not the infrastructure or research
+comparisons. It remains in the separate GDP/income and purchasing-power analyses.
+Later observations outside the common period remain in the source CSV.
 
-## Inland transport infrastructure investment
+Consecutive observed years are connected normally. Dotted links mark
+source-flagged methodology changes between adjacent observed years, **not
+like-for-like changes**; they add no inferred observations or hover values.
+Genuinely missing years are not filled or joined.
 
-![Inland transport infrastructure investment](../outputs/investment/inland_transport_investment.png)
+## UK infrastructure investment
 
-**OECD / International Transport Forum, Transport infrastructure indicators**,
-`DSD_INDICATORS@DF_INFRASTRUCTURE`, measure `INVESTMENT`, mode `TOT_INL`,
-unit `PT_B1GQ`. This is the source's published GDP-share indicator, not a ratio
-reconstructed using exchange rates or a separately revised GDP series.
+![UK infrastructure investment](../outputs/investment/uk_infrastructure_investment.png)
 
-It covers inland transport construction and improvements, including roads, rail and
-inland waterways, with all financing sources; it is **not** maintenance spending,
-energy/water/digital infrastructure, all government capital spending, or a measure
-of infrastructure quality. National reporting coverage differs, so trends deserve
-more weight than a precise ranking of levels.
+**ONS Infrastructure statistics**, latest workbook discovered from its dataset
+page, initially the July 2026 edition. Both panels have complete annual data:
 
-**Important source limitation:** at the initial October 15, 2026 retrieval, the UK
-series ends in **2019**, the US in **2021**, and Poland in **2024**. US observations
-for 2004-2007 are missing. No comparable EU aggregate is supplied in this flow; none
-is manufactured from a partial selection of member states. These historical end
-dates are not presented as current-year spending.
+- **Market sector, 1997-2025:** published total investment in infrastructure,
+  chained volume measures at **2023 prices**, shown in billions of pounds.
+  The parser identifies the price benchmark in the workbook rather than hard-coding
+  the reference year. It never sums non-additive chained-volume industry components.
+- **General government, 2006-2025:** current-price infrastructure investment divided
+  by the **same workbook's same-year current-price GDP**, shown as a percentage.
+  Full numerator and denominator values are retained and reconcile with ONS's
+  rounded published GDP shares.
+
+Market-sector and government coverage/definitions differ; **do not add the panels**.
+These are official statistics in development using ONS's narrow functional
+infrastructure definition, not every capital asset. No US or EU series is spliced
+onto the UK source. The separate public-capital chart provides the cross-country view.
+
+The obsolete ITF transport chart was **retired**, not interpolated or silently
+extended beyond its UK 2019 endpoint. All 63 original ITF source observations are
+preserved in `data/archive/inland_transport_investment_2026-10-15.csv`; they are
+not inputs to the new ONS figure. The active ONS input is
+`data/uk_infrastructure_investment.csv`.
 
 ## Public capital investment
 
@@ -63,7 +76,7 @@ objectives and general university funds. These are budget allocations, **not**
 actual research spending, all government support, or only research performed in
 government laboratories. R&D tax relief is excluded.
 
-For UK, US and Poland, the source is **OECD Research and Development Statistics**,
+For UK and US, the source is **OECD Research and Development Statistics**,
 `DSD_RDS_GOV@DF_GBARD_NABS07`, measure `C`, total socio-economic objective and funding
 mode, current national currency. The ratio uses the same year's nominal OECD GDP,
 with the same currency and unit-multiplier checks as public investment.
@@ -80,8 +93,11 @@ aggregate of member-government budgets, **not the EU institutions' own budget**.
 The EU OECD current-PPP budget total is deliberately not divided by an unrelated
 euro GDP series. Both providers use the Frascati GBARD framework.
 
-Initial coverage: UK 2000-2023; US 2000-2025; Poland 2000-2024, with genuine gaps
-in 2002 and 2003; EU-27 2004-2025. Preliminary/estimated allocations retain their flags.
+The plotted **2004-2023** window is the complete common UK/US/EU-27 history.
+It has no missing annual observations and all end labels refer to **2023**, not a
+mixture of latest years. The only interior source-marked transition is shown as
+a dotted link. Later US/EU observations, and Polish source data, remain in the CSV
+but are not plotted. Preliminary/estimated allocations retain their flags.
 
 ## Total research and development spending
 
@@ -96,11 +112,13 @@ non-profits, regardless of funding origin. Includes foreign funding of domestic
 research; excludes domestic money funding research abroad. It is not just public
 funding, university funding or basic science.
 
-Initial UK coverage ends in 2023; US, Poland and EU-27 in 2024. This is the latest
+The plotted **2000-2023** window is the complete common UK/US/EU-27 period.
+Initial UK source coverage ends in 2023; US, Poland and EU-27 in 2024. This is the latest
 coverage in the selected harmonised OECD flow, not a claim that newer national
 statistics do not exist. Newer ONS national releases are **not spliced** onto the
 OECD line. UK source-flagged breaks in 2014 and 2018, and all other published break
-flags, separate the lines; the observations themselves remain visible.
+flags are marked with dotted links between the actual adjacent observations,
+not unexplained blank segments or invented annual values.
 
 ## Military expenditure
 
@@ -122,8 +140,7 @@ terms, including its commercial-use licensing provisions, for the intended reuse
 
 ## Sources and definitions
 
-- [OECD infrastructure investment definition](https://www.oecd.org/en/data/indicators/infrastructure-investment.html)
-- [ITF comparability and transport investment methodology](https://itf-oecd.org/evolution-transport-infrastructure-investments-financial-crisis)
+- [ONS Infrastructure statistics, current workbook](https://www.ons.gov.uk/economy/economicoutputandproductivity/productivitymeasures/datasets/experimentalinfrastructurestatistics)
 - [OECD government investment definitions](https://www.oecd.org/en/publications/government-at-a-glance-2025_0efd0bcd-en/full-report/government-investment-spending_023c3a29.html)
 - [OECD R&D statistics and government budgets](https://www.oecd.org/en/data/datasets/research-and-development-statistics.html)
 - [OECD GBARD, R&D tax relief and GERD definitions](https://www.oecd.org/en/publications/restoring-public-finances_fbcf9161-en/full-report/research-and-development_5936512a.html)
@@ -145,10 +162,11 @@ spending volumes**; a share can rise because GDP falls.
 ```bash
 python -m investment_data
 python -m investment_data --from-csv data/investment_funding_long.csv
-pytest tests/test_investment.py -q
+pytest tests/test_investment.py tests/test_infrastructure.py -q
 ```
 
-The complete saved input is `data/investment_funding_long.csv`. All five charts and
+Saved inputs are `data/investment_funding_long.csv` and
+`data/uk_infrastructure_investment.csv`. All five charts and
 their hash-bound hover data are in `outputs/investment/`; article-background copies
 are in `outputs/page_background/investment/`. The scheduled complete-source refresh
 includes this module. A failed/partial fetch cannot replace the saved CSV or silently

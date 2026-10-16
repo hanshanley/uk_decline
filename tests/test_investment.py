@@ -115,7 +115,6 @@ def test_live_input_builder_scales_units_once_and_preserves_direct_source_percen
     assert row.currency == "GBP"
     assert "/A.GBR.S1.S1.B1GQ." in row.gdp_series_id
     assert all(funding_frame.loc[funding_frame.metric == sources.RESEARCH, "value"] == 2.7)
-    assert all(funding_frame.loc[funding_frame.metric == sources.TRANSPORT, "value"] == .8)
     assert all(funding_frame.loc[funding_frame.metric == sources.MILITARY, "value"] == 2.3)
     eu = funding_frame.loc[(funding_frame.metric == sources.BUDGET) & (funding_frame.iso3 == "EU27_2020")]
     assert eu.value.eq(.7).all() and eu.gdp.isna().all() and eu.status.eq("E").all()
@@ -219,7 +218,7 @@ def test_late_source_failure_keeps_saved_inputs_and_existing_images(funding_fram
     assert list(output.iterdir()) == [existing]
 
 
-def test_five_charts_preserve_every_source_value_country_gap_and_method_break(
+def test_comparisons_use_complete_common_years_and_preserve_methods_and_requested_peers(
     funding_frame, monkeypatch, tmp_path,
 ):
     captured = []
@@ -231,30 +230,66 @@ def test_five_charts_preserve_every_source_value_country_gap_and_method_break(
 
     monkeypatch.setattr(charts, "save_chart", save)
     outputs = charts.make_charts(funding_frame, tmp_path)
-    assert len(outputs) == 5
+    assert len(outputs) == 4
     for (metric, *_), path, fig in zip(charts.CHARTS, outputs, captured):
         payload = load_chart_data(tmp_path, path.relative_to(tmp_path))
         actual = {
             (series["label"], int(point[2])): float(point[3].rstrip("%").replace(",", ""))
             for series in payload["series"] for point in series["points"]
         }
+        selected = funding_frame.loc[funding_frame.metric == metric]
+        if metric != sources.MILITARY:
+            selected = selected.loc[selected.iso3 != "POL"]
+        first = selected.groupby("iso3").year.min().max()
+        last = selected.groupby("iso3").year.max().min()
+        selected = selected.loc[selected.year.between(first, last)]
         expected = {
             (row.country, row.year): row.value
-            for row in funding_frame.loc[funding_frame.metric == metric].itertuples()
+            for row in selected.itertuples()
         }
         assert actual == pytest.approx(expected)
         ax = fig.axes[0]
-        if metric == sources.TRANSPORT:
-            us = next(line for line in ax.lines if line.get_label() == "United States")
-            assert np.isnan(us.get_ydata()[4:8]).all()
-            assert "EU aggregate" in " ".join(fig.texts[-1].get_text().split())
-            assert "2019" in " ".join(text.get_text() for text in ax.texts)
+        for country, group in selected.groupby("country"):
+            assert set(group.year) == set(range(first, last + 1))
+            assert last - first + 1 >= 10
+        assert any(line.get_label() == "Poland" for line in ax.lines) == (metric == sources.MILITARY)
         if metric == sources.RESEARCH:
             uk = next(line for line in ax.lines if line.get_label() == "United Kingdom")
             assert np.isnan(uk.get_ydata()[list(uk.get_xdata()).index(2017.5)])
             assert uk.get_ydata()[list(uk.get_xdata()).index(2018)] == 2.7
+            assert any(np.allclose(segment, [[2017, 2.7], [2018, 2.7]])
+                       for collection in ax.collections for segment in collection.get_segments())
         canvas = FigureCanvasAgg(fig)
         canvas.draw()
         assert not fig.texts[-1].get_window_extent(canvas.get_renderer()).overlaps(
             ax.xaxis.label.get_window_extent(canvas.get_renderer())
         )
+
+
+def test_comparison_refuses_an_uninformative_short_or_spotty_latest_window(funding_frame):
+    missing = (
+        (funding_frame.metric == sources.BUDGET) & (funding_frame.iso3 == "GBR")
+        & (funding_frame.year == 2022)
+    )
+    with pytest.raises(ValueError, match="Insufficient complete common history"):
+        charts.common_period(funding_frame.loc[~missing], sources.BUDGET)
+
+
+def test_infrastructure_download_failure_preserves_both_saved_inputs(funding_frame, monkeypatch, tmp_path):
+    from investment_data import infrastructure
+
+    csv_path = tmp_path / "funding.csv"
+    infra_path = tmp_path / "infrastructure.csv"
+    funding_frame.to_csv(csv_path, index=False)
+    infra_path.write_text("previous infrastructure observations")
+    before = csv_path.read_bytes(), infra_path.read_bytes()
+
+    def fail():
+        raise requests.ConnectionError("ONS workbook unavailable")
+
+    monkeypatch.setattr(infrastructure, "fetch", fail)
+    with pytest.raises(requests.ConnectionError, match="ONS workbook"):
+        main(["--csv", str(csv_path), "--infrastructure-csv", str(infra_path),
+              "--out", str(tmp_path / "charts")])
+    assert before == (csv_path.read_bytes(), infra_path.read_bytes())
+    assert not (tmp_path / "charts").exists()

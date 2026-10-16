@@ -68,6 +68,10 @@ Access as module constants (`vizstyle.ACCENT`) or via the `PALETTE` dict
   titles use slightly more leading. Data, axes, subtitles and source notes are not
   moved, and hover coordinates are generated after this final layout adjustment.
 - **Save at `dpi=200`, `bbox_inches="tight"`** (handled by `save_fig`).
+- **Method changes are not missing data.** Where adjacent annual observations have
+  a known source-definition break, use `mark_year_breaks` for a clearly explained
+  dotted connector. It adds no observations to hover data. Do not use it across
+  genuinely missing years or incompatible welfare concepts.
 - Charts render headless (`matplotlib.use("Agg")` is set on import) — no display needed.
 
 ## Reference implementation

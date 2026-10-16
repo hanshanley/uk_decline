@@ -85,9 +85,9 @@ ANALYSES = (
              "Public spending and investment, with financial years and inflation adjustments stated."),
     Analysis("infrastructure", "Infrastructure & investment", "Public services",
              "investment_data", "investment",
-             ("inland_transport_investment.png", "public_capital_investment.png"),
-             "Inland transport investment and broader public fixed investment as shares of GDP. "
-             "Coverage differs: infrastructure is not all government capital spending."),
+             ("uk_infrastructure_investment.png", "public_capital_investment.png"),
+             "Complete annual UK infrastructure series from ONS, alongside UK/US/EU public fixed investment. "
+             "Market-sector real volumes and government GDP shares are distinct measures."),
     Analysis("research-funding", "Research funding", "Economy", "investment_data", "investment",
              ("government_research_funding.png", "total_research_spending.png"),
              "Government research budgets and total R&D expenditure as separate GDP shares, "
@@ -131,10 +131,10 @@ ANALYSES = (
 )
 
 CHART_COMPARATORS = {
-    "inland_transport_investment": {"United Kingdom", "United States", "Poland"},
+    "uk_infrastructure_investment": {"UK market sector", "UK general government"},
     **dict.fromkeys(
         ("public_capital_investment", "government_research_funding", "total_research_spending"),
-        {"United Kingdom", "United States", "EU-27", "Poland"},
+        {"United Kingdom", "United States", "EU-27"},
     ),
     "military_expenditure": {"United Kingdom", "United States", "European Union", "Poland"},
     **dict.fromkeys(
@@ -184,6 +184,9 @@ def validate_comparators(chart: Path, observations: dict) -> None:
     actual = {series["label"] for series in observations["series"] if series["points"]}
     if missing := expected - actual:
         raise ValueError(f"{chart}: missing required comparator observations: {sorted(missing)}")
+    if chart.stem in {"public_capital_investment", "government_research_funding", "total_research_spending"}:
+        if "Poland" in actual:
+            raise ValueError(f"{chart}: Poland is excluded from this comparison")
 
 
 def tracked_files(root: Path) -> set[Path]:
@@ -204,7 +207,7 @@ SUBSCRIBE_URL = (
 )
 
 CHART_TITLES = {
-    "inland_transport_investment": "Inland transport infrastructure investment: published national GDP shares",
+    "uk_infrastructure_investment": "UK infrastructure: market-sector real investment and government investment relative to GDP",
     "public_capital_investment": "Public fixed investment: all general-government assets, not infrastructure alone",
     "government_research_funding": "Government R&D budget allocations: not actual expenditure or tax relief",
     "total_research_spending": "Total R&D expenditure: research performed across all sectors",

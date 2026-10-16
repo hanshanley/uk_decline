@@ -20,6 +20,7 @@ See ``vizstyle/README.md`` for the full guide and palette swatches.
 from __future__ import annotations
 
 import pathlib
+import math
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
@@ -32,12 +33,13 @@ matplotlib.use("Agg")  # headless: analyses render to PNG, never to a display
 
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
+from matplotlib.collections import LineCollection
 from .hover import save_chart
 
 __all__ = [
     "PALETTE", "BG", "TEXT", "MUTED", "GRID", "ACCENT", "BLUE", "GOLD", "GREEN",
     "RC_PARAMS", "house_style", "source_note", "end_label", "save_fig", "white_stroke",
-    "with_year_gaps", "save_chart",
+    "with_year_gaps", "mark_year_breaks", "save_chart",
 ]
 
 # ── Palette ──────────────────────────────────────────────────────────────────
@@ -99,6 +101,22 @@ def with_year_gaps(series: pd.Series, *, breaks: Iterable[int] = ()) -> pd.Serie
         if first < year <= last:
             annual.loc[year - 0.5] = float("nan")
     return annual.sort_index()
+
+
+def mark_year_breaks(ax, series: pd.Series, *, breaks: Iterable[int], color: str,
+                     linewidth: float) -> None:
+    """Distinguish adjacent observed years across a method change without adding data."""
+    segments = [
+        [(year - 1, float(series.loc[year - 1])), (year, float(series.loc[year]))]
+        for year in sorted(set(breaks))
+        if year in series.index and year - 1 in series.index
+        and math.isfinite(series.loc[year]) and math.isfinite(series.loc[year - 1])
+    ]
+    if segments:
+        ax.add_collection(LineCollection(
+            segments, colors=color, linewidths=linewidth * .8, linestyles="dotted",
+            alpha=.8, zorder=1.5,
+        ), autolim=False)
 
 
 def source_note(fig, text: str, *, x: float = 0.01, y: float = 0.01,
