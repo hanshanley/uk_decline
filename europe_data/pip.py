@@ -10,6 +10,7 @@ per person per day; multiply by 365 for an annual figure (documented in the READ
 
 from __future__ import annotations
 
+import math
 from typing import Iterable
 
 from . import countries
@@ -72,6 +73,8 @@ def fetch(
     for row in payload:
         if row.get("reporting_level") not in (None, "national"):
             continue
+        if row.get("is_interpolated") is True:
+            continue
         median = row.get("median")
         year = row.get("reporting_year")
         iso3 = row.get("country_code")
@@ -80,8 +83,13 @@ def fetch(
         year = int(year)
         if not (start <= year <= end):
             continue
+        if iso3 not in iso3_list or row.get("welfare_type") not in _WELFARE_PREF:
+            raise ValueError(f"Unexpected PIP survey country or welfare definition: {row}")
+        value = float(median)
+        if not math.isfinite(value) or value < 0:
+            raise ValueError(f"Invalid PIP median: {iso3} {year}")
         key = (iso3, year)
-        pref = _WELFARE_PREF.get(row.get("welfare_type", ""), 2)
+        pref = _WELFARE_PREF[row["welfare_type"]]
         prev = best.get(key)
         if prev is None or pref < prev[0]:
             curated = countries.BY_ISO3.get(iso3)
@@ -91,7 +99,7 @@ def fetch(
                 "country": name,
                 "year": year,
                 "metric": METRIC,
-                "value": float(median),
+                "value": value,
                 "unit": UNIT,
                 "source": SOURCE,
                 "survey_comparability": row.get("survey_comparability"),

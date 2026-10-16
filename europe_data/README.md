@@ -145,7 +145,8 @@ and conversion factor are saved with each observation. Missing conversions,
 mismatched currencies, duplicate observations, or lost published 2013–2023 coverage
 stop the refresh instead of silently creating a fragmented comparison.
 
-The older Eurostat and World Bank comparisons remain supplemental:
+The Eurostat and World Bank comparisons remain supplemental, with coverage-aware
+recent views rather than long stretches before most peers have observations:
 
 ![Median disposable income, PPS](../outputs/gdp_income/median_disposable_income_pps.png)
 ![Median income, World Bank PIP](../outputs/gdp_income/median_income_pip.png)
@@ -161,11 +162,27 @@ preceding calendar year, with exceptions including the UK. The ECHP-to-EU-SILC
 transition and later national survey changes introduce method breaks. Source status
 flags are retained in the data; charts do not connect observations across a flagged
 break or a missing year. PIP's sparse early surveys are shown as points, not an
-interpolated annual history. Its comparability-spell identifiers and welfare types
+interpolated annual history in the saved data. Its comparability-spell identifiers and welfare types
 are retained, and lines also stop at known changes in either. PPP adjustment does
 not eliminate differences in national survey methods or welfare definitions.
 PIP labels observations by the **welfare reporting year**, which can precede the
 survey year when income is collected retrospectively.
+
+The Eurostat chart starts at the **latest first-observation year among its required
+comparators**, currently **2011**, and retains all subsequent supplied observations
+through 2025. This avoids mixing the sparse ECHP-era histories into the recent
+EU-SILC view. **UK observations still end in 2018**: the subtitle and dated end label
+state this prominently; no replacement UK values or US series are fabricated.
+The PIP chart shows **2000 onward**, not a 1970 start that leaves most early peer
+histories blank. Every country keeps its own latest observation and genuine gaps.
+End labels name each country and its year rather than implying a common current
+endpoint. Both charts' **full earlier source histories remain in the CSV**; the
+OECD comparison still shows its complete available history.
+
+Refreshes reject loss of previously published country/year/metric observations,
+duplicate cells and non-finite values before replacing any source tables. Partial
+`--sources` downloads must use a separate `--out` directory if a combined dataset
+already exists, so a one-source download cannot silently erase the other measures.
 
 Poland is included in all three income exports, with a consistent dashed purple line.
 The supplemental PIP chart now also includes genuine US survey observations.

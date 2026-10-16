@@ -186,6 +186,7 @@ def test_gdp_figures_plot_distinct_volume_and_nominal_series(monkeypatch, tmp_pa
     data = pd.DataFrame(rows)
     monkeypatch.setattr(plots.pd, "read_csv", lambda _: data)
     monkeypatch.setattr(plots, "fig_median_income_oecd", lambda *args: None)
+    monkeypatch.setattr(plots, "fig_median_income_non_oecd", lambda *args, **kwargs: None)
     monkeypatch.setattr(plots.gdp_comparisons, "make_chart", lambda *args: None)
     captured = {}
     def save(fig, path, **kwargs):
@@ -515,6 +516,93 @@ def test_pip_chart_breaks_at_known_survey_and_welfare_changes(monkeypatch, tmp_p
     assert list(xs[pd.notna(ys)]) == list(range(2000, 2007))
     assert list(ys[pd.notna(ys)]) == [100, 110, 120, 130, 140, 150, 160]
     assert line.get_marker() == "o"
+
+
+def test_non_oecd_income_views_keep_recent_values_and_explicit_source_end_dates(monkeypatch, tmp_path):
+    import pandas as pd
+    from europe_data import plot_uk_decline as plots
+
+    for source, metric, first in (
+        ("eurostat", "median_disposable_income", 2011),
+        ("pip", "median_income_pip", 2000),
+    ):
+        peers = [name for name, *_ in plots.INCOME_PEERS if source == "pip" or name != "United States"]
+        if source == "eurostat":
+            peers.append(plots.EU_EUROSTAT[0])
+        rows = []
+        for index, country in enumerate(peers):
+            start = 2011 if country == plots.EU_EUROSTAT[0] else 1995
+            end = (2018 if source == "eurostat" else 2021) if country == "United Kingdom" else 2025
+            rows += [
+                {"country": country, "year": year, metric: float(index * 100 + year),
+                 f"{metric}__status": "b" if year == 2017 else ""}
+                for year in range(start, end + 1)
+                if not (country == "France" and year == 2014)
+            ]
+        frame = pd.DataFrame(rows)
+        saved = frame.copy(deep=True)
+        captured = []
+        monkeypatch.setattr(plots, "save_chart", lambda fig, *args, **kwargs: captured.append(fig))
+        plots.fig_median_income_non_oecd(frame, tmp_path, source=source)
+        ax = captured[0].axes[0]
+        for line in ax.lines:
+            country = plots.EU_EUROSTAT[0] if line.get_label() == "EU-27" else line.get_label()
+            expected = frame.loc[(frame.country == country) & (frame.year >= first)]
+            actual = [(int(x), y) for x, y in zip(line.get_xdata(), line.get_ydata()) if pd.notna(y)]
+            assert actual == list(zip(expected.year, expected[metric]))
+            assert min(x for x, _ in actual) >= first
+        assert len(ax.lines) == len(peers)
+        text = " ".join(item.get_text() for item in ax.texts)
+        assert f"United Kingdom ({2018 if source == 'eurostat' else 2021})" in text
+        if source == "eurostat":
+            assert "US not covered" in text and "2018" in text
+            assert not any(line.get_label() == "United States" for line in ax.lines)
+        france = next(line for line in ax.lines if line.get_label() == "France")
+        assert pd.isna(france.get_ydata()[list(france.get_xdata()).index(2014)])
+        assert pd.isna(france.get_ydata()[list(france.get_xdata()).index(2016.5)])
+        pd.testing.assert_frame_equal(frame, saved)
+
+
+def test_pip_does_not_turn_interpolations_or_invalid_welfare_data_into_surveys(monkeypatch):
+    import pytest
+    from europe_data import pip
+
+    common = dict(country_code="GBR", reporting_level="national", welfare_type="income",
+                  reporting_year=2021, median=50.)
+    monkeypatch.setattr(pip, "_valid_codes", {"GBR"})
+    monkeypatch.setattr(pip, "get_json", lambda *args, **kwargs: [
+        {**common, "is_interpolated": True},
+        {**common, "reporting_year": 2022, "is_interpolated": False},
+    ])
+    rows = pip.fetch(2021, 2022, iso3s=["GBR"])
+    assert [row["year"] for row in rows] == [2022]
+    for changed in (dict(median=float("nan")), dict(welfare_type="unknown"), dict(country_code="USA")):
+        monkeypatch.setattr(pip, "get_json", lambda *args, change=changed, **kwargs: [{**common, **change}])
+        with pytest.raises(ValueError):
+            pip.fetch(2021, 2022, iso3s=["GBR"])
+
+
+def test_europe_refresh_rejects_dropped_history_partial_overwrites_and_invalid_cells(tmp_path):
+    import pytest
+    from europe_data import fetch_data
+
+    rows = [
+        dict(iso3="GBR", country="United Kingdom", year=year, metric="median_income_pip",
+             value=50., unit="2021 PPP $ per day", source="World Bank PIP")
+        for year in (2000, 2021)
+    ]
+    previous = tmp_path / "europe_combined_wide.csv"
+    combine.write_wide(rows, str(previous))
+    fetch_data.validate_refresh_rows([("pip", rows)], previous, 1970, 2026, list(fetch_data.SOURCES))
+    with pytest.raises(ValueError, match="previously published"):
+        fetch_data.validate_refresh_rows([("pip", rows[1:])], previous, 1970, 2026, list(fetch_data.SOURCES))
+    with pytest.raises(ValueError, match="previously published"):
+        fetch_data.validate_refresh_rows([("pip", rows[1:])], previous, 2020, 2026, list(fetch_data.SOURCES))
+    with pytest.raises(ValueError, match="partial source fetch"):
+        fetch_data.validate_refresh_rows([("pip", rows)], previous, 1970, 2026, ["pip"])
+    for invalid in ([*rows, rows[0]], [{**rows[0], "value": float("inf")}]):
+        with pytest.raises(ValueError, match="Duplicate"):
+            fetch_data.validate_refresh_rows([("pip", invalid)], previous, 1970, 2026, list(fetch_data.SOURCES))
 
 
 def test_combine_long_and_wide() -> None:

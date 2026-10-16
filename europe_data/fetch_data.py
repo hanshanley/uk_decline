@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import math
 import pathlib
 import sys
 
@@ -25,6 +26,36 @@ from europe_data import combine, eurostat, gdp_comparisons, maddison, oecd_incom
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCES = ("worldbank", "maddison", "eurostat", "pip", "oecd-income")
+
+
+def validate_refresh_rows(
+    grouped: list[tuple[str, list[dict]]], previous: pathlib.Path,
+    start: int, end: int, sources: list[str],
+) -> None:
+    rows = [row for _, records in grouped for row in records]
+    keys = [(row["iso3"], row["year"], row["metric"]) for row in rows]
+    if len(keys) != len(set(keys)) or any(
+        not math.isfinite(float(row["value"])) or not start <= row["year"] <= end
+        or row["metric"] not in combine.METRIC_ORDER
+        for row in rows
+    ):
+        raise ValueError("Duplicate, non-finite or out-of-range Europe source observations")
+    if not previous.exists():
+        return
+    if set(sources) != set(SOURCES):
+        raise ValueError(
+            "A partial source fetch would replace the published combined dataset; "
+            "use a separate --out directory or refresh all sources"
+        )
+    saved = pd.read_csv(previous)
+    metrics = [metric for metric in combine.METRIC_ORDER if metric in saved.columns]
+    cells = saved.melt(id_vars=["iso3", "year"], value_vars=metrics, var_name="metric").dropna(subset=["value"])
+    missing = set(cells[["iso3", "year", "metric"]].itertuples(index=False, name=None)) - set(keys)
+    if missing:
+        raise ValueError(
+            "Europe refresh lost previously published observations; "
+            f"existing source data was not replaced: {sorted(missing)[:10]}"
+        )
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -86,6 +117,10 @@ def main(argv: list[str] | None = None) -> int:
         tqdm.write(f"  {name}: {len(rows)} rows")
         grouped.append((stem, rows))
 
+    validate_refresh_rows(
+        grouped, pathlib.Path(args.out) / "europe_combined_wide.csv",
+        args.start, args.end, args.sources,
+    )
     written = combine.combine(
         grouped,
         args.out,
