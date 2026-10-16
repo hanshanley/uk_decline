@@ -76,4 +76,4 @@ the full-year chart.
   [official 2025 parcel-statistics workbook](https://cms.trussell.org.uk/sites/default/files/2026-03/eys_2025_parcel_stats.xlsx).
 - Trussell, [Mid-year stats](https://www.trussell.org.uk/news-and-research/latest-stats/mid-year-stats) and
   [official April–September 2024 workbook](https://trusselltrustprod.prod.acquia-sites.com/sites/default/files/2024-11/MYS%202024%20parcel%20statistics%20%28web%29.xlsx).
-- Calendar-year workbook accessed **2026-10-15**.
+- Calendar-year workbook accessed **2026-10-16**.
