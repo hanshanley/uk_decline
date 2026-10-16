@@ -121,7 +121,7 @@ def uk_listed_companies():
 
 
 def culture_spending():
-    """Real recreation, culture and religion spending in 2025-26 GBP billions."""
+    """Real recreation, culture and religion spending in the source's price-year pounds."""
     r = _rows(DATA / "austerity_spending.csv")
     pts = {
         int(x["year"]): float(x["value"])
@@ -132,6 +132,21 @@ def culture_spending():
     }
     ys = sorted(pts)
     return ys, [pts[y] for y in ys]
+
+
+def culture_source():
+    units = {
+        row.get("unit", "")
+        for row in _rows(DATA / "austerity_spending.csv")
+        if row["metric"] == "functional_spending_real" and row["category"] == "recreation_culture"
+    }
+    if len(units) != 1:
+        raise ValueError("Culture spending requires one explicit real-price basis; refresh austerity_data")
+    match = re.fullmatch(r"GBP billion, real \((\d{4})-(\d{2}) prices\)", units.pop())
+    if match is None or int(match[2]) != (int(match[1]) + 1) % 100:
+        raise ValueError("Culture spending requires one explicit real-price basis; refresh austerity_data")
+    basis = f"{match[1]}\u2013{match[2]}"
+    return f"HM Treasury \u00b7 financial years\nConstant {basis} pounds, GDP-deflated"
 
 
 def food_bank_parcels():
@@ -176,7 +191,7 @@ PANELS = [
      tuple(int(date[:4]) for date, _ in nhs_metrics.series_breaks(
          "rtt_waiting_list_total", "ENG"))),
     ("Recreation, culture & religion", culture_spending, lambda v: f"£{v:.1f}bn", +1,
-     "HM Treasury · financial years, inflation-adjusted", 2007),
+     culture_source, 2007),
     ("England tuition cap", tuition_nominal, lambda v: f"£{v:,.0f}", -1,
      "England statutory maximum · academic years, nominal pounds\n"
      "Not inflation-adjusted; not average UK tuition", 2006),
@@ -197,6 +212,7 @@ def _panel(ax, title, loader, fmt, good_dir, source, start, break_years=(),
     pts = [(x, y) for x, y in zip(xs, ys) if x >= start]
     if not pts:
         raise ValueError(f"{title}: no observations from {start} onward")
+    source = source() if callable(source) else source
     xs, ys = [p[0] for p in pts], [p[1] for p in pts]
     breaks = [year for year in break_years if xs[0] < year <= xs[-1]]
     change = ys[-1] - ys[0]

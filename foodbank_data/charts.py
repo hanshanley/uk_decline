@@ -44,6 +44,7 @@ def foodbank_history_chart(
     fiscal = fiscal.sort_values("end_year").copy()
     annual = annual.sort_values("year")
     latest = annual.iloc[-1]
+    latest_year = int(latest["year"])
 
     historical = fiscal.copy()
     historical["x"] = historical["end_year"].astype(float)
@@ -88,33 +89,39 @@ def foodbank_history_chart(
         zorder=3,
     )
     recent.bar(
-        0,
+        latest_year,
         latest["adults"],
         width=0.72,
         color=ADULT,
         edgecolor=BG,
         linewidth=0.8,
+        label="Adults",
         zorder=3,
     )
     recent.bar(
-        0,
+        latest_year,
         latest["children"],
         width=0.72,
         bottom=latest["adults"],
         color=CHILD,
         edgecolor=BG,
         linewidth=0.8,
+        label="Children",
         zorder=3,
     )
 
     labels = {
-        "2005/06": None,
+        str(historical.iloc[0]["period_label"]): None,
         "2011/12": None,
         "2018/19": None,
-        "2023/24": None,
+        str(historical.iloc[-1]["period_label"]): None,
     }
     for period in labels:
-        row = historical.loc[historical["period_label"] == period].iloc[0]
+        rows = historical.loc[historical["period_label"] == period]
+        if rows.empty:
+            continue
+        row = rows.iloc[0]
+        endpoint = period in {historical.iloc[0]["period_label"], historical.iloc[-1]["period_label"]}
         ax.text(
             row["x"],
             row["total"] + 72_000,
@@ -122,11 +129,11 @@ def foodbank_history_chart(
             ha="center",
             va="bottom",
             fontsize=9.2,
-            color=TEXT if period in {"2005/06", "2023/24"} else MUTED,
-            fontweight="bold" if period in {"2005/06", "2023/24"} else "normal",
+            color=TEXT if endpoint else MUTED,
+            fontweight="bold" if endpoint else "normal",
         )
     recent.text(
-        0,
+        latest_year,
         latest["total"] + 72_000,
         _total_label(float(latest["total"])),
         ha="center",
@@ -143,7 +150,7 @@ def foodbank_history_chart(
     ):
         recent.annotate(
             f"{_total_label(float(count))} parcels\nfor {label}",
-            xy=(0.36, center), xytext=(0.7, center),
+            xy=(latest_year + .36, center), xytext=(latest_year + .7, center),
             ha="left", va="center", fontsize=11, color=TEXT,
             arrowprops={"arrowstyle": "-", "color": color, "linewidth": 1.5},
         )
@@ -156,7 +163,7 @@ def foodbank_history_chart(
     recent.set_title(f"Calendar year {int(latest['year'])}",
                      loc="left", fontsize=12, fontweight="bold", pad=14)
     ax.set_xlim(historical["x"].min() - 0.7, historical["x"].max() + 0.8)
-    recent.set_xlim(-0.65, 2.1)
+    recent.set_xlim(latest_year - .65, latest_year + 2.1)
     recent.set_xticks([])
     recent.tick_params(axis="y", left=False, labelleft=False)
     ax.set_ylim(0, max(float(historical["total"].max()), latest["total"]) * 1.14)

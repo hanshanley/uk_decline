@@ -103,6 +103,36 @@ def test_parse_historical_functions_and_source() -> None:
     assert "2011-12 prices" in first["unit"]
 
 
+def test_price_basis_is_preserved_without_relabelling_the_historical_vintage():
+    rows = treasury.build_rows({
+        "4_1": _aggregate_sheet(), "4_3": _functions_sheet(),
+        "historical_4_3": _historical_functions_sheet(), "price_basis": "2030-31",
+    })
+    assert {row["unit"] for row in rows if row["metric"] == "functional_spending_real"} == {
+        "GBP billion, real (2030-31 prices)",
+    }
+    assert {row["unit"] for row in rows if row["metric"] == "functional_spending_historical_real"} == {
+        "GBP billion, real (2011-12 prices)",
+    }
+
+
+def test_price_basis_comes_from_methodology_not_the_release_year(monkeypatch):
+    from types import SimpleNamespace
+
+    release = "https://www.gov.uk/government/statistics/public-spending-statistics-release-july-2031"
+    article = release + "/public-spending-statistics-july-2031"
+    pages = {
+        release: f'<a href="{article}">Publication</a>',
+        article: "The real terms figures in this publication are given in 2029–30 prices.",
+    }
+    monkeypatch.setattr(treasury, "_get", lambda url, timeout: SimpleNamespace(text=pages[url]))
+    assert treasury.resolve_price_basis(release) == "2029-30"
+    for text in ("No price-year statement", pages[article] + pages[article].replace("2029–30", "2030–31")):
+        pages[article] = text
+        with pytest.raises(ValueError, match="no unique real-price basis"):
+            treasury.resolve_price_basis(release)
+
+
 def test_index_and_trough_math() -> None:
     frame = _frame()
     housing = charts.indexed_function_series(frame, "housing_community")
@@ -112,6 +142,29 @@ def test_index_and_trough_math() -> None:
     change, year = charts.trough_change(frame, "housing_community")
     assert change == pytest.approx(-30)
     assert year == "2012-13"
+
+
+def test_source_vintage_seam_is_dotted_without_inventing_missing_years(monkeypatch):
+    from matplotlib.collections import LineCollection
+
+    frame = _frame()
+    earlier = frame[(frame.metric == "functional_spending_real")
+                    & (frame.financial_year == "2010-11")].copy()
+    earlier["financial_year"], earlier["year"] = "2003-04", 2003
+    earlier["value"] *= .8
+    frame = pd.concat([frame, earlier], ignore_index=True)
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    charts.make_chart(frame)
+    for ax in captured[0].axes[:4]:
+        line = ax.lines[0]
+        assert pd.isna(line.get_ydata()[list(line.get_xdata()).index(2002.5)])
+        assert pd.isna(line.get_ydata()[list(line.get_xdata()).index(2004)])
+        segments = [segment for c in ax.collections if isinstance(c, LineCollection)
+                    for segment in c.get_segments()]
+        assert len(segments) == 1
+        assert list(segments[0][:, 0]) == [2002, 2003]
+    assert "Dotted links: source-vintage changes" in " ".join(t.get_text() for t in captured[0].texts)
 
 
 def test_new_spending_year_and_high_value_are_not_silently_dropped(monkeypatch, tmp_path):

@@ -9,7 +9,8 @@ in 2003–04, so the first three observations come from the official PESA 2012
 historical table. Both vintages are indexed independently to 2010–11 = 100; at
 their 2003–04 overlap the plotted functions differ by up to 3 index points
 (and up to 7 across the full overlap). This vintage seam is not a measured
-year-to-year spending change.
+year-to-year spending change. Dotted links mark the switch to the current vintage;
+genuinely missing years remain blank.
 
 ![Austerity spending and investment](../outputs/austerity/uk_austerity_spending_investment.png)
 
@@ -44,6 +45,11 @@ Current-release real values are in **2025–26 prices**, deflated by HM Treasury
 the ONS GDP deflator. Historical PESA 2012 levels retain **2011–12 prices**; only their
 independently rebased indices, not cash levels, are joined to the chart.
 The pipeline resolves the latest July PSS release and its Chapter 4 workbook from GOV.UK.
+It reads the real-price year from the release's methodology and preserves it in
+each current real-spending row's `unit`. The overview uses that saved basis in its
+currency caption instead of assuming a fixed price year. Unidentified or
+conflicting price-year metadata is rejected before an absolute spending level
+can be shown on the overview.
 
 Education is intentionally omitted from the comparison chart because HM Treasury warns that
 student-loan accounting changed between 2010–11 and 2011–12, breaking direct comparability.

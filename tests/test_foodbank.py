@@ -159,9 +159,26 @@ def test_chart_keeps_calendar_annotations_separate_and_readable(monkeypatch):
     for annotation in recent.texts:
         if annotation.get_text().endswith(("for children", "for adults")):
             assert annotation.arrow_patch is not None
-            assert annotation.xy[0] == pytest.approx(0.36)
+            assert annotation.xy[0] == pytest.approx(int(annual.iloc[-1]["year"]) + .36)
             bar = recent.patches[1 if annotation.get_text().endswith("for children") else 0]
             assert bar.get_y() < annotation.xy[1] < bar.get_y() + bar.get_height()
+
+
+def test_historical_chart_exports_latest_calendar_year_and_age_groups(monkeypatch, tmp_path):
+    from vizstyle.hover import observations
+
+    annual = parse.parse_calendar_years(CALENDAR_SOURCE.path(RAW_DIR))
+    annual.loc[annual.index[-1], "year"] = 2027
+    fiscal = history.build_fiscal_history(FISCAL_ARCHIVE, FISCAL_SLIDES_SOURCE.path(RAW_DIR))
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    charts.foodbank_history_chart(fiscal, annual, tmp_path / "history.png")
+    exported = observations(captured[0], dpi=220, pad_inches=.15)
+    recent = [(s["label"], p[2], p[3]) for s in exported for p in s["points"] if p[2] == "2027"]
+    assert recent == [("Adults", "2027", "1,732,619"), ("Children", "2027", "912,216")]
+    assert all(s["y_label"] == "Emergency food parcels distributed"
+               for s in exported if any(p[2] == "2027" for p in s["points"]))
+    assert not any(p[2] == "0" for s in exported for p in s["points"])
 
 
 def test_official_workbooks_match_headlines() -> None:

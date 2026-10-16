@@ -18,6 +18,7 @@ from urllib.parse import urljoin, urlsplit
 
 import pandas as pd
 import requests
+from bs4 import BeautifulSoup
 
 COLLECTION_URL = "https://www.gov.uk/government/collections/national-statistics-release"
 PINNED_RELEASE_URL = (
@@ -133,10 +134,38 @@ def resolve_workbook_url(
     return links[0]
 
 
+def resolve_price_basis(release_url: str, timeout: int = 60) -> str:
+    """Read the real-price year from the release's methodology, not its publication date."""
+    page = BeautifulSoup(_get(release_url, timeout).text, "html.parser")
+    links = {
+        urljoin(release_url.rstrip("/") + "/", link["href"])
+        for link in page.select("a[href]")
+        if re.search(r"/public-spending-statistics-july-\d{4}/?$", urlsplit(link["href"]).path)
+    }
+    if len(links) != 1:
+        raise ValueError("Cannot identify a unique PSS methodology page for the real-price basis")
+    text = BeautifulSoup(_get(links.pop(), timeout).text, "html.parser").get_text(" ", strip=True)
+    bases = {
+        f"{year}-{end}"
+        for year, end in re.findall(
+            r"real\s+terms\s+figures\s+in\s+this\s+publication\s+are\s+given\s+in\s+"
+            r"(\d{4})[-\u2013](\d{2})\s+prices", text, re.I,
+        )
+    }
+    if len(bases) != 1:
+        raise ValueError("PSS methodology has no unique real-price basis")
+    basis = bases.pop()
+    if int(basis[-2:]) != (int(basis[:4]) + 1) % 100:
+        raise ValueError(f"Invalid real-price financial year: {basis}")
+    return basis
+
+
 def download_workbook(
     url: str | None = None,
     historical_url: str = HISTORICAL_WORKBOOK_URL,
     timeout: int = 120,
+    *,
+    price_basis: str | None = None,
 ) -> dict:
     """Download current PSS tables plus the historical functional-spending table."""
     source = "HM Treasury, Public Spending Statistics, Tables 4.1 and 4.3"
@@ -147,6 +176,7 @@ def download_workbook(
             raise ValueError(f"Cannot identify the Public Spending Statistics release year: {release}")
         source = f"HM Treasury, Public Spending Statistics, July {match[1]}, Tables 4.1 and 4.3"
         url = resolve_workbook_url(release, timeout=timeout)
+        price_basis = resolve_price_basis(release, timeout=timeout)
     response = _get(url, timeout)
     workbook = pd.read_excel(
         io.BytesIO(response.content),
@@ -160,6 +190,8 @@ def download_workbook(
         header=None,
     )
     workbook["source"] = source
+    if price_basis is not None:
+        workbook["price_basis"] = price_basis
     return workbook
 
 
@@ -295,8 +327,16 @@ def build_rows(workbook: dict | None = None) -> list[dict]:
     """Return a sorted tidy dataset from the official PSS workbook."""
     workbook = workbook or download_workbook()
     rows = parse_aggregates(workbook["4_1"]) + parse_functions(workbook["4_3"])
+    basis = workbook.get("price_basis")
+    if basis is not None and (
+        not _FY_RE.fullmatch(str(basis))
+        or int(str(basis)[-2:]) != (int(str(basis)[:4]) + 1) % 100
+    ):
+        raise ValueError(f"Invalid real-price financial year: {basis}")
     for row in rows:
         row["source"] = workbook.get("source", SOURCE)
+        if basis is not None and row["unit"] == "GBP billion, real":
+            row["unit"] = f"GBP billion, real ({basis} prices)"
     if "historical_4_3" in workbook:
         rows += parse_historical_functions(workbook["historical_4_3"])
     rows.sort(key=lambda row: (row["metric"], row["category"], row["year"]))

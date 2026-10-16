@@ -145,6 +145,19 @@ def _label(ax, artist) -> str:
     return ax.get_title(loc="left") or ax.get_title() or ax.get_ylabel() or "Value"
 
 
+def _axis_label(ax, *, x: bool) -> str:
+    label = ax.get_xlabel() if x else ax.get_ylabel()
+    if label:
+        return label
+    shared = ax.get_shared_x_axes() if x else ax.get_shared_y_axes()
+    labels = {other.get_xlabel() if x else other.get_ylabel()
+              for other in shared.get_siblings(ax)}
+    labels.discard("")
+    if len(labels) > 1:
+        raise ValueError("Cannot infer an unlabeled shared axis: conflicting axis labels")
+    return next(iter(labels), "")
+
+
 def observations(fig, *, dpi: float, bbox_inches="tight", pad_inches=.1) -> list[dict]:
     """Use the same raster geometry as savefig, including its tight crop and padding."""
     original_dpi, original_canvas = fig.dpi, fig.canvas
@@ -173,8 +186,8 @@ def observations(fig, *, dpi: float, bbox_inches="tight", pad_inches=.1) -> list
                 x1, y0 = position(ax.bbox.x1, ax.bbox.y1)
                 return {
                     "label": _label(ax, artist),
-                    "x_label": ax.get_ylabel() if horizontal else ax.get_xlabel(),
-                    "y_label": ax.get_xlabel() if horizontal else ax.get_ylabel(),
+                    "x_label": _axis_label(ax, x=not horizontal),
+                    "y_label": _axis_label(ax, x=horizontal),
                     "bounds": [x0, y0, x1, y1],
                     "points": [],
                 }

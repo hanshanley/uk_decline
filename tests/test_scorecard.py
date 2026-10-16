@@ -177,10 +177,10 @@ def test_overview_panels_use_year_only_labels_without_changing_period_selection(
         monkeypatch.setattr(scorecard, "_rows", lambda path: [
             {"year": "2007", "metric": "functional_spending_real", "category": "recreation_culture",
              "value": "19.1", "country": "United Kingdom", "nominal_local": "8000",
-             "currency": "GBP"},
+             "currency": "GBP", "unit": "GBP billion, real (2025-26 prices)"},
             {"year": "2025", "metric": "functional_spending_real", "category": "recreation_culture",
              "value": "15.1", "country": "United Kingdom", "nominal_local": "11000",
-             "currency": "GBP"},
+             "currency": "GBP", "unit": "GBP billion, real (2025-26 prices)"},
         ])
         fig, ax = scorecard.plt.subplots()
         try:
@@ -193,6 +193,18 @@ def test_overview_panels_use_year_only_labels_without_changing_period_selection(
             assert "years" in text
         finally:
             scorecard.plt.close(fig)
+
+
+def test_culture_caption_uses_the_saved_price_basis_and_rejects_unknown_units(monkeypatch):
+    rows = [
+        {"metric": "functional_spending_real", "category": "recreation_culture",
+         "unit": "GBP billion, real (2030-31 prices)"}
+    ]
+    monkeypatch.setattr(scorecard, "_rows", lambda path: rows)
+    assert "Constant 2030–31 pounds" in scorecard.culture_source()
+    rows[0]["unit"] = "GBP billion, real"
+    with pytest.raises(ValueError, match="explicit real-price basis"):
+        scorecard.culture_source()
 
 
 def test_tuition_overview_shows_current_nominal_cap_without_inventing_real_values(monkeypatch):

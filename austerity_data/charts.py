@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import pandas as pd
 
-from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, GRID, MUTED, TEXT, house_style, save_chart, with_year_gaps
+from vizstyle import (ACCENT, BG, BLUE, GOLD, GREEN, GRID, MUTED, TEXT, house_style,
+                      save_chart, with_year_gaps, mark_year_breaks)
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "outputs" / "austerity" / "uk_austerity_spending_investment.png"
@@ -58,6 +59,7 @@ def indexed_function_series(
     )
     current = current[["financial_year", "year", "value"]].copy()
     current["index"] = current["value"] / current_base * 100
+    current["vintage"] = "current"
 
     historical_all = df[
         (df["metric"] == "functional_spending_historical_real")
@@ -77,6 +79,7 @@ def indexed_function_series(
         & (historical_all["financial_year"] < current["financial_year"].min())
     ][["financial_year", "year", "value"]].copy()
     historical["index"] = historical["value"] / historical_base * 100
+    historical["vintage"] = "historical"
     return pd.concat([historical, current], ignore_index=True).sort_values("year")
 
 
@@ -174,7 +177,10 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         _label_text, color, _width = SERIES[category]
         series = indexed_function_series(df, category)
         ax.axvspan(2010, 2019.9, color=ACCENT, alpha=0.055, linewidth=0)
-        annual = with_year_gaps(series.set_index("year")["index"])
+        breaks = series.loc[series["vintage"].ne(series["vintage"].shift())
+                            & series["vintage"].shift().notna(), "year"]
+        observed = series.set_index("year")["index"]
+        annual = with_year_gaps(observed, breaks=breaks)
         ax.plot(
             annual.index,
             annual.values,
@@ -184,6 +190,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
             zorder=4,
         )
         ax.scatter(series["year"], series["index"], s=10, color=color, zorder=5)
+        mark_year_breaks(ax, observed, breaks=breaks, color=color, linewidth=2.8)
         ax.axhline(100, color=TEXT, linewidth=0.8, alpha=0.45)
         last = series.iloc[-1]
         first = series.iloc[0]
@@ -233,7 +240,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
     fig.text(
         0.94,
         0.862,
-        "Shading: 2010–11 to 2019–20",
+        "Shading: 2010–11 to 2019–20\nDotted links: source-vintage changes",
         ha="right",
         fontsize=9.5,
         color=MUTED,
@@ -327,7 +334,8 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
             "Note: 2000–01 to 2002–03 use Public Expenditure Statistical Analyses 2012; "
             "later years use the saved Public Spending Statistics vintage. Each "
             "vintage is indexed to its own 2010–11 value; revision and definition "
-            "differences remain at the seam. Missing years are not joined. "
+            "differences remain at the seam; dotted links are not like-for-like growth. "
+            "Missing years are not joined. "
             "Education is omitted because of an accounting "
             "break. Net investment is after depreciation and includes net capital grants.",
             width=185,

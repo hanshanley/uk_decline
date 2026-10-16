@@ -216,6 +216,46 @@ def test_hover_reports_axis_units_without_rounding_away_the_observation(tmp_path
     plt.close(fig)
 
 
+@pytest.mark.parametrize("axis", ["x", "y"])
+def test_shared_axis_labels_are_inherited_without_adding_visible_duplicate_labels(tmp_path, axis):
+    fig, (left, right) = plt.subplots(1, 2, **{f"share{axis}": True})
+    left.plot([2024, 2025], [10, 20], label="Earlier")
+    right.plot([2024, 2025], [30, 40], label="Recent")
+    if axis == "x":
+        left.set_xlabel("Survey year")
+    else:
+        left.set_ylabel("Income (current purchasing power standards)")
+    path = tmp_path / "shared.png"
+    save_chart(fig, path, bbox_inches="tight")
+    data = chart_data.load_chart_data(tmp_path, path.relative_to(tmp_path))
+    label = "Survey year" if axis == "x" else "Income (current purchasing power standards)"
+    assert all(series[f"{axis}_label"] == label for series in data["series"])
+    assert (right.get_xlabel() if axis == "x" else right.get_ylabel()) == ""
+    plt.close(fig)
+
+
+def test_independent_axes_do_not_borrow_incompatible_units(tmp_path):
+    fig, (left, right) = plt.subplots(1, 2)
+    left.set_ylabel("Pounds")
+    left.plot([2025], [100], label="Money")
+    right.plot([2025], [2], label="Count")
+    path = tmp_path / "independent.png"
+    save_chart(fig, path)
+    data = chart_data.load_chart_data(tmp_path, path.relative_to(tmp_path))
+    assert data["series"][1]["y_label"] == ""
+    plt.close(fig)
+
+
+def test_unlabeled_shared_axis_rejects_conflicting_units(tmp_path):
+    fig, axes = plt.subplots(1, 3, sharey=True)
+    axes[0].set_ylabel("Pounds")
+    axes[1].set_ylabel("Dollars")
+    axes[2].plot([2025], [100], label="Ambiguous")
+    with pytest.raises(ValueError, match="conflicting axis labels"):
+        save_chart(fig, tmp_path / "ambiguous.png")
+    plt.close(fig)
+
+
 def test_stacked_areas_report_actual_shares_not_upper_boundaries(tmp_path):
     fig, ax = plt.subplots()
     ax.stackplot([2020, 2021], [20, 21], [60, 61], [20, 18], labels=["Children", "Working-age", "Older"])
