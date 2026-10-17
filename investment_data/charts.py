@@ -81,6 +81,7 @@ def make_charts(frame: pd.DataFrame, output: Path) -> list[Path]:
         first, last = int(data["year"].min()), int(data["year"].max())
         fig, ax = plt.subplots(figsize=(13.5, 7.2))
         ends = []
+        endpoint_flags = []
         for code, (color, linestyle, width) in STYLES.items():
             part = data[data["iso3"] == code].sort_values("year")
             if part.empty:
@@ -93,10 +94,13 @@ def make_charts(frame: pd.DataFrame, output: Path) -> list[Path]:
                     marker="o", markersize=3.2, label=country)
             mark_year_breaks(ax, observed, breaks=breaks, color=color, linewidth=width)
             latest = part.iloc[-1]
-            status = f"; {latest['status'].replace(';', ',')}" if latest["status"] else ""
+            if latest["status"]:
+                endpoint_flags.append(
+                    f"{country} ({int(latest['year'])}): {latest['status'].replace(';', ',')}"
+                )
             ends.append((
                 float(latest["value"]),
-                f"{country} {latest['value']:.2f}%\n  {int(latest['year'])}{status}", color,
+                f"{country} {latest['value']:.2f}%\n  {int(latest['year'])}", color,
                 int(latest["year"]),
             ))
         spread = max(float(data["value"].max() - data["value"].min()), .1)
@@ -121,6 +125,8 @@ def make_charts(frame: pd.DataFrame, output: Path) -> list[Path]:
         fig.suptitle(f"{title}, {first}\u2013{last}", x=.085, y=.97, ha="left",
                      fontsize=21, fontweight="bold")
         fig.text(.085, .905, subtitle, fontsize=11, color=MUTED)
+        if endpoint_flags:
+            source += " Latest observation flags: " + "; ".join(endpoint_flags) + "."
         source += (
             " Complete shared years only; newer observations remain in the CSV. E = estimated, P = provisional, "
             "D = definition differs, B = series break; source flags are retained in the CSV. "

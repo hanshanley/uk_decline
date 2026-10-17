@@ -221,6 +221,14 @@ def test_late_source_failure_keeps_saved_inputs_and_existing_images(funding_fram
 def test_comparisons_use_complete_common_years_and_preserve_methods_and_requested_peers(
     funding_frame, monkeypatch, tmp_path,
 ):
+    funding_frame.loc[
+        (funding_frame.metric == sources.CAPITAL) & (funding_frame.iso3 == "EU27_2020")
+        & (funding_frame.year == 2024), "status"
+    ] = "P"
+    funding_frame.loc[
+        (funding_frame.metric == sources.RESEARCH) & (funding_frame.iso3 == "GBR")
+        & (funding_frame.year == 2023), "status"
+    ] = "B;D;P"
     captured = []
     original = charts.save_chart
 
@@ -249,6 +257,15 @@ def test_comparisons_use_complete_common_years_and_preserve_methods_and_requeste
         }
         assert actual == pytest.approx(expected)
         ax = fig.axes[0]
+        labels = {text.get_text().lstrip() for text in ax.texts}
+        footnote = " ".join(fig.texts[-1].get_text().split())
+        if metric == sources.CAPITAL:
+            assert f"EU-27 2.00%\n  {last}" in labels
+            assert f"EU-27 ({last}): P" in footnote
+            assert "P = provisional" in footnote
+        elif metric == sources.RESEARCH:
+            assert f"United Kingdom 2.70%\n  {last}" in labels
+            assert f"United Kingdom ({last}): B,D,P" in footnote
         for country, group in selected.groupby("country"):
             assert set(group.year) == set(range(first, last + 1))
             assert last - first + 1 >= 10
