@@ -46,6 +46,7 @@ class Analysis:
     output: str
     charts: tuple[str, ...]
     description: str
+    downloads: tuple[tuple[str, str], ...] = ()
 
     @property
     def featured(self) -> str:
@@ -57,7 +58,8 @@ ANALYSES = (
              ("uk_gdp_relative_to_peers_simple.png", "uk_real_gdp_relative_to_peers.png",
               "median_disposable_income_oecd.png"),
              "Nominal GDP at market exchange rates and real GDP at fixed 2021 purchasing power parities, "
-             "alongside median disposable household income."),
+             "alongside median disposable household income.",
+             downloads=(("median_disposable_income_oecd_history.png", "Full income history (PNG)"),)),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
              ("ppp_gdp_per_capita_growth.png", "ppp_gdp_relative_to_peers.png",
               "ppp_gap_decomposition_uk_us.png"),
@@ -143,7 +145,10 @@ CHART_COMPARATORS = {
          "uk_ppp_gdp_relative_to_peers"),
         {"United States", "EU average", "Poland"},
     ),
-    "median_disposable_income_oecd": {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
+    **dict.fromkeys(
+        ("median_disposable_income_oecd", "median_disposable_income_oecd_history"),
+        {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
+    ),
     "median_income_pip": {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
     "median_disposable_income_pps": {"United Kingdom", "Germany", "France", "Italy", "Poland", "EU-27"},
     "ppp_gdp_per_capita_growth": {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland", "EU average"},
@@ -508,6 +513,11 @@ def homepage() -> str:
 
 def analysis_page(analysis: Analysis) -> str:
     page = Path(analysis.slug) / "index.html"
+    downloads = "".join(
+        f'<a href="{relative_url(Path("outputs") / analysis.output / filename, page)}" download>'
+        f'{escape(label)}</a> &middot; '
+        for filename, label in analysis.downloads
+    )
     figures = []
     for filename in analysis.charts:
         chart = Path("outputs") / analysis.output / filename
@@ -528,6 +538,7 @@ def analysis_page(analysis: Analysis) -> str:
     </section>
     <section class="chart-gallery" aria-label="Charts">{''.join(figures)}</section>
     <p class="context">
+      {downloads}
       <a href="{REPOSITORY}/tree/master/outputs/{analysis.output}">All charts on GitHub &#8599;</a>
       &middot; <a href="{REPOSITORY}/blob/master/{analysis.module}/README.md">Full documentation on GitHub &#8599;</a>
     </p>"""
@@ -610,6 +621,7 @@ def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
         required = {
             Path(analysis.module) / "README.md",
             *(Path("outputs") / analysis.output / chart for chart in analysis.charts),
+            *(Path("outputs") / analysis.output / filename for filename, _ in analysis.downloads),
         }
         if missing := required - files:
             raise ValueError(f"{analysis.title}: missing tracked publication inputs: {sorted(missing)}")

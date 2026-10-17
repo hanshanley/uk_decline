@@ -95,7 +95,7 @@ SOURCE_OECD = (
     "Data: OECD Income Distribution Database (2012 methodology); OECD annual household-consumption "
     "purchasing power parities. Median disposable household income divided by the square root of household size. "
     "Current-price purchasing-power dollars, not a real-income-growth index. OECD income-year labels retained "
-    "(UK financial years); all available years shown, with different country coverage. "
+    "(UK financial years). "
     "Missing years remain blank; dotted links mark definition changes, not like-for-like growth. "
     "Not spliced to Eurostat."
 )
@@ -291,18 +291,44 @@ def fig_median_income_non_oecd(df: pd.DataFrame, out: pathlib.Path, *, source: s
 
 def fig_median_income_oecd(df: pd.DataFrame, out: pathlib.Path) -> None:
     income = df[df[oecd_income.METRIC].notna()]
+    coverage = []
     for country, *_ in INCOME_PEERS:
         series = income[income["country"] == country]
         if series.empty:
             raise ValueError(f"Missing OECD median disposable income: {country}")
+        coverage.append(set(series["year"]))
     selected = income[income["country"].isin([country for country, *_ in INCOME_PEERS])]
+    shared = set.intersection(*coverage)
+    if not shared:
+        raise ValueError("OECD income has no complete common annual comparison")
+    common_end = max(shared)
+    common_start = common_end
+    while common_start - 1 in shared:
+        common_start -= 1
+    if common_start == common_end:
+        raise ValueError("OECD income has no complete common annual comparison spanning multiple years")
+    comparison = selected[selected["year"].between(common_start, common_end)]
+    _line_chart(
+        comparison, oecd_income.METRIC,
+        f"Median disposable income: UK vs peers, {int(common_start)}\u2013{int(common_end)}",
+        "Annual household-size-adjusted income\n(current purchasing-power dollars)",
+        lambda value, _: f"${value / 1000:.0f}k",
+        SOURCE_OECD + " Complete shared annual period only. The separate full-history figure "
+        "retains every earlier observation and any later country-specific releases.",
+        "median_disposable_income_oecd.png", out, xlabel="Income year (OECD labels)",
+        subtitle="The same six countries, with an observation in every year",
+        end_labels=True,
+    )
     start, end = int(selected["year"].min()), int(selected["year"].max())
     _line_chart(
         selected, oecd_income.METRIC,
-        f"Median disposable income: UK vs peers, {start}\u2013{end}",
+        f"Median disposable income: full published history, {start}\u2013{end}",
         "Annual household-size-adjusted income\n(current purchasing-power dollars)",
-        lambda value, _: f"${value / 1000:.0f}k", SOURCE_OECD,
-        "median_disposable_income_oecd.png", out, xlabel="Income year (OECD labels)",
+        lambda value, _: f"${value / 1000:.0f}k",
+        SOURCE_OECD + " All available years retained; country coverage differs. "
+        "Use the companion common-period figure for the complete six-country comparison.",
+        "median_disposable_income_oecd_history.png", out, xlabel="Income year (OECD labels)",
+        subtitle="Coverage varies by country; missing observations are not filled",
     )
 
 

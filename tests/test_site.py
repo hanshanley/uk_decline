@@ -101,7 +101,7 @@ def site_repository(tmp_path):
             f"![Chart](../outputs/{analysis.output}/{analysis.featured})\n\n"
             "[Overview](../README.md#scope)\n\n[Sources](#sources)\n"
         )
-        for filename in analysis.charts:
+        for filename in (*analysis.charts, *(name for name, _ in analysis.downloads)):
             chart = root / "outputs" / analysis.output / filename
             chart.parent.mkdir(parents=True, exist_ok=True)
             chart.write_bytes(b"test image")
@@ -174,6 +174,12 @@ def test_public_gdp_comparisons_keep_nominal_and_fixed_ppp_without_third_measure
         "uk_gdp_relative_to_peers_simple.png", "uk_real_gdp_relative_to_peers.png",
         "median_disposable_income_oecd.png",
     ]
+    history = page.find("a", string="Full income history (PNG)")
+    assert history is not None and history.has_attr("download")
+    assert urlsplit(history["href"]).path == (
+        "../outputs/gdp_income/median_disposable_income_oecd_history.png"
+    )
+    assert (output / "outputs/gdp_income/median_disposable_income_oecd_history.json").exists()
 
 
 def test_supplemental_charts_are_not_automatically_embedded(site_repository):

@@ -317,6 +317,8 @@ def test_oecd_income_chart_has_recent_annual_observations_without_bridging_defin
     fig = captured[0]
     ax = fig.axes[0]
     assert "2013\u20132023" in ax.get_title()
+    assert "same six countries" in ax.texts[0].get_text().lower()
+    assert len(captured) == 2
     assert ax.get_xlabel() == "Income year (OECD labels)"
     assert {line.get_label() for line in ax.lines} >= {"United States", "Poland"}
     assert len(ax.lines) == 6
@@ -364,7 +366,8 @@ def test_income_chart_preserves_early_history_and_latest_country_observations(mo
     rows = [
         {"country": country, "year": year, oecd_income.METRIC: value}
         for country, *_ in plots.INCOME_PEERS
-        for year, value in ((2013, 20000.), (2023, 30000.))
+        for year in range(2013, 2024)
+        for value in [20000. + (year - 2013) * 1000]
     ]
     rows.extend([
         {"country": "United Kingdom", "year": 2002, oecd_income.METRIC: 12000.},
@@ -373,13 +376,29 @@ def test_income_chart_preserves_early_history_and_latest_country_observations(mo
     captured = []
     monkeypatch.setattr(plots, "save_chart", lambda fig, *a, **k: captured.append(fig))
     plots.fig_median_income_oecd(pd.DataFrame(rows), tmp_path)
-    ax = captured[0].axes[0]
+    comparison = captured[0].axes[0]
+    assert "2013\u20132023" in comparison.get_title()
+    assert all(list(line.get_xdata()) == list(range(2013, 2024)) for line in comparison.lines)
+    ax = captured[1].axes[0]
     assert "2002\u20132024" in ax.get_title()
     uk, us = ax.lines[:2]
     assert uk.get_xdata()[0] == 2002
     assert uk.get_ydata()[0] == 12000.
     assert us.get_xdata()[-1] == 2024 and us.get_ydata()[-1] == 45000.
     assert pd.isna(uk.get_ydata()[1:11]).all()
+
+
+def test_income_comparison_rejects_a_single_shared_year_instead_of_filling_gaps(monkeypatch, tmp_path):
+    import pandas as pd
+    import pytest
+    from europe_data import oecd_income, plot_uk_decline as plots
+
+    rows = [
+        {"country": country, "year": year, oecd_income.METRIC: 20000.}
+        for country, *_ in plots.INCOME_PEERS for year in (2013, 2023)
+    ]
+    with pytest.raises(ValueError, match="complete common annual comparison"):
+        plots.fig_median_income_oecd(pd.DataFrame(rows), tmp_path)
 
 
 def test_simplified_gdp_ratio_shows_us_eu_and_poland(monkeypatch, tmp_path):

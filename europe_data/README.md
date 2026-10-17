@@ -119,16 +119,22 @@ it does **not** identify a causal currency effect or establish a loss of househo
 ### Median disposable income (a "typical household" measure)
 ![Median disposable income, adjusted for household size and purchasing power](../outputs/gdp_income/median_disposable_income_oecd.png)
 
-The public comparison uses the **OECD Income Distribution Database**, with annual
-observations for the UK, US, **Poland**, Germany, France and Italy across **all available
-years**, currently **2002–2023** overall. Coverage starts in 2002 for the UK, 2003
-for Italy, 2005 for Poland, 2008 for Germany, 2011 for France and 2012 for the US. The earlier
-2013–2023 display window unnecessarily hid available observations; it is no longer
-used. Unlike the Eurostat series, the UK continues after 2018. Each country's
-latest observation is retained even when peers have not published the same year.
-Missing years remain blank; dotted links explicitly identify definition changes,
-not like-for-like growth. No older methodology is spliced in to manufacture
-additional annual observations.
+The public comparison uses the **OECD Income Distribution Database**, showing the
+latest complete shared annual period for the UK, US, **Poland**, Germany, France
+and Italy. The current window is **2012–2023**, with **12 published observations per
+country**. This avoids isolated early points and uneven line starts masquerading
+as a complete historical comparison.
+
+The [full published history](../outputs/gdp_income/median_disposable_income_oecd_history.png)
+is retained separately, together with its hover-data sidecar and the complete CSV.
+The website links to this history from the GDP and incomes page. It preserves every
+available observation, currently **2002–2023** overall: the UK starts in 2002,
+Italy in 2003, Poland in 2005, Germany in 2008, France in 2011 and the US in 2012.
+Earlier gaps are present in the OECD source, not removed by the fetcher.
+Each country's latest observation remains in the history even if other countries
+have not published that year. Unlike Eurostat, the UK continues after 2018.
+Missing years are not filled; dotted links identify definition changes, not
+like-for-like growth. Older methodology is not spliced in to manufacture annual values.
 
 Income is disposable household income after taxes and transfers, divided by the
 square root of household size. The national-currency medians are divided by
@@ -179,7 +185,7 @@ The PIP chart shows **2000 onward**, not a 1970 start that leaves most early pee
 histories blank. Every country keeps its own latest observation and genuine gaps.
 End labels name each country and its year rather than implying a common current
 endpoint. Both charts' **full earlier source histories remain in the CSV**; the
-OECD comparison still shows its complete available history.
+OECD full-history figure still preserves its complete available history.
 
 Refreshes reject loss of previously published country/year/metric observations,
 duplicate cells and non-finite values before replacing any source tables. Partial
