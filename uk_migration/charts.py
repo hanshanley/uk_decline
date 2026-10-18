@@ -34,9 +34,12 @@ SOURCE_HO = "Home Office Immigration System Statistics (gov.uk)"
 SOURCE_WB = "World Bank, World Development Indicators (api.worldbank.org)"
 METHOD_BREAK_YEAR = 2012
 _METHOD_NOTE = (
-    "Note: 2012 method break. International Passenger Survey through 2011; "
-    "revised estimates based on administrative records from 2012. "
-    "Different methods are not directly comparable. Lines are not joined across the break."
+    "Note: 2012 method break. Different methods are not directly comparable; "
+    "lines are not joined across the break."
+)
+_SOURCE_ONS_METHODS = (
+    "Office for National Statistics: International Passenger Survey (ad hoc 006408) "
+    "through 2011; revised/admin-based long-term migration from 2012."
 )
 
 # ---- Substack theme (shared vizstyle house style) --------------------------
@@ -59,14 +62,15 @@ def _series(df: pd.DataFrame, metric: str, category: str = "all") -> pd.DataFram
     return sel.sort_values("period")
 
 
-def _save(fig, name: str, source: str, *, publication: bool = False) -> Path:
+def _save(fig, name: str, source: str, *, publication: bool = False,
+          right: float = 0.96) -> Path:
     import textwrap
 
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     path = FIGURES_DIR / name
     source = "\n".join(textwrap.fill(line, width=145) for line in source.splitlines())
     if publication:
-        fig.subplots_adjust(left=0.09, right=0.96, top=0.80, bottom=0.20)
+        fig.subplots_adjust(left=0.09, right=right, top=0.80, bottom=0.20)
     else:
         fig.subplots_adjust(bottom=0.20 if "\n" in source else 0.14)
     fig.text(
@@ -119,55 +123,85 @@ def _plot_ons_methods(
     return ips, admin
 
 
-def _annotate_peak_and_latest(ax, data: pd.DataFrame) -> None:
-    if data.empty:
-        return
-    peak = data.loc[data["value"].idxmax()]
-    latest = data.iloc[-1]
-    for row, label, offset in (
-        (peak, f"Peak {row_value_millions(peak['value'])}", (0, 12)),
-        (latest, f"{int(latest['period'])}: {row_value_millions(latest['value'])}", (0, -20)),
-    ):
-        ax.annotate(
-            label,
-            xy=(row["period"], row["value"]),
-            xytext=offset,
-            textcoords="offset points",
-            ha="center",
-            fontsize=9,
-            color=SUBSTACK_TEXT,
-        )
+def _compact_count(value: float, _position=None) -> str:
+    if not value:
+        return "0"
+    if abs(value) >= 1_000_000:
+        return f"{value / 1_000_000:g}m"
+    if abs(value) >= 1000:
+        return f"{value / 1000:g}k"
+    return f"{value:g}"
 
 
-def row_value_millions(value: float) -> str:
-    return f"{value / 1_000_000:.2f}M"
+def _style_ons_figure(fig, ax, segments: list[pd.DataFrame], title: str,
+                      subtitle: str, ylabel: str, *, counts: bool = True) -> int:
+    observed = [segment for segment in segments if not segment.empty]
+    if not observed:
+        raise ValueError("No ONS migration observations to plot")
+    first = int(min(segment["period"].min() for segment in observed))
+    latest = int(max(segment["period"].max() for segment in observed))
+    low = min(float(segment["value"].min()) for segment in observed)
+    high = max(0., max(float(segment["value"].max()) for segment in observed))
+    padding = max(high - low, abs(high), 1) * 0.08
+    ax.set_xlim(first - 0.6, latest + 0.6)
+    ax.set_ylim(0 if low >= 0 else low - padding, high + padding)
+    ax.set_xticks(sorted({first, *range((first // 10 + 1) * 10, latest + 1, 10), latest}))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
+    if counts:
+        ax.yaxis.set_major_formatter(_compact_count)
+    ax.set_xlabel("Year", fontsize=10.5, labelpad=5)
+    ax.set_ylabel(ylabel, fontsize=10.5, labelpad=7)
+    ax.tick_params(labelsize=10)
+    ax.grid(axis="y", linewidth=0.5)
+    ax.set_axisbelow(True)
+    fig.suptitle(title, x=0.09, y=0.96, ha="left", fontsize=16, fontweight="bold")
+    fig.text(0.09, 0.89, f"{subtitle} \u00b7 {first}\u2013{latest}",
+             fontsize=10.5, color=SUBSTACK_MUTED)
+    return latest
+
+
+def _ons_end_labels(ax, ends: list[tuple[float, str, str, int]], latest: int) -> None:
+    low, high = ax.get_ylim()
+    first_label = len(ax.texts)
+    labelled_ends(ax, ends, min_gap=(high - low) * 0.045, x=latest, fontsize=9.5)
+    for label in ax.texts[first_label:]:
+        label.set_path_effects([])
+        label.set_fontweight("normal")
 
 
 def chart_immigration(df: pd.DataFrame) -> Path:
-    fig, ax = plt.subplots(figsize=(11, 6))
-    _ips, admin = _plot_ons_methods(
-        ax, df, "immigration_by_origin", "immigration"
+    fig, ax = plt.subplots(figsize=(11, 6.2))
+    ips, admin = _plot_ons_methods(
+        ax, df, "immigration_by_origin", "immigration",
+        label="UK long-term immigration over time",
     )
-    _annotate_peak_and_latest(ax, admin)
-    _style_title(ax, "UK long-term immigration over time")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("Immigration per year")
-    _style_axes(ax)
-    return _save(fig, "immigration_over_time.png", _SOURCE_BY_ORIGIN)
+    latest = _style_ons_figure(
+        fig, ax, [ips, admin], "UK long-term immigration",
+        "Annual arrivals", "Immigration per year",
+    )
+    last = (admin if not admin.empty else ips).iloc[-1]
+    _ons_end_labels(ax, [(last["value"], f"{_compact_count(last['value'])} ({int(last['period'])})",
+                         SUBSTACK_ACCENT, int(last["period"]))], latest)
+    return _save(fig, "immigration_over_time.png", _SOURCE_BY_ORIGIN,
+                 publication=True, right=0.83)
 
 
 def chart_net_migration(df: pd.DataFrame) -> Path:
-    fig, ax = plt.subplots(figsize=(11, 6))
-    _ips, admin = _plot_ons_methods(
-        ax, df, "net_migration_by_origin", "net_migration"
+    fig, ax = plt.subplots(figsize=(11, 6.2))
+    ips, admin = _plot_ons_methods(
+        ax, df, "net_migration_by_origin", "net_migration",
+        label="UK net long-term migration over time",
     )
-    _annotate_peak_and_latest(ax, admin)
-    ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
-    _style_title(ax, "UK net long-term migration over time")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("People (net)")
-    _style_axes(ax)
-    return _save(fig, "net_migration.png", _SOURCE_BY_ORIGIN)
+    ax.axhline(0, color=SUBSTACK_MUTED, linewidth=0.8)
+    latest = _style_ons_figure(
+        fig, ax, [ips, admin], "UK net long-term migration",
+        "Immigration minus emigration", "People (net)",
+    )
+    last = (admin if not admin.empty else ips).iloc[-1]
+    _ons_end_labels(ax, [(last["value"], f"{_compact_count(last['value'])} ({int(last['period'])})",
+                         SUBSTACK_ACCENT, int(last["period"]))], latest)
+    return _save(fig, "net_migration.png", _SOURCE_BY_ORIGIN,
+                 publication=True, right=0.83)
 
 
 def chart_inflow_outflow(df: pd.DataFrame) -> Path:
@@ -304,58 +338,67 @@ def chart_legal_vs_irregular(df: pd.DataFrame) -> Path:
 
 
 def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
-    fig, ax = plt.subplots(figsize=(11, 6))
-    _plot_ons_methods(
+    fig, ax = plt.subplots(figsize=(11, 6.2))
+    ips, admin = _plot_ons_methods(
         ax, df, "net_migration_by_origin_per_1000_pop", "net_migration_per_1000_pop",
+        label="UK net migration per 1,000 population",
     )
-    ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
-    _style_title(ax, "UK net migration per 1,000 population")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("Per 1,000 population")
-    _style_axes(ax, thousands=False)
+    ax.axhline(0, color=SUBSTACK_MUTED, linewidth=0.8)
+    latest = _style_ons_figure(
+        fig, ax, [ips, admin], "UK net migration per 1,000 population",
+        "Annual net flows, population-adjusted", "Per 1,000 population", counts=False,
+    )
+    last = (admin if not admin.empty else ips).iloc[-1]
+    _ons_end_labels(ax, [(last["value"], f"{last['value']:.1f} ({int(last['period'])})",
+                         SUBSTACK_ACCENT, int(last["period"]))], latest)
     return _save(
         fig, "net_migration_per_capita.png",
-        f"{SOURCE_ONS_IPS}; {SOURCE_ONS}; {SOURCE_WB} (population denominator only)\n"
-        + _METHOD_NOTE,
+        f"{_SOURCE_ONS_METHODS}\nWorld Bank WDI: SP.POP.TOTL (population denominator only).\n"
+        + _METHOD_NOTE, publication=True, right=0.83,
     )
 
 
 _ORIGIN_GROUPS = [
-    ("all", SUBSTACK_TEXT, "All citizenships"),
     ("british", country_color("UK"), "British"),
     ("eu", country_color("EUU"), "EU / EU+"),
     ("non_eu", SUBSTACK_BLUE, "Non-EU / Non-EU+"),
 ]
 
 _SOURCE_BY_ORIGIN = (
-    f"{SOURCE_ONS_IPS}; {SOURCE_ONS} (admin-based, 2012+)\n" + _METHOD_NOTE
+    _SOURCE_ONS_METHODS + "\n" + _METHOD_NOTE
 )
 
 
 def _chart_by_origin(df: pd.DataFrame, ips_metric: str, admin_metric: str,
                      title: str, ylabel: str, name: str, zero_line: bool) -> Path:
-    fig, ax = plt.subplots(figsize=(11, 6))
+    fig, ax = plt.subplots(figsize=(11, 6.2))
+    segments, ends = [], []
     for cat, color, label in _ORIGIN_GROUPS:
-        _plot_ons_methods(
+        ips, admin = _plot_ons_methods(
             ax, df, ips_metric, admin_metric, category=cat,
-            color=color, linewidth=2.0, label=label,
+            color=color, linewidth=2.2, label=label,
         )
+        segments.extend((ips, admin))
+        observed = admin if not admin.empty else ips
+        if not observed.empty:
+            last = observed.iloc[-1]
+            ends.append((
+                last["value"], f"{label}  {_compact_count(last['value'])} ({int(last['period'])})",
+                color, int(last["period"]),
+            ))
     if zero_line:
-        ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
-    _style_title(ax, title)
-    ax.set_xlabel("Year")
-    ax.set_ylabel(ylabel)
-    handles, labels = ax.get_legend_handles_labels()
-    labelled = dict(zip(labels, handles))
-    ax.legend(labelled.values(), labelled.keys(), loc="upper left", frameon=False)
-    _style_axes(ax)
-    return _save(fig, name, _SOURCE_BY_ORIGIN)
+        ax.axhline(0, color=SUBSTACK_MUTED, linewidth=0.8)
+    latest = _style_ons_figure(
+        fig, ax, segments, title, "Long-term flows by citizenship group", ylabel,
+    )
+    _ons_end_labels(ax, ends, latest)
+    return _save(fig, name, _SOURCE_BY_ORIGIN, publication=True, right=0.76)
 
 
 def chart_immigration_by_origin(df: pd.DataFrame) -> Path:
     return _chart_by_origin(
         df, "immigration_by_origin", "immigration",
-        "UK immigration by citizenship group",
+        "UK immigration",
         "Immigration per year", "immigration_by_origin.png", zero_line=False,
     )
 
@@ -363,7 +406,7 @@ def chart_immigration_by_origin(df: pd.DataFrame) -> Path:
 def chart_net_migration_by_origin(df: pd.DataFrame) -> Path:
     return _chart_by_origin(
         df, "net_migration_by_origin", "net_migration",
-        "UK net migration by citizenship group",
+        "UK net migration",
         "Net migration per year", "net_migration_by_origin.png", zero_line=True,
     )
 

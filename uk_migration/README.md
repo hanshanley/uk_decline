@@ -17,6 +17,12 @@ estimates from 2012, with the method change explained in the footnote and no lin
 connecting the two methods. These methods are not directly comparable; the jump
 between segments must not be read as a measured year-on-year increase.
 
+The citizenship-group charts show **British**, **EU / EU+**, and
+**Non-EU / Non-EU+**, without an overlapping all-citizenships aggregate. Dated
+line-end labels replace the legend, and compact axis labels retain full-precision
+values in the interactive observations. The complete history and separate UK-wide
+total charts remain available; the underlying source table is unchanged.
+
 | File | Shows |
 |---|---|
 | `immigration_over_time.png` | ONS-only long-run immigration inflow; separate methods, with the 2012 change explained in the footnote. |

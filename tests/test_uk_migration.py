@@ -10,7 +10,7 @@ from uk_migration._aggregate import aggregate_by_year
 from uk_migration.sources import asylum, irregular, ons_ltim, visas
 
 
-def test_origin_method_segments_keep_country_identity_and_unique_legend(monkeypatch, tmp_path):
+def test_origin_method_segments_keep_country_identity_with_direct_labels(monkeypatch, tmp_path):
     import json
 
     monkeypatch.setattr(charts, "FIGURES_DIR", tmp_path)
@@ -24,7 +24,7 @@ def test_origin_method_segments_keep_country_identity_and_unique_legend(monkeypa
     monkeypatch.setattr(charts, "save_chart", capture)
     rows = [
         dict(metric=metric, category=category, period=year, value=value)
-        for category in ("british", "eu")
+        for category in ("all", "british", "eu")
         for metric, year, value in (
             ("immigration_by_origin", 2011, 10), ("immigration", 2012, 20),
         )
@@ -36,9 +36,69 @@ def test_origin_method_segments_keep_country_identity_and_unique_legend(monkeypa
         ("British", ["2011"]), ("British", ["2012"]),
         ("EU / EU+", ["2011"]), ("EU / EU+", ["2012"]),
     ]
-    assert [text.get_text() for text in figures[0].axes[0].get_legend().get_texts()] == [
-        "British", "EU / EU+",
+    ax = figures[0].axes[0]
+    assert ax.get_legend() is None
+    labels = [text.get_text().strip() for text in ax.texts if text.get_text()]
+    assert labels == ["British  20 (2012)", "EU / EU+  20 (2012)"]
+
+
+@pytest.mark.parametrize("chart,metric,values", [
+    (charts.chart_immigration_by_origin, "immigration",
+     {"all": 813000, "british": 110000, "eu": 76000, "non_eu": 627000}),
+    (charts.chart_net_migration_by_origin, "net_migration",
+     {"all": 171000, "british": -136000, "eu": -42000, "non_eu": 350000}),
+    (charts.chart_net_migration_by_origin, "net_migration",
+     {"all": -251000, "british": -136000, "eu": -42000, "non_eu": -73000}),
+])
+def test_origin_layout_preserves_component_data_and_separates_endpoint_labels(
+    chart, metric, values, monkeypatch, tmp_path,
+):
+    import json
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    rows = [
+        dict(metric=metric + ("_by_origin" if year < 2012 else ""),
+             category=category, period=year, value=value * factor)
+        for category, value in values.items()
+        for year, factor in ((1964, .2), (2011, .7), (2012, 2), (2025, 1))
     ]
+    figures = []
+    original = charts.save_chart
+
+    def save(fig, *args, **kwargs):
+        figures.append(fig)
+        return original(fig, *args, **kwargs)
+
+    monkeypatch.setattr(charts, "save_chart", save)
+    monkeypatch.setattr(charts, "FIGURES_DIR", tmp_path)
+    path = chart(pd.DataFrame(rows))
+    fig, ax = figures[0], figures[0].axes[0]
+    assert ax.get_legend() is None
+    if metric == "net_migration":
+        assert ax.get_ylim()[0] < 0 < ax.get_ylim()[1]
+    assert list(ax.get_xticks()) == [1964, 1970, 1980, 1990, 2000, 2010, 2020, 2025]
+    data = json.loads(path.with_suffix(".json").read_text())
+    assert {series["label"] for series in data["series"]} == {"British", "EU / EU+", "Non-EU / Non-EU+"}
+    actual = {
+        (series["label"], point[2]): float(point[3].replace(",", ""))
+        for series in data["series"] for point in series["points"]
+    }
+    expected = {
+        (label, str(row["period"])): row["value"]
+        for category, _, label in charts._ORIGIN_GROUPS
+        for row in rows if row["category"] == category
+    }
+    assert actual == pytest.approx(expected)
+    labels = [text for text in ax.texts if text.get_text()]
+    assert len(labels) == 3 and all("(2025)" in text.get_text() for text in labels)
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    boxes = sorted((text.get_window_extent(renderer) for text in labels), key=lambda box: box.y0)
+    assert all(lower.y1 + 1 < upper.y0 for lower, upper in zip(boxes, boxes[1:]))
+    assert all(box.x1 < fig.bbox.x1 for box in boxes)
+    assert fig.texts[-1].get_window_extent(renderer).y1 + 5 < ax.xaxis.label.get_window_extent(renderer).y0
+    assert "2012 method break" in fig.texts[-1].get_text()
 
 
 @pytest.mark.parametrize("chart,metric,categories,latest_label", [
@@ -376,7 +436,7 @@ def test_migration_method_break_is_footnoted_without_joining_segments(chart, mon
     rows = [
         schema.row(
             year, metric, value, unit="people", legality=schema.TOTAL,
-            flow_type=schema.NET, source="ONS",
+            flow_type=schema.NET, source="ONS", category=category,
         )
         for year, value, suffix in ((2010, 100, "_by_origin"), (2011, 110, "_by_origin"),
                                     (2012, 200, ""), (2013, 210, ""))
@@ -384,10 +444,11 @@ def test_migration_method_break_is_footnoted_without_joining_segments(chart, mon
             f"immigration{suffix}", f"net_migration{suffix}",
             f"net_migration{suffix}_per_1000_pop",
         )
+        for category in ("all", "british", "eu", "non_eu")
     ]
     captured = {}
 
-    def save(fig, name, source):
+    def save(fig, name, source, **kwargs):
         ax = fig.axes[0]
         captured["years"] = [list(line.get_xdata()) for line in ax.lines]
         captured["labels"] = [text.get_text() for text in ax.texts]
