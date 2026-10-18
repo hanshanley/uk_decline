@@ -230,7 +230,8 @@ def test_public_gdp_comparisons_keep_nominal_and_fixed_ppp_without_third_measure
     assert page.find("a", href="../recent-incomes/") is not None
     recent = BeautifulSoup((output / "recent-incomes/index.html").read_text(), "html.parser")
     assert [Path(urlsplit(image["src"]).path).name for image in recent.select("main img")] == [
-        "median_disposable_income_oecd.png",
+        "median_disposable_income_oecd.png", "median_disposable_income_oecd_four_country.png",
+        "median_disposable_income_oecd_uk_us_eu.png",
     ]
     assert recent.select_one("h1").get_text() == "Median disposable income"
     assert "hollow points in the shaded recent tails are our model estimates" in recent.get_text()
@@ -242,6 +243,14 @@ def test_public_gdp_comparisons_keep_nominal_and_fixed_ppp_without_third_measure
     }
     assert recent.find("a", string="Full income history (PNG)") is not None
     assert recent.find("a", href="../gdp-income/") is not None
+    for name, countries in {
+        "median_disposable_income_oecd_four_country": {"United Kingdom", "United States", "Germany", "France"},
+        "median_disposable_income_oecd_uk_us_eu": {"United Kingdom", "United States", "EU-27"},
+    }.items():
+        assert recent.select_one(f"#{name} img") is not None
+        data = json.loads((output / f"outputs/gdp_income/{name}.json").read_text())
+        observed = {series["label"] for series in data["series"] if "(model estimate)" not in series["label"]}
+        assert observed == countries
 
 
 def test_supplemental_charts_are_not_automatically_embedded(site_repository):

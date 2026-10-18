@@ -185,7 +185,11 @@ def test_gdp_figures_plot_distinct_volume_and_nominal_series(monkeypatch, tmp_pa
             rows.append(row)
     data = pd.DataFrame(rows)
     monkeypatch.setattr(plots.pd, "read_csv", lambda _: data)
-    monkeypatch.setattr(plots, "fig_median_income_oecd", lambda *args, **kwargs: None)
+    income_comparisons = []
+    monkeypatch.setattr(
+        plots, "fig_median_income_oecd",
+        lambda *args, **kwargs: income_comparisons.append(kwargs["comparison"]),
+    )
     monkeypatch.setattr(plots, "fig_median_income_non_oecd", lambda *args, **kwargs: None)
     monkeypatch.setattr(plots.gdp_comparisons, "make_chart", lambda *args: None)
     captured = {}
@@ -193,6 +197,7 @@ def test_gdp_figures_plot_distinct_volume_and_nominal_series(monkeypatch, tmp_pa
         captured[Path(path).name] = plots.plt.gcf()
     monkeypatch.setattr(plots, "save_chart", save)
     assert plots.main(["--out", str(tmp_path)]) == 0
+    assert income_comparisons == ["all", "four_country", "uk_us_eu"]
     real = captured["gdp_per_capita_real_over_time.png"].axes[0]
     nominal = captured["gdp_per_capita_nominal_over_time.png"].axes[0]
     assert list(real.lines[0].get_ydata()[pd.notna(real.lines[0].get_ydata())]) == pytest.approx([100, 110])

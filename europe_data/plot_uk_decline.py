@@ -25,6 +25,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import math
 import pathlib
 import textwrap
 
@@ -150,7 +151,8 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
                 scale: float = 1.0, source_ha: str = "left",
                 xlabel: str | None = None, baseline_year: int | None = None,
                 subtitle: str | None = None, end_labels: bool = False,
-                estimates: pd.DataFrame | None = None) -> None:
+                estimates: pd.DataFrame | None = None, peers: list[tuple] | None = None,
+                eu_reference: pd.DataFrame | None = None) -> None:
     """Draw a UK-vs-peers line chart for one metric and save it to ``out/filename``.
 
     ``eu_agg``/``eu_label`` optionally add an EU reference series (Eurostat
@@ -158,10 +160,35 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
     ``scale``
     divides the values (e.g. 1000 to show GDP in 000s).
     """
-    peers = INCOME_PEERS if metric.startswith("median") else PEERS
+    if peers is None:
+        peers = INCOME_PEERS if metric.startswith("median") else PEERS
     series = [*peers, eu_agg] if eu_agg is not None else list(peers)
     modelled = estimates is not None and not estimates.empty
-    fig, ax = plt.subplots(figsize=(12, 7) if modelled else (11, 6))
+    if eu_reference is None:
+        fig, ax = plt.subplots(figsize=(12, 7) if modelled else (11, 6))
+    else:
+        fig, (ax, eu_ax) = plt.subplots(
+            2, 1, figsize=(12, 10), sharex=True, gridspec_kw={"height_ratios": [1.6, 1]},
+        )
+        fig.suptitle(title, fontsize=20, fontweight="bold", y=.995)
+        eu_metric = "median_disposable_income"
+        _plot_annual_series(
+            eu_ax, eu_reference, eu_metric, EU_EUROSTAT[0],
+            EU_EUROSTAT[1], "-", 1.8, label="EU-27",
+        )
+        eu_ax.set_title("EU-27 reference: Eurostat, different household scale",
+                       fontsize=14, fontweight="bold", pad=12)
+        eu_ax.set_ylabel("Annual income (current PPS)\nModified-OECD household adjustment")
+        eu_ax.set_xlabel("Income reference year (EU: survey year minus one)")
+        eu_ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda value, _: f"{value / 1000:g}k"))
+        eu_ax.grid(axis="y", linewidth=.5)
+        eu_ax.set_axisbelow(True)
+        eu_ax.margins(y=.15)
+        last_eu = eu_reference.iloc[-1]
+        labelled_ends(
+            eu_ax, [(last_eu[eu_metric], f"EU-27 ({int(last_eu['year'])})", EU_EUROSTAT[1])],
+            min_gap=1, x=int(last_eu["year"]), fontsize=9,
+        )
     plotted = False
     ends = []
     last_year = None
@@ -207,14 +234,20 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
         ax.axvspan(first - .5, last + .15, color=SUBSTACK_GRID, alpha=.45, zorder=0)
         ax.text((first + last) / 2, .035, "Model estimates", transform=ax.get_xaxis_transform(),
                 ha="center", va="bottom", fontsize=8.5, color=SUBSTACK_MUTED)
-    ax.set_xlabel(xlabel or ("Survey year" if metric == "median_disposable_income" else "Year"), labelpad=2)
+    ax.set_xlabel(
+        "" if eu_reference is not None else
+        xlabel or ("Survey year" if metric == "median_disposable_income" else "Year"), labelpad=2,
+    )
     if baseline_year is not None or metric.startswith("median"):
         ax.xaxis.set_major_locator(mtick.MaxNLocator(nbins=9, integer=True))
     if modelled:
         ax.set_xticks(sorted({*range(int(df["year"].min()), last + 1, 2), last}))
     ax.set_ylabel(ylabel, labelpad=2)
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(yfmt))
-    ax.set_title(title, fontweight="bold", pad=30 if subtitle else 14)
+    ax.set_title("UK and US: OECD" if eu_reference is not None else title,
+                 fontweight="bold", pad=30 if subtitle else 14)
+    if eu_reference is not None:
+        ax.title.set_fontsize(14)
     if subtitle:
         ax.text(.5, 1.015, subtitle, transform=ax.transAxes, ha="center", va="bottom",
                 fontsize=10.5, color=SUBSTACK_MUTED)
@@ -236,6 +269,8 @@ def _line_chart(df: pd.DataFrame, metric: str, title: str, ylabel: str, yfmt,
         0.18 if metric == "median_disposable_income" else 0.15
     )
     plt.subplots_adjust(bottom=bottom)
+    if eu_reference is not None:
+        fig.subplots_adjust(hspace=.35)
     save_chart(fig, out / filename, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
@@ -319,15 +354,24 @@ def fig_median_income_non_oecd(df: pd.DataFrame, out: pathlib.Path, *, source: s
 
 def fig_median_income_oecd(
     df: pd.DataFrame, out: pathlib.Path, *, estimates: pd.DataFrame | None = None,
+    comparison: str = "all",
 ) -> None:
+    selections = {
+        "all": {country for country, *_ in INCOME_PEERS},
+        "four_country": {"United Kingdom", "United States", "Germany", "France"},
+        "uk_us_eu": {"United Kingdom", "United States"},
+    }
+    if comparison not in selections:
+        raise ValueError(f"Unknown median-income comparison: {comparison}")
+    peers = [peer for peer in INCOME_PEERS if peer[0] in selections[comparison]]
     income = df[df[oecd_income.METRIC].notna()]
     coverage = []
-    for country, *_ in INCOME_PEERS:
+    for country, *_ in peers:
         series = income[income["country"] == country]
         if series.empty:
             raise ValueError(f"Missing OECD median disposable income: {country}")
         coverage.append(set(series["year"]))
-    selected = income[income["country"].isin([country for country, *_ in INCOME_PEERS])]
+    selected = income[income["country"].isin(selections[comparison])]
     shared = set.intersection(*coverage)
     if not shared:
         raise ValueError("OECD income has no complete common annual comparison")
@@ -337,14 +381,17 @@ def fig_median_income_oecd(
         common_start -= 1
     if common_start == common_end:
         raise ValueError("OECD income has no complete common annual comparison spanning multiple years")
-    comparison = selected[selected["year"].between(common_start, common_end)]
+    comparison_data = selected[selected["year"].between(common_start, common_end)]
     modelled = False
     end = int(common_end)
     source = SOURCE_OECD + " Complete shared annual period only. The separate full-history figure " \
         "retains every earlier observation and any later country-specific releases."
-    subtitle = "The same six countries, with an observation in every year"
+    subtitle = (
+        "The same six countries, with an observation in every year" if comparison == "all" else
+        "The selected countries, with an observation in every year"
+    )
     if estimates is not None:
-        actual = selected[["country", "year", oecd_income.METRIC]].rename(
+        actual = income[["country", "year", oecd_income.METRIC]].rename(
             columns={oecd_income.METRIC: "value"},
         )
         actual = actual.assign(
@@ -352,10 +399,11 @@ def fig_median_income_oecd(
             metric=oecd_income.METRIC, unit=oecd_income.UNIT,
         )
         estimates = income_estimates.validate(estimates, actual)
+        estimates = estimates[estimates["country"].isin(selections[comparison])]
         modelled = not estimates.empty
         if modelled:
             end = income_estimates.THROUGH_YEAR
-            comparison = selected[selected["year"].between(common_start, end)]
+            comparison_data = selected[selected["year"].between(common_start, end)]
             first = int(estimates["year"].min())
             subtitle = (
                 f"Filled dots: observations | Hollow dots: our model estimates ({first}\u2013{end})"
@@ -371,15 +419,46 @@ def fig_median_income_oecd(
                 "Estimates rounded to $100; uncertainty not quantified. Current purchasing-power dollars, "
                 "not real growth. Dotted historical links: definition change. Full observed history retained separately."
             )
+    reference = None
+    if comparison == "uk_us_eu":
+        reference = _series(df, EU_EUROSTAT[0], "median_disposable_income").copy()
+        reference["year"] -= 1
+        reference = reference[reference["year"].between(common_start, end)]
+        if (
+            reference.empty or reference["year"].duplicated().any()
+            or not reference["median_disposable_income"].map(
+                lambda value: math.isfinite(value) and value > 0,
+            ).all()
+            or set(range(int(common_start), int(reference["year"].max()) + 1)) - set(reference["year"])
+            or reference["year"].max() < end - 1
+        ):
+            raise ValueError("Missing or incomplete published EU median-income reference")
+        source += (
+            " Separate EU panel: Eurostat ilc_di03 MED_EI, EU27_2020, total population; "
+            "modified-OECD household scale and current PPS, NOT OECD square-root/PPP dollars. "
+            "Different vertical scales: levels must not be compared across panels. "
+            "EU income year shown as survey year minus one; income generally refers to the preceding "
+            "calendar year, with national exceptions. EU ends at its actual source observation; "
+            "no model extrapolation or average of national medians is substituted."
+        )
+    labels = {
+        "all": "UK vs peers",
+        "four_country": "UK vs three peers",
+        "uk_us_eu": "UK, US and EU reference",
+    }
+    suffix = "" if comparison == "all" else f"_{comparison}"
     _line_chart(
-        comparison, oecd_income.METRIC,
-        f"Median disposable income: UK vs peers, {int(common_start)}\u2013{end}",
+        comparison_data, oecd_income.METRIC,
+        f"Median disposable income: {labels[comparison]}, {int(common_start)}\u2013{end}",
         "Annual household-size-adjusted income\n(current purchasing-power dollars)",
         lambda value, _: f"${value / 1000:.0f}k",
         source,
-        "median_disposable_income_oecd.png", out, xlabel="Income year (OECD labels)",
+        f"median_disposable_income_oecd{suffix}.png", out, xlabel="Income year (OECD labels)",
         subtitle=subtitle, end_labels=True, estimates=estimates if modelled else None,
+        peers=peers, eu_reference=reference,
     )
+    if comparison != "all":
+        return
     start, end = int(selected["year"].min()), int(selected["year"].max())
     _line_chart(
         selected, oecd_income.METRIC,
@@ -529,7 +608,9 @@ def main(argv: list[str] | None = None) -> int:
     fig_uk_relative(df, out, simplified=True)
     fig_uk_relative(df, out, simplified=True, basis="real")
     fig_uk_relative(df, out, simplified=True, basis="ppp")
-    fig_median_income_oecd(df, out, estimates=pd.read_csv(args.income_estimates))
+    estimates = pd.read_csv(args.income_estimates)
+    for comparison in ("all", "four_country", "uk_us_eu"):
+        fig_median_income_oecd(df, out, estimates=estimates, comparison=comparison)
     fig_median_income_non_oecd(df, out, source="eurostat")
     fig_median_income_non_oecd(df, out, source="pip")
 

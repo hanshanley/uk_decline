@@ -61,11 +61,13 @@ ANALYSES = (
              "alongside median disposable household income.",
              downloads=(("median_disposable_income_oecd_history.png", "Full income history (PNG)"),)),
     Analysis("recent-incomes", "Median disposable income", "Economy", "europe_data", "gdp_income",
-             ("median_disposable_income_oecd.png",),
+             ("median_disposable_income_oecd.png", "median_disposable_income_oecd_four_country.png",
+              "median_disposable_income_oecd_uk_us_eu.png"),
              "The UK, US, Germany, France, Italy and Poland on one household-size-adjusted, "
              "purchasing-power basis through 2025. Filled points are published OECD medians; "
              "hollow points in the shaded recent tails are our model estimates, not observed OECD medians. "
-             "Different national median measures are not spliced into the lines.",
+             "Different national median measures are not spliced into the lines. "
+             "The UK/US/EU version keeps Eurostat's EU reference on a separate, explicitly different scale.",
              downloads=(("median_disposable_income_oecd_history.png", "Full income history (PNG)"),)),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
              ("ppp_gdp_per_capita_growth.png", "ppp_gdp_relative_to_peers.png",
@@ -162,6 +164,8 @@ CHART_COMPARATORS = {
         {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
     ),
     "median_income_pip": {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
+    "median_disposable_income_oecd_four_country": {"United Kingdom", "United States", "Germany", "France"},
+    "median_disposable_income_oecd_uk_us_eu": {"United Kingdom", "United States", "EU-27"},
     "median_income_recent_national": {"United Kingdom", "United States"},
     "median_income_recent_europe": {"Germany", "France", "Italy", "Poland"},
     "median_disposable_income_pps": {"United Kingdom", "Germany", "France", "Italy", "Poland", "EU-27"},
@@ -258,6 +262,8 @@ CHART_TITLES = {
     "gdp_per_capita_real_over_time": "Real GDP per person growth: each economy starts at 100 in 2007",
     "median_disposable_income_pps": "Median disposable income in purchasing power standards",
     "median_disposable_income_oecd": "Median disposable income, adjusted for household size and purchasing power",
+    "median_disposable_income_oecd_four_country": "Median disposable income: UK, US, Germany and France",
+    "median_disposable_income_oecd_uk_us_eu": "UK and US median income with a separate Eurostat EU-27 reference; different units and household scales",
     "median_income_recent_national": "Latest UK and US income: separate national measures",
     "median_income_recent_europe": "Newer European median disposable income, by income year",
     "median_income_pip": "Median daily income or consumption, adjusted for purchasing power",
