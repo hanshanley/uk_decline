@@ -100,8 +100,9 @@ ANALYSES = (
              "Not NATO budget estimates, announced targets or military capability."),
     Analysis("debt-borrowing", "Debt & borrowing costs", "Economy", "debt_data", "debt",
              ("uk_public_debt_pct_gdp.png", "uk_borrowing_costs_daily.png",
-              "government_borrowing_costs.png"),
-             "UK public debt relative to GDP and government-bond yields: the debt stock and the cost of new borrowing."),
+              "government_borrowing_costs.png", "debt_interest_budget_share.png"),
+             "UK public debt, market borrowing rates and the share of government spending used "
+             "for debt interest, compared with the US, Germany, France and Italy."),
     Analysis("nhs", "NHS performance", "Public services", "nhs_data", "nhs",
              ("rtt_waiting_list_per_1000.png", "ae_4hr_pct.png", "cancer_62day_pct.png"),
              "Waiting lists and treatment standards across the four nations, with scope breaks."),
@@ -164,6 +165,7 @@ CHART_COMPARATORS = {
     "sterling_currency_strength_v2": {"US dollar", "Euro", "Japanese yen", "Swiss franc"},
     "trade_share_gdp": {"United Kingdom", "United States", "Germany", "France", "Japan"},
     "government_borrowing_costs": {"United Kingdom", "United States", "Germany", "France", "Italy"},
+    "debt_interest_budget_share": {"United Kingdom", "United States", "Germany", "France", "Italy"},
     **dict.fromkeys(
         ("ae_4hr_pct", "cancer_62day_pct", "rtt_waiting_list_per_1000"),
         {"England", "Scotland", "Wales", "Northern Ireland"},
@@ -221,6 +223,7 @@ CHART_TITLES = {
     "uk_public_debt_pct_gdp": "UK public-sector net debt as a share of GDP",
     "uk_borrowing_costs_daily": "UK 10-year borrowing rates: latest daily observations",
     "government_borrowing_costs": "Government borrowing rates: 10-year bond yields",
+    "debt_interest_budget_share": "Government budgets: interest payments as a share of total expenditure",
     "uk_unemployment": "Overall unemployment: UK, EU and US",
     "uk_youth_unemployment": "Youth unemployment: UK, EU and US",
     "median_age_over_time": "Median age across countries: projections from 2024 are marked",

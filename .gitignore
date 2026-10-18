@@ -21,6 +21,7 @@ data/processed/*.csv
 !data/europe_combined_wide.csv
 !data/oecd_median_income_ppp.csv
 !data/debt_borrowing_long.csv
+!data/debt_interest_budget.csv
 !data/uk_gilt_yields_daily.csv
 !data/unemployment_long.csv
 !data/unemployment_references.csv

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import csv
+import io
 from pathlib import Path
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -8,7 +10,7 @@ import pandas as pd
 import pytest
 import requests
 
-from debt_data import charts, sources
+from debt_data import charts, interest, sources
 from debt_data.__main__ import main
 
 
@@ -99,13 +101,14 @@ def test_daily_yield_validation_checks_freshness_and_preserves_history(daily_fra
 
 
 def test_failed_daily_download_preserves_both_saved_inputs(
-    debt_frame, daily_frame, monkeypatch, tmp_path,
+    debt_frame, daily_frame, budget_frame, monkeypatch, tmp_path,
 ):
     monthly_csv, daily_csv = tmp_path / "monthly.csv", tmp_path / "daily.csv"
     debt_frame.to_csv(monthly_csv, index=False)
     daily_frame.to_csv(daily_csv, index=False)
     saved = monthly_csv.read_bytes(), daily_csv.read_bytes()
     monkeypatch.setattr(sources, "fetch", lambda: debt_frame)
+    monkeypatch.setattr(interest, "fetch", lambda: budget_frame)
 
     def fail():
         raise requests.ConnectionError("daily yield source unavailable")
@@ -113,6 +116,7 @@ def test_failed_daily_download_preserves_both_saved_inputs(
     monkeypatch.setattr(sources, "fetch_daily", fail)
     with pytest.raises(requests.ConnectionError, match="daily yield"):
         main(["--csv", str(monthly_csv), "--daily-csv", str(daily_csv),
+              "--interest-csv", str(tmp_path / "interest.csv"),
               "--out", str(tmp_path / "charts")])
     assert (monthly_csv.read_bytes(), daily_csv.read_bytes()) == saved
     assert not (tmp_path / "charts").exists()
@@ -234,6 +238,194 @@ def test_daily_chart_is_separate_recent_and_does_not_fill_missing_days(
     assert "12 Oct 2026" in fig.texts[1].get_text()
     assert "not spliced" in fig.texts[-1].get_text()
     assert ax.get_xlim()[1] - ax.dataLim.x1 <= 14
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    assert fig.texts[-1].get_window_extent(renderer).y1 + 5 < ax.xaxis.label.get_window_extent(renderer).y0
+
+
+def _interest_csv(records):
+    fields = [
+        "DATAFLOW", *interest.DIMENSIONS, "TIME_PERIOD", "OBS_VALUE", "UNIT_MULT",
+        "CURRENCY", "UNIT_MEASURE", "PRICE_BASE", "ADJUSTMENT",
+        "OBS_STATUS", "OBS_STATUS_2", "CONF_STATUS",
+    ]
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=fields)
+    writer.writeheader()
+    for record in records:
+        code, measure = record.get("REF_AREA", "GBR"), record.get("MEASURE", "GGINTP")
+        row = {key: value.split("+")[0] for key, value in interest.DIMENSIONS.items()}
+        row.update(
+            DATAFLOW="OECD.ECO.MAD:DSD_EO@DF_EO(1.5)",
+            REF_AREA=code, MEASURE=measure, TIME_PERIOD=2023,
+            OBS_VALUE=10 if measure == "GGINTP" else 200,
+            UNIT_MULT=6, CURRENCY="" if code == "USA" else interest.CURRENCIES.get(code, "GBP"),
+            UNIT_MEASURE="XDC", PRICE_BASE="V", ADJUSTMENT="",
+            OBS_STATUS="A", CONF_STATUS="F",
+        )
+        row.update(record)
+        writer.writerow(row)
+    return output.getvalue()
+
+
+def _parse_interest(text):
+    return interest.parse(
+        text, end=2025, retrieved="2026-10-18T16:00:00Z", source_url="source",
+        flow=interest.FLOW + ",1.5", vintage="OECD Economic Outlook 119",
+    )
+
+
+@pytest.fixture
+def budget_frame(monkeypatch):
+    records = [
+        dict(REF_AREA=code, TIME_PERIOD=year, MEASURE=measure)
+        for code in interest.COUNTRIES
+        for year in range(2000, interest.BASELINE_END[code] + 1)
+        for measure in ("GGINTP", "YPGT")
+    ]
+    monkeypatch.setattr(interest, "get_text", lambda *args, **kwargs: _interest_csv(records))
+    monkeypatch.setattr(interest, "get_json", lambda *args, **kwargs: {"data": {"dataflows": [{
+        "agencyID": "OECD.ECO.MAD", "id": "DSD_EO@DF_EO",
+        "version": "1.5", "name": "Economic Outlook 119",
+    }]}})
+    return interest.fetch()
+
+
+def test_interest_ratio_uses_matched_national_currency_units_and_keeps_source_flags():
+    text = _interest_csv([
+        dict(OBS_VALUE=12_000, UNIT_MULT=6, OBS_STATUS="P"),
+        dict(MEASURE="YPGT", OBS_VALUE=1000, UNIT_MULT=9, OBS_STATUS="E"),
+    ])
+    frame = _parse_interest(text)
+    assert len(frame) == 1
+    row = frame.iloc[0]
+    assert row["interest"] == 12_000_000_000
+    assert row["expenditure"] == 1_000_000_000_000
+    assert row["value"] == pytest.approx(1.2)
+    assert row["status"] == "E;P"
+    assert row["currency"] == "GBP"
+    assert row["interest_series_id"].endswith("/GBR.GGINTP.A")
+    assert row["expenditure_series_id"].endswith("/GBR.YPGT.A")
+    fractional = _parse_interest(_interest_csv([
+        dict(REF_AREA="FRA", OBS_VALUE="66635.9"),
+        dict(REF_AREA="FRA", MEASURE="YPGT", OBS_VALUE=1000, UNIT_MULT=9),
+    ]))
+    assert fractional.iloc[0]["interest"] == 66_635_900_000
+
+
+@pytest.mark.parametrize("change", [
+    {"MEASURE": "GNINTP"}, {"FREQ": "Q"}, {"MEASURE": "YPG"},
+    {"PRICE_BASE": "Q"}, {"UNIT_MEASURE": "USD"}, {"CURRENCY": "USD"},
+    {"ADJUSTMENT": "Y"}, {"OBS_VALUE": "nan"}, {"OBS_VALUE": "-1"},
+    {"UNIT_MULT": ""}, {"TIME_PERIOD": 2026}, {"OBS_STATUS": "UNKNOWN"},
+])
+def test_interest_parser_rejects_incompatible_governments_units_and_invalid_values(change):
+    with pytest.raises(ValueError):
+        _parse_interest(_interest_csv([change]))
+
+
+def test_interest_parser_does_not_invent_components_or_publish_forecasts():
+    for records in (
+        [{}, {}],
+        [{}, dict(MEASURE="YPGT", TIME_PERIOD=2022)],
+        [{}, dict(MEASURE="YPGT", OBS_VALUE=0)],
+    ):
+        with pytest.raises(ValueError):
+            _parse_interest(_interest_csv(records))
+    forecasts = [
+        dict(MEASURE=measure, OBS_STATUS="F") for measure in ("GGINTP", "YPGT")
+    ]
+    assert _parse_interest(_interest_csv(forecasts)).empty
+
+
+def test_interest_validation_protects_published_coverage_and_source_calculation(budget_frame):
+    with pytest.raises(ValueError, match="annual coverage"):
+        interest.validate(budget_frame.iloc[1:])
+    corrupt = budget_frame.copy()
+    corrupt.loc[0, "value"] += .1
+    with pytest.raises(ValueError, match="numerator/denominator"):
+        interest.validate(corrupt)
+    previous = budget_frame.copy()
+    previous.loc[previous.index[-1], "year"] = 2026
+    with pytest.raises(ValueError, match="previously published"):
+        interest.validate(budget_frame, previous=previous)
+    mixed = budget_frame.copy()
+    mixed.loc[0, "source_vintage"] = "OECD Economic Outlook 118"
+    with pytest.raises(ValueError, match="provenance"):
+        interest.validate(mixed)
+
+
+def test_interest_refresh_discovers_new_edition_without_splicing_old_components(
+    budget_frame, monkeypatch,
+):
+    monkeypatch.setattr(interest, "get_json", lambda *args, **kwargs: {"data": {"dataflows": [{
+        "agencyID": "OECD.ECO.MAD", "id": "DSD_EO@DF_EO",
+        "version": "1.6", "name": "Economic Outlook No 120",
+    }]}})
+    records = [
+        dict(REF_AREA=row.iso3, TIME_PERIOD=row.year, MEASURE=measure)
+        for row in budget_frame.itertuples() for measure in ("GGINTP", "YPGT")
+    ]
+
+    def download(url, **kwargs):
+        assert ",1.6/" in url
+        assert kwargs["params"]["endPeriod"] == str(pd.Timestamp.now(tz="UTC").year - 1)
+        return _interest_csv(records).replace("DF_EO(1.5)", "DF_EO(1.6)")
+
+    monkeypatch.setattr(interest, "get_text", download)
+    frame = interest.fetch()
+    assert frame["source_vintage"].eq("OECD Economic Outlook No 120").all()
+    assert frame["interest_series_id"].str.contains(",1.6/", regex=False).all()
+    assert frame["expenditure_series_id"].str.contains(",1.6/", regex=False).all()
+
+
+def test_failed_interest_source_preserves_saved_inputs_and_does_not_render(
+    debt_frame, daily_frame, budget_frame, monkeypatch, tmp_path,
+):
+    monthly_csv, daily_csv, budget_csv = (
+        tmp_path / name for name in ("monthly.csv", "daily.csv", "interest.csv")
+    )
+    for path, frame in ((monthly_csv, debt_frame), (daily_csv, daily_frame), (budget_csv, budget_frame)):
+        frame.to_csv(path, index=False)
+    saved = [path.read_bytes() for path in (monthly_csv, daily_csv, budget_csv)]
+    monkeypatch.setattr(sources, "fetch", lambda: debt_frame)
+
+    def fail():
+        raise requests.ConnectionError("interest expenditure source unavailable")
+
+    monkeypatch.setattr(interest, "fetch", fail)
+    with pytest.raises(requests.ConnectionError, match="interest expenditure"):
+        main(["--csv", str(monthly_csv), "--daily-csv", str(daily_csv),
+              "--interest-csv", str(budget_csv), "--out", str(tmp_path / "charts")])
+    assert [path.read_bytes() for path in (monthly_csv, daily_csv, budget_csv)] == saved
+    assert not (tmp_path / "charts").exists()
+
+
+def test_interest_chart_has_all_peers_correct_units_and_dated_latest_points(
+    debt_frame, budget_frame, monkeypatch, tmp_path,
+):
+    figures = []
+    marked = budget_frame["iso3"].eq("GBR") & budget_frame["year"].eq(2018)
+    budget_frame.loc[marked, "status"] = "B;P"
+    budget_frame.loc[budget_frame.index[-1], "status"] = "P"
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *args, **kwargs: figures.append(fig))
+    paths = charts.make_charts(debt_frame, tmp_path, budget=budget_frame)
+    assert paths[-1].name == "debt_interest_budget_share.png"
+    fig, ax = figures[-1], figures[-1].axes[0]
+    assert {line.get_label() for line in ax.lines} == set(charts.COLORS)
+    assert "total government expenditure" in ax.get_ylabel()
+    assert ax.get_xlabel() == "Calendar year"
+    assert ax.get_ylim()[0] == 0
+    labels = [text.get_text().strip() for text in ax.texts]
+    assert any("United States 5.0%\n  2025" == label for label in labels)
+    assert any("United Kingdom 5.0%\n  2025" == label for label in labels)
+    assert not any(label.endswith(" P") for label in labels)
+    footer = fig.texts[-1].get_text().replace("\n", " ")
+    assert "Latest observation flags:" in footer
+    assert "not cash payments or principal repayments" in footer
+    assert "OECD Economic Outlook 119" in footer
+    assert "2026 onward projections are not shown" in footer
     canvas = FigureCanvasAgg(fig)
     canvas.draw()
     renderer = canvas.get_renderer()
