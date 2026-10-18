@@ -1,14 +1,15 @@
-# Tuition sub-analysis — cost of a four-year degree: UK vs EU vs US
+# Tuition sub-analysis — England, EU countries and the US
 
-Part of the `uk_decline` study. Determines the **median** and **average** cost of a
-four-year bachelor's degree across the **UK**, the **EU-27**, and the **US**, to test the
-claim that *the UK has a higher average cost of degrees*.
+Part of the `uk_decline` study. Compares annual published **tuition and fee
+references** for England, EU countries and US public four-year institutions.
+These are not estimates of the average student's total degree cost.
 
-> **On this mixed-definition snapshot**, England's maximum annual
-> tuition (~**$12,890**, the published £9,790 cap for 2026/27, converted at nearby-year FX) is **higher than both**
-> the EU country-compilation mean (~**$442/yr**, median **$0**) and the US average published **in-state public** tuition
-> (~**$11,950/yr**, 2025/26). This compares a statutory maximum with a US institutional average
-> and an unweighted EU country compilation, not like-for-like student averages.
+> **Common-year comparison, 2023/24:** England's £9,250 maximum annual fee is
+> about **$11,497** at 2023 exchange rates, compared with the US public four-year
+> in-state average of **$11,310**. The 23 reporting EU countries' mean most-common
+> fee is about **$566** (country median **$34**). The four unreported country fees
+> are excluded, not entered as zero. This compares a statutory maximum with an
+> institutional average and national most-common fees, not like-for-like student averages.
 > England's cap is not a UK-wide average; rules differ in Scotland, Wales and Northern Ireland.
 
 ## Scope
@@ -17,7 +18,8 @@ claim that *the UK has a higher average cost of degrees*.
 |---|---|
 | Cost | **Tuition / fees only** (no living costs) |
 | Cohort | **Domestic / in-country (EU) students** at public institutions |
-| Regions | **UK** (own category), **EU-27**, **US** |
+| Regions | **England** (stored under UK/GBR), **27 EU countries**, **US** |
+| Public cross-section | **2023/24**, with **2023 exchange rates**; 23 EU fees reported, four missing |
 | Aggregation | **Per country, unweighted** median & average |
 | Degree totals | Summary table: annual tuition **× 4** normalized; the public chart compares annual fees only |
 | Currency | normalized to **USD** (nominal, market FX) and **constant 2022 USD** (CPI-adjusted) |
@@ -32,7 +34,8 @@ actual bill or an inflation-adjusted measure.
 
 ![England statutory tuition cap](../outputs/tuition/tuition_england_cap_nominal.png)
 
-Dated cross-country compilation (nominal USD, annual domestic tuition, one figure
+**Archived mixed-year compilation**, not the basis for the public matched-year
+comparison (nominal USD, annual domestic tuition, one figure
 per country): **EU 2023/24–2026/27, US 2025/26, England 2026/27**. Six EU
 entries use newer national sources; the remaining 21 retain their dated 2023/24
 references. This is not a uniformly current EU dataset.
@@ -43,7 +46,7 @@ references. This is not a uniformly current EU dataset.
 | **EU-27** | 27 | $442 | $0 | $1,768 | $0 |
 | **US** | 1 | $11,950 | $11,950 | $47,800 | $47,800 |
 
-Constant-2022-USD values use the tuition source year's **BLS annual CPI-U**.
+In that archived compilation, constant-2022-USD values use the tuition source year's **BLS annual CPI-U**.
 The US 2025/26 snapshot is **$10,863 in 2022 dollars**. BLS's published 2025
 annual average uses 11 months because October collection was suspended during the
 federal shutdown; it is used as published, not reconstructed or interpolated.
@@ -52,15 +55,49 @@ annual 2026 CPI is available. Consequently that chart's EU mean covers **23 of
 27 countries**, not the full EU compilation; it is not comparable with the
 27-country nominal mean as a measure of change.
 
-The public cross-country chart therefore uses **nominal dollars**, with one entry
-each for England, the EU country-compilation mean and the US. All 27 EU country
-entries are included, with equal country weights and the country median noted
-separately. This is **not an official EU-wide or student-weighted fee average**.
-England's 2026/27 cap uses the latest published annual exchange rate (2025), which
-is stated on the figure; no unavailable 2026 annual CPI is fabricated. The
-per-country and inflation-adjusted snapshots remain supplemental charts on GitHub.
+The public cross-country comparison now uses **2023/24 for all countries** and
+**2023 World Bank market exchange rates**. It shows England, the mean of the
+**23 reporting EU country fees**, and the US, with equal weights for reporting EU
+countries and the country median noted separately. It is **not an official EU-wide
+or student-weighted fee average**. The real-dollar companion uses the same fee year,
+exchange-rate year and published same-year BLS CPI. The full mixed-year country
+ranking remains an explicitly labelled historical reference download.
 
 ![Annual tuition: England, EU country mean and US](../outputs/tuition/tuition_region_comparison.png)
+
+### Compact country ranking: through France
+
+![Annual domestic tuition, ranked through France](../outputs/tuition/tuition_by_country_to_france.png)
+
+This compact view uses **2023/24 fees for every entry**, converted at **2023 annual
+market exchange rates**. This is the latest shared academic year in the primary
+[Eurydice open-data release](https://eurydice.eacea.ec.europa.eu/data-and-visuals/national-student-fees),
+not its 2025 publication year. England's statutory cap and the College Board US
+average are matched to the same 2023/24 academic start year. It is **not a crop
+of the mixed-year table**, and no old amount is relabelled as a current fee.
+
+The 11 reported entries ranked through France are England, the US, Ireland,
+the Netherlands, Italy, Hungary, Belgium (Flemish Community), Spain, Portugal,
+Luxembourg and France. Countries below France are omitted from this compact
+view. Bulgaria, Croatia, Latvia and Romania lack reported fee amounts in the
+selected primary-source row; they are **missing, not zero**. This is a selected
+ranking of reported fees, not an exhaustive ranking of every EU country.
+
+The tracked [common-year table](../data/tuition_common_year.csv) preserves all
+29 country entries, including the four unreported amounts, academic year,
+same-year FX, both nominal and real-dollar values and exact source/measure
+metadata. `tuition.common_year` discovers the latest dated primary workbook,
+selects **Most common / First cycle / Home students / Full-time** in the published
+euro block, and matches the national cap/average and conversion inputs to that
+academic year. Mixed years, mismatched FX, insufficient EU coverage and missing
+provenance stop publication.
+
+The website displays this matched-year graph and links separately to the
+[full mixed-year reference ranking](../outputs/tuition/tuition_by_country.png).
+Caps, most-common fees, registration charges and institutional averages remain
+different concepts despite the aligned years; the footnote states those
+limitations. Both new same-year comparisons are regenerated during the weekly
+tuition refresh.
 
 Market exchange rates express fees in US dollars at the year's exchange rate.
 GDP PPP expresses them against an economy-wide purchasing-power basket, not a
@@ -76,8 +113,9 @@ measures student affordability.
 > fee series cover — a year's fees took **21.8% of UK
 > GDP per head against 13.3% in the US**.
 
-Full per-country data: `data/processed/tuition_by_country.csv`.
-Region summary: `data/processed/summary.csv`.
+Matched-year source data: `data/tuition_common_year.csv`.
+Archived mixed-year data: `data/processed/tuition_by_country.csv`.
+Matched-year region summary: `data/processed/summary.csv`.
 
 ## Historical trend — real (inflation-adjusted) tuition back to the 1970s
 
@@ -135,9 +173,10 @@ verification in-row).
 | Inflation | **BLS** annual CPI-U, `CUUR0000SA0`, published `M13` annual averages | `tuition/cpi.py`; saved 1963–2025 series shared by snapshot, market-rate history and PPP tuition charts | **primary** |
 | Exchange rates | **World Bank** `PA.NUS.FCRF` (keyless API) | `tuition/rates.py` (`fetch_series`) | **primary** |
 | EU snapshot fees | Six national sources plus **Eurydice** 2023/24 summary for 21 countries | `data/raw/manual_tuition.csv`; dates and definitions retained per row | **mixed primary / secondary** |
+| Public matched-year comparison | **Eurydice primary open data 2023/24**, most-common annual home/full-time/first-cycle fee, with same-year England cap and College Board US average | `tuition/common_year.py`; 23 reported EU amounts and four missing amounts retained explicitly | **primary publisher workbook** |
 | Germany history | German HE fee history / Eurydice | `data/raw/tuition_history_manual.csv` | secondary |
 
-> **Honesty note:** the EU-27 snapshot fees come from a published *summary* of the Eurydice
+> **Archived-reference note:** the mixed-year EU-27 compilation comes from a published *summary* of the Eurydice
 > report, not the primary PDF, except the six nationally sourced updates. Bulgaria
 > remains marked `APPROXIMATE`; Spain now uses the ministry's **€15.37 mean
 > first-enrolment credit price × 60 credits = €922.20**, a standardized annual
@@ -163,22 +202,28 @@ verification in-row).
    market FX; constant-2022-USD figures deflate the nominal USD by the saved BLS US CPI. An offline
    fallback FX table lives in `tuition/config.py` (snapshot only — the historical
    deflators have no fabricated fallback).
-4. **Aggregation** — `analyze.py` computes per-region median & average (annual and ×4).
+4. **Matched-year source** — `common_year.py` reads the primary Eurydice workbook,
+   matches England and US historical fees to its academic year, and requires exact
+   same-year FX and CPI. Missing fees remain missing.
+5. **Aggregation** — `analyze.py` computes per-region median & average (annual and ×4)
+   from the matched-year source, not the archived mixed-year compilation.
 
 ## Run
 
 ```bash
 # runtime deps in requirements.txt (requests, tenacity, matplotlib, pandas, lxml); tests need pytest
-# --- current cross-sectional snapshot ---
+# --- source inputs and shared-year comparison ---
 .venv/bin/python -m tuition.cpi                # refresh published annual BLS CPI (also used by PPP tuition)
 .venv/bin/python -m tuition.build_dataset      # fetch WB rates + normalize  (--offline to skip network)
+.venv/bin/python -m tuition.fetch_collegeboard # update the complete publisher fee history
+.venv/bin/python -m tuition.build_history      # prepare genuine same-year England/US observations
+.venv/bin/python -m tuition.common_year        # primary Eurydice cohort + exact-year FX/CPI
 .venv/bin/python -m tuition.analyze            # print table + write summary.csv
-.venv/bin/python -m tuition.plot_tuition       # snapshot figures -> ../outputs/tuition/  (add --real for constant 2022 USD)
+.venv/bin/python -m tuition.plot_tuition       # shared-year comparisons and archived full reference
+.venv/bin/python -m tuition.plot_tuition --real # constant 2022 USD companions
 
 # --- historical, inflation-adjusted series (back to the 1970s) ---
-.venv/bin/python -m tuition.fetch_collegeboard # fetch full College Board nominal history
 .venv/bin/python -m tuition.fetch_nces --refresh # optional separate NCES reference
-.venv/bin/python -m tuition.build_history      # combine College Board US + UK caps + Germany
 .venv/bin/python -m tuition.plot_history       # historical chart -> ../outputs/tuition/tuition_history_real_usd.png
 
 .venv/bin/python -m pytest tests/test_tuition.py -q
@@ -193,8 +238,10 @@ carry an italic **source note citing the data provenance**:
   in nominal pounds, without inflation or currency conversion.
 - `tuition_history_real_usd.png` — real (constant 2022 USD) tuition; US through
   2025/26 for both US and England, and sparse German zero-fee reference years.
-- `tuition_region_comparison.png` — average & median annual tuition, UK vs EU-27 vs US.
-- `tuition_by_country.png` — per-country ranking, colored by region.
+- `tuition_region_comparison.png` — matched-year England cap, reporting-EU-country mean
+  and median, and US in-state average.
+- `tuition_by_country_to_france.png` — matched-year nominal ranking, ending at France.
+- `tuition_by_country.png` — archived mixed-year per-country ranking, with shared country colors.
 - `*_real.png` — constant 2022 USD (CPI-adjusted) variants of the two snapshot charts.
 
 ## Layout (tuition sub-analysis files)
@@ -214,6 +261,7 @@ fetch_oecd.py       # checks the OECD SDMX API for a usable fee series
 fetch_eurostat.py   # checks Eurostat/Eurydice for a usable fee series
 build_dataset.py    # snapshot: merge curated + fetched, convert to nominal + constant-2022 USD
 build_history.py    # historical: College Board US + UK caps + Germany -> real 2022 USD
+common_year.py      # primary matched-year comparison -> ../data/tuition_common_year.csv
 analyze.py          # per-region median & average + verdict
 plot_tuition.py     # snapshot figures -> ../outputs/tuition/
 plot_history.py     # historical real-USD figure -> ../outputs/tuition/
@@ -231,20 +279,25 @@ tests/test_tuition.py
   "Domestic US cost" here means
   the **in-state public** figure most students face; the private figure is kept as a
   reference row (`include_primary=0`).
-- **UK is nation-split.** The headline is **England (£9,790 published for 2026/27)**; **Scotland** charges
+- **UK is nation-split.** The current cap panel shows **England (£9,790 for 2026/27)**;
+  the matched-year comparison uses **£9,250 for 2023/24**. **Scotland** charges
   eligible Scottish-domiciled students **£0** (reference row). **Wales** and
   **Northern Ireland** have their own fee rules; the England cap must not be applied
   to all UK students.
-- **Many EU states charge €0** for domestic students (Germany, the Nordics, etc.). These
-  zeros are legitimate data points and are kept, which is why the EU **median is $0**.
+- **Zero and missing are different.** Published zero fees are retained, while four
+  unreported EU fees are excluded. The matched-year reporting-country median is
+  **$34**, not zero. Eurydice can include registration/admin charges even where
+  general tuition is free.
 - **3-vs-4-year programmes.** The results table's ×4 total is a normalized comparison;
-  the region chart separately annotates typical 3-year UK/EU and 4-year US degrees.
-- **Reference years differ** (EU 2023/24–2026/27, US 2025/26, England 2026/27); nominal figures prefer
+  it does not assert that every degree lasts four years. The public charts compare annual fees.
+- **Reference years differ only in the archived compilation**
+  (EU 2023/24–2026/27, US 2025/26, England 2026/27); those nominal figures prefer
   source-year FX, falling back to a nearby published year within three years; the actual
-  FX year is recorded per row. Real values require exact source-year CPI.
+  FX year is recorded per row. The public cross-section instead requires **2023/24
+  throughout and exact 2023 FX**. Real values require exact source-year CPI.
 - **Definitions differ.** England is a cap; US is an enrollment-weighted published
-  fee; EU entries mix caps, conditional state-funded places, contributions and
-  institutional fees. Luxembourg is **€400 per semester × 2 = €800/year** for
-  most University of Luxembourg programmes, not €400/year. France excludes CVEC;
-  Ireland excludes institutional levies. The compilation is not a harmonized
-  student-cost average.
+  fee; the matched-year EU source reports most-common fees, which can include
+  administrative charges. The archived compilation mixes national measures and
+  dates: its newer Luxembourg reference is **€800/year**, whereas the selected
+  primary **2023/24** annual-fee row reports **€400**. They are not interchangeable.
+  Neither comparison is a harmonized student-cost average.

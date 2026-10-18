@@ -163,8 +163,8 @@ def test_load_primary_excludes_reference_rows():
 # --- plot regression: missing region must not KeyError ----------------------
 def test_plot_region_comparison_missing_region_no_crash():
     rows = [
-        {"country": "United Kingdom", "region": config.UK, "annual_tuition_usd": 12179.48},
-        {"country": "Germany", "region": config.EU, "annual_tuition_usd": 0.0},
+        {"country": "United Kingdom", "region": config.UK, "year": 2023, "annual_tuition_usd": 12179.48},
+        {"country": "Germany", "region": config.EU, "year": 2023, "annual_tuition_usd": 0.0},
     ]  # note: no US region present
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fh:
         out = fh.name
@@ -181,8 +181,8 @@ def test_region_chart_includes_england_and_one_eu_summary_with_honest_units(monk
     from matplotlib.backends.backend_agg import FigureCanvasAgg
 
     rows = [
-        {"country": "United Kingdom", "region": config.UK, "year": 2026, "annual_tuition_usd": 12890.5},
-        {"country": "United States", "region": config.US, "year": 2025, "annual_tuition_usd": 11950},
+        {"country": "United Kingdom", "region": config.UK, "year": 2023, "annual_tuition_usd": 12890.5},
+        {"country": "United States", "region": config.US, "year": 2023, "annual_tuition_usd": 11950},
         {"country": "Germany", "region": config.EU, "year": 2023, "annual_tuition_usd": 0},
         {"country": "Italy", "region": config.EU, "year": 2023, "annual_tuition_usd": 1600},
     ]
@@ -194,11 +194,11 @@ def test_region_chart_includes_england_and_one_eu_summary_with_honest_units(monk
     assert len(ax.patches) == 3
     assert [patch.get_width() for patch in ax.patches] == pytest.approx([800, 11950, 12890.5])
     labels = [label.get_text() for label in ax.get_yticklabels()]
-    assert any("England (fee cap)" in label and "2026/27" in label for label in labels)
+    assert any("England (fee cap)" in label and "2023/24" in label for label in labels)
     assert any("EU sample (2/27 countries)" in label for label in labels)
     assert not any(label.startswith(("Germany", "Italy")) for label in labels)
     assert "not an official EU or student-weighted average" in fig.texts[0].get_text()
-    assert "2026 fees use 2025 rates" in " ".join(fig.texts[0].get_text().split())
+    assert "Currency conversion uses 2023 annual World Bank exchange rates." in " ".join(fig.texts[0].get_text().split())
     assert "constant" not in ax.get_xlabel()
     canvas = FigureCanvasAgg(fig)
     canvas.draw()
@@ -636,8 +636,8 @@ def test_real_snapshot_with_only_zero_median_eu_remains_readable(tmp_path, monke
         {"country": country, "region": region, "year": year,
          "annual_tuition_usd_real2022": None}
         for country, region, year in [
-            ("Italy", config.EU, 2026),
-            ("United States", config.US, 2025), ("England", config.UK, 2026),
+            ("Italy", config.EU, 2023),
+            ("United States", config.US, 2023), ("England", config.UK, 2023),
         ]
     ]
     captured = []
@@ -651,7 +651,7 @@ def test_real_snapshot_with_only_zero_median_eu_remains_readable(tmp_path, monke
         "EU sample (3/27 countries)\n2023/24"
     ]
     note = " ".join(captured[0].texts[0].get_text().split())
-    assert "Not plotted: Italy (2026), United States (2025), England (2026)" in note
+    assert "Not plotted: Italy (2023), United States (2023), England (2023)" in note
     from matplotlib.backends.backend_agg import FigureCanvasAgg
 
     fig = captured[0]
@@ -686,3 +686,243 @@ def test_tuition_country_bars_keep_country_colors_without_a_misleading_region_le
     ]
     assert "EU sample (1/27 countries)" in captured[0].axes[0].get_title()
     assert "Not plotted: England (2026)" in " ".join(captured[0].texts[0].get_text().split())
+
+
+def test_compact_tuition_ranking_stops_at_france_and_preserves_values_and_colors(tmp_path):
+    import json
+    from matplotlib.colors import to_rgba
+    from unittest.mock import patch
+    from vizstyle import country_color
+
+    rows = [
+        dict(country=country, region=region, year=2025, fx_year=2025, annual_tuition_usd=value)
+        for country, region, value in (
+            ("France", config.EU, 201.14),
+            ("United Kingdom", config.UK, 12554.74),
+            ("United States", config.US, 11950),
+            ("Belgium", config.EU, 1307.39),
+            ("Germany", config.EU, 0),
+            ("Portugal", config.EU, 787.6),
+            ("Sweden", config.EU, 150),
+        )
+    ]
+    before = [dict(row) for row in rows]
+    figures = []
+    original = plot_tuition.save_chart
+
+    def save(fig, *args, **kwargs):
+        figures.append(fig)
+        return original(fig, *args, **kwargs)
+
+    path = tmp_path / "compact.png"
+    with patch.object(plot_tuition, "save_chart", save):
+        plot_tuition.plot_by_country(
+            rows, "annual_tuition_usd", "US dollars", str(path), through_country="France",
+        )
+    assert rows == before
+    ax = figures[0].axes[0]
+    assert [text.get_text() for text in ax.get_yticklabels()] == [
+        "France", "Portugal", "Belgium", "United States", "England (fee cap)",
+    ]
+    assert [bar.get_width() for bar in ax.patches] == [201.14, 787.6, 1307.39, 11950, 12554.74]
+    assert [bar.get_facecolor() for bar in ax.patches][-3:] == [
+        to_rgba(country_color("EU")), to_rgba(country_color("US")), to_rgba(country_color("UK")),
+    ]
+    data = json.loads(path.with_suffix(".json").read_text())
+    assert [(point[2], point[3]) for series in data["series"] for point in series["points"]] == [
+        ("France", "$201.14"), ("Portugal", "$787.6"), ("Belgium", "$1,307.39"),
+        ("United States", "$11,950"), ("England (fee cap)", "$12,554.74"),
+    ]
+    footer = " ".join(figures[0].texts[-1].get_text().split())
+    assert "lower-fee countries omitted, not missing" in footer
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    canvas = FigureCanvasAgg(figures[0])
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    assert figures[0].texts[-1].get_window_extent(renderer).y1 < ax.xaxis.label.get_window_extent(renderer).y0
+
+
+def test_compact_tuition_ranking_rejects_missing_cutoff_country(tmp_path):
+    import pytest
+
+    rows = [dict(country="Germany", region=config.EU, year=2025, fx_year=2025, annual_tuition_usd=0)]
+    with pytest.raises(ValueError, match="cutoff country"):
+        plot_tuition.plot_by_country(
+            rows, "annual_tuition_usd", "US dollars", str(tmp_path / "missing.png"),
+            through_country="France",
+        )
+    assert not (tmp_path / "missing.png").exists()
+
+
+def _common_fee_book():
+    import pandas as pd
+    from tuition import common_year
+
+    codes = list(common_year.EU_CODES.values())
+    columns = ["Annual fee amount (in euro)", "Education cycle", "Student category", "Student status", *codes]
+    amounts = [
+        ":" if code in ("BG", "HR", "LV", "RO") else 0 if code == "DE" else 100
+        for code in codes
+    ]
+    frame = pd.DataFrame([
+        ["Reference academic year: 2023/2024"],
+        ["Annual fee amount (national currency)", *columns[1:]],
+        ["Most common", "First cycle", "Home students", "Full-time", *([99999] * len(codes))],
+        columns,
+        ["Most common", "First cycle", "Home students", "Full-time", *amounts],
+    ])
+    return {
+        common_year.SHEET: frame,
+        "Eurostat data": pd.DataFrame([["Euro/ECU exchange rates"], [2023]]),
+    }
+
+
+def test_common_fee_source_uses_euro_block_and_preserves_genuine_missing_amounts():
+    from tuition import common_year
+
+    rows = common_year.parse_eurydice(_common_fee_book(), 2023, "https://eurydice.eacea.ec.europa.eu/data.xlsx")
+    by_code = {row["iso3"]: row for row in rows}
+    assert len(rows) == 27
+    assert by_code["DEU"]["annual_tuition_local"] == 0
+    assert by_code["FRA"]["annual_tuition_local"] == 100
+    assert {row["iso3"] for row in rows if row["annual_tuition_local"] is None} == {
+        "BGR", "HRV", "LVA", "ROU",
+    }
+    assert all(row["currency"] == "EUR" and row["year"] == 2023 for row in rows)
+    assert "Flemish Community" in by_code["BEL"]["notes"]
+
+
+def test_common_fee_source_rejects_wrong_academic_year_or_student_cohort():
+    import pytest
+    from tuition import common_year
+
+    with pytest.raises(ValueError, match="reference academic year"):
+        common_year.parse_eurydice(_common_fee_book(), 2025, "https://source")
+    book = _common_fee_book()
+    book[common_year.SHEET].iloc[-1, 2] = "International students"
+    with pytest.raises(ValueError, match="home/full-time/first-cycle"):
+        common_year.parse_eurydice(book, 2023, "https://source")
+    book = _common_fee_book()
+    book["Eurostat data"].iloc[1, 0] = 2022
+    with pytest.raises(ValueError, match="publisher exchange-rate year"):
+        common_year.parse_eurydice(book, 2023, "https://source")
+
+
+def test_common_year_builder_matches_fee_year_fx_year_and_missing_country_counts():
+    import pytest
+    from tuition import common_year
+
+    rows = common_year.parse_eurydice(_common_fee_book(), 2023, "https://source")
+    rows += common_year.national_rows([
+        dict(iso3="GBR", year=2023, nominal_local=9250, currency="GBP", source="cap", source_url="https://source"),
+        dict(iso3="USA", year=2023, nominal_local=11310, currency="USD", source="fees", source_url="https://source"),
+    ], 2023)
+    fx = {
+        ("DEU", 2023): dict(currency="EUR", fx_lcu_per_usd=.8, fx_year=2023),
+        ("GBR", 2023): dict(currency="GBP", fx_lcu_per_usd=.5, fx_year=2023),
+    }
+    built = common_year.build(rows, fx, {2023: .9})
+    summary = aggregate_by_region(built, "annual_tuition_usd")
+    assert summary["EU"]["n"] == 23
+    assert summary["EU"]["mean_annual"] == pytest.approx(22 * 125 / 23)
+    assert summary["UK"]["median_annual"] == 18500
+    assert summary["US"]["median_annual"] == 11310
+    assert built[-2]["annual_tuition_usd_real2022"] == 16650
+    assert all(row["fx_year"] == 2023 and row["academic_year"] == "2023/24" for row in built)
+    fx["DEU", 2023]["fx_year"] = 2022
+    with pytest.raises(ValueError, match="exact 2023"):
+        common_year.build(rows, fx, {2023: .9})
+
+
+def test_common_fee_source_resolves_reference_year_instead_of_download_publication_year():
+    from tuition import common_year
+
+    year, url = common_year.latest_workbook(
+        '<a href="/sites/default/files/2025-04/Open%20data_2022_2023_0.xlsx">Old</a>'
+        '<a href="/sites/default/files/2025-09/Open%20data_2023-2024.xlsx">Current</a>'
+        '<a href="https://untrusted.invalid/Open%20data_2025-2026.xlsx">Other</a>'
+    )
+    assert year == 2023 and "2025-09" in url
+
+
+def test_common_fee_refresh_preserves_reported_amounts_and_does_not_regress_the_year():
+    import pytest
+    from tuition import common_year
+
+    rows = common_year.load()
+    changed = [dict(row) for row in rows]
+    lost = next(row for row in changed if row["iso3"] == "DEU")
+    for field in ("annual_tuition_local", "annual_tuition_usd", "annual_tuition_usd_real2022"):
+        lost[field] = None
+    with pytest.raises(ValueError, match="previously reported"):
+        common_year.validate(changed, rows)
+    newer = [{**row, "year": 2024} for row in rows]
+    with pytest.raises(ValueError, match="regress"):
+        common_year.validate(rows, newer)
+
+
+def test_region_plot_refuses_a_mixed_academic_year_or_nearby_year_exchange_rate(tmp_path):
+    import pytest
+    from tuition import common_year
+
+    for column, value in (("year", "2026"), ("fx_year", "2022")):
+        rows = common_year.load()
+        rows[0][column] = value
+        with pytest.raises(ValueError, match="common academic year|same year's exchange rates"):
+            plot_tuition.plot_region_comparison(rows, "annual_tuition_usd", "US dollars", str(tmp_path / "bad.png"))
+        assert not (tmp_path / "bad.png").exists()
+
+
+def test_common_year_tuition_rejects_mixed_fee_years_and_fx_years():
+    import pytest
+    from tuition import common_year
+
+    rows = common_year.load()
+    year = int(rows[0]["year"]) + 1
+    for column, value in (("year", str(year)), ("academic_year", f"{year}/{(year+1)%100:02d}"),
+                          ("fx_year", str(year))):
+        changed = [dict(row) for row in rows]
+        changed[-1][column] = value
+        with pytest.raises(ValueError, match="academic years|metadata"):
+            common_year.validate(changed)
+
+
+def test_compact_tuition_plot_itself_refuses_mixed_years(tmp_path):
+    import pytest
+    from tuition import common_year
+
+    rows = common_year.load()
+    rows[0]["year"] = "2026"
+    with pytest.raises(ValueError, match="one academic year"):
+        plot_tuition.plot_by_country(
+            rows, "annual_tuition_usd", "US dollars", str(tmp_path / "mixed.png"),
+            through_country="France",
+        )
+
+
+def test_primary_eurydice_selector_keeps_most_common_first_cycle_and_missing_values():
+    import pandas as pd
+    import pytest
+    from tuition import common_year
+
+    codes = list(common_year.EU_CODES.values())
+    values = [None if code == "BG" else 0 if code == "DE" else 200 for code in codes]
+    table = pd.DataFrame([
+        ["Reference academic year: 2023/2024", *([None] * (3 + len(codes)))],
+        ["Annual fee amount (in euro)", "Cycle", "Student", "Attendance", *codes],
+        ["Maximum", "First cycle", "Home students", "Full-time", *([9999] * len(codes))],
+        ["Most common", "Second cycle", "Home students", "Full-time", *([8888] * len(codes))],
+        ["Most common", "First cycle", "Home students", "Full-time", *values],
+    ])
+    book = _common_fee_book()
+    book[common_year.SHEET] = table
+    rows = common_year.parse_eurydice(book, 2023, "https://example.test/data.xlsx")
+    by_code = {row["iso3"]: row for row in rows}
+    assert len(rows) == 27
+    assert by_code["BGR"]["annual_tuition_local"] is None
+    assert by_code["DEU"]["annual_tuition_local"] == 0
+    assert by_code["FRA"]["annual_tuition_local"] == 200
+    assert "Flemish" in by_code["BEL"]["notes"]
+    with pytest.raises(ValueError, match="reference academic year"):
+        common_year.parse_eurydice(book, 2025, "https://example.test/data.xlsx")

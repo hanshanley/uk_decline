@@ -1,10 +1,11 @@
 """Generate tuition figures in the shared Substack style.
 
-Reads ``data/processed/tuition_by_country.csv`` (primary per-country rows) and writes:
-  1. tuition_region_comparison.png — average & median annual domestic tuition (USD) for
-     UK vs EU-27 vs US.
-  2. tuition_by_country.png — per-country annual domestic tuition (USD), ranked, colored
-     by region, showing the UK as an outlier against the EU-27.
+Reads the matched-year source and the separate archived country compilation:
+  1. tuition_region_comparison.png — same-year England cap, reporting-EU-country
+     mean and median, and US in-state average.
+  2. tuition_by_country.png — archived mixed-year annual fees, ranked and colored
+     by country.
+  3. tuition_by_country_to_france.png — same-year nominal ranking ending at France.
 
 Usage:
     python plot_tuition.py            # nominal USD (default)
@@ -19,7 +20,7 @@ import textwrap
 
 import matplotlib.pyplot as plt
 
-from tuition import config, theme
+from tuition import common_year, config, theme
 from tuition.dataset import load_primary
 from tuition.stats import aggregate_by_region
 from vizstyle import COUNTRY_COLORS, country_color, save_chart
@@ -64,10 +65,17 @@ def _missing_note(rows: list[dict], value_key: str) -> str:
         f"{r['country']} ({r['year']})"
         for r in rows if r.get(value_key) is None
     ]
-    return f" Not plotted: {', '.join(missing)} — conversion data unavailable." if missing else ""
+    return f" Not plotted: {', '.join(missing)} — source amount or conversion unavailable; not treated as zero." if missing else ""
 
 
 def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path: str) -> None:
+    years = {int(row["year"]) for row in rows}
+    if len(years) != 1:
+        raise ValueError("Tuition comparison must use one common academic year")
+    year = years.pop()
+    if any(row.get("fx_year") not in (None, "") and int(row["fx_year"]) != year for row in rows):
+        raise ValueError("Tuition comparison requires the same year's exchange rates")
+    academic_year = f"{year}/{(year + 1) % 100:02d}"
     agg = aggregate_by_region(rows, value_key)
     # EU statistics weight countries equally, not students.
     order = [r for r in (config.EU, config.US, config.UK) if r in agg]  # low -> high (barh)
@@ -125,34 +133,60 @@ def plot_region_comparison(rows: list[dict], value_key: str, unit: str, out_path
     ax.set_xlabel(f"Annual tuition & fees ({unit})")
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"${v:,.0f}"))
     ax.set_xlim(0, max([*vals, 1.0]) * 1.3)
-    ax.set_title("Domestic tuition comparison — source years differ\n"
+    ax.set_title(f"Domestic tuition comparison, {academic_year}\n"
                  "public universities, domestic / in-state students",
                  fontweight="bold", pad=14)
     ax.grid(axis="x", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)
     source = (
-        "Sources: Eurydice 2023/24 and national fee schedules (EU); College Board 2025/26 "
-        "(US public four-year institutions, in-state tuition and fees); Student Finance England "
-        "2026/27 (maximum fee, not an average). EU: arithmetic mean of listed country fees, "
-        "not an official EU or student-weighted average. Entries mix fees, caps, contributions "
-        "and conditional free places; source years differ. "
-        "Nominal US dollars at published annual exchange rates; 2026 fees use 2025 rates. "
-        "Not inflation-adjusted or purchasing-power-adjusted."
-    ) if value_key == "annual_tuition_usd" else SOURCE_NOTE
+        f"Sources: Eurydice primary open data, {academic_year}, most common annual fee for home, "
+        "full-time first-cycle students; College Board, same-year public four-year in-state average; "
+        "England, same-year statutory tuition cap. EU: arithmetic mean of reporting countries, "
+        "not an official EU or student-weighted average; Belgium uses the Flemish Community. "
+        "Fee definitions differ: Eurydice can include registration/admin charges; England is a cap, "
+        "not a student average. Missing fees are excluded, not zero-filled. "
+        f"Currency conversion uses {year} annual World Bank exchange rates. "
+    )
+    source += (
+        "Nominal US dollars, not inflation-adjusted or purchasing-power-adjusted."
+        if value_key == "annual_tuition_usd" else
+        f"Converted to constant {config.REAL_BASE_YEAR} US dollars using published {year} US CPI."
+    )
     _finalize(
         fig, out_path, bottom=0.16, missing_note=_missing_note(rows, value_key), source=source,
     )
 
 
-def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) -> None:
+def plot_by_country(
+    rows: list[dict], value_key: str, unit: str, out_path: str, *,
+    through_country: str | None = None,
+) -> None:
+    missing_note = _missing_note(rows, value_key)
     data = [
         (REGION_LABELS[config.UK] if r["region"] == config.UK else r["country"],
          r[value_key], r["region"])
         for r in rows if r[value_key] is not None
     ]
     data.sort(key=lambda t: t[1])  # ascending -> highest at top of horizontal bars
+    if through_country is not None:
+        years = {int(row["year"]) for row in rows if row[value_key] is not None}
+        if (
+            len(years) != 1
+            or any(str(row.get("fx_year", "")) != str(row["year"])
+                   for row in rows if row[value_key] is not None)
+        ):
+            raise ValueError("Compact tuition comparison requires one academic year and matching FX year")
+        cutoff = [index for index, (name, _, _) in enumerate(data) if name == through_country]
+        if len(cutoff) != 1:
+            raise ValueError(f"Expected one plotted tuition entry for cutoff country: {through_country}")
+        data = data[cutoff[0]:]
+        names = {name for name, _, _ in data}
+        rows = [
+            row for row in rows
+            if (REGION_LABELS[config.UK] if row["region"] == config.UK else row["country"]) in names
+        ]
 
-    fig, ax = plt.subplots(figsize=(11, 9))
+    fig, ax = plt.subplots(figsize=(11, 6.5 if through_country is not None else 9))
     y = range(len(data))
     colors = [COUNTRY_COLOR[name] for name, _, _ in data]
     ax.barh(list(y), [v for _, v, _ in data], color=colors, edgecolor=theme.BG, linewidth=0.5, label="Annual domestic bachelor's tuition")
@@ -168,7 +202,10 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
         if row[value_key] is not None:
             label = REGION_LABELS[row["region"]]
             if row["region"] == config.EU and eu_count < len(config.EU27):
-                label = f"EU sample ({eu_count}/{len(config.EU27)} countries)"
+                label = (
+                    "Selected EU entries" if through_country is not None
+                    else f"EU sample ({eu_count}/{len(config.EU27)} countries)"
+                )
             periods.setdefault(label, set()).add(int(row["year"]))
     def academic(year):
         return f"{year}/{(year + 1) % 100:02d}"
@@ -177,9 +214,15 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
         + (f"–{academic(max(years))}" if min(years) != max(years) else "")
         for label, years in sorted(periods.items())
     )
-    ax.set_title("Annual domestic bachelor's tuition — dated source comparison\n"
-                 + subtitle,
-                 fontweight="bold", pad=14)
+    if through_country is None:
+        ax.set_title("Annual domestic bachelor's tuition — dated source comparison\n"
+                     + subtitle, fontweight="bold", pad=14)
+    else:
+        year = next(iter(years))
+        ax.set_title(f"Annual domestic bachelor's tuition, {academic(year)}",
+                     loc="left", fontweight="bold", pad=34)
+        ax.text(0, 1.02, f"Selected public-institution fees; all converted at {year} market exchange rates",
+                transform=ax.transAxes, fontsize=9, color=theme.MUTED)
     ax.grid(axis="x", linestyle="-", linewidth=0.5)
     ax.set_axisbelow(True)
     ax.margins(y=0.01)
@@ -194,7 +237,17 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
                         color=colors[i], fontweight="bold",
                         xytext=(7, 0), textcoords="offset points")
 
-    _finalize(fig, out_path, bottom=0.08, missing_note=_missing_note(rows, value_key))
+    source = SOURCE_NOTE
+    if through_country is not None:
+        source = (
+            f"Sources: Eurydice {academic(year)}, most common annual fee for home, full-time first-cycle "
+            "students; England maximum undergraduate fee; College Board US public four-year in-state "
+            f"average for the same academic year. Nominal dollars at World Bank {year} annual FX. "
+            "Caps, common fees and averages differ: not identical student bills or an EU average. "
+            "Belgium: Flemish Community. Missing fee amounts are not treated as zero. "
+            f"Ranking shown through {through_country}; lower-fee countries omitted, not missing."
+        )
+    _finalize(fig, out_path, bottom=0.08, missing_note=missing_note, source=source)
 
 
 def main() -> None:
@@ -210,15 +263,22 @@ def main() -> None:
 
     os.makedirs(config.OUTPUTS_DIR, exist_ok=True)
     rows = load_primary([value_key])
+    comparison = common_year.load()
 
     plot_region_comparison(
-        rows, value_key, unit,
+        comparison, value_key, unit,
         os.path.join(config.OUTPUTS_DIR, f"tuition_region_comparison{suffix}.png"),
     )
     plot_by_country(
         rows, value_key, unit,
         os.path.join(config.OUTPUTS_DIR, f"tuition_by_country{suffix}.png"),
     )
+    if not args.real:
+        plot_by_country(
+            comparison, value_key, unit,
+            os.path.join(config.OUTPUTS_DIR, "tuition_by_country_to_france.png"),
+            through_country="France",
+        )
 
 
 if __name__ == "__main__":

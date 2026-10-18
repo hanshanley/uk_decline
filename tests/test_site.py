@@ -194,6 +194,17 @@ def test_purchasing_power_page_includes_inflation_with_six_country_hover_series(
     )["series"]) == 6
 
 
+def test_tuition_page_embeds_compact_ranking_and_links_to_full_ranking(site_repository):
+    output = build_site.build(site_repository)
+    page = BeautifulSoup((output / "tuition/index.html").read_text(), "html.parser")
+    assert page.select_one("#tuition_by_country_to_france img") is not None
+    assert len(page.select(".chart-gallery figure")) == 4
+    full = page.find("a", string="Full tuition ranking, mixed source years (PNG)")
+    assert full is not None and full.has_attr("download")
+    assert urlsplit(full["href"]).path == "../outputs/tuition/tuition_by_country.png"
+    assert (output / "outputs/tuition/tuition_by_country.json").exists()
+
+
 def test_public_gdp_comparisons_keep_nominal_and_fixed_ppp_without_third_measure(site_repository):
     output = build_site.build(site_repository)
     page = BeautifulSoup((output / "gdp-income/index.html").read_text(), "html.parser")
@@ -348,7 +359,7 @@ def test_topic_pages_only_embed_curated_charts_without_documentation_duplicates(
         page = BeautifulSoup((output / analysis.slug / "index.html").read_text(), "html.parser")
         images = page.select("main img")
         assert [Path(urlsplit(image["src"]).path).name for image in images] == list(analysis.charts)
-        limits = {"debt-borrowing": 4, "purchasing-power": 4, "gdp-income": 5}
+        limits = {"debt-borrowing": 4, "purchasing-power": 4, "gdp-income": 5, "tuition": 4}
         assert 1 <= len(images) <= limits.get(analysis.slug, 3)
         assert len({image["src"] for image in images}) == len(images)
         assert not page.select(".methodology, #methodology, .prose, pre")
@@ -513,6 +524,21 @@ def test_partial_refresh_does_not_claim_all_sources_checked(monkeypatch, tmp_pat
     assert commands == [
         ("-m", "trade_data"), ("scorecard.py",), ("-m", "scripts.export_page_plots"),
     ]
+    assert not (tmp_path / "data/site/refresh.json").exists()
+
+
+def test_tuition_refresh_builds_common_cohort_before_summaries_and_figures(monkeypatch, tmp_path):
+    commands = []
+    monkeypatch.setattr(refresh_data, "run", lambda command, root: commands.append(command))
+    refresh_data.refresh(tmp_path, only=["tuition"])
+    cohort = commands.index(("-m", "tuition.common_year"))
+    for module in ("tuition.cpi", "tuition.fetch_collegeboard", "tuition.build_history"):
+        assert commands.index(("-m", module)) < cohort
+    for command in (
+        ("-m", "tuition.analyze"), ("-m", "tuition.plot_tuition"),
+        ("-m", "tuition.plot_tuition", "--real"),
+    ):
+        assert cohort < commands.index(command)
     assert not (tmp_path / "data/site/refresh.json").exists()
 
 

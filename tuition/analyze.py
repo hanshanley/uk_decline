@@ -1,7 +1,7 @@
 """Compute and report median & average tuition per region (UK vs EU vs US).
 
-Reads ``data/processed/tuition_by_country.csv`` (produced by build_dataset.py), keeps
-only primary per-country rows, and computes the median & average annual and four-year
+Reads ``data/tuition_common_year.csv`` (produced by common_year.py), using a single
+academic year, and computes the median & average annual and four-year
 tuition per region, in nominal (market-FX) USD and constant 2022 USD. Writes ``summary.csv`` and
 prints a comparison table plus a verdict on the "UK has a higher average" claim.
 """
@@ -10,11 +10,10 @@ from __future__ import annotations
 
 import csv
 
-from tuition import config
-from tuition.dataset import load_primary
+from tuition import common_year, config
 from tuition.stats import aggregate_by_region, round_or_none
 
-REGION_LABELS = config.REGION_LABELS
+REGION_LABELS = {**config.REGION_LABELS, config.UK: "England", config.EU: "EU sample"}
 METRICS = [
     ("annual_tuition_usd", "USD (nominal, market FX)"),
     ("annual_tuition_usd_real2022", "Constant 2022 USD"),
@@ -61,19 +60,20 @@ def print_table(summary: list[dict]) -> None:
 
 def print_verdict(summary: list[dict]) -> None:
     nominal = {r["region"]: r for r in summary if r["metric"] == "USD (nominal, market FX)"}
-    if not {"UK", "EU-27", "US"} <= nominal.keys():
+    if not {"England", "EU sample", "US"} <= nominal.keys():
         return
-    uk, eu, us = nominal["UK"], nominal["EU-27"], nominal["US"]
-    print("\nVerdict (nominal USD, annual domestic tuition):")
-    print(f"  UK avg ${uk['mean_annual_usd']:,.0f}  |  EU-27 avg ${eu['mean_annual_usd']:,.0f}  |  US avg ${us['mean_annual_usd']:,.0f}")
+    uk, eu, us = nominal["England"], nominal["EU sample"], nominal["US"]
+    print("\nMatched-year reference comparison (nominal USD; fee definitions differ):")
+    print(f"  England cap ${uk['mean_annual_usd']:,.0f}  |  EU reporting-country mean ${eu['mean_annual_usd']:,.0f} "
+          f"(n={eu['n_countries']})  |  US public in-state average ${us['mean_annual_usd']:,.0f}")
     higher_than_eu = uk["mean_annual_usd"] > eu["mean_annual_usd"]
     higher_than_us = uk["mean_annual_usd"] > us["mean_annual_usd"]
-    print(f"  UK vs EU-27: UK is {'HIGHER' if higher_than_eu else 'lower'}.")
-    print(f"  UK vs US:    UK is {'HIGHER' if higher_than_us else 'lower'}.")
+    print(f"  England cap vs EU reporting-country mean: {'HIGHER' if higher_than_eu else 'lower'}.")
+    print(f"  England cap vs US in-state average: {'HIGHER' if higher_than_us else 'lower'}.")
 
 
 def main() -> None:
-    rows = load_primary(VALUE_KEYS)
+    rows = common_year.load()
     summary = build_summary(rows)
     if not summary:
         print("[analyze] no primary tuition rows found; nothing to summarize.")

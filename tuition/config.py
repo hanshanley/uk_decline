@@ -107,6 +107,7 @@ WB_CPI_INDICATOR = "FP.CPI.TOTL"  # consumer price index (for real-terms deflati
 PKG_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(PKG_DIR)
 DATA_DIR = os.path.join(ROOT, "data")
+COMMON_YEAR_CSV = os.path.join(DATA_DIR, "tuition_common_year.csv")
 RAW_DIR = os.path.join(DATA_DIR, "raw")
 PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
 OUTPUTS_DIR = os.path.join(ROOT, "outputs", "tuition")  # generated figures
