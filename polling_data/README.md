@@ -18,11 +18,18 @@ Pollster names are grouped case-insensitively, ignoring spaces and punctuation.
 
 This prevents frequent publishers from dominating a simple average of every
 poll. It is not sample-size weighted and does not estimate pollster house effects.
-Only days with **at least three pollsters** are shown. Missing days remain gaps,
-not interpolated observations. The comparison is post-election, with fieldwork
-ending from 5 July 2024 onwards; the first qualifying three-firm average is
-7 August 2024. The chart stops at the newest qualifying fieldwork end, rather
-than extending a stale reading to today's date.
+The average CSV contains only days with **at least three pollsters**; missing
+days are not filled. The chart shows the **latest uninterrupted run of qualifying
+daily averages**, trimming earlier fragments rather than interpolating gaps or
+joining across them. Its footnote gives the actual display start.
+
+The calculation is post-election, with fieldwork ending from 5 July 2024 onwards.
+In the initial snapshot, the first qualifying three-firm average is 7 August 2024,
+but sparse early coverage creates gaps in September and early October. Continuous
+chart coverage starts on **3 October 2024**. **All earlier qualifying averages
+remain in the full CSV download**, along with all underlying polls in the source
+CSV. The chart stops at the newest qualifying fieldwork end, rather than extending
+a stale reading to today's date, and refuses a one-day-only display with no trend.
 
 The percentages are published headline voting-intention figures, **not raw
 responses from everyone surveyed**. Pollsters differ in how they handle turnout,

@@ -383,15 +383,20 @@ def validate_average(frame: pd.DataFrame) -> pd.DataFrame:
 
 def make_chart(frame: pd.DataFrame, out: Path = OUTPUT) -> Path:
     frame = validate_average(frame)
+    dates = frame["date"].drop_duplicates().sort_values()
+    after_gap = dates[dates.diff().gt(pd.Timedelta(days=1))]
+    first = after_gap.iloc[-1] if not after_gap.empty else dates.iloc[0]
+    latest = dates.iloc[-1]
+    if first == latest:
+        raise ValueError("Polling chart needs at least two consecutive days of qualifying averages")
+    frame = frame[frame["date"].ge(first)]
     house_style()
     fig, ax = plt.subplots(figsize=(13.5, 7.4))
-    first, latest = frame["date"].min(), frame["date"].max()
     end = mdates.date2num(latest)
     ends = []
     for party, (label, color) in PARTIES.items():
         part = frame[frame["party_id"].eq(party)].set_index("date")["value"]
-        daily = part.reindex(pd.date_range(first, latest))
-        ax.plot(daily.index, daily.values, color=color, label=label, linewidth=2.1)
+        ax.plot(part.index, part.values, color=color, label=label, linewidth=2.1)
         ends.append((float(part.iloc[-1]), f"{label}  {part.iloc[-1]:.1f}%", color, end))
     upper = max(30, math.ceil((frame["value"].max() + 3) / 5) * 5)
     ax.set_ylim(0, upper)
@@ -418,7 +423,8 @@ def make_chart(frame: pd.DataFrame, out: Path = OUTPUT) -> Path:
         "Source: Wikipedia's national polling compilation and linked pollsters; our calculations (CC BY-SA 4.0). "
         "Each pollster contributes its latest qualifying poll in the previous 30 calendar days; "
         "same-day ties are averaged within that pollster. "
-        "Daily calculations require three pollsters; gaps are not interpolated. "
+        f"Minimum three pollsters; continuous coverage shown from {first:%d %b %Y}. "
+        "Earlier averages remain in the CSV; no interpolation. "
         "UK-wide and MRP-labelled entries excluded; undecided/turnout treatment varies by pollster. "
         "Selected parties are not renormalised to 100%. No house-effect adjustment; not an election forecast."
     )

@@ -149,7 +149,8 @@ ANALYSES = (
              "Survey trust and governance indicators, respecting collection and methodology changes."),
     Analysis("polling", "British polling averages", "Population & institutions", "polling_data", "polling",
              ("gb_voting_intention_average.png",),
-             "Labour, Conservatives, Reform UK, Liberal Democrats and Greens since the 2024 election. "
+             "Labour, Conservatives, Reform UK, Liberal Democrats and Greens over the latest "
+             "uninterrupted polling window; complete post-election history is available as CSV. "
              "Great Britain voting intention, using a trailing 30-day average with equal weight per pollster; "
              "not a forecast of votes or seats.",
              data_downloads=(

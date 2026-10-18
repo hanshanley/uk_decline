@@ -214,12 +214,21 @@ def test_average_validation_requires_shared_dates_and_contributor_sets(polls):
         polling.validate_average(frame)
 
 
-def test_chart_preserves_daily_gaps_exact_percent_values_and_readable_geometry(polls, tmp_path, monkeypatch):
-    averages = polling.average(polls)
-    second = averages.copy()
-    second["date"] += pd.Timedelta(days=3)
-    second["window_start"] += pd.Timedelta(days=3)
-    averages = pd.concat([averages, second])
+@pytest.mark.parametrize(("offsets", "shown"), [
+    ([0, 1, 2], [0, 1, 2]),
+    ([0, 3, 4], [3, 4]),
+    ([0, 2, 3, 6, 7, 8], [6, 7, 8]),
+])
+def test_chart_shows_only_continuous_history_with_exact_values_and_readable_geometry(
+    polls, tmp_path, monkeypatch, offsets, shown,
+):
+    initial = polling.average(polls)
+    averages = pd.concat([
+        initial.assign(date=initial["date"] + pd.Timedelta(days=offset),
+                       window_start=initial["window_start"] + pd.Timedelta(days=offset))
+        for offset in offsets
+    ])
+    before = averages.copy(deep=True)
     captured = {}
     original = polling.save_chart
 
@@ -237,11 +246,19 @@ def test_chart_preserves_daily_gaps_exact_percent_values_and_readable_geometry(p
     assert ax.get_legend() is None
     for line in ax.lines:
         if line.get_label() in {label for label, _ in polling.PARTIES.values()}:
-            assert pd.isna(line.get_ydata()[1:3]).all()
+            assert not pd.isna(line.get_ydata()).any()
+            assert list(line.get_ydata()) == [
+                initial.loc[initial["party"].eq(line.get_label()), "value"].iloc[0]
+            ] * len(shown)
+            assert pd.to_datetime(line.get_xdata()).to_list() == [
+                initial["date"].iloc[0] + pd.Timedelta(days=offset) for offset in shown
+            ]
     bounds = sorted((text.get_window_extent(renderer) for text in ax.texts), key=lambda b: b.y0)
     assert all(left.y1 < right.y0 for left, right in zip(bounds, bounds[1:]))
     assert all(box.y0 > ax.bbox.y0 and box.y1 < ax.bbox.y1 for box in bounds)
     title, subtitle, footnote = fig.texts
+    start = initial["date"].iloc[0] + pd.Timedelta(days=shown[0])
+    assert f"continuous coverage shown from {start:%d %b %Y}" in " ".join(footnote.get_text().split())
     assert title.get_window_extent(renderer).y0 > subtitle.get_window_extent(renderer).y1 + 5 * fig.dpi / 72
     assert footnote.get_window_extent(renderer).y1 < ax.xaxis.label.get_window_extent(renderer).y0
     assert max(box.x1 for box in bounds) < fig.bbox.x1
@@ -249,9 +266,23 @@ def test_chart_preserves_daily_gaps_exact_percent_values_and_readable_geometry(p
     assert data["image_sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
     assert {series["label"] for series in data["series"]} == {label for label, _ in polling.PARTIES.values()}
     for series in data["series"]:
-        expected = averages[averages["party"].eq(series["label"])]
+        expected = averages[averages["party"].eq(series["label"]) & averages["date"].ge(start)]
         assert [point[2] for point in series["points"]] == expected["date"].dt.strftime("%Y-%m-%d").tolist()
         assert [float(point[3].rstrip("%")) for point in series["points"]] == expected["value"].tolist()
+    pd.testing.assert_frame_equal(averages, before)
+
+
+def test_chart_refuses_an_isolated_latest_day_instead_of_showing_an_empty_trend(polls, tmp_path):
+    initial = polling.average(polls)
+    with pytest.raises(ValueError, match="two consecutive days"):
+        polling.make_chart(initial, tmp_path)
+    late = initial.assign(
+        date=initial["date"] + pd.Timedelta(days=3),
+        window_start=initial["window_start"] + pd.Timedelta(days=3),
+    )
+    with pytest.raises(ValueError, match="two consecutive days"):
+        polling.make_chart(pd.concat([initial, late]), tmp_path)
+    assert not list(tmp_path.iterdir())
 
 
 @pytest.mark.skipif(not polling.SAVED_POLLS.exists(), reason="Saved polling snapshot is not available")
