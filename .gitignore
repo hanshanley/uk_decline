@@ -26,6 +26,8 @@ data/processed/*.csv
 !data/debt_interest_budget.csv
 !data/consumer_inflation.csv
 !data/consumer_inflation_eu.csv
+!data/gb_voting_intention_polls.csv
+!data/gb_voting_intention_average.csv
 !data/uk_gilt_yields_daily.csv
 !data/unemployment_long.csv
 !data/unemployment_references.csv

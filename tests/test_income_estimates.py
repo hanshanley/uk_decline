@@ -166,7 +166,7 @@ def test_failed_fetch_preserves_the_previous_saved_model(monkeypatch, tmp_path):
     ("four_country", {"United Kingdom", "United States", "Germany", "France"}),
     ("uk_us_eu", {"United Kingdom", "United States"}),
 ])
-def test_income_variants_preserve_selected_observations_and_distinct_model_tails(
+def test_income_variants_preserve_selected_observations_and_use_one_axis(
     comparison, names, monkeypatch, tmp_path,
 ):
     from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -189,45 +189,38 @@ def test_income_variants_preserve_selected_observations_and_distinct_model_tails
         return original_save(fig, *args, **kwargs)
 
     monkeypatch.setattr(plots, "save_chart", save)
-    plots.fig_median_income_oecd(wide, tmp_path, estimates=estimates(), comparison=comparison)
+    plots.fig_median_income_oecd(wide, tmp_path, comparison=comparison)
     assert len(captured) == 1
     fig, = captured
     ax = fig.axes[0]
-    assert {line.get_label() for line in ax.lines} == names | {
-        f"{name} (model estimate)" for name in names
-    }
+    assert len(fig.axes) == 1
+    assert {line.get_label() for line in ax.lines} == names | ({"EU-27"} if comparison == "uk_us_eu" else set())
     for line in ax.lines:
-        name = line.get_label().replace(" (model estimate)", "")
+        name = line.get_label()
         assert line.get_color() == country_color(name)
-        if "(model estimate)" in line.get_label():
-            assert list(line.get_xdata()) == [2024, 2025]
-            assert line.get_markerfacecolor() == plots.SUBSTACK_BG
+        assert list(line.get_xdata()) == [2022, 2023]
+        if comparison == "uk_us_eu":
+            raw = [11000., 12000.] if name == "EU-27" else [29000., 30000.]
+            assert list(line.get_ydata()) == pytest.approx([100 * value / raw[0] for value in raw])
         else:
-            assert list(line.get_xdata()) == [2022, 2023]
             assert list(line.get_ydata()) == [29000., 30000.]
     if comparison == "uk_us_eu":
-        assert len(fig.axes) == 2
-        reference = fig.axes[1]
-        assert len(reference.lines) == 1
-        line, = reference.lines
-        assert line.get_label() == "EU-27"
-        assert line.get_color() == country_color("EU")
-        assert list(line.get_xdata()) == [2022, 2023, 2024]
-        assert list(line.get_ydata()) == [11000., 12000., 13000.]
-        assert "PPS" in reference.get_ylabel()
-        assert "survey year minus one" in reference.get_xlabel()
-        assert not reference.patches
-        assert "Different vertical scales" in " ".join(fig.texts[-1].get_text().split())
+        assert "2022 = 100" in ax.get_ylabel()
+        assert "survey year minus one" in ax.get_xlabel()
+        assert not ax.patches
+        assert "not comparable income levels or real-income growth" in " ".join(fig.texts[-1].get_text().split())
         canvas = FigureCanvasAgg(fig)
         canvas.draw()
         renderer = canvas.get_renderer()
-        assert fig.texts[-1].get_window_extent(renderer).y1 < reference.xaxis.label.get_window_extent(renderer).y0
-        assert reference.title.get_window_extent(renderer).y1 + 5 < ax.get_window_extent(renderer).y0
+        assert fig.texts[-1].get_window_extent(renderer).y1 < ax.xaxis.label.get_window_extent(renderer).y0
         data = json.loads((tmp_path / "median_disposable_income_oecd_uk_us_eu.json").read_text())
         series = next(item for item in data["series"] if item["label"] == "EU-27")
-        assert "PPS" in series["y_label"]
+        assert "2022 = 100" in series["y_label"]
         assert "survey year minus one" in series["x_label"]
-        assert [point[2] for point in series["points"]] == ["2022", "2023", "2024"]
+        assert [point[2] for point in series["points"]] == ["2022", "2023"]
+        assert [float(point[3].replace(",", "")) for point in series["points"]] == pytest.approx(
+            [100., 100 * 12000 / 11000], abs=1e-6,
+        )
     pd.testing.assert_frame_equal(wide, before)
 
 
@@ -237,11 +230,11 @@ def test_income_eu_version_refuses_missing_reference_instead_of_averaging_nation
     wide = observed()[["country", "year", "value"]].rename(columns={"value": oecd_income.METRIC})
     wide["median_disposable_income"] = float("nan")
     with pytest.raises(ValueError, match="published EU median-income reference"):
-        plots.fig_median_income_oecd(wide, tmp_path, estimates=estimates(), comparison="uk_us_eu")
+        plots.fig_median_income_oecd(wide, tmp_path, comparison="uk_us_eu")
     assert not list(tmp_path.glob("*.png"))
 
 
-def test_future_observations_render_as_actuals_and_eventually_remove_the_model_tail(monkeypatch, tmp_path):
+def test_new_observations_extend_common_window_only_when_all_peers_have_released_them(monkeypatch, tmp_path):
     from europe_data import plot_uk_decline as plots
 
     actual = pd.concat([
@@ -252,15 +245,15 @@ def test_future_observations_render_as_actuals_and_eventually_remove_the_model_t
 
     def render(frame):
         wide = frame[["country", "year", "value"]].rename(columns={"value": oecd_income.METRIC})
-        plots.fig_median_income_oecd(wide, tmp_path, estimates=estimates(frame))
+        plots.fig_median_income_oecd(wide, tmp_path)
         return captured[-2].axes[0]
 
     ax = render(actual)
     us = next(line for line in ax.lines if line.get_label() == "United States")
-    modelled = next(line for line in ax.lines if line.get_label() == "United States (model estimate)")
-    assert list(us.get_xdata()) == [2022, 2023, 2024]
-    assert us.get_ydata()[-1] == 36000.
-    assert list(modelled.get_xdata()) == [2025]
+    assert list(us.get_xdata()) == [2022, 2023]
+    history = next(line for line in captured[-1].axes[0].lines if line.get_label() == "United States")
+    assert list(history.get_xdata()) == [2022, 2023, 2024]
+    assert history.get_ydata()[-1] == 36000.
     complete = pd.concat([
         observed(),
         observed().query("year == 2023").assign(year=2024, value=36000.),
@@ -272,38 +265,80 @@ def test_future_observations_render_as_actuals_and_eventually_remove_the_model_t
     assert not ax.patches
 
 
-def test_model_tail_is_distinct_in_rendering_and_hover_while_history_stays_observed(monkeypatch, tmp_path):
+def test_main_comparison_and_full_history_remain_observations_only(monkeypatch, tmp_path):
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from europe_data import plot_uk_decline as plots
-    from scripts import refresh_data
 
     actual = observed()
     wide = actual[["country", "year", "value"]].rename(columns={"value": oecd_income.METRIC})
     captured = []
     monkeypatch.setattr(plots, "save_chart", lambda fig, *a, **kw: captured.append(fig))
-    plots.fig_median_income_oecd(wide, tmp_path, estimates=estimates())
+    plots.fig_median_income_oecd(wide, tmp_path)
     ax, history = [fig.axes[0] for fig in captured]
-    assert "2022\u20132025" in ax.get_title()
-    assert len(ax.lines) == 12
-    assert len(ax.patches) == 1
+    assert "2022\u20132023" in ax.get_title()
+    assert len(ax.lines) == 6
+    assert not ax.patches
     for line in ax.lines:
-        if "model estimate" in line.get_label():
-            assert list(line.get_xdata()) == [2024, 2025]
-            assert line.get_linestyle() == "-."
-            assert line.get_markerfacecolor() == plots.SUBSTACK_BG
-        else:
-            assert list(line.get_xdata()) == [2022, 2023]
-            assert list(line.get_ydata()) == [29000., 30000.]
+        assert "model estimate" not in line.get_label()
+        assert list(line.get_xdata()) == [2022, 2023]
+        assert list(line.get_ydata()) == [29000., 30000.]
     assert len(history.lines) == 6
     assert all(list(line.get_xdata()) == [2022, 2023] for line in history.lines)
-    assert "NOT observed OECD medians" in captured[0].texts[0].get_text()
     canvas = FigureCanvasAgg(captured[0])
     canvas.draw()
     renderer = canvas.get_renderer()
     assert captured[0].texts[0].get_window_extent(renderer).y1 + 5 < (
         ax.xaxis.label.get_window_extent(renderer).y0
     )
-    steps = refresh_data.STEPS["gdp-income"]
-    assert steps.index(("-m", "europe_data.fetch_data")) < (
-        steps.index(("-m", "europe_data.income_estimates"))
-    ) < steps.index(("-m", "europe_data.plot_uk_decline"))
+
+
+@pytest.mark.parametrize("comparison", ["all", "four_country", "uk_us_eu"])
+def test_published_income_charts_default_to_observations_only(comparison, monkeypatch, tmp_path):
+    from europe_data import plot_uk_decline as plots
+
+    actual = observed()
+    wide = actual[["country", "year", "value"]].rename(columns={"value": oecd_income.METRIC})
+    eu = pd.DataFrame([
+        dict(country=plots.EU_EUROSTAT[0], year=year, median_disposable_income=12000.)
+        for year in (2023, 2024, 2025)
+    ])
+    wide = pd.concat([wide, eu], ignore_index=True)
+    captured = []
+    original = plots.save_chart
+
+    def save(fig, *args, **kwargs):
+        captured.append(fig)
+        original(fig, *args, **kwargs)
+
+    monkeypatch.setattr(plots, "save_chart", save)
+    plots.fig_median_income_oecd(wide, tmp_path, comparison=comparison)
+    ax = captured[0].axes[0]
+    assert not ax.patches
+    assert all(list(line.get_xdata()) == [2022, 2023] for line in ax.lines)
+    assert all("model estimate" not in line.get_label() for line in ax.lines)
+    assert all("est." not in text.get_text() for text in ax.texts)
+    suffix = "" if comparison == "all" else f"_{comparison}"
+    data = json.loads((tmp_path / f"median_disposable_income_oecd{suffix}.json").read_text())
+    assert all("model estimate" not in series["label"] for series in data["series"])
+    if comparison == "uk_us_eu":
+        assert len(captured[0].axes) == 1
+        assert {line.get_label() for line in ax.lines} == {"United Kingdom", "United States", "EU-27"}
+        assert all(line.get_ydata()[0] == 100 for line in ax.lines)
+        assert any("not income levels or inflation-adjusted growth" in text.get_text() for text in ax.texts)
+
+
+def test_default_income_command_and_refresh_do_not_load_or_regenerate_model_estimates(monkeypatch, tmp_path):
+    from europe_data import plot_uk_decline as plots
+    from scripts import refresh_data
+
+    source = tmp_path / "observed.csv"
+    observed().to_csv(source, index=False)
+    rendered = []
+    monkeypatch.setattr(plots.gdp_comparisons, "make_chart", lambda *a, **kw: None)
+    monkeypatch.setattr(plots, "_line_chart", lambda *a, **kw: None)
+    monkeypatch.setattr(plots, "fig_uk_relative", lambda *a, **kw: None)
+    monkeypatch.setattr(plots, "fig_median_income_non_oecd", lambda *a, **kw: None)
+    monkeypatch.setattr(plots, "fig_median_income_oecd", lambda *a, **kw: rendered.append(kw))
+    assert plots.main(["--data", str(source), "--out", str(tmp_path / "figures")]) == 0
+    assert rendered == [{"comparison": name} for name in ("all", "four_country", "uk_us_eu")]
+    assert ("-m", "europe_data.income_estimates") not in refresh_data.STEPS["gdp-income"]

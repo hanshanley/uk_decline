@@ -101,6 +101,10 @@ def site_repository(tmp_path):
             f"![Chart](../outputs/{analysis.output}/{analysis.featured})\n\n"
             "[Overview](../README.md#scope)\n\n[Sources](#sources)\n"
         )
+        for filename, _ in analysis.data_downloads:
+            data = root / filename
+            data.parent.mkdir(parents=True, exist_ok=True)
+            data.write_text("date,value\n2026-10-14,25\n")
         for filename in (*analysis.charts, *(name for name, _ in analysis.downloads)):
             chart = root / "outputs" / analysis.output / filename
             chart.parent.mkdir(parents=True, exist_ok=True)
@@ -181,6 +185,31 @@ def test_borrowing_page_includes_interest_budget_share_with_same_five_peers(site
     assert len(page.select(".chart-gallery figure")) == 4
 
 
+def test_polling_page_exposes_five_party_chart_and_full_source_downloads(site_repository):
+    root = site_repository
+    output = build_site.build(root)
+    page = BeautifulSoup((output / "polling/index.html").read_text(), "html.parser")
+    chart = page.select_one("#gb_voting_intention_average img")
+    assert "30-day, pollster-balanced" in chart["alt"]
+    data = json.loads((output / "outputs/polling/gb_voting_intention_average.json").read_text())
+    assert {series["label"] for series in data["series"]} == {
+        "Labour", "Conservatives", "Reform UK", "Liberal Democrats", "Greens",
+    }
+    for name in ("gb_voting_intention_polls.csv", "gb_voting_intention_average.csv"):
+        assert page.find("a", href=f"../data/{name}") is not None
+        assert (output / "data" / name).read_bytes() == (root / "data" / name).read_bytes()
+    assert refresh_data.STEPS["polling"] == (("-m", "polling_data"),)
+
+
+def test_polling_publication_refuses_a_missing_full_data_download(site_repository):
+    subprocess.run(
+        ["git", "rm", "data/gb_voting_intention_polls.csv"],
+        cwd=site_repository, check=True, capture_output=True,
+    )
+    with pytest.raises(ValueError, match="gb_voting_intention_polls.csv"):
+        build_site.build(site_repository)
+
+
 def test_purchasing_power_page_includes_both_simpler_inflation_versions_and_full_download(site_repository):
     output = build_site.build(site_repository)
     page = BeautifulSoup((output / "purchasing-power/index.html").read_text(), "html.parser")
@@ -234,7 +263,8 @@ def test_public_gdp_comparisons_keep_nominal_and_fixed_ppp_without_third_measure
         "median_disposable_income_oecd_uk_us_eu.png",
     ]
     assert recent.select_one("h1").get_text() == "Median disposable income"
-    assert "hollow points in the shaded recent tails are our model estimates" in recent.get_text()
+    assert "Published observations only" in recent.get_text()
+    assert "hollow points in the shaded recent tails" not in recent.get_text()
     comparison = recent.select_one("#median_disposable_income_oecd img")
     assert comparison["src"] == page.select_one("#median_disposable_income_oecd img")["src"]
     observations = json.loads((output / "outputs/gdp_income/median_disposable_income_oecd.json").read_text())

@@ -47,6 +47,7 @@ class Analysis:
     charts: tuple[str, ...]
     description: str
     downloads: tuple[tuple[str, str], ...] = ()
+    data_downloads: tuple[tuple[str, str], ...] = ()
 
     @property
     def featured(self) -> str:
@@ -64,10 +65,11 @@ ANALYSES = (
              ("median_disposable_income_oecd.png", "median_disposable_income_oecd_four_country.png",
               "median_disposable_income_oecd_uk_us_eu.png"),
              "The UK, US, Germany, France, Italy and Poland on one household-size-adjusted, "
-             "purchasing-power basis through 2025. Filled points are published OECD medians; "
-             "hollow points in the shaded recent tails are our model estimates, not observed OECD medians. "
+             "purchasing-power basis. Published observations only; "
+             "the lines stop at their available source years. "
              "Different national median measures are not spliced into the lines. "
-             "The UK/US/EU version keeps Eurostat's EU reference on a separate, explicitly different scale.",
+             "The UK/US/EU version indexes each published series to its shared starting year; "
+             "it does not compare income levels or inflation-adjusted growth.",
              downloads=(("median_disposable_income_oecd_history.png", "Full income history (PNG)"),)),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
              ("ppp_gdp_per_capita_growth.png", "ppp_gdp_relative_to_peers.png",
@@ -145,9 +147,21 @@ ANALYSES = (
     Analysis("trust", "Institutional trust", "Population & institutions", "trust_data", "trust",
              ("trust_national_govt_pct.png", "wgi_government_effectiveness.png"),
              "Survey trust and governance indicators, respecting collection and methodology changes."),
+    Analysis("polling", "British polling averages", "Population & institutions", "polling_data", "polling",
+             ("gb_voting_intention_average.png",),
+             "Labour, Conservatives, Reform UK, Liberal Democrats and Greens since the 2024 election. "
+             "Great Britain voting intention, using a trailing 30-day average with equal weight per pollster; "
+             "not a forecast of votes or seats.",
+             data_downloads=(
+                 ("data/gb_voting_intention_polls.csv", "Underlying polls, including exclusions (CSV)"),
+                 ("data/gb_voting_intention_average.csv", "Daily averages and contributors (CSV)"),
+             )),
 )
 
 CHART_COMPARATORS = {
+    "gb_voting_intention_average": {
+        "Labour", "Conservatives", "Reform UK", "Liberal Democrats", "Greens",
+    },
     "uk_infrastructure_investment": {"UK market sector", "UK general government"},
     **dict.fromkeys(
         ("public_capital_investment", "government_research_funding", "total_research_spending"),
@@ -235,6 +249,7 @@ SUBSCRIBE_URL = (
 )
 
 CHART_TITLES = {
+    "gb_voting_intention_average": "Great Britain: 30-day, pollster-balanced voting-intention averages",
     "uk_infrastructure_investment": "UK infrastructure: market-sector real investment and government investment relative to GDP",
     "public_capital_investment": "Public fixed investment: all general-government assets, not infrastructure alone",
     "government_research_funding": "Government R&D budget allocations: not actual expenditure or tax relief",
@@ -263,7 +278,7 @@ CHART_TITLES = {
     "median_disposable_income_pps": "Median disposable income in purchasing power standards",
     "median_disposable_income_oecd": "Median disposable income, adjusted for household size and purchasing power",
     "median_disposable_income_oecd_four_country": "Median disposable income: UK, US, Germany and France",
-    "median_disposable_income_oecd_uk_us_eu": "UK and US median income with a separate Eurostat EU-27 reference; different units and household scales",
+    "median_disposable_income_oecd_uk_us_eu": "UK, US and EU: indexed median-income series, not comparable income levels",
     "median_income_recent_national": "Latest UK and US income: separate national measures",
     "median_income_recent_europe": "Newer European median disposable income, by income year",
     "median_income_pip": "Median daily income or consumption, adjusted for purchasing power",
@@ -557,6 +572,10 @@ def analysis_page(analysis: Analysis) -> str:
         f'{escape(label)}</a> &middot; '
         for filename, label in analysis.downloads
     )
+    downloads += "".join(
+        f'<a href="{relative_url(Path(filename), page)}" download>{escape(label)}</a> &middot; '
+        for filename, label in analysis.data_downloads
+    )
     figures = []
     for filename in analysis.charts:
         chart = Path("outputs") / analysis.output / filename
@@ -660,6 +679,7 @@ def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
     for analysis in ANALYSES:
         required = {
             Path(analysis.module) / "README.md",
+            *(Path(filename) for filename, _ in analysis.data_downloads),
             *(Path("outputs") / analysis.output / chart for chart in analysis.charts),
             *(Path("outputs") / analysis.output / filename for filename, _ in analysis.downloads),
         }
