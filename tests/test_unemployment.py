@@ -13,6 +13,7 @@ import requests
 
 from unemployment_data import charts, references, sources
 from unemployment_data.__main__ import main
+from vizstyle import ACCENT, MUTED, TEXT
 
 
 def _csv(metric, dates):
@@ -317,32 +318,34 @@ def test_rendered_charts_keep_missing_months_and_separate_text(
         for line in ax.lines:
             assert np.isnan(line.get_ydata()).sum() == 1
         subtitle = next(text for text in fig.texts if "Seasonally adjusted" in text.get_text())
-        latest = next(text for text in fig.texts if text.get_text().startswith("Latest: "))
         source = next(text for text in fig.texts if text.get_text().startswith("Source: "))
-        assert "May-Jul 2026" in latest.get_text()
-        assert "Aug 2026" in latest.get_text()
+        ends = [text for text in ax.texts if text.get_text().strip()]
+        latest = " ".join(text.get_text() for text in ends)
+        assert "May-Jul 2026" in latest
+        assert "Aug 2026" in latest
         assert "Office for National Statistics" in source.get_text()
+        assert ax.get_legend() is None
+        assert not any(text.get_text().startswith("Latest: ") for text in fig.texts)
+        assert len(ends) == 3
         if index == 0:
             assert [line.get_label() for line in ax.lines] == ["UK (16+)", "EU (15-74)", "US (16+)"]
-            assert "UK: 5.0%" in latest.get_text()
-            assert "EU: 6.0%" in latest.get_text()
-            assert "US: 4.0%" in latest.get_text()
+            assert "UK 5.0%" in latest
+            assert "EU 6.0%" in latest
+            assert "US 4.0%" in latest
         else:
             assert [line.get_label() for line in ax.lines] == ["UK (16-24)", "EU (15-24)", "US (16-24)"]
         expected_values = (5, 6, 4) if index == 0 else (15, 15, 9)
         for line, expected in zip(ax.lines, expected_values):
             assert np.all(line.get_ydata()[np.isfinite(line.get_ydata())] == expected)
-        assert len({line.get_color() for line in ax.lines}) == 3
-        legend_box = ax.get_legend().get_window_extent(renderer)
-        assert legend_box.y1 <= ax.get_window_extent(renderer).y1
-        assert legend_box.x1 <= ax.get_window_extent(renderer).x1
+        assert [line.get_color() for line in ax.lines] == [ACCENT, MUTED, TEXT]
+        endpoint_boxes = [text.get_window_extent(renderer) for text in ends]
+        assert all(not a.overlaps(b) for i, a in enumerate(endpoint_boxes) for b in endpoint_boxes[i+1:])
+        assert all(box.x0 >= ax.bbox.x1 for box in endpoint_boxes)
         title_box = fig._suptitle.get_window_extent(renderer)
         subtitle_box = subtitle.get_window_extent(renderer)
-        latest_box = latest.get_window_extent(renderer)
         source_box = source.get_window_extent(renderer)
         assert title_box.y0 > subtitle_box.y1
-        assert subtitle_box.y0 > latest_box.y1
-        assert latest_box.y0 > ax.get_window_extent(renderer).y1
+        assert subtitle_box.y0 > ax.get_window_extent(renderer).y1
         assert source_box.y1 < ax.xaxis.label.get_window_extent(renderer).y0
-        for box in (title_box, subtitle_box, latest_box, source_box):
+        for box in (title_box, subtitle_box, source_box, *endpoint_boxes):
             assert 0 <= box.x0 < box.x1 <= fig.bbox.width

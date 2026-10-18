@@ -8,6 +8,7 @@ picture. Codes are World Bank 3-letter region/aggregate codes.
 from __future__ import annotations
 
 from typing import NamedTuple
+from vizstyle import country_color
 
 
 class Region(NamedTuple):
@@ -27,17 +28,7 @@ REGIONS: list[Region] = [
 
 BY_CODE: dict[str, Region] = {r.code: r for r in REGIONS}
 
-# Stable colour per region so charts stay consistent across runs. Earthy
-# "Substack" palette shared with pre1870_reapportionment_package: the UK focus
-# line takes the warm accent, the US the deep blue, the rest muted earth tones.
-COLOURS: dict[str, str] = {
-    "GBR": "#C85A3D",  # UK -- warm accent (focus line)
-    "USA": "#3D6F8C",  # US -- deep blue
-    "WLD": "#8C7B6B",  # World -- muted brown-grey
-    "EUU": "#4A7C59",  # EU -- green
-    "JPN": "#C2993E",  # Japan -- gold
-    "CHN": "#7B2D26",  # China -- deep red
-}
+COLOURS: dict[str, str] = {region.code: country_color(region.code) for region in REGIONS}
 
 
 def codes(core_only: bool = False) -> list[str]:

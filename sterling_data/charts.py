@@ -9,16 +9,16 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 
-from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, MUTED, TEXT, house_style, source_note, save_chart, with_year_gaps
+from vizstyle import ACCENT, BG, MUTED, TEXT, country_color, house_style, source_note, save_chart, with_year_gaps
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "outputs" / "sterling" / "sterling_currency_strength_v2.png"
 
 SERIES = {
-    "USD": ("US dollar", ACCENT),
-    "EUR": ("Euro", BLUE),
-    "JPY": ("Japanese yen", GOLD),
-    "CHF": ("Swiss franc", GREEN),
+    "USD": ("US dollar", country_color("USA")),
+    "EUR": ("Euro", country_color("EUU")),
+    "JPY": ("Japanese yen", country_color("JPN")),
+    "CHF": ("Swiss franc", country_color("CHE")),
 }
 
 
@@ -93,7 +93,7 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
             ha="left",
         )
 
-    ax.axhline(0, color=TEXT, linewidth=0.9, alpha=0.5)
+    ax.axhline(0, color=ACCENT, linewidth=0.9, alpha=0.5)
     ax.set_xlim(1999.7, latest_year + 0.35)
     lo = math.floor((float(frame["change_pct"].min()) - 5) / 10) * 10
     hi = math.ceil((float(frame["change_pct"].max()) + 5) / 10) * 10

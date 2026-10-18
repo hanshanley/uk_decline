@@ -11,7 +11,7 @@ import pandas as pd
 
 from ppp_data.figure import labelled_ends
 from ppp_data.peers import POLAND
-from vizstyle import ACCENT, BG, MUTED, TEXT, house_style, save_chart, with_year_gaps, mark_year_breaks
+from vizstyle import BG, MUTED, country_color, house_style, save_chart, with_year_gaps, mark_year_breaks
 
 from . import sources
 
@@ -50,8 +50,8 @@ CHARTS = (
     ),
 )
 STYLES = {
-    "GBR": (ACCENT, "-", 2.8), "USA": (TEXT, "-", 1.9),
-    "EU27_2020": (MUTED, "--", 2.0), "EUU": (MUTED, "--", 2.0),
+    "GBR": (country_color("GBR"), "-", 2.8), "USA": (country_color("USA"), "-", 1.9),
+    "EU27_2020": (country_color("EU27_2020"), "--", 2.0), "EUU": (country_color("EUU"), "--", 2.0),
     "POL": (POLAND.colour, POLAND.linestyle, POLAND.linewidth),
 }
 

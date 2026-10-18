@@ -12,15 +12,14 @@ import pandas as pd
 
 from ppp_data.figure import labelled_ends
 from vizstyle import (
-    ACCENT, BG, BLUE, GOLD, GREEN, MUTED, TEXT, house_style, save_chart,
+    ACCENT, BG, MUTED, country_color, house_style, save_chart,
     with_year_gaps, mark_year_breaks,
 )
 from . import interest, sources
 
-COLORS = {
-    "United Kingdom": ACCENT, "United States": TEXT, "Germany": BLUE,
-    "France": GOLD, "Italy": GREEN,
-}
+COLORS = {country: country_color(country) for country in (
+    "United Kingdom", "United States", "Germany", "France", "Italy",
+)}
 
 
 def make_charts(

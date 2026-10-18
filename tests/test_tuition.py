@@ -663,7 +663,7 @@ def test_real_snapshot_with_only_zero_median_eu_remains_readable(tmp_path, monke
     assert note_bounds.y1 < fig.axes[0].xaxis.label.get_window_extent(renderer).y0
 
 
-def test_tuition_country_legend_does_not_claim_an_unplotted_england_series(monkeypatch, tmp_path):
+def test_tuition_country_bars_keep_country_colors_without_a_misleading_region_legend(monkeypatch, tmp_path):
     rows = [
         dict(country=country, region=region, year=year, annual_tuition_usd_real2022=value)
         for country, region, year, value in (
@@ -676,7 +676,13 @@ def test_tuition_country_legend_does_not_claim_an_unplotted_england_series(monke
     plot_tuition.plot_by_country(
         rows, "annual_tuition_usd_real2022", "constant 2022 USD", str(tmp_path / "real.png"),
     )
-    labels = [text.get_text() for text in captured[0].axes[0].get_legend().get_texts()]
-    assert labels == ["EU-27", "US"]
+    from matplotlib.colors import to_rgba
+    from vizstyle import country_color
+
+    ax = captured[0].axes[0]
+    assert ax.get_legend() is None
+    assert [bar.get_facecolor() for bar in ax.patches] == [
+        to_rgba(country_color("Germany")), to_rgba(country_color("US")),
+    ]
     assert "EU sample (1/27 countries)" in captured[0].axes[0].get_title()
     assert "Not plotted: England (2026)" in " ".join(captured[0].texts[0].get_text().split())

@@ -24,9 +24,9 @@ from vizstyle import with_year_gaps, save_chart
 
 # region key -> (label, colour, matplotlib draw style)
 SERIES = {
-    config.US: ("US — public 4-year, in-state (College Board)", theme.GOLD, "line"),
-    config.UK: ("UK — England fee cap (statutory)", theme.ACCENT, "line"),
-    config.EU: ("Germany — zero-fee reference years only", theme.BLUE, "points"),
+    config.US: ("US — public 4-year, in-state (College Board)", theme.country_color("US"), "line"),
+    config.UK: ("UK — England fee cap (statutory)", theme.country_color("UK"), "line"),
+    config.EU: ("Germany — zero-fee reference years only", theme.country_color("Germany"), "points"),
 }
 SOURCE_NOTE = (
     "Real 2022 US dollars (inflation-adjusted). Sources: US — College Board Table CP-2 "

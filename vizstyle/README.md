@@ -42,6 +42,37 @@ save_fig(fig, "outputs/london/example.png")             # tight layout + dpi=200
 Access as module constants (`vizstyle.ACCENT`) or via the `PALETTE` dict
 (`PALETTE["accent"]`).
 
+## Country identities
+
+Use `country_color("USA")` (or `country_color("United States")`) for country-coded
+lines, bars and labels rather than picking the next available palette color.
+The identity is fixed across analyses:
+
+| Country or aggregate | Color |
+|---|---|
+| UK / England / London | Orange (`ACCENT`, `#C85A3D`) |
+| United States | Near-black (`TEXT`, `#1A1A1A`) |
+| Germany | Blue (`BLUE`, `#3D6F8C`) |
+| France | Gold (`GOLD`, `#C2993E`) |
+| Italy | Green (`GREEN`, `#4A7C59`) |
+| Poland | Purple (`#7B6D8D`) |
+| EU / Europe reference aggregates | Grey (`MUTED`, `#6B6B6B`) |
+| Japan | Brown (`#8C7B6B`) |
+| China | Deep red (`#7B2D26`) |
+| Switzerland | Teal (`#4E8580`) |
+
+The same identities apply to currency series (US dollar, euro, yen and Swiss franc).
+`COUNTRY_COLORS` uses canonical ISO-style codes; `country_color` resolves the
+supported names and aliases and raises on unknown identities. Tuition's other EU
+country bars are neutral grey, not a second identity for the highlighted peers.
+Subnational comparisons also agree: Scotland blue, Wales green and Northern
+Ireland gold.
+
+These rules apply when color identifies a country. Within-country categories
+(age groups, sex, spending functions and good/bad direction in the overview)
+retain their distinct categorical or status colors. Multiple measures for the
+same country use line style and weight, not a new country color.
+
 ## API
 
 | Symbol | What it does |
@@ -49,6 +80,7 @@ Access as module constants (`vizstyle.ACCENT`) or via the `PALETTE` dict
 | `house_style()` | Apply the shared rcParams to `plt.rcParams`. Call once before plotting. Idempotent. |
 | `RC_PARAMS` | The rcParams dict itself (if you want to merge/inspect). |
 | `PALETTE`, `BG`, `TEXT`, `MUTED`, `GRID`, `ACCENT`, `BLUE`, `GOLD`, `GREEN` | Colours. |
+| `COUNTRY_COLORS`, `country_color(country)` | Stable country/aggregate identities shared by every analysis. |
 | `source_note(fig, text, *, x=0.01, y=0.01, ha="left")` | Standard italic muted source note at the figure margin. |
 | `end_label(ax, x, y, text, color, *, fontsize=10.5)` | Label a series at its end point, with a white halo for legibility. |
 | `white_stroke()` | The path-effects list for a white text outline (labels over data). |
@@ -56,8 +88,8 @@ Access as module constants (`vizstyle.ACCENT`) or via the `PALETTE` dict
 
 ## Conventions
 
-- **UK / London is always the terracotta `accent`;** comparators use `blue` (then `gold`,
-  `green`). This keeps the "subject of the story" visually consistent across analyses.
+- **UK / London is always the orange `accent`; US is always near-black.**
+  Other countries use the fixed identity table above, not their order in a chart.
 - **Every figure carries a `source_note`** naming the data's collecting organisation.
 - **Titles** are bold; add a muted one-line subtitle with
   `ax.text(0.5, 1.015, subtitle, transform=ax.transAxes, ha="center", va="bottom",

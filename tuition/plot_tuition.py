@@ -22,10 +22,13 @@ import matplotlib.pyplot as plt
 from tuition import config, theme
 from tuition.dataset import load_primary
 from tuition.stats import aggregate_by_region
-from vizstyle import save_chart
+from vizstyle import COUNTRY_COLORS, country_color, save_chart
 
 REGION_LABELS = {**config.REGION_LABELS, config.UK: "England (fee cap)"}
-REGION_COLOR = {config.UK: theme.ACCENT, config.EU: theme.BLUE, config.US: theme.GOLD}
+REGION_COLOR = {region: country_color(region) for region in (config.UK, config.EU, config.US)}
+COUNTRY_COLOR = {country.name: COUNTRY_COLORS.get(country.iso3, REGION_COLOR[config.EU])
+                 for country in config.ALL_COUNTRIES}
+COUNTRY_COLOR[REGION_LABELS[config.UK]] = country_color("UK")
 SOURCE_NOTE = (
     "Sources: EU country compilation, Eurydice 2023/24 plus national fee sources "
     "(France, Ireland, Luxembourg, Netherlands 2026/27; Portugal 2025/26; Spain 2024/25); College Board Trends in "
@@ -151,7 +154,7 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
 
     fig, ax = plt.subplots(figsize=(11, 9))
     y = range(len(data))
-    colors = [REGION_COLOR[region] for _, _, region in data]
+    colors = [COUNTRY_COLOR[name] for name, _, _ in data]
     ax.barh(list(y), [v for _, v, _ in data], color=colors, edgecolor=theme.BG, linewidth=0.5, label="Annual domestic bachelor's tuition")
 
     ax.set_yticks(list(y))
@@ -186,15 +189,11 @@ def plot_by_country(rows: list[dict], value_key: str, unit: str, out_path: str) 
             ax.annotate(_money(v), (v, i), ha="left", va="center", fontsize=8,
                         color=theme.TEXT, xytext=(3, 0), textcoords="offset points")
         else:
-            ax.plot(0, i, "o", color=theme.GREEN, markersize=4.5, zorder=4, label="Annual domestic bachelor's tuition")
+            ax.plot(0, i, "o", color=colors[i], markersize=4.5, zorder=4, label="Annual domestic bachelor's tuition")
             ax.annotate("$0", (0, i), ha="left", va="center", fontsize=8,
-                        color=theme.GREEN, fontweight="bold",
+                        color=colors[i], fontweight="bold",
                         xytext=(7, 0), textcoords="offset points")
 
-    present = [r for r in (config.UK, config.EU, config.US) if any(region == r for _, _, region in data)]
-    handles = [plt.Rectangle((0, 0), 1, 1, color=REGION_COLOR[r]) for r in present]
-    ax.legend(handles, [REGION_LABELS[r] for r in present],
-              loc="lower right", frameon=False)
     _finalize(fig, out_path, bottom=0.08, missing_note=_missing_note(rows, value_key))
 
 

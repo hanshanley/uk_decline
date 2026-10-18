@@ -18,6 +18,46 @@ All output lands in [`../outputs/ppp/`](../outputs/ppp). Run it with:
 
 ## Headline results
 
+### Consumer-price inflation
+![Consumer-price inflation: UK vs peers](../outputs/ppp/consumer_price_inflation.png)
+
+The Purchasing power page also compares **monthly year-on-year consumer-price
+inflation** for the UK, US, Germany, France, Italy and Poland, from **2000 through
+the latest published month**. This measures price changes over time, **not PPP
+price-level differences**. Lower positive inflation means prices rise more slowly;
+it does not mean past price increases have been reversed.
+
+The source is the [OECD national Consumer Price Indices database](https://www.oecd.org/en/data/insights/data-explainers/2024/07/consumer-price-indices-frequently-asked-questions-faqs.html):
+all items, monthly, national methodology, year-on-year change (`M.N.CPI.PA._T.N.GY`).
+The UK national series is **CPIH**, including owner-occupiers' housing costs;
+the US series is **CPI-U**. National baskets and housing treatment differ, so
+these are not identically constructed harmonised indices.
+
+France and Italy use the current **COICOP 2018** source throughout its available
+history. Poland retains the published COICOP 1999 history before its 2018-classification
+series begins in January 2026. UK, US and Germany retain their published
+1999-classification series. Both official dataflows are queried on every refresh.
+The [saved inflation table](../data/consumer_inflation.csv) records each observation's
+classification, source query, precise series, unit, status and UTC retrieval time.
+Classification changes are not interpolation or new component observations.
+
+Every country keeps its own actual endpoint date, including 2026 releases.
+Missing months break the line. In particular, the US October 2025 CPI observation
+was not collected during the [federal shutdown](https://www.bls.gov/cpi/additional-resources/2025-federal-government-shutdown-impact-cpi-faq.htm)
+and is not filled. No forecasts, seasonal adjustments, smoothing, currency conversion
+or fabricated annual averages are added.
+
+```bash
+./.venv/bin/python -m ppp_data.inflation
+./.venv/bin/python -m ppp_data.inflation --from-csv data/consumer_inflation.csv
+```
+
+The scheduled **Monday 06:37 UTC** Purchasing power refresh includes this command.
+Unexpected definitions or units, duplicate months, non-finite rates, lost baseline
+history, or loss of any published country/month cell stop publication. A live
+source more than 120 days old for any country also blocks the refresh.
+Offline reconstruction preserves its saved CSV and does not impose a freshness limit.
+
 ### Separating volume growth from non-volume factors
 ![Decomposition of the UK/US gap](../outputs/ppp/ppp_gap_decomposition_uk_us.png)
 

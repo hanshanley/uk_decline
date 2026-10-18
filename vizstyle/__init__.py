@@ -39,7 +39,7 @@ from .hover import save_chart
 __all__ = [
     "PALETTE", "BG", "TEXT", "MUTED", "GRID", "ACCENT", "BLUE", "GOLD", "GREEN",
     "RC_PARAMS", "house_style", "source_note", "end_label", "save_fig", "white_stroke",
-    "with_year_gaps", "mark_year_breaks", "save_chart",
+    "with_year_gaps", "mark_year_breaks", "save_chart", "COUNTRY_COLORS", "country_color",
 ]
 
 # ── Palette ──────────────────────────────────────────────────────────────────
@@ -57,6 +57,34 @@ PALETTE: dict[str, str] = {
     "bg": BG, "card": CARD, "text": TEXT, "muted": MUTED, "grid": GRID,
     "accent": ACCENT, "blue": BLUE, "gold": GOLD, "green": GREEN,
 }
+
+COUNTRY_COLORS: dict[str, str] = {
+    "GBR": ACCENT, "USA": TEXT, "DEU": BLUE, "FRA": GOLD, "ITA": GREEN,
+    "POL": "#7B6D8D", "EUU": MUTED, "JPN": "#8C7B6B", "CHN": "#7B2D26",
+    "WLD": "#99958C", "CHE": "#4E8580",
+    "ENG": ACCENT, "SCO": BLUE, "WAL": GREEN, "NIR": GOLD,
+}
+_COUNTRY_ALIASES = {
+    "uk": "GBR", "united kingdom": "GBR", "london": "GBR", "gb": "GBR",
+    "us": "USA", "united states": "USA", "united states of america": "USA",
+    "germany": "DEU", "de": "DEU", "france": "FRA", "fr": "FRA",
+    "italy": "ITA", "it": "ITA", "poland": "POL", "pl": "POL",
+    "eu": "EUU", "eu-27": "EUU", "eu27_2020": "EUU",
+    "eu average": "EUU", "europe": "EUU", "europe_median": "EUU",
+    "european union": "EUU", "european union (27, 2020)": "EUU",
+    "japan": "JPN", "jp": "JPN", "china": "CHN", "cn": "CHN",
+    "world": "WLD", "switzerland": "CHE", "ch": "CHE",
+    "england": "ENG", "england & wales": "ENG",
+    "england (fee cap)": "ENG", "scotland": "SCO",
+    "wales": "WAL", "northern ireland": "NIR",
+}
+
+
+def country_color(country: str) -> str:
+    """Resolve country/aggregate aliases; unknown identities must not acquire a default."""
+    name = country.strip()
+    return COUNTRY_COLORS[_COUNTRY_ALIASES.get(name.casefold(), name.upper())]
+
 
 # ── rcParams ─────────────────────────────────────────────────────────────────
 RC_PARAMS: dict[str, Any] = {

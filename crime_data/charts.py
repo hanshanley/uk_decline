@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 
-from vizstyle import ACCENT, BLUE, GRID, MUTED, RC_PARAMS as _THEME, white_stroke, save_chart
+from vizstyle import ACCENT, BLUE, GRID, MUTED, country_color, RC_PARAMS as _THEME, white_stroke, save_chart
 
 _STROKE = white_stroke()
 _CRIME_THEME = {
@@ -304,10 +304,10 @@ def chart_homicide_peers(df, out_dir):
     eu_mean = eu_grp.mean()[eu_grp.size() >= _MIN_EU_REPORTERS]
     ax.plot(
         eu_mean.index, eu_mean.values, color=MUTED, linewidth=1.6,
-        linestyle=(0, (4, 3)), alpha=0.9, label="EU-27 reporting-country mean",
+        linestyle=(0, (4, 3)), label="EU-27 reporting-country mean",
     )
     xus, yus = line("USA")
-    ax.plot(xus, yus, color=BLUE, linewidth=2.2, solid_capstyle="round", label="United States")
+    ax.plot(xus, yus, color=country_color("USA"), linewidth=2.2, solid_capstyle="round", label="United States")
     xuk, yuk = line("GBR")
     ax.plot(xuk, yuk, color=ACCENT, linewidth=2.7, solid_capstyle="round", label="United Kingdom")
 
@@ -316,11 +316,11 @@ def chart_homicide_peers(df, out_dir):
                    f"EU-27  {eu_mean.values[-1]:.1f} ({int(eu_mean.index[-1])})", MUTED, dy=-13)
     if len(xus):
         _end_label(ax, xus.iloc[-1], yus.iloc[-1],
-                   f"United States  {yus.iloc[-1]:.1f} ({int(xus.iloc[-1])})", BLUE)
+                   f"United States  {yus.iloc[-1]:.1f} ({int(xus.iloc[-1])})", country_color("USA"))
     if len(xuk):
         _end_label(ax, xuk.iloc[-1], yuk.iloc[-1],
                    f"United Kingdom  {yuk.iloc[-1]:.1f} ({int(xuk.iloc[-1])})", ACCENT, dy=11)
-    for xs, ys, color in ((xus, yus, BLUE), (xuk, yuk, ACCENT)):
+    for xs, ys, color in ((xus, yus, country_color("USA")), (xuk, yuk, country_color("UK"))):
         if len(xs):
             ax.plot([xs.iloc[-1]], [ys.iloc[-1]], "o", color=color, markersize=5,
                     zorder=5)
@@ -356,9 +356,9 @@ def chart_homicide_nations(df, out_dir):
         return None
 
     styles = {
-        "England & Wales": (ACCENT, "-", 2.7, 0),
-        "Scotland": (BLUE, "-", 2.15, -13),
-        "Northern Ireland": (MUTED, (0, (4, 3)), 1.65, 13),
+        "England & Wales": (country_color("England & Wales"), "-", 2.7, 0),
+        "Scotland": (country_color("Scotland"), "-", 2.15, -13),
+        "Northern Ireland": (country_color("Northern Ireland"), (0, (4, 3)), 1.65, 13),
     }
     fig, ax = plt.subplots(figsize=(10.5, 5.8))
     for jurisdiction, (color, linestyle, width, label_offset) in styles.items():

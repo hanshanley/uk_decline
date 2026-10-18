@@ -18,7 +18,7 @@ import requests
 
 from europe_data import eurostat
 from vizstyle import (
-    ACCENT, BLUE, GOLD, GREEN, MUTED, house_style, mark_year_breaks,
+    MUTED, country_color, house_style, mark_year_breaks,
     save_chart, source_note, with_year_gaps,
 )
 
@@ -217,7 +217,7 @@ def charts(frame: pd.DataFrame, out: Path = OUTPUT) -> list[Path]:
     out.mkdir(parents=True, exist_ok=True)
     fig, axes = plt.subplots(1, 2, figsize=(13.5, 7))
     for ax, country, color, symbol in zip(
-        axes, ["United Kingdom", "United States"], [ACCENT, BLUE], ["£", "$"],
+        axes, ["United Kingdom", "United States"], [country_color("UK"), country_color("US")], ["£", "$"],
     ):
         sub = frame[frame["country"] == country].sort_values("year")
         values = sub.set_index("year")["value"]
@@ -261,7 +261,8 @@ def charts(frame: pd.DataFrame, out: Path = OUTPUT) -> list[Path]:
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(12.5, 7))
-    for country, color in zip(EU_COUNTRIES.values(), [BLUE, GREEN, GOLD, ACCENT]):
+    for country in EU_COUNTRIES.values():
+        color = country_color(country)
         sub = frame[frame["country"] == country].sort_values("year")
         values = sub.set_index("year")["value"]
         breaks = sub.loc[sub["status"].fillna("").str.contains("b"), "year"].tolist()

@@ -8,17 +8,17 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 
-from vizstyle import ACCENT, BG, BLUE, GOLD, GREEN, MUTED, TEXT, house_style, source_note, save_chart, with_year_gaps
+from vizstyle import BG, MUTED, TEXT, country_color, house_style, source_note, save_chart, with_year_gaps
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "outputs" / "trade" / "trade_share_gdp.png"
 
 STYLE = {
-    "GBR": ("United Kingdom", ACCENT, 3.2, 5),
-    "DEU": ("Germany", GREEN, 2.0, 3),
-    "FRA": ("France", BLUE, 2.0, 3),
-    "JPN": ("Japan", GOLD, 2.0, 3),
-    "USA": ("United States", MUTED, 1.8, 2),
+    "GBR": ("United Kingdom", country_color("GBR"), 3.2, 5),
+    "DEU": ("Germany", country_color("DEU"), 2.0, 3),
+    "FRA": ("France", country_color("FRA"), 2.0, 3),
+    "JPN": ("Japan", country_color("JPN"), 2.0, 3),
+    "USA": ("United States", country_color("USA"), 1.8, 2),
 }
 
 
@@ -46,7 +46,6 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
             label=label,
             color=color,
             linewidth=width,
-            alpha=1 if code == "GBR" else 0.9,
             solid_capstyle="round",
             zorder=zorder,
         )

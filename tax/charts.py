@@ -21,12 +21,12 @@ import matplotlib.ticker as mtick  # noqa: E402
 from . import config  # noqa: E402
 
 # ── Substack-style theme (matches pre1870_reapportionment_package) ──────────
-from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, house_style, white_stroke, save_chart, with_year_gaps
+from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, country_color, house_style, white_stroke, save_chart, with_year_gaps
 
 house_style()
 
 # Series colours: UK / Europe (median) / US.
-SERIES_COLORS = {"uk": ACCENT, "europe_median": BLUE, "us": GOLD}
+SERIES_COLORS = {key: country_color(key) for key in ("uk", "europe_median", "us")}
 SERIES_LABELS = {"uk": "United Kingdom", "europe_median": "Europe (median)", "us": "United States"}
 
 SOURCE_NOTE = config.FIGURE_SOURCE_NOTE

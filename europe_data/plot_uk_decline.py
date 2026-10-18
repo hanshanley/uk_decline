@@ -43,7 +43,7 @@ from vizstyle import (  # noqa: E402
     BG as SUBSTACK_BG, CARD as SUBSTACK_CARD, TEXT as SUBSTACK_TEXT,
     MUTED as SUBSTACK_MUTED, ACCENT as SUBSTACK_ACCENT, BLUE as SUBSTACK_BLUE,
     GOLD as SUBSTACK_GOLD, GREEN as SUBSTACK_GREEN, GRID as SUBSTACK_GRID,
-    house_style, with_year_gaps, mark_year_breaks, save_chart,
+    country_color, house_style, with_year_gaps, mark_year_breaks, save_chart,
 )
 
 house_style()
@@ -51,16 +51,16 @@ house_style()
 # UK is always the warm accent; peers use the cooler/earthy palette. The US (a key
 # non-European peer) is near-black. Spain removed per request; US added.
 PEERS = [
-    ("United Kingdom", SUBSTACK_ACCENT, "-", 2.8),
-    ("United States", SUBSTACK_TEXT, "-", 1.8),
-    ("Germany", SUBSTACK_BLUE, "-", 1.8),
-    ("France", SUBSTACK_GOLD, "-", 1.8),
-    ("Italy", SUBSTACK_GREEN, "-", 1.8),
-    ("Poland", "#7B6D8D", "--", 2.1),
+    ("United Kingdom", country_color("GBR"), "-", 2.8),
+    ("United States", country_color("USA"), "-", 1.8),
+    ("Germany", country_color("DEU"), "-", 1.8),
+    ("France", country_color("FRA"), "-", 1.8),
+    ("Italy", country_color("ITA"), "-", 1.8),
+    ("Poland", country_color("POL"), "--", 2.1),
 ]
 INCOME_PEERS = list(PEERS)
-EU_WB = ("European Union", SUBSTACK_BLUE, "--", 2.0)                    # World Bank EU aggregate, for GDP
-EU_EUROSTAT = ("European Union (27, 2020)", SUBSTACK_MUTED, "--", 1.6)  # Eurostat, income
+EU_WB = ("European Union", country_color("EUU"), "--", 2.0)                    # World Bank EU aggregate, for GDP
+EU_EUROSTAT = ("European Union (27, 2020)", country_color("EUU"), "--", 1.6)  # Eurostat, income
 
 # Volume growth and current-dollar valuation are separate questions.
 GDP_METRIC = "gdp_per_capita_constant_usd"
@@ -364,11 +364,11 @@ def fig_uk_relative(
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
 
     refs = [
-        ("United States", SUBSTACK_TEXT, "-", 2.8, "United States"),
-        ("Germany", SUBSTACK_BLUE, "-", 2.0, "Germany"),
-        ("France", SUBSTACK_GOLD, "-", 2.0, "France"),
-        ("European Union", SUBSTACK_MUTED, "--", 2.0, "EU average"),
-        ("Poland", "#7B6D8D", "--", 2.1, "Poland"),
+        ("United States", country_color("USA"), "-", 2.8, "United States"),
+        ("Germany", country_color("DEU"), "-", 2.0, "Germany"),
+        ("France", country_color("FRA"), "-", 2.0, "France"),
+        ("European Union", country_color("EUU"), "--", 2.0, "EU average"),
+        ("Poland", country_color("POL"), "--", 2.1, "Poland"),
     ]
     if simplified or basis != "nominal":
         refs = [ref for ref in refs if ref[0] in {"United States", "European Union", "Poland"}]

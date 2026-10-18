@@ -941,6 +941,12 @@ def test_gdp_source_footers_do_not_overlap_year_label(monkeypatch, tmp_path, cha
     footer_top = max(text.get_window_extent(renderer).y1 for text in fig.texts)
     xlabel_bottom = fig.axes[0].xaxis.label.get_window_extent(renderer).y0
     assert footer_top < xlabel_bottom
+    if chart_name == "chart_ppp_vs_market_fx":
+        from vizstyle import country_color
+
+        measures = fig.axes[0].lines[:3]
+        assert all(line.get_color() == country_color("UK") for line in measures)
+        assert len({line.get_linestyle() for line in measures}) == 3
 
 
 def test_decomposition_is_invariant_to_fixed_benchmark_rescaling() -> None:

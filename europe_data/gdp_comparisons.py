@@ -66,11 +66,11 @@ def make_chart(frame: pd.DataFrame, out: Path) -> None:
     house_style()
     fig, axes = plt.subplots(2, 2, figsize=(13, 9))
     definitions = (
-        (NOMINAL, "Nominal: annual market exchange rates", ACCENT,
+        (NOMINAL, "Nominal: annual market exchange rates", TEXT,
          "Current US dollars; includes GDP prices and currency changes"),
-        (CURRENT_PPP, "PPP: each year's prices and parities", BLUE,
+        (CURRENT_PPP, "PPP: each year's prices and parities", TEXT,
          "Current international dollars; not a pure real-growth measure"),
-        (CONSTANT_PPP, "Real output: fixed 2021 PPP benchmark", GREEN,
+        (CONSTANT_PPP, "Real output: fixed 2021 PPP benchmark", TEXT,
          "Constant 2021 international dollars; benchmark-valued volumes"),
     )
     for ax, (metric, title, color, description) in zip(axes.flat, definitions):
@@ -78,7 +78,7 @@ def make_chart(frame: pd.DataFrame, out: Path) -> None:
         annual = with_year_gaps(values)
         ax.plot(annual.index, annual.values, color=color, linewidth=2.4, label=title,
                 marker="o", markevery=[len(annual) - 1], markersize=4)
-        ax.axhline(100, color=MUTED, linestyle="--", linewidth=.8)
+        ax.axhline(100, color=ACCENT, linestyle="--", linewidth=.8)
         ax.set_title(title, fontsize=13, fontweight="bold", loc="left", pad=40)
         ax.text(0, 1.015, f"{end}: {values.loc[end]:.1f}% of the UK "
                 f"({abs(values.loc[end] - 100):.1f}% "

@@ -43,7 +43,7 @@ EU and US references are seasonally adjusted **monthly** observations. The chart
 retain these source frequencies rather than inventing matching three-month rates.
 The x-axis aligns the UK centre month with the peers' calendar month; these are
 contextual comparisons, not identically defined estimates. Latest labels give each
-series' own actual period, and age bands appear in the legend. The EU youth
+series' own actual period, and age bands appear in the source note and hover labels. The EU youth
 series includes 15-year-olds, unlike the UK and US.
 
 Recent Labour Force Survey estimates have additional uncertainty because of
@@ -54,8 +54,10 @@ vintage throughout, without adding forecasts, smoothing observations, or
 interpolating missing values. They do not add an invented confidence interval
 when the source CSV does not provide one.
 
-Both charts use consistent UK, EU and US colours, distinct line styles and
-actual-observation hover data. Missing months break the line; they are not
+Both charts use the shared country colours: **UK orange, US black, EU grey**.
+Direct line-end country/value/period labels replace the legend and repeated
+latest-value banner. The full source history and actual-observation hover data
+are retained; the EU also has a dashed line. Missing months break the line; they are not
 interpolated. In particular, the US October 2025 household survey was not collected
 during the federal shutdown, so neither US series has an observation that month.
 Detailed documentation stays here rather than in a duplicated website methods section.

@@ -38,7 +38,7 @@ METHOD_BREAK_YEAR = 2012
 from vizstyle import (  # noqa: E402
     BG as SUBSTACK_BG, TEXT as SUBSTACK_TEXT, MUTED as SUBSTACK_MUTED,
     ACCENT as SUBSTACK_ACCENT, BLUE as SUBSTACK_BLUE, GOLD as SUBSTACK_GOLD,
-    GREEN as SUBSTACK_GREEN, GRID as SUBSTACK_GRID, house_style, with_year_gaps, save_chart,
+    GREEN as SUBSTACK_GREEN, GRID as SUBSTACK_GRID, country_color, house_style, with_year_gaps, save_chart,
 )
 
 house_style()
@@ -95,7 +95,7 @@ def _plot_ons_methods(
     ips_metric: str,
     admin_metric: str,
     *,
-    color: str = SUBSTACK_BLUE,
+    color: str = SUBSTACK_ACCENT,
     category: str = "all",
     linewidth: float = 2.6,
     label: str | None = None,
@@ -111,7 +111,6 @@ def _plot_ons_methods(
                 segment["period"], segment["value"], color=color,
                 linewidth=linewidth, label=label,
             )
-            label = None
     return ips, admin
 
 
@@ -331,9 +330,9 @@ def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
 
 _ORIGIN_GROUPS = [
     ("all", SUBSTACK_TEXT, "All citizenships"),
-    ("british", SUBSTACK_MUTED, "British"),
-    ("eu", SUBSTACK_BLUE, "EU / EU+"),
-    ("non_eu", SUBSTACK_ACCENT, "Non-EU / Non-EU+"),
+    ("british", country_color("UK"), "British"),
+    ("eu", country_color("EUU"), "EU / EU+"),
+    ("non_eu", SUBSTACK_BLUE, "Non-EU / Non-EU+"),
 ]
 
 _SOURCE_BY_ORIGIN = (
@@ -357,7 +356,9 @@ def _chart_by_origin(df: pd.DataFrame, ips_metric: str, admin_metric: str,
     _style_title(ax, title)
     ax.set_xlabel("Year")
     ax.set_ylabel(ylabel)
-    ax.legend(loc="upper left", frameon=False)
+    handles, labels = ax.get_legend_handles_labels()
+    labelled = dict(zip(labels, handles))
+    ax.legend(labelled.values(), labelled.keys(), loc="upper left", frameon=False)
     _style_axes(ax)
     return _save(fig, name, _SOURCE_BY_ORIGIN)
 

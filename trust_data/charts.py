@@ -13,13 +13,13 @@ import textwrap
 
 from . import countries, metrics
 from .paths import CHART_DIR, DEFAULT_LONG_CSV
-from vizstyle import ACCENT, BLUE, GREEN, house_style, save_chart, with_year_gaps
+from vizstyle import country_color, house_style, save_chart, with_year_gaps
 
 # Group styling: the UK stands out; comparators are muted.
 GROUP_STYLE = {
-    countries.UK: {"color": ACCENT, "lw": 2.8, "alpha": 1.0, "zorder": 5},
-    countries.EU: {"color": BLUE, "lw": 1.4, "alpha": 0.55, "zorder": 2},
-    countries.US: {"color": GREEN, "lw": 1.8, "alpha": 0.9, "zorder": 4},
+    countries.UK: {"color": country_color("GBR"), "lw": 2.8, "alpha": 1.0, "zorder": 5},
+    countries.EU: {"color": country_color("EUU"), "lw": 1.4, "alpha": 0.55, "zorder": 2},
+    countries.US: {"color": country_color("USA"), "lw": 1.8, "alpha": 0.9, "zorder": 4},
 }
 
 

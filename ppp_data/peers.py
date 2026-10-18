@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import NamedTuple
 
 from europe_data import countries
-from vizstyle import ACCENT, BLUE, GOLD, GREEN, MUTED, TEXT
+from vizstyle import country_color
 
 
 class Peer(NamedTuple):
@@ -23,17 +23,17 @@ class Peer(NamedTuple):
 
 UK = "GBR"
 US = "USA"
-POLAND = Peer("POL", "Poland", "#7B6D8D", "--", 2.1)
-EU_AVERAGE = Peer("EUU", "EU average", MUTED, "--", 2.0)
+POLAND = Peer("POL", "Poland", country_color("POL"), "--", 2.1)
+EU_AVERAGE = Peer("EUU", "EU average", country_color("EUU"), "--", 2.0)
 
 # The UK is always terracotta and heavier than everything else; the US is near-black as
 # the primary comparator. These countries have World Bank PPP series back to 1990.
 PEERS: list[Peer] = [
-    Peer("GBR", "United Kingdom", ACCENT, "-", 2.8),
-    Peer("USA", "United States", TEXT, "-", 1.9),
-    Peer("DEU", "Germany", BLUE, "-", 1.9),
-    Peer("FRA", "France", GOLD, "-", 1.9),
-    Peer("ITA", "Italy", GREEN, "-", 1.9),
+    Peer("GBR", "United Kingdom", country_color("GBR"), "-", 2.8),
+    Peer("USA", "United States", country_color("USA"), "-", 1.9),
+    Peer("DEU", "Germany", country_color("DEU"), "-", 1.9),
+    Peer("FRA", "France", country_color("FRA"), "-", 1.9),
+    Peer("ITA", "Italy", country_color("ITA"), "-", 1.9),
     POLAND,
 ]
 GDP_PEERS = [*PEERS, EU_AVERAGE]
@@ -41,9 +41,9 @@ GDP_PEERS = [*PEERS, EU_AVERAGE]
 # Peers used on the "relative to the UK" chart. The UK itself is the 100% baseline there,
 # so it is not in this list; Poland is added because its convergence is the headline.
 RELATIVE_PEERS: list[Peer] = [
-    Peer("USA", "United States", TEXT, "-", 2.8),
-    Peer("DEU", "Germany", BLUE, "-", 2.0),
-    Peer("FRA", "France", GOLD, "-", 2.0),
+    Peer("USA", "United States", country_color("USA"), "-", 2.8),
+    Peer("DEU", "Germany", country_color("DEU"), "-", 2.0),
+    Peer("FRA", "France", country_color("FRA"), "-", 2.0),
     EU_AVERAGE,
     POLAND,
 ]
@@ -51,10 +51,10 @@ RELATIVE_PEERS: list[Peer] = [
 # Peers on the price-level-index chart. The US is the numeraire (a flat 1.00 reference),
 # so it is drawn as a horizontal guide rather than a series.
 PRICE_LEVEL_PEERS: list[Peer] = [
-    Peer("GBR", "United Kingdom", ACCENT, "-", 2.8),
-    Peer("DEU", "Germany", BLUE, "-", 1.9),
-    Peer("FRA", "France", GOLD, "-", 1.9),
-    Peer("ITA", "Italy", GREEN, "-", 1.9),
+    Peer("GBR", "United Kingdom", country_color("GBR"), "-", 2.8),
+    Peer("DEU", "Germany", country_color("DEU"), "-", 1.9),
+    Peer("FRA", "France", country_color("FRA"), "-", 1.9),
+    Peer("ITA", "Italy", country_color("ITA"), "-", 1.9),
     POLAND,
 ]
 

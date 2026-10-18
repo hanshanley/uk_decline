@@ -233,18 +233,18 @@ def chart_ppp_vs_market_fx(rows: list[dict], out_dir: Path) -> Path | None:
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
     ax.fill_between(years, fx_pct, ppp_pct, color=MUTED, alpha=0.13, zorder=1)
     ax.plot(years, fx_pct, color=ACCENT, linewidth=2.8, zorder=4, label="At market exchange rates")
-    ax.plot(years, ppp_pct, color=BLUE, linewidth=2.8, zorder=4, label="Purchasing power (current prices)")
-    ax.plot(years, real_pct, color=GREEN, linewidth=2.2, linestyle="--", zorder=3, label="Purchasing power (constant prices)")
+    ax.plot(years, ppp_pct, color=ACCENT, linewidth=2.2, linestyle="--", zorder=4, label="Purchasing power (current prices)")
+    ax.plot(years, real_pct, color=ACCENT, linewidth=1.8, linestyle=":", zorder=3, label="Purchasing power (constant prices)")
 
     labelled_ends(ax, [(fx_pct[-1], "at market\nexchange rates", ACCENT, years[-1]),
-                       (ppp_pct[-1], "purchasing power\n(current prices)", BLUE, years[-1]),
-                       (real_pct[-1], "output volumes\n(2021 price benchmark)", GREEN, years[-1])],
+                       (ppp_pct[-1], "purchasing power\n(current prices)", ACCENT, years[-1]),
+                       (real_pct[-1], "output volumes\n(2021 price benchmark)", ACCENT, years[-1])],
                   min_gap=4.5, x=years[-1], fontsize=9.5)
 
     peak_year = max(years, key=lambda y: fx[y])
     peak_pct = fx[peak_year] * 100
     ax.plot([peak_year], [peak_pct], "o", color=ACCENT, markersize=7,
-            markeredgecolor="white", markeredgewidth=1.4, zorder=6)
+            markeredgecolor="white", markeredgewidth=1.4, zorder=6, label="At market exchange rates")
     ax.annotate(
         f"{peak_year}: peak dollar GDP ratio\n{peak_pct:.0f}% of the US at market rates,\n"
         f"but {ppp[peak_year]*100:.0f}% after adjusting for local prices",

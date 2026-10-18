@@ -32,7 +32,7 @@ import matplotlib.ticker as mtick
 
 from tuition import config as tuition_config
 from tuition.cpi import load_cpi
-from vizstyle import ACCENT, BLUE, GOLD, MUTED, save_fig, source_note, white_stroke
+from vizstyle import ACCENT, BLUE, MUTED, country_color, save_fig, source_note, white_stroke
 
 from . import peers, series
 from .figure import labelled_ends, note, subtitle, themed_plt, tidy
@@ -264,8 +264,7 @@ def _share_subtitle(uk_years: list[int], uk: list[float],
 def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
     """UK tuition on both conversion bases, with the US for scale.
 
-    The two UK lines are deliberately given different weights and colours rather than two
-    dashes of the same colour: the whole point of the figure is the gap between them, and
+    The two UK lines use different weights and dashes: the figure compares their gap, and
     the shaded band makes it readable at a glance. The band flips sign around 2016 — when
     sterling was strong a UK degree looked dearer in dollars than it felt at home, and since
     then the reverse.
@@ -286,15 +285,15 @@ def chart_tuition_ppp(points: list[TuitionPoint], out_dir: Path) -> Path | None:
 
     fig, ax = plt.subplots(figsize=(11.5, 6.5))
     ax.fill_between(uk_years, uk_ppp, uk_fx, color=MUTED, alpha=0.16, zorder=1)
-    ax.plot(uk_years, uk_fx, color=MUTED, linewidth=1.8, linestyle="--", zorder=3, label="England, at market rates")
+    ax.plot(uk_years, uk_fx, color=country_color("UK"), linewidth=1.8, linestyle="--", zorder=3, label="England, at market rates")
     ax.plot(uk_years, uk_ppp, color=ACCENT, linewidth=3.0, zorder=4, label="England, purchasing power")
     if us_years:
-        ax.plot(us_years, us_ppp, color=GOLD, linewidth=2.0, zorder=2, label="United States")
+        ax.plot(us_years, us_ppp, color=country_color("US"), linewidth=2.0, zorder=2, label="United States")
 
-    labels = [(uk_ppp[-1], "UK, purchasing power", ACCENT, uk_years[-1]),
-              (uk_fx[-1], "UK, at market rates", MUTED, uk_years[-1])]
+    labels = [(uk_ppp[-1], "UK, purchasing power", country_color("UK"), uk_years[-1]),
+              (uk_fx[-1], "UK, at market rates", country_color("UK"), uk_years[-1])]
     if us_years:
-        labels.append((us_ppp[-1], "United States", GOLD, us_years[-1]))
+        labels.append((us_ppp[-1], "United States", country_color("US"), us_years[-1]))
     labelled_ends(ax, labels, min_gap=max(uk_ppp) * 0.085,
                   x=max(uk_years[-1], us_years[-1] if us_years else uk_years[-1]),
                   fontsize=10)
@@ -335,7 +334,7 @@ def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | Non
     ax.plot(uk_years, uk, "o", color=ACCENT, markersize=5,
             markeredgecolor="white", markeredgewidth=1.0)
     if us_years:
-        ax.plot(us_years, us, color=GOLD, linewidth=2.0, label="US public four-year, in-state")
+        ax.plot(us_years, us, color=country_color("US"), linewidth=2.0, label="US public four-year, in-state")
     if de_years:
         ax.plot(de_years, de, "o", color=BLUE, markersize=5, label="Germany, selected zero-fee reference years")
         ax.text(sum(de_years) / len(de_years), max(uk) * 0.03,
@@ -345,7 +344,7 @@ def chart_tuition_share(points: list[TuitionPoint], out_dir: Path) -> Path | Non
 
     labels = [(uk[-1], "England fee cap / UK GDP per head", ACCENT, uk_years[-1])]
     if us_years:
-        labels.append((us[-1], "United States", GOLD, us_years[-1]))
+        labels.append((us[-1], "United States", country_color("US"), us_years[-1]))
     labelled_ends(ax, labels, min_gap=max(uk) * 0.09,
                   x=max(uk_years[-1], us_years[-1] if us_years else uk_years[-1]),
                   fontsize=9.5)

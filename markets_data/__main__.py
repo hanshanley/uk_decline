@@ -42,7 +42,7 @@ def main(argv: list[str] | None = None) -> int:
         import pandas as pd
 
         print(f"[markets_data] using existing CSV: {args.from_csv}", file=sys.stderr)
-        source = pd.read_csv(args.from_csv)  # load once; reused by charts + summary
+        source = pd.read_csv(args.from_csv, float_precision="round_trip")  # load once for charts + summary
     else:
         df = combine.build(args.start, args.end, args.csv)
         source = df

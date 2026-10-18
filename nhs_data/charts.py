@@ -21,17 +21,12 @@ from . import _util, metrics  # noqa: E402
 from .paths import CHART_DIR, DEFAULT_CSV  # noqa: E402
 
 # ── Substack-style theme (matches personal_projects/pre1870_reapportionment_package) ──
-from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, house_style, save_chart
+from vizstyle import BG, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN, country_color, house_style, save_chart
 
 house_style()
 
 # Stable colour per nation, drawn from the theme's muted palette.
-NATION_COLOURS = {
-    "ENG": ACCENT,
-    "SCO": BLUE,
-    "WAL": GREEN,
-    "NIR": GOLD,
-}
+NATION_COLOURS = {code: country_color(code) for code in ("ENG", "SCO", "WAL", "NIR")}
 
 NATION_SOURCES = {
     "ENG": "NHS England",

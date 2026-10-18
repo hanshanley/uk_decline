@@ -505,6 +505,22 @@ def test_filtered_market_history_keeps_original_constant_dollar_base(tmp_path, m
     assert units == ["constant 2020 US$"]
 
 
+def test_offline_market_plot_preserves_saved_large_value_precision(tmp_path, monkeypatch):
+    import pandas as pd
+    from markets_data import charts
+
+    value = 9568188789479.037
+    path = tmp_path / "markets.csv"
+    pd.DataFrame([
+        markets.make_row("United States", "USA", 2016, "market_cap_usd_real", value),
+        markets.make_row("United States", "USA", 2017, "market_cap_usd_real", value + 1),
+    ]).to_csv(path, index=False)
+    figures = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: figures.append(fig))
+    charts.make_charts(path, tmp_path)
+    assert figures[0].axes[0].lines[0].get_ydata()[0] == value
+
+
 def _run() -> int:
     import pytest
 

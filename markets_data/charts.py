@@ -105,7 +105,7 @@ def _load(source):
         source = DEFAULT_CSV
     if hasattr(source, "columns"):  # already a DataFrame
         return source
-    return pd.read_csv(source)
+    return pd.read_csv(source, float_precision="round_trip")
 
 
 def _annotate_year_gaps(ax, series, label: str = "UK data unavailable", *, at_top=False) -> None:

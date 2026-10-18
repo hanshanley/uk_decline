@@ -10,6 +10,37 @@ from uk_migration._aggregate import aggregate_by_year
 from uk_migration.sources import asylum, irregular, ons_ltim, visas
 
 
+def test_origin_method_segments_keep_country_identity_and_unique_legend(monkeypatch, tmp_path):
+    import json
+
+    monkeypatch.setattr(charts, "FIGURES_DIR", tmp_path)
+    figures = []
+    save = charts.save_chart
+
+    def capture(fig, *args, **kwargs):
+        figures.append(fig)
+        return save(fig, *args, **kwargs)
+
+    monkeypatch.setattr(charts, "save_chart", capture)
+    rows = [
+        dict(metric=metric, category=category, period=year, value=value)
+        for category in ("british", "eu")
+        for metric, year, value in (
+            ("immigration_by_origin", 2011, 10), ("immigration", 2012, 20),
+        )
+    ]
+    path = charts.chart_immigration_by_origin(pd.DataFrame(rows))
+    data = json.loads(path.with_suffix(".json").read_text())
+    assert [(series["label"], [point[2] for point in series["points"]])
+            for series in data["series"]] == [
+        ("British", ["2011"]), ("British", ["2012"]),
+        ("EU / EU+", ["2011"]), ("EU / EU+", ["2012"]),
+    ]
+    assert [text.get_text() for text in figures[0].axes[0].get_legend().get_texts()] == [
+        "British", "EU / EU+",
+    ]
+
+
 @pytest.mark.parametrize("chart,metric,categories,latest_label", [
     (charts.chart_visas_by_category, "visas_granted", ["work", "study", "family"], "Work: 260k (2025)"),
     (charts.chart_asylum, "asylum_applications", ["main_applicant"], "260,000 in 2025"),

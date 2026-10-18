@@ -8,10 +8,10 @@ from __future__ import annotations
 from vizstyle import (  # noqa: F401  (re-exported for back-compat)
     BG, CARD, TEXT, MUTED, GRID, ACCENT, BLUE, GOLD, GREEN,
     RC_PARAMS, PALETTE, source_note, end_label, save_fig, white_stroke,
-    house_style as apply,
+    house_style as apply, country_color,
 )
 
 __all__ = [
     "BG", "CARD", "TEXT", "MUTED", "GRID", "ACCENT", "BLUE", "GOLD", "GREEN",
-    "RC_PARAMS", "PALETTE", "apply", "source_note", "end_label", "save_fig", "white_stroke",
+    "RC_PARAMS", "PALETTE", "apply", "source_note", "end_label", "save_fig", "white_stroke", "country_color",
 ]
