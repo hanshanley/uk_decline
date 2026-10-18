@@ -35,6 +35,6 @@ Note: 2012 method break. Different methods are not directly comparable; lines ar
 Note: 2012 method break. Different methods are not directly comparable; lines are not joined across the break. |
 | `visas_by_category.png` | Entry-clearance visas granted by category (2005+) | Home Office Immigration System Statistics (gov.uk), entry-clearance-visa-outcomes dataset |
 | `asylum_applications.png` | Asylum applications, main applicants (2001+) | Home Office Immigration System Statistics (gov.uk), asylum-claims dataset |
-| `irregular_arrivals.png` | Detected irregular arrivals incl. small boats (2018+) | Home Office Immigration System Statistics (gov.uk), illegal-entry-routes dataset |
+| `irregular_arrivals.png` | Detected irregular arrivals incl. small boats (2018+) | Home Office Immigration System Statistics (gov.uk), Data_IER_D01 |
 | `legal_vs_irregular.png` | Total immigration vs detected irregular arrivals, log scale | Office for National Statistics, Long-Term International Migration (ons.gov.uk); Home Office Immigration System Statistics (gov.uk) |
 | `net_migration_per_capita.png` | ONS net migration per 1,000 population, 1964–2025 | Office for National Statistics, International Passenger Survey, long-term migration 1964–2015, ad hoc 006408 (ons.gov.uk); Office for National Statistics, Long-Term International Migration (ons.gov.uk); World Bank, World Development Indicators (api.worldbank.org) (SP.POP.TOTL denominator only) |

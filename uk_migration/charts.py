@@ -32,6 +32,11 @@ SOURCE_ONS_IPS = (
 )
 SOURCE_HO = "Home Office Immigration System Statistics (gov.uk)"
 SOURCE_WB = "World Bank, World Development Indicators (api.worldbank.org)"
+_SOURCE_IRREGULAR = (
+    f"{SOURCE_HO}, Data_IER_D01.\n"
+    "Complete calendar years; detections are not the total irregular population. "
+    "Missing years are not joined."
+)
 METHOD_BREAK_YEAR = 2012
 _METHOD_NOTE = (
     "Note: 2012 method break. Different methods are not directly comparable; "
@@ -133,11 +138,11 @@ def _compact_count(value: float, _position=None) -> str:
     return f"{value:g}"
 
 
-def _style_ons_figure(fig, ax, segments: list[pd.DataFrame], title: str,
-                      subtitle: str, ylabel: str, *, counts: bool = True) -> int:
+def _style_migration_figure(fig, ax, segments: list[pd.DataFrame], title: str,
+                            subtitle: str, ylabel: str, *, counts: bool = True) -> int:
     observed = [segment for segment in segments if not segment.empty]
     if not observed:
-        raise ValueError("No ONS migration observations to plot")
+        raise ValueError("No migration observations to plot")
     first = int(min(segment["period"].min() for segment in observed))
     latest = int(max(segment["period"].max() for segment in observed))
     low = min(float(segment["value"].min()) for segment in observed)
@@ -145,7 +150,11 @@ def _style_ons_figure(fig, ax, segments: list[pd.DataFrame], title: str,
     padding = max(high - low, abs(high), 1) * 0.08
     ax.set_xlim(first - 0.6, latest + 0.6)
     ax.set_ylim(0 if low >= 0 else low - padding, high + padding)
-    ax.set_xticks(sorted({first, *range((first // 10 + 1) * 10, latest + 1, 10), latest}))
+    ticks = (
+        list(range(first, latest + 1)) if latest - first <= 12
+        else sorted({first, *range((first // 10 + 1) * 10, latest + 1, 10), latest})
+    )
+    ax.set_xticks(ticks)
     ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
     if counts:
         ax.yaxis.set_major_formatter(_compact_count)
@@ -160,7 +169,7 @@ def _style_ons_figure(fig, ax, segments: list[pd.DataFrame], title: str,
     return latest
 
 
-def _ons_end_labels(ax, ends: list[tuple[float, str, str, int]], latest: int) -> None:
+def _migration_end_labels(ax, ends: list[tuple[float, str, str, int]], latest: int) -> None:
     low, high = ax.get_ylim()
     first_label = len(ax.texts)
     labelled_ends(ax, ends, min_gap=(high - low) * 0.045, x=latest, fontsize=9.5)
@@ -175,12 +184,12 @@ def chart_immigration(df: pd.DataFrame) -> Path:
         ax, df, "immigration_by_origin", "immigration",
         label="UK long-term immigration over time",
     )
-    latest = _style_ons_figure(
+    latest = _style_migration_figure(
         fig, ax, [ips, admin], "UK long-term immigration",
         "Annual arrivals", "Immigration per year",
     )
     last = (admin if not admin.empty else ips).iloc[-1]
-    _ons_end_labels(ax, [(last["value"], f"{_compact_count(last['value'])} ({int(last['period'])})",
+    _migration_end_labels(ax, [(last["value"], f"{_compact_count(last['value'])} ({int(last['period'])})",
                          SUBSTACK_ACCENT, int(last["period"]))], latest)
     return _save(fig, "immigration_over_time.png", _SOURCE_BY_ORIGIN,
                  publication=True, right=0.83)
@@ -193,12 +202,12 @@ def chart_net_migration(df: pd.DataFrame) -> Path:
         label="UK net long-term migration over time",
     )
     ax.axhline(0, color=SUBSTACK_MUTED, linewidth=0.8)
-    latest = _style_ons_figure(
+    latest = _style_migration_figure(
         fig, ax, [ips, admin], "UK net long-term migration",
         "Immigration minus emigration", "People (net)",
     )
     last = (admin if not admin.empty else ips).iloc[-1]
-    _ons_end_labels(ax, [(last["value"], f"{_compact_count(last['value'])} ({int(last['period'])})",
+    _migration_end_labels(ax, [(last["value"], f"{_compact_count(last['value'])} ({int(last['period'])})",
                          SUBSTACK_ACCENT, int(last["period"]))], latest)
     return _save(fig, "net_migration.png", _SOURCE_BY_ORIGIN,
                  publication=True, right=0.83)
@@ -304,17 +313,32 @@ def chart_asylum(df: pd.DataFrame) -> Path:
 
 
 def chart_irregular(df: pd.DataFrame) -> Path:
-    total = _series(df, "irregular_arrivals", "all")
-    boats = _series(df, "irregular_arrivals", "small_boat")
-    fig, ax = plt.subplots(figsize=(11, 6))
-    ax.plot(total["period"], total["value"], marker="o", color=SUBSTACK_BLUE, label="All irregular arrivals")
-    ax.plot(boats["period"], boats["value"], marker="o", color=SUBSTACK_ACCENT, label="Small boats")
-    _style_title(ax, "UK irregular arrivals detected")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("Detections per year")
-    ax.legend(loc="upper left", frameon=False)
-    _style_axes(ax)
-    return _save(fig, "irregular_arrivals.png", SOURCE_HO)
+    data = []
+    for category, label, color in (
+        ("all", "All detected arrivals", SUBSTACK_BLUE),
+        ("small_boat", "Small boats", SUBSTACK_ACCENT),
+    ):
+        series = _series(df, "irregular_arrivals", category)
+        if series.empty:
+            raise ValueError(f"Missing published irregular-arrival category: {category}")
+        data.append((series, label, color))
+    fig, ax = plt.subplots(figsize=(11, 6.2))
+    ends = []
+    for series, label, color in data:
+        annual = with_year_gaps(series.set_index("period")["value"])
+        ax.plot(annual.index, annual.values, linewidth=2.4, color=color, label=label)
+        last = series.iloc[-1]
+        ends.append((
+            last["value"], f"{label}  {last['value']:,.0f} ({int(last['period'])})",
+            color, int(last["period"]),
+        ))
+    latest = _style_migration_figure(
+        fig, ax, [series for series, _, _ in data], "UK irregular arrivals detected",
+        "Small boats are included in the total", "Detections per year",
+    )
+    _migration_end_labels(ax, ends, latest)
+    return _save(fig, "irregular_arrivals.png", _SOURCE_IRREGULAR,
+                 publication=True, right=0.76)
 
 
 def chart_legal_vs_irregular(df: pd.DataFrame) -> Path:
@@ -344,12 +368,12 @@ def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
         label="UK net migration per 1,000 population",
     )
     ax.axhline(0, color=SUBSTACK_MUTED, linewidth=0.8)
-    latest = _style_ons_figure(
+    latest = _style_migration_figure(
         fig, ax, [ips, admin], "UK net migration per 1,000 population",
         "Annual net flows, population-adjusted", "Per 1,000 population", counts=False,
     )
     last = (admin if not admin.empty else ips).iloc[-1]
-    _ons_end_labels(ax, [(last["value"], f"{last['value']:.1f} ({int(last['period'])})",
+    _migration_end_labels(ax, [(last["value"], f"{last['value']:.1f} ({int(last['period'])})",
                          SUBSTACK_ACCENT, int(last["period"]))], latest)
     return _save(
         fig, "net_migration_per_capita.png",
@@ -388,10 +412,10 @@ def _chart_by_origin(df: pd.DataFrame, ips_metric: str, admin_metric: str,
             ))
     if zero_line:
         ax.axhline(0, color=SUBSTACK_MUTED, linewidth=0.8)
-    latest = _style_ons_figure(
+    latest = _style_migration_figure(
         fig, ax, segments, title, "Long-term flows by citizenship group", ylabel,
     )
-    _ons_end_labels(ax, ends, latest)
+    _migration_end_labels(ax, ends, latest)
     return _save(fig, name, _SOURCE_BY_ORIGIN, publication=True, right=0.76)
 
 
@@ -438,7 +462,7 @@ _CHART_DOCS: list[tuple[str, str, str]] = [
     ("asylum_applications.png", "Asylum applications, main applicants (2001+)",
      f"{SOURCE_HO}, asylum-claims dataset"),
     ("irregular_arrivals.png", "Detected irregular arrivals incl. small boats (2018+)",
-     f"{SOURCE_HO}, illegal-entry-routes dataset"),
+     f"{SOURCE_HO}, Data_IER_D01"),
     ("legal_vs_irregular.png", "Total immigration vs detected irregular arrivals, log scale",
      f"{SOURCE_ONS}; {SOURCE_HO}"),
     ("net_migration_per_capita.png", "ONS net migration per 1,000 population, 1964–2025",

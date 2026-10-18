@@ -46,6 +46,8 @@ total charts remain available; the underlying source table is unchanged.
 Home Office annual series omit categories with incomplete quarterly coverage. An
 all-method irregular total is published only if every method observed that year has
 four quarters; complete small-boat figures cannot disguise partial air-arrival data.
+The irregular-arrivals chart shows total detections and small-boat detections:
+small boats are **included in the total**, so the two lines must not be added.
 Detected arrivals are not the entire irregular population. Total ONS immigration has
 a different long-term residence definition and is not a legal-only count: these
 measures are not a mutually exclusive legal/illegal partition.

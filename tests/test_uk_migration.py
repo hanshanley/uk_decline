@@ -136,6 +136,68 @@ def test_public_migration_charts_use_readable_labels_and_preserve_missing_years(
     assert fig.texts[-1].get_window_extent(renderer).y1 + 5 < ax.xaxis.label.get_window_extent(renderer).y0
 
 
+def test_irregular_chart_uses_dated_labels_and_preserves_missing_years(monkeypatch, tmp_path):
+    import json
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    rows = [
+        dict(metric="irregular_arrivals", category=category, period=year, value=value)
+        for category, values in (
+            ("all", (13000, 17000, 22000, 30000)),
+            ("small_boat", (300, 1800, 15000, 29999)),
+        )
+        for year, value in zip((2018, 2019, 2021, 2025), values)
+    ]
+    figures = []
+    original = charts.save_chart
+
+    def save(fig, *args, **kwargs):
+        figures.append(fig)
+        return original(fig, *args, **kwargs)
+
+    monkeypatch.setattr(charts, "save_chart", save)
+    monkeypatch.setattr(charts, "FIGURES_DIR", tmp_path)
+    path = charts.chart_irregular(pd.DataFrame(rows))
+    fig, ax = figures[0], figures[0].axes[0]
+    assert ax.get_legend() is None
+    assert list(ax.get_xticks()) == list(range(2018, 2026))
+    for line in ax.lines:
+        assert pd.isna(line.get_ydata()).sum() == 4
+    data = json.loads(path.with_suffix(".json").read_text())
+    labels = {"all": "All detected arrivals", "small_boat": "Small boats"}
+    actual = {
+        (series["label"], point[2]): float(point[3].replace(",", ""))
+        for series in data["series"] for point in series["points"]
+    }
+    assert actual == {
+        (labels[row["category"]], str(row["period"])): row["value"] for row in rows
+    }
+    assert "Small boats are included in the total" in fig.texts[1].get_text()
+    assert "not the total irregular population" in fig.texts[-1].get_text()
+    assert "Data_IER_D01" in fig.texts[-1].get_text()
+    ends = [text for text in ax.texts if text.get_text()]
+    assert {text.get_text().strip() for text in ends} == {
+        "All detected arrivals  30,000 (2025)", "Small boats  29,999 (2025)",
+    }
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    boxes = sorted((text.get_window_extent(renderer) for text in ends), key=lambda box: box.y0)
+    assert boxes[0].y1 + 1 < boxes[1].y0
+    assert all(box.x1 < fig.bbox.x1 for box in boxes)
+    assert fig.texts[-1].get_window_extent(renderer).y1 + 5 < ax.xaxis.label.get_window_extent(renderer).y0
+
+
+@pytest.mark.parametrize("missing", ["all", "small_boat"])
+def test_irregular_chart_rejects_a_missing_series(missing):
+    rows = [
+        dict(metric="irregular_arrivals", category=category, period=2025, value=1000)
+        for category in ("all", "small_boat") if category != missing
+    ]
+    with pytest.raises(ValueError, match=f"Missing published irregular-arrival category: {missing}"):
+        charts.chart_irregular(pd.DataFrame(rows))
+
+
 def test_log_chart_labels_survive_shared_style_reset(monkeypatch, tmp_path):
     from vizstyle import house_style
     from matplotlib.backends.backend_agg import FigureCanvasAgg
