@@ -19,13 +19,30 @@ All output lands in [`../outputs/ppp/`](../outputs/ppp). Run it with:
 ## Headline results
 
 ### Consumer-price inflation
-![Consumer-price inflation: UK vs peers](../outputs/ppp/consumer_price_inflation.png)
+![Consumer-price inflation: UK, US, Germany and France](../outputs/ppp/consumer_price_inflation_four_country.png)
 
-The Purchasing power page also compares **monthly year-on-year consumer-price
-inflation** for the UK, US, Germany, France, Italy and Poland, from **2000 through
-the latest published month**. This measures price changes over time, **not PPP
+The Purchasing power page compares **monthly year-on-year consumer-price
+inflation** for the UK, US, Germany and France, from **2000 through
+the latest published month**. The [original six-country comparison](../outputs/ppp/consumer_price_inflation.png),
+including Italy and Poland, remains available as a separate download.
+The four-country version retains every published observation for the selected
+countries, the US's missing month and the same country colours.
+This measures price changes over time, **not PPP
 price-level differences**. Lower positive inflation means prices rise more slowly;
 it does not mean past price increases have been reversed.
+
+![Consumer-price inflation: UK, US and EU](../outputs/ppp/consumer_price_inflation_uk_us_eu.png)
+
+The UK/US/EU version uses the **published OECD `EU27_2020` aggregate**, not a
+simple average of the countries plotted here and not the euro area. Its
+27-member composition is held constant across the series, as specified in the
+[OECD methodological notes](https://www.oecd.org/content/dam/oecd/en/data/methods/Methodological-Notes-of-the-OECD-Consumer-Price-Index-News-Release.pdf);
+the UK is excluded.
+The EU source starts in **December 2000**, so there is no invented January–November
+2000 history. The separate [saved EU table](../data/consumer_inflation_eu.csv)
+retains every value, source query, date, classification and status.
+Its COICOP 2018 source contains the complete published back series; it is not
+spliced to the discontinued classification.
 
 The source is the [OECD national Consumer Price Indices database](https://www.oecd.org/en/data/insights/data-explainers/2024/07/consumer-price-indices-frequently-asked-questions-faqs.html):
 all items, monthly, national methodology, year-on-year change (`M.N.CPI.PA._T.N.GY`).
@@ -56,7 +73,9 @@ The scheduled **Monday 06:37 UTC** Purchasing power refresh includes this comman
 Unexpected definitions or units, duplicate months, non-finite rates, lost baseline
 history, or loss of any published country/month cell stop publication. A live
 source more than 120 days old for any country also blocks the refresh.
-Offline reconstruction preserves its saved CSV and does not impose a freshness limit.
+Offline reconstruction preserves both saved CSVs and does not impose a freshness limit.
+The same command regenerates all three comparisons and their observation sidecars;
+the publication exporter also produces pale-background Substack copies.
 
 ### Separating volume growth from non-volume factors
 ![Decomposition of the UK/US gap](../outputs/ppp/ppp_gap_decomposition_uk_us.png)

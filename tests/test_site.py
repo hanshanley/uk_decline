@@ -181,13 +181,22 @@ def test_borrowing_page_includes_interest_budget_share_with_same_five_peers(site
     assert len(page.select(".chart-gallery figure")) == 4
 
 
-def test_purchasing_power_page_includes_inflation_with_six_country_hover_series(site_repository):
+def test_purchasing_power_page_includes_both_simpler_inflation_versions_and_full_download(site_repository):
     output = build_site.build(site_repository)
     page = BeautifulSoup((output / "purchasing-power/index.html").read_text(), "html.parser")
-    chart = page.select_one("#consumer_price_inflation img")
-    assert chart is not None
-    assert "Consumer-price inflation" in chart["alt"]
-    assert len(page.select(".chart-gallery figure")) == 4
+    for name, countries in {
+        "consumer_price_inflation_four_country": {"United Kingdom", "United States", "Germany", "France"},
+        "consumer_price_inflation_uk_us_eu": {"United Kingdom", "United States", "European Union"},
+    }.items():
+        chart = page.select_one(f"#{name} img")
+        assert chart is not None
+        assert "Consumer-price inflation" in chart["alt"]
+        data = json.loads((output / f"outputs/ppp/{name}.json").read_text())
+        assert {series["label"] for series in data["series"]} == countries
+    assert len(page.select(".chart-gallery figure")) == 5
+    full = page.find("a", string="Full six-country inflation comparison (PNG)")
+    assert full is not None and full.has_attr("download")
+    assert urlsplit(full["href"]).path == "../outputs/ppp/consumer_price_inflation.png"
     assert ("-m", "ppp_data.inflation") in refresh_data.STEPS["purchasing-power"]
     assert len(json.loads(
         (output / "outputs/ppp/consumer_price_inflation.json").read_text()
@@ -368,7 +377,7 @@ def test_topic_pages_only_embed_curated_charts_without_documentation_duplicates(
         page = BeautifulSoup((output / analysis.slug / "index.html").read_text(), "html.parser")
         images = page.select("main img")
         assert [Path(urlsplit(image["src"]).path).name for image in images] == list(analysis.charts)
-        limits = {"debt-borrowing": 4, "purchasing-power": 4, "gdp-income": 5, "tuition": 4}
+        limits = {"debt-borrowing": 4, "purchasing-power": 5, "gdp-income": 5, "tuition": 4}
         assert 1 <= len(images) <= limits.get(analysis.slug, 3)
         assert len({image["src"] for image in images}) == len(images)
         assert not page.select(".methodology, #methodology, .prose, pre")
