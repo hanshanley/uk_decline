@@ -1,0 +1,45 @@
+country,year,survey_year,period,value,unit,price_base,definition,status,source_url
+France,2018,2019,2018,20471.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+France,2019,2020,2019,19518.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",b,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+France,2020,2021,2020,20100.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+France,2021,2022,2021,20575.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",b,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+France,2022,2023,2022,21875.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+France,2023,2024,2023,23222.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+France,2024,2025,2024,23792.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Germany,2018,2019,2018,22693.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Germany,2019,2020,2019,24229.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",b,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Germany,2020,2021,2020,23336.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Germany,2021,2022,2021,23127.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Germany,2022,2023,2022,24086.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Germany,2023,2024,2023,25192.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Germany,2024,2025,2024,26594.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Italy,2018,2019,2018,17099.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Italy,2019,2020,2019,17764.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Italy,2020,2021,2020,17304.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Italy,2021,2022,2021,18472.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Italy,2022,2023,2022,19691.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Italy,2023,2024,2023,20804.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Italy,2024,2025,2024,22624.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Poland,2018,2019,2018,12335.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Poland,2019,2020,2019,13350.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Poland,2020,2021,2020,13870.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Poland,2021,2022,2021,14906.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Poland,2022,2023,2022,16551.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Poland,2023,2024,2023,18064.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+Poland,2024,2025,2024,19925.0,PPS,current,"Eurostat modified-OECD scale, single-adult reference",,https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table
+United Kingdom,2018,2018,2017/18,36038.0,GBP,2024/25,"ONS modified-OECD scale, two-adult reference",,https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/personalandhouseholdfinances/incomeandwealth/datasets/householddisposableincomeandinequality/financialyearending2025/hdiifye2025.xlsx
+United Kingdom,2019,2019,2018/19,36333.0,GBP,2024/25,"ONS modified-OECD scale, two-adult reference",,https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/personalandhouseholdfinances/incomeandwealth/datasets/householddisposableincomeandinequality/financialyearending2025/hdiifye2025.xlsx
+United Kingdom,2020,2020,2019/20,37826.0,GBP,2024/25,"ONS modified-OECD scale, two-adult reference",,https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/personalandhouseholdfinances/incomeandwealth/datasets/householddisposableincomeandinequality/financialyearending2025/hdiifye2025.xlsx
+United Kingdom,2021,2021,2020/21,38592.0,GBP,2024/25,"ONS modified-OECD scale, two-adult reference",,https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/personalandhouseholdfinances/incomeandwealth/datasets/householddisposableincomeandinequality/financialyearending2025/hdiifye2025.xlsx
+United Kingdom,2022,2022,2021/22,38480.0,GBP,2024/25,"ONS modified-OECD scale, two-adult reference",,https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/personalandhouseholdfinances/incomeandwealth/datasets/householddisposableincomeandinequality/financialyearending2025/hdiifye2025.xlsx
+United Kingdom,2023,2023,2022/23,37529.0,GBP,2024/25,"ONS modified-OECD scale, two-adult reference",,https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/personalandhouseholdfinances/incomeandwealth/datasets/householddisposableincomeandinequality/financialyearending2025/hdiifye2025.xlsx
+United Kingdom,2024,2024,2023/24,37817.0,GBP,2024/25,"ONS modified-OECD scale, two-adult reference",,https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/personalandhouseholdfinances/incomeandwealth/datasets/householddisposableincomeandinequality/financialyearending2025/hdiifye2025.xlsx
+United Kingdom,2025,2025,2024/25,39159.0,GBP,2024/25,"ONS modified-OECD scale, two-adult reference",Reduced survey sample,https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/personalandhouseholdfinances/incomeandwealth/datasets/householddisposableincomeandinequality/financialyearending2025/hdiifye2025.xlsx
+United States,2018,2019,2018,69590.0,USD,2025,Census post-tax whole-household median,,https://www2.census.gov/programs-surveys/demo/tables/p60/289/table10.xlsx
+United States,2019,2020,2019,74000.0,USD,2025,Census post-tax whole-household median,,https://www2.census.gov/programs-surveys/demo/tables/p60/289/table10.xlsx
+United States,2020,2021,2020,77510.0,USD,2025,Census post-tax whole-household median,Implementation of 2020 Census-based population controls.,https://www2.census.gov/programs-surveys/demo/tables/p60/289/table10.xlsx
+United States,2021,2022,2021,76870.0,USD,2025,Census post-tax whole-household median,,https://www2.census.gov/programs-surveys/demo/tables/p60/289/table10.xlsx
+United States,2022,2023,2022,70170.0,USD,2025,Census post-tax whole-household median,,https://www2.census.gov/programs-surveys/demo/tables/p60/289/table10.xlsx
+United States,2023,2024,2023,72790.0,USD,2025,Census post-tax whole-household median,,https://www2.census.gov/programs-surveys/demo/tables/p60/289/table10.xlsx
+United States,2024,2025,2024,73760.0,USD,2025,Census post-tax whole-household median,Implementation of Vintage 2025 population controls.,https://www2.census.gov/programs-surveys/demo/tables/p60/289/table10.xlsx
+United States,2025,2026,2025,76060.0,USD,2025,Census post-tax whole-household median,,https://www2.census.gov/programs-surveys/demo/tables/p60/289/table10.xlsx

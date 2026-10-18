@@ -152,7 +152,50 @@ and conversion factor are saved with each observation. Missing conversions,
 mismatched currencies, duplicate observations, or lost published 2013–2023 coverage
 stop the refresh instead of silently creating a fragmented comparison.
 
-The Eurostat and World Bank comparisons remain supplemental, with coverage-aware
+### Newer national and European observations
+
+![Newer UK and US national income observations](../outputs/gdp_income/median_income_recent_national.png)
+![Newer European income observations](../outputs/gdp_income/median_income_recent_europe.png)
+
+The OECD comparison currently ends in income year 2023. These separate figures
+retain newer source-published observations without splicing incompatible definitions.
+The UK panel uses the ONS Household Finances Survey, Table 1: median disposable
+income under the modified-OECD equivalence scale, normalised to a two-adult household,
+in source-published constant-price pounds. It reaches **April 2024–March 2025**.
+The 2024/25 estimate has a reduced survey sample and increased uncertainty.
+The US panel uses Census's historical **post-tax whole-household median**,
+in source-published constant-price dollars, through **calendar-year 2025**.
+It is not adjusted for household size. Population-control changes are shown with
+dotted links. The two panels have different definitions, currencies and price bases:
+their levels must not be compared directly.
+
+The European figure uses Eurostat `ilc_di03` for Germany, France, Italy and Poland,
+with the modified-OECD scale normalised to a single adult and current purchasing
+power standards (not US dollars or constant-price growth). **Survey year 2025
+measures income in 2024** for these countries. The x-axis explicitly uses income
+years. This is not a newer UK/US comparison and cannot establish a newer UK–Poland
+ranking. Modelled flash estimates of 2025 income are not added to observed series.
+
+Sources:
+- [ONS household disposable income workbooks](https://www.ons.gov.uk/peoplepopulationandcommunity/personalandhouseholdfinances/incomeandwealth/datasets/householddisposableincomeandinequality),
+  latest dated edition, Table 1.
+- [US Census national income tables](https://www.census.gov/topics/income-poverty/income/data/tables.html),
+  latest edition, *Selected Measures of Household Post-Tax Income Dispersion*.
+- [Eurostat mean and median income by age and sex](https://ec.europa.eu/eurostat/databrowser/view/ilc_di03/default/table),
+  median, all ages and sexes, purchasing power standards.
+
+The saved [recent-income source table](../data/recent_disposable_income.csv) retains
+periods, survey years, price bases, definitions, source flags and download URLs.
+The weekly GDP/income refresh discovers the latest dated ONS and Census workbooks,
+fetches Eurostat, validates all six country series and preserves previously published
+date coverage before replacing saved inputs.
+
+```bash
+./.venv/bin/python -m europe_data.recent_income
+./.venv/bin/python -m europe_data.recent_income --from-csv data/recent_disposable_income.csv
+```
+
+The older Eurostat and World Bank comparisons remain supplemental, with coverage-aware
 recent views rather than long stretches before most peers have observations:
 
 ![Median disposable income, PPS](../outputs/gdp_income/median_disposable_income_pps.png)

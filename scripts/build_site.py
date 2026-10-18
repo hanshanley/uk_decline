@@ -60,10 +60,15 @@ ANALYSES = (
              "Nominal GDP at market exchange rates and real GDP at fixed 2021 purchasing power parities, "
              "alongside median disposable household income.",
              downloads=(("median_disposable_income_oecd_history.png", "Full income history (PNG)"),)),
+    Analysis("recent-incomes", "Recent household incomes", "Economy", "europe_data", "gdp_income",
+             ("median_income_recent_national.png", "median_income_recent_europe.png"),
+             "The latest national UK and US income medians, alongside newer European income "
+             "observations. Separate definitions and price bases—not a newer UK–Poland ranking."),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
              ("ppp_gdp_per_capita_growth.png", "ppp_gdp_relative_to_peers.png",
-              "ppp_gap_decomposition_uk_us.png"),
-             "Separate real economic growth from exchange rates and relative price levels."),
+              "ppp_gap_decomposition_uk_us.png", "consumer_price_inflation.png"),
+             "Separate real economic growth, exchange rates and relative price levels; "
+             "consumer-price inflation shows how national prices change over time."),
     Analysis("markets", "Stock markets", "Economy", "markets_data", "stock_markets",
              ("stock_lse_uk_companies.png", "stock_listed_domestic_companies.png",
               "stock_market_cap_pct_gdp.png"),
@@ -151,6 +156,8 @@ CHART_COMPARATORS = {
         {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
     ),
     "median_income_pip": {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
+    "median_income_recent_national": {"United Kingdom", "United States"},
+    "median_income_recent_europe": {"Germany", "France", "Italy", "Poland"},
     "median_disposable_income_pps": {"United Kingdom", "Germany", "France", "Italy", "Poland", "EU-27"},
     "ppp_gdp_per_capita_growth": {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland", "EU average"},
     "ppp_gdp_per_capita_over_time": {"United Kingdom", "United States", "Poland", "EU average"},
@@ -158,6 +165,7 @@ CHART_COMPARATORS = {
     "gdp_per_capita_nominal_over_time": {"United Kingdom", "United States", "Poland", "EU average"},
     "gdp_per_capita_real_over_time": {"United Kingdom", "United States", "Poland", "EU average"},
     "ppp_gdp_relative_to_peers": {"United States", "Germany", "France", "EU average", "Poland"},
+    "consumer_price_inflation": {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
     **dict.fromkeys(
         ("stock_listed_domestic_companies", "stock_market_cap_pct_gdp"),
         {"United Kingdom", "United States", "European Union", "Japan", "China"},
@@ -242,6 +250,8 @@ CHART_TITLES = {
     "gdp_per_capita_real_over_time": "Real GDP per person growth: each economy starts at 100 in 2007",
     "median_disposable_income_pps": "Median disposable income in purchasing power standards",
     "median_disposable_income_oecd": "Median disposable income, adjusted for household size and purchasing power",
+    "median_income_recent_national": "Latest UK and US income: separate national measures",
+    "median_income_recent_europe": "Newer European median disposable income, by income year",
     "median_income_pip": "Median daily income or consumption, adjusted for purchasing power",
     "uk_gdp_relative_to_peers": "Other countries' nominal GDP per person relative to the UK at market exchange rates",
     "uk_gdp_relative_to_peers_simple": "Nominal GDP per person: US, EU and Poland relative to the UK",
@@ -270,6 +280,7 @@ CHART_TITLES = {
     "ppp_gap_decomposition_uk_us": "The UK–US GDP gap: output growth, prices and exchange rates",
     "ppp_gdp_long_run_maddison": "Long-run real GDP per person, adjusted for purchasing power",
     "ppp_gdp_per_capita_growth": "Growth in real GDP per person",
+    "consumer_price_inflation": "Consumer-price inflation: UK, US, Germany, France, Italy and Poland",
     "ppp_gdp_per_capita_over_time": "Real GDP per person at a fixed purchasing-power benchmark",
     "ppp_gdp_relative_to_peers": "GDP per person relative to the UK, adjusted for purchasing power",
     "ppp_tuition_history": "Historical tuition fees, adjusted for purchasing power",
@@ -516,6 +527,14 @@ def homepage() -> str:
 
 def analysis_page(analysis: Analysis) -> str:
     page = Path(analysis.slug) / "index.html"
+    related = {
+        "gdp-income": ("recent-incomes", "Newer national and European income figures"),
+        "recent-incomes": ("gdp-income", "Harmonised OECD income comparison and GDP"),
+    }
+    related_link = ""
+    if analysis.slug in related:
+        slug, label = related[analysis.slug]
+        related_link = f'<p class="context"><a href="../{slug}/">{label} &#8594;</a></p>'
     downloads = "".join(
         f'<a href="{relative_url(Path("outputs") / analysis.output / filename, page)}" download>'
         f'{escape(label)}</a> &middot; '
@@ -539,6 +558,7 @@ def analysis_page(analysis: Analysis) -> str:
       or tap a point on mobile. Observation periods and source notes
       are printed on each figure; the site's build date does not imply newer observations.</p>
     </section>
+    {related_link}
     <section class="chart-gallery" aria-label="Charts">{''.join(figures)}</section>
     <p class="context">
       {downloads}
