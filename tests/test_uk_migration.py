@@ -366,11 +366,13 @@ def test_ons_method_segments_have_clean_2012_handoff():
 
 
 @pytest.mark.parametrize("chart", [
+    charts.chart_immigration,
+    charts.chart_net_migration,
     charts.chart_immigration_by_origin,
     charts.chart_net_migration_by_origin,
     charts.chart_net_migration_per_capita,
 ])
-def test_migration_method_break_is_preserved_in_other_views(chart, monkeypatch):
+def test_migration_method_break_is_footnoted_without_joining_segments(chart, monkeypatch):
     rows = [
         schema.row(
             year, metric, value, unit="people", legality=schema.TOTAL,
@@ -389,6 +391,7 @@ def test_migration_method_break_is_preserved_in_other_views(chart, monkeypatch):
         ax = fig.axes[0]
         captured["years"] = [list(line.get_xdata()) for line in ax.lines]
         captured["labels"] = [text.get_text() for text in ax.texts]
+        captured["source"] = source
         charts.plt.close(fig)
         return name
 
@@ -397,7 +400,10 @@ def test_migration_method_break_is_preserved_in_other_views(chart, monkeypatch):
     assert [2010, 2011] in captured["years"]
     assert [2012, 2013] in captured["years"]
     assert [2010, 2011, 2012, 2013] not in captured["years"]
-    assert "2012 method break" in captured["labels"]
+    assert [2012, 2012] not in captured["years"]
+    assert "2012 method break" not in captured["labels"]
+    assert "2012 method break" in captured["source"]
+    assert "Different methods are not directly comparable" in captured["source"]
 
 
 def test_ons_ips_history_parse_by_origin_in_thousands():

@@ -33,6 +33,11 @@ SOURCE_ONS_IPS = (
 SOURCE_HO = "Home Office Immigration System Statistics (gov.uk)"
 SOURCE_WB = "World Bank, World Development Indicators (api.worldbank.org)"
 METHOD_BREAK_YEAR = 2012
+_METHOD_NOTE = (
+    "Note: 2012 method break. International Passenger Survey through 2011; "
+    "revised estimates based on administrative records from 2012. "
+    "Different methods are not directly comparable. Lines are not joined across the break."
+)
 
 # ---- Substack theme (shared vizstyle house style) --------------------------
 from vizstyle import (  # noqa: E402
@@ -114,15 +119,6 @@ def _plot_ons_methods(
     return ips, admin
 
 
-def _mark_method_break(ax) -> None:
-    ax.axvline(METHOD_BREAK_YEAR, color=SUBSTACK_MUTED, linestyle=":", linewidth=1)
-    ax.annotate(
-        "2012 method break", xy=(METHOD_BREAK_YEAR, 0.98),
-        xycoords=ax.get_xaxis_transform(), xytext=(4, 0), textcoords="offset points",
-        rotation=90, va="top", fontsize=8, color=SUBSTACK_MUTED,
-    )
-
-
 def _annotate_peak_and_latest(ax, data: pd.DataFrame) -> None:
     if data.empty:
         return
@@ -152,7 +148,6 @@ def chart_immigration(df: pd.DataFrame) -> Path:
     _ips, admin = _plot_ons_methods(
         ax, df, "immigration_by_origin", "immigration"
     )
-    _mark_method_break(ax)
     _annotate_peak_and_latest(ax, admin)
     _style_title(ax, "UK long-term immigration over time")
     ax.set_xlabel("Year")
@@ -166,7 +161,6 @@ def chart_net_migration(df: pd.DataFrame) -> Path:
     _ips, admin = _plot_ons_methods(
         ax, df, "net_migration_by_origin", "net_migration"
     )
-    _mark_method_break(ax)
     _annotate_peak_and_latest(ax, admin)
     ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
     _style_title(ax, "UK net long-term migration over time")
@@ -314,7 +308,6 @@ def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
     _plot_ons_methods(
         ax, df, "net_migration_by_origin_per_1000_pop", "net_migration_per_1000_pop",
     )
-    _mark_method_break(ax)
     ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
     _style_title(ax, "UK net migration per 1,000 population")
     ax.set_xlabel("Year")
@@ -323,8 +316,7 @@ def chart_net_migration_per_capita(df: pd.DataFrame) -> Path:
     return _save(
         fig, "net_migration_per_capita.png",
         f"{SOURCE_ONS_IPS}; {SOURCE_ONS}; {SOURCE_WB} (population denominator only)\n"
-        "Note: International Passenger Survey through 2011; revised estimates based on administrative records from 2012. "
-        "Different methods are not directly comparable.",
+        + _METHOD_NOTE,
     )
 
 
@@ -336,9 +328,7 @@ _ORIGIN_GROUPS = [
 ]
 
 _SOURCE_BY_ORIGIN = (
-    f"{SOURCE_ONS_IPS}; {SOURCE_ONS} (admin-based, 2012+)\n"
-    "Note: International Passenger Survey through 2011; revised estimates based on administrative records from 2012. "
-    "Different methods are not directly comparable."
+    f"{SOURCE_ONS_IPS}; {SOURCE_ONS} (admin-based, 2012+)\n" + _METHOD_NOTE
 )
 
 
@@ -350,7 +340,6 @@ def _chart_by_origin(df: pd.DataFrame, ips_metric: str, admin_metric: str,
             ax, df, ips_metric, admin_metric, category=cat,
             color=color, linewidth=2.0, label=label,
         )
-    _mark_method_break(ax)
     if zero_line:
         ax.axhline(0, color=SUBSTACK_TEXT, linewidth=0.8)
     _style_title(ax, title)

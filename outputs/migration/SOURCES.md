@@ -25,14 +25,14 @@ population adjustment, since headcounts are not monetary and CPI inflation does 
 | File | Shows | Source |
 |---|---|---|
 | `immigration_over_time.png` | UK long-term immigration over time, 1964–2025 | Office for National Statistics, International Passenger Survey, long-term migration 1964–2015, ad hoc 006408 (ons.gov.uk); Office for National Statistics, Long-Term International Migration (ons.gov.uk) (admin-based, 2012+)
-Note: International Passenger Survey through 2011; revised estimates based on administrative records from 2012. Different methods are not directly comparable. |
+Note: 2012 method break. International Passenger Survey through 2011; revised estimates based on administrative records from 2012. Different methods are not directly comparable. Lines are not joined across the break. |
 | `net_migration.png` | UK net long-term migration over time, 1964–2025 | Office for National Statistics, International Passenger Survey, long-term migration 1964–2015, ad hoc 006408 (ons.gov.uk); Office for National Statistics, Long-Term International Migration (ons.gov.uk) (admin-based, 2012+)
-Note: International Passenger Survey through 2011; revised estimates based on administrative records from 2012. Different methods are not directly comparable. |
+Note: 2012 method break. International Passenger Survey through 2011; revised estimates based on administrative records from 2012. Different methods are not directly comparable. Lines are not joined across the break. |
 | `immigration_vs_emigration.png` | Annual immigration vs emigration flows (2012+) | Office for National Statistics, Long-Term International Migration (ons.gov.uk) |
 | `immigration_by_origin.png` | Immigration by citizenship group, 1964–2025 (IPS + admin-based) | Office for National Statistics, International Passenger Survey, long-term migration 1964–2015, ad hoc 006408 (ons.gov.uk); Office for National Statistics, Long-Term International Migration (ons.gov.uk) (admin-based, 2012+)
-Note: International Passenger Survey through 2011; revised estimates based on administrative records from 2012. Different methods are not directly comparable. |
+Note: 2012 method break. International Passenger Survey through 2011; revised estimates based on administrative records from 2012. Different methods are not directly comparable. Lines are not joined across the break. |
 | `net_migration_by_origin.png` | Net migration by citizenship group, 1964–2025 (IPS + admin-based) | Office for National Statistics, International Passenger Survey, long-term migration 1964–2015, ad hoc 006408 (ons.gov.uk); Office for National Statistics, Long-Term International Migration (ons.gov.uk) (admin-based, 2012+)
-Note: International Passenger Survey through 2011; revised estimates based on administrative records from 2012. Different methods are not directly comparable. |
+Note: 2012 method break. International Passenger Survey through 2011; revised estimates based on administrative records from 2012. Different methods are not directly comparable. Lines are not joined across the break. |
 | `visas_by_category.png` | Entry-clearance visas granted by category (2005+) | Home Office Immigration System Statistics (gov.uk), entry-clearance-visa-outcomes dataset |
 | `asylum_applications.png` | Asylum applications, main applicants (2001+) | Home Office Immigration System Statistics (gov.uk), asylum-claims dataset |
 | `irregular_arrivals.png` | Detected irregular arrivals incl. small boats (2018+) | Home Office Immigration System Statistics (gov.uk), illegal-entry-routes dataset |
