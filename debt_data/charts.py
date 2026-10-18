@@ -171,25 +171,26 @@ def make_charts(
         ax.xaxis.set_major_formatter(mtick.StrMethodFormatter("{x:.0f}"))
         ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=100))
         ax.set_xlabel("Calendar year")
-        ax.set_ylabel("Interest payments\n(% of total government expenditure)")
+        ax.set_ylabel("Interest payments\n(% of central/federal government spending)")
         ax.grid(axis="y", linewidth=.5)
         ax.set_axisbelow(True)
         if ax.collections:
             ax.text(.015, .975, "Dotted segments: methodology change",
                     transform=ax.transAxes, va="top", fontsize=8.5, color=MUTED)
-        fig.suptitle(f"Budget share spent on debt interest, {first}\u2013{last}",
+        fig.suptitle(f"Central government: debt-interest share, {first}\u2013{last}",
                      x=.08, y=.97, ha="left", fontsize=22, fontweight="bold")
-        fig.text(.08, .91, "UK vs peers; general government, including state and local government",
+        fig.text(.08, .91, "Central/federal government only; state and local governments excluded",
                  fontsize=11, color=MUTED)
         source = (
-            f"Source: {budget['source_vintage'].iloc[0]}: gross general-government interest payments "
-            "(GGINTP) / total disbursements (YPGT), multiplied by 100. "
-            "Matched country, calendar year and national currency; "
-            "no exchange-rate conversion. Total expenditure includes investment and interest. "
-            "General government excludes central banks and public corporations; not central-government "
-            "budgets or a share of tax revenue. Accrued interest, not cash payments or principal repayments. "
-            f"Historical figures may include OECD estimates and can be revised; {last + 1} onward "
-            "projections are not shown. Missing observations are not filled."
+            "Sources: Europe: OECD National Accounts, central government S1311, interest payable D41 / "
+            "total expenditure OTE. US: BEA federal national accounts via FRED, A091RC1A027NBEA / "
+            "W019RC1A027NBEA. Ratio multiplied by 100; matched country, calendar year and national currency. "
+            "Includes investment and central-government transfers, but does not add state/local budgets. "
+            "National-account estimates, not Treasury cash-budget totals; accounting conventions and "
+            "programme responsibilities differ, so precise level comparisons need care. "
+            "Interest is before subtracting interest receipts; principal repayments are excluded. "
+            f"Historical estimates can be revised; {last + 1} onward projections and missing-year fills "
+            "are not included."
         )
         if endpoint_flags:
             source += " Latest observation flags: " + "; ".join(endpoint_flags) + "."

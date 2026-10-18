@@ -172,7 +172,7 @@ def test_borrowing_page_includes_interest_budget_share_with_same_five_peers(site
     page = BeautifulSoup((output / "debt-borrowing/index.html").read_text(), "html.parser")
     chart = page.select_one("#debt_interest_budget_share img")
     assert chart is not None
-    assert "share of total expenditure" in chart["alt"]
+    assert "Central/federal budgets" in chart["alt"]
     assert urlsplit(chart["data-chart-data"]).path == "../outputs/debt/debt_interest_budget_share.json"
     sidecar = json.loads((output / "outputs/debt/debt_interest_budget_share.json").read_text())
     assert {series["label"] for series in sidecar["series"]} == {

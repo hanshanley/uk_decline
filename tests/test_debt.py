@@ -247,21 +247,20 @@ def test_daily_chart_is_separate_recent_and_does_not_fill_missing_days(
 def _interest_csv(records):
     fields = [
         "DATAFLOW", *interest.DIMENSIONS, "TIME_PERIOD", "OBS_VALUE", "UNIT_MULT",
-        "CURRENCY", "UNIT_MEASURE", "PRICE_BASE", "ADJUSTMENT",
-        "OBS_STATUS", "OBS_STATUS_2", "CONF_STATUS",
+        "CURRENCY", "CONSOLIDATION", "OBS_STATUS", "OBS_STATUS_2", "CONF_STATUS",
     ]
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=fields)
     writer.writeheader()
     for record in records:
-        code, measure = record.get("REF_AREA", "GBR"), record.get("MEASURE", "GGINTP")
+        code, transaction = record.get("REF_AREA", "GBR"), record.get("TRANSACTION", "D41")
         row = {key: value.split("+")[0] for key, value in interest.DIMENSIONS.items()}
         row.update(
-            DATAFLOW="OECD.ECO.MAD:DSD_EO@DF_EO(1.5)",
-            REF_AREA=code, MEASURE=measure, TIME_PERIOD=2023,
-            OBS_VALUE=10 if measure == "GGINTP" else 200,
-            UNIT_MULT=6, CURRENCY="" if code == "USA" else interest.CURRENCIES.get(code, "GBP"),
-            UNIT_MEASURE="XDC", PRICE_BASE="V", ADJUSTMENT="",
+            DATAFLOW="OECD.SDD.NAD:DSD_NASEC10@DF_TABLE12(1.1)",
+            REF_AREA=code, TRANSACTION=transaction, TIME_PERIOD=2023,
+            OBS_VALUE=10 if transaction == "D41" else 200,
+            UNIT_MULT=6, CURRENCY=interest.CURRENCIES.get(code, "GBP"),
+            CONSOLIDATION="C" if transaction == "D41" else "P",
             OBS_STATUS="A", CONF_STATUS="F",
         )
         row.update(record)
@@ -272,22 +271,49 @@ def _interest_csv(records):
 def _parse_interest(text):
     return interest.parse(
         text, end=2025, retrieved="2026-10-18T16:00:00Z", source_url="source",
-        flow=interest.FLOW + ",1.5", vintage="OECD Economic Outlook 119",
+        flow=interest.FLOW + ",1.1",
+    )
+
+
+def _federal_html(component, *, changes=None, records=None):
+    series, title = interest.US_SERIES[component]
+    metadata = {
+        "Series ID": series, "Title": title, "Source": "U.S. Bureau of Economic Analysis",
+        "Release": "Gross Domestic Product", "Frequency": "Annual",
+        "Units": "Billions of Dollars", "Seasonal Adjustment": "Not Seasonally Adjusted",
+        "Last Updated": "2026-09-30 7:59 AM CDT",
+    }
+    metadata.update(changes or {})
+    records = records if records is not None else [
+        (year, 10 if component == "interest" else 200) for year in range(2000, 2026)
+    ]
+    return (
+        "<table>" + "".join(f"<tr><th>{key}</th><td>{value}</td></tr>"
+                           for key, value in metadata.items())
+        + "</table><table id='data-table-observations'><tr><th>DATE</th><th>VALUE</th></tr>"
+        + "".join(f"<tr><td>{year}-01-01</td><td>{value}</td></tr>" for year, value in records)
+        + "</table>"
     )
 
 
 @pytest.fixture
 def budget_frame(monkeypatch):
     records = [
-        dict(REF_AREA=code, TIME_PERIOD=year, MEASURE=measure)
-        for code in interest.COUNTRIES
+        dict(REF_AREA=code, TIME_PERIOD=year, TRANSACTION=transaction)
+        for code in interest.COUNTRIES if code != "USA"
         for year in range(2000, interest.BASELINE_END[code] + 1)
-        for measure in ("GGINTP", "YPGT")
+        for transaction in ("D41", "OTE")
     ]
-    monkeypatch.setattr(interest, "get_text", lambda *args, **kwargs: _interest_csv(records))
+
+    def download(url, **kwargs):
+        if url.startswith(interest.BASE):
+            return _interest_csv(records)
+        component = next(key for key, (series, _) in interest.US_SERIES.items() if url.endswith(series))
+        return _federal_html(component)
+
+    monkeypatch.setattr(interest, "get_text", download)
     monkeypatch.setattr(interest, "get_json", lambda *args, **kwargs: {"data": {"dataflows": [{
-        "agencyID": "OECD.ECO.MAD", "id": "DSD_EO@DF_EO",
-        "version": "1.5", "name": "Economic Outlook 119",
+        "agencyID": "OECD.SDD.NAD", "id": "DSD_NASEC10@DF_TABLE12", "version": "1.1",
     }]}})
     return interest.fetch()
 
@@ -295,7 +321,7 @@ def budget_frame(monkeypatch):
 def test_interest_ratio_uses_matched_national_currency_units_and_keeps_source_flags():
     text = _interest_csv([
         dict(OBS_VALUE=12_000, UNIT_MULT=6, OBS_STATUS="P"),
-        dict(MEASURE="YPGT", OBS_VALUE=1000, UNIT_MULT=9, OBS_STATUS="E"),
+        dict(TRANSACTION="OTE", OBS_VALUE=1000, UNIT_MULT=9, OBS_STATUS="E"),
     ])
     frame = _parse_interest(text)
     assert len(frame) == 1
@@ -305,19 +331,20 @@ def test_interest_ratio_uses_matched_national_currency_units_and_keeps_source_fl
     assert row["value"] == pytest.approx(1.2)
     assert row["status"] == "E;P"
     assert row["currency"] == "GBP"
-    assert row["interest_series_id"].endswith("/GBR.GGINTP.A")
-    assert row["expenditure_series_id"].endswith("/GBR.YPGT.A")
+    assert ".GBR.S1311._Z.D.D41." in row["interest_series_id"]
+    assert ".GBR.S1311._Z.D.OTE." in row["expenditure_series_id"]
     fractional = _parse_interest(_interest_csv([
         dict(REF_AREA="FRA", OBS_VALUE="66635.9"),
-        dict(REF_AREA="FRA", MEASURE="YPGT", OBS_VALUE=1000, UNIT_MULT=9),
+        dict(REF_AREA="FRA", TRANSACTION="OTE", OBS_VALUE=1000, UNIT_MULT=9),
     ]))
     assert fractional.iloc[0]["interest"] == 66_635_900_000
 
 
 @pytest.mark.parametrize("change", [
-    {"MEASURE": "GNINTP"}, {"FREQ": "Q"}, {"MEASURE": "YPG"},
+    {"SECTOR": "S13"}, {"SECTOR": "S1312"}, {"SECTOR": "S1313"},
+    {"FREQ": "Q"}, {"TRANSACTION": "D4"}, {"ACCOUNTING_ENTRY": "C"},
     {"PRICE_BASE": "Q"}, {"UNIT_MEASURE": "USD"}, {"CURRENCY": "USD"},
-    {"ADJUSTMENT": "Y"}, {"OBS_VALUE": "nan"}, {"OBS_VALUE": "-1"},
+    {"CONSOLIDATION": "N"}, {"OBS_VALUE": "nan"}, {"OBS_VALUE": "-1"},
     {"UNIT_MULT": ""}, {"TIME_PERIOD": 2026}, {"OBS_STATUS": "UNKNOWN"},
 ])
 def test_interest_parser_rejects_incompatible_governments_units_and_invalid_values(change):
@@ -328,13 +355,13 @@ def test_interest_parser_rejects_incompatible_governments_units_and_invalid_valu
 def test_interest_parser_does_not_invent_components_or_publish_forecasts():
     for records in (
         [{}, {}],
-        [{}, dict(MEASURE="YPGT", TIME_PERIOD=2022)],
-        [{}, dict(MEASURE="YPGT", OBS_VALUE=0)],
+        [{}, dict(TRANSACTION="OTE", TIME_PERIOD=2022)],
+        [{}, dict(TRANSACTION="OTE", OBS_VALUE=0)],
     ):
         with pytest.raises(ValueError):
             _parse_interest(_interest_csv(records))
     forecasts = [
-        dict(MEASURE=measure, OBS_STATUS="F") for measure in ("GGINTP", "YPGT")
+        dict(TRANSACTION=transaction, OBS_STATUS="F") for transaction in ("D41", "OTE")
     ]
     assert _parse_interest(_interest_csv(forecasts)).empty
 
@@ -351,33 +378,89 @@ def test_interest_validation_protects_published_coverage_and_source_calculation(
     with pytest.raises(ValueError, match="previously published"):
         interest.validate(budget_frame, previous=previous)
     mixed = budget_frame.copy()
-    mixed.loc[0, "source_vintage"] = "OECD Economic Outlook 118"
+    mixed.loc[0, "source_vintage"] = "OECD Economic Outlook 119"
     with pytest.raises(ValueError, match="provenance"):
         interest.validate(mixed)
+    broad = budget_frame.copy()
+    broad.loc[0, "expenditure_series_id"] = broad.loc[0, "expenditure_series_id"].replace(".S1311.", ".S13.")
+    with pytest.raises(ValueError, match="S1311"):
+        interest.validate(broad)
+    broad = budget_frame.copy()
+    broad.loc[broad["iso3"] == "USA", "expenditure_series_id"] = "W068RC1A027NBEA"
+    with pytest.raises(ValueError, match="federal-only"):
+        interest.validate(broad)
 
 
-def test_interest_refresh_discovers_new_edition_without_splicing_old_components(
+def test_interest_refresh_discovers_new_oecd_version_without_splicing_us_components(
     budget_frame, monkeypatch,
 ):
     monkeypatch.setattr(interest, "get_json", lambda *args, **kwargs: {"data": {"dataflows": [{
-        "agencyID": "OECD.ECO.MAD", "id": "DSD_EO@DF_EO",
-        "version": "1.6", "name": "Economic Outlook No 120",
+        "agencyID": "OECD.SDD.NAD", "id": "DSD_NASEC10@DF_TABLE12", "version": "1.2",
     }]}})
     records = [
-        dict(REF_AREA=row.iso3, TIME_PERIOD=row.year, MEASURE=measure)
-        for row in budget_frame.itertuples() for measure in ("GGINTP", "YPGT")
+        dict(REF_AREA=row.iso3, TIME_PERIOD=row.year, TRANSACTION=transaction)
+        for row in budget_frame.itertuples() if row.iso3 != "USA"
+        for transaction in ("D41", "OTE")
     ]
+    original_download = interest.get_text
 
     def download(url, **kwargs):
-        assert ",1.6/" in url
+        if not url.startswith(interest.BASE):
+            return original_download(url, **kwargs)
+        assert ",1.2/" in url
         assert kwargs["params"]["endPeriod"] == str(pd.Timestamp.now(tz="UTC").year - 1)
-        return _interest_csv(records).replace("DF_EO(1.5)", "DF_EO(1.6)")
+        return _interest_csv(records).replace("DF_TABLE12(1.1)", "DF_TABLE12(1.2)")
 
     monkeypatch.setattr(interest, "get_text", download)
     frame = interest.fetch()
-    assert frame["source_vintage"].eq("OECD Economic Outlook No 120").all()
-    assert frame["interest_series_id"].str.contains(",1.6/", regex=False).all()
-    assert frame["expenditure_series_id"].str.contains(",1.6/", regex=False).all()
+    european = frame[frame["iso3"] != "USA"]
+    assert european["interest_series_id"].str.contains(",1.2/", regex=False).all()
+    assert european["expenditure_series_id"].str.contains(",1.2/", regex=False).all()
+    us = frame[frame["iso3"] == "USA"]
+    assert us["source_vintage"].eq("BEA NIPA (FRED updated 2026-09-30)").all()
+    assert set(us["year"]) == set(range(2000, 2026))
+
+
+@pytest.mark.parametrize("changes", [
+    {"Title": "Government total expenditures"}, {"Series ID": "W068RC1A027NBEA"},
+    {"Frequency": "Quarterly"}, {"Units": "Percent of GDP"},
+    {"Seasonal Adjustment": "Seasonally Adjusted Annual Rate"},
+])
+def test_federal_parser_rejects_general_government_and_incompatible_series(changes):
+    with pytest.raises(ValueError, match="metadata"):
+        interest.parse_federal(_federal_html("expenditure", changes=changes), "expenditure", end=2025)
+
+
+def test_federal_parser_scales_annual_dollars_and_rejects_duplicate_years():
+    values, updated = interest.parse_federal(
+        _federal_html("interest", records=[(2024, "1117.544"), (2025, "1217.730")]),
+        "interest", end=2025,
+    )
+    assert values == {2024: 1_117_544_000_000, 2025: 1_217_730_000_000}
+    assert updated == "2026-09-30"
+    with pytest.raises(ValueError, match="Duplicate"):
+        interest.parse_federal(
+            _federal_html("interest", records=[(2025, 10), (2025, 20)]),
+            "interest", end=2025,
+        )
+
+
+@pytest.mark.parametrize("problem", ["missing-year", "mixed-release"])
+def test_federal_refresh_rejects_unmatched_components_and_release_dates(
+    budget_frame, monkeypatch, problem,
+):
+    original = interest.get_text
+
+    def download(url, **kwargs):
+        if not url.endswith(interest.US_SERIES["expenditure"][0]):
+            return original(url, **kwargs)
+        if problem == "mixed-release":
+            return _federal_html("expenditure", changes={"Last Updated": "2026-09-29 7:51 AM CDT"})
+        return _federal_html("expenditure", records=[(year, 200) for year in range(2000, 2025)])
+
+    monkeypatch.setattr(interest, "get_text", download)
+    with pytest.raises(ValueError, match="Unmatched|different release dates"):
+        interest.fetch()
 
 
 def test_failed_interest_source_preserves_saved_inputs_and_does_not_render(
@@ -414,7 +497,7 @@ def test_interest_chart_has_all_peers_correct_units_and_dated_latest_points(
     assert paths[-1].name == "debt_interest_budget_share.png"
     fig, ax = figures[-1], figures[-1].axes[0]
     assert {line.get_label() for line in ax.lines} == set(charts.COLORS)
-    assert "total government expenditure" in ax.get_ylabel()
+    assert "central/federal government spending" in ax.get_ylabel()
     assert ax.get_xlabel() == "Calendar year"
     assert ax.get_ylim()[0] == 0
     labels = [text.get_text().strip() for text in ax.texts]
@@ -423,9 +506,12 @@ def test_interest_chart_has_all_peers_correct_units_and_dated_latest_points(
     assert not any(label.endswith(" P") for label in labels)
     footer = fig.texts[-1].get_text().replace("\n", " ")
     assert "Latest observation flags:" in footer
-    assert "not cash payments or principal repayments" in footer
-    assert "OECD Economic Outlook 119" in footer
-    assert "2026 onward projections are not shown" in footer
+    assert "central government S1311" in footer
+    assert "BEA federal national accounts" in footer
+    assert "does not add state/local budgets" in footer
+    assert "principal repayments are excluded" in footer
+    assert "accounting conventions" in footer
+    assert "Central/federal government only" in fig.texts[1].get_text()
     canvas = FigureCanvasAgg(fig)
     canvas.draw()
     renderer = canvas.get_renderer()

@@ -1,4 +1,4 @@
-"""Refresh public debt and government-bond yields, or rebuild from saved CSVs."""
+"""Refresh debt, central-government interest and bond yields, or rebuild saved data."""
 
 from __future__ import annotations
 

@@ -1,8 +1,8 @@
 # Government debt and borrowing costs
 
 Three distinct questions: **how large is the UK's public debt relative to its economy,
-what market interest rates apply to new borrowing, and how much of government
-spending is used for interest on existing debt?**
+what market interest rates apply to new borrowing, and how much of
+central-government spending is used for interest on existing debt?**
 
 ## Public debt relative to GDP
 
@@ -58,42 +58,55 @@ interpret a UK-US or UK-Germany spread as a pure measure of fiscal credibility.
 Nor should net debt multiplied by the 10-year yield be presented as the actual
 interest bill: neither the debt base nor the interest rate matches that calculation.
 
-## Share of the budget spent on interest
+## Central/federal spending used for interest
 
-![Interest payments as a share of total government expenditure](../outputs/debt/debt_interest_budget_share.png)
+![Interest payments as a share of central/federal government spending](../outputs/debt/debt_interest_budget_share.png)
 
-The UK, United States, Germany, France and Italy are compared using the latest
-**OECD Economic Outlook** edition's **general-government** series. This includes central, state and local government
-and social security funds, but excludes central banks and public corporations.
-Comparing central-government budgets alone would give different institutional
-coverage in federal and non-federal countries.
+The UK, United States, Germany, France and Italy are compared using
+**central/federal government only**. State and local government budgets are not
+added to either the interest bill or the spending denominator.
 
 For each country and calendar year, the calculation is:
 
-**100 x gross interest payments (GGINTP) / total disbursements (YPGT).**
+**100 x central/federal interest payable / that government's total expenditure.**
 
-Both amounts come from the same Economic Outlook edition, in the same national
-currency and year. Unit multipliers are applied before division; no exchange-rate
-conversion or GDP denominator is involved. The denominator is total disbursements,
-including current spending, investment and interest. It is **not** just departmental
-day-to-day spending, tax revenue or the UK's broader public-sector TME measure.
+For the four European countries, both components come from **OECD National Accounts
+Table 12, sector S1311 (central government)**: interest payable `D41`, divided by
+total expenditure `OTE`. This excludes sector S1312 (state government), S1313
+(local government), and separately classified social-security funds. Germany's
+series is federal government, not the combined federal and state budgets.
+
+For the US, the complete 2000–2025 line uses **BEA federal national accounts**,
+distributed by FRED: annual federal monetary interest paid (`A091RC1A027NBEA`),
+divided by annual federal total expenditure (`W019RC1A027NBEA`). The title,
+frequency, dollar units and federal scope of both series are validated. The
+European central-government series are available through 2025, but the same OECD
+US series currently stops in 2024; a BEA-only US history avoids splicing one new
+US observation onto a different source.
+
+Both amounts use the same country, national currency and calendar year. Unit
+multipliers are applied before division; no exchange-rate conversion or GDP
+denominator is involved. Total expenditure includes current spending, investment,
+interest and transfers paid by central government. It does **not** add the budgets
+of the recipient state/local governments. It is not tax revenue, GDP, or the UK's
+broader public-sector Total Managed Expenditure.
 
 The comparison has complete annual coverage from **2000 through 2025 for all five
 countries**, with **26 published annual values per country**.
 Every endpoint is explicitly dated.
 These are calendar-year national accounts, not UK April-March financial years or
-US federal fiscal years. Missing observations are not filled, and projections for
-**2026 onward** are excluded. Historical figures can include OECD estimates and
-can be revised; these are not claimed to be final national-account outturns.
-The initial edition is **Economic Outlook 119 (June 2026)**. The refresh resolves
-the latest edition from OECD metadata instead of pinning that vintage forever.
-The same edition is used for every country and year, rather than splicing a newer
-US estimate onto the less timely annual national-accounts dataset.
+US federal fiscal years. Missing observations are not filled, and 2026 onward
+projections are excluded. These are published national-account estimates, not
+Treasury cash-budget totals. National accounting conventions, social-insurance
+classification and central-government programme responsibilities differ, so the
+levels are **not a perfectly harmonised fiscal-performance ranking**.
+The BEA numerator and denominator must share an update date; OECD source versions
+are also checked. The CSV retains each component's exact source and retrieval date.
 
-Interest is recorded on an **accrual basis**, including relevant index-linked
-interest, rather than as cash leaving the Treasury that year. Principal repayments
-are not interest. This is interest payable before subtracting government interest
-receipts, not a net-interest-to-revenue indicator. Source estimates can be revised.
+Interest is measured before subtracting government interest receipts. Principal
+repayments are not interest. National-account timing and financial-service
+adjustments can differ from cash interest outlays; relevant index-linked interest
+is accrued rather than treated as a new cash coupon payment. Source estimates can be revised.
 Source flags are retained in the CSV, with endpoint flags explained in the footnote
 rather than appended to country labels; breaks use dotted links between genuinely
 adjacent observed years, not fabricated observations.
@@ -115,12 +128,17 @@ adjacent observed years, not fabricated observations.
   The [documented CSV download interface](https://www.bankofengland.co.uk/boeapps/database/help.asp)
   is requested from January 2000 through `now`, without a fixed end date.
   Downloads use `curl`, which is available on the GitHub-hosted Ubuntu runner.
-- [OECD Economic Outlook, current edition metadata](https://sdmx.oecd.org/public/rest/v1/dataflow/OECD.ECO.MAD/DSD_EO@DF_EO/latest?references=none):
-  annual `GGINTP` (gross general-government interest payments) and `YPGT` (total
-  general-government disbursements), current-price national currency (`XDC`).
-  The CSV records the edition, exact source queries, component series and UTC
-  retrieval time. OECD leaves the US currency attribute blank; `XDC` for the
-  United States identifies US dollars, with no conversion or currency substitution.
+- [OECD central-government national accounts, current structure](https://sdmx.oecd.org/public/rest/v1/dataflow/OECD.SDD.NAD/DSD_NASEC10@DF_TABLE12/latest?references=none):
+  sector `S1311`, annual `D41` payable and `OTE`, current-price national currency.
+  The parser rejects general-government `S13`, state/local sectors and other
+  definitions rather than silently relabelling them as central government.
+- BEA annual federal national accounts via FRED:
+  [federal interest](https://fred.stlouisfed.org/series/A091RC1A027NBEA) and
+  [federal total expenditure](https://fred.stlouisfed.org/series/W019RC1A027NBEA).
+  Both are annual, not seasonally adjusted, billions of current dollars.
+  [BEA's government-spending definitions](https://www.bea.gov/help/faq/552) and
+  [comparison of government-finance and national-account conventions](https://apps.bea.gov/scb/other/comparing-gfs-and-bea-estimates.htm)
+  explain why these should not be confused with Treasury cash-budget outlays.
 
 ```bash
 ./.venv/bin/python -m debt_data
@@ -136,7 +154,7 @@ dates and the same explicit source and unit fields. Both tables are saved for of
 reconstruction; `--daily-csv` can select an alternative daily input path.
 The [annual interest-budget CSV](../data/debt_interest_budget.csv) stores every
 percentage, its unrounded interest and expenditure amounts in national currency,
-both series identifiers, source status, query URL and retrieval time.
+both series identifiers, source status, both component URLs and retrieval time.
 `--interest-csv` selects an alternative annual input/output path.
 
 The **Monday 06:37 UTC** full refresh includes this analysis, including the daily
@@ -148,7 +166,7 @@ response more than seven calendar days old also blocks publication; offline
 rebuilds do not impose this freshness check. Missing source observations are never
 interpolated, and chart lines do not bridge absent months or business days.
 The annual comparison also requires both same-country/year components, matching
-currencies and government definitions, a positive expenditure denominator and
+currencies and central/federal scope, a positive expenditure denominator and
 complete previously published annual coverage. Forecast flags block inclusion.
 
 All four figures are embedded in the public topic page. This documentation
