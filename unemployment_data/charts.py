@@ -70,6 +70,8 @@ def make_charts(frame: pd.DataFrame, out: Path, reference_frame: pd.DataFrame) -
         ax.xaxis.set_major_locator(mdates.YearLocator(5))
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
         ax.grid(axis="x", visible=False)
+        ax.grid(axis="y", visible=True)
+        ax.set_axisbelow(True)
         fig.suptitle(title, x=.10, y=.98, ha="left", fontsize=22, color=TEXT, fontweight="bold")
         fig.text(
             .10, .91, "Seasonally adjusted; UK: rolling three months; EU and US: monthly",

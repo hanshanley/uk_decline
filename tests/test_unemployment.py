@@ -314,6 +314,9 @@ def test_rendered_charts_keep_missing_months_and_separate_text(
         renderer = canvas.get_renderer()
         ax = fig.axes[0]
         assert ax.get_ylim()[0] == 0
+        assert ax.get_ygridlines() and all(line.get_visible() for line in ax.get_ygridlines())
+        assert not any(line.get_visible() for line in ax.get_xgridlines())
+        assert ax.get_axisbelow() is True
         assert len(ax.lines) == 3
         for line in ax.lines:
             assert np.isnan(line.get_ydata()).sum() == 1
