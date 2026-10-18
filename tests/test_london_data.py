@@ -82,6 +82,22 @@ def test_chart_endpoint_wording_does_not_assert_increases(monkeypatch):
     assert all("rose" not in text and "widened" not in text for text in subtitles)
 
 
+def test_london_national_reference_keeps_the_uk_color_and_a_distinct_dash(monkeypatch, tmp_path):
+    from london_data import charts
+    from vizstyle import country_color
+
+    captured = []
+    monkeypatch.setattr(charts.vs, "save_fig", lambda fig, path, **kwargs: captured.append(fig) or path)
+    charts.make_charts(pd.DataFrame(ons.build_rows(_fake_workbook())), tmp_path)
+    ax = captured[-1].axes[0]
+    reference, london = ax.lines
+    assert reference.get_ydata() == [100, 100]
+    assert reference.get_color() == london.get_color() == country_color("UK")
+    assert reference.get_linestyle() == "--" and london.get_linestyle() == "-"
+    label = next(text for text in ax.texts if "UK average = 100" in text.get_text())
+    assert label.get_color() == country_color("UK")
+
+
 def test_build_rows_units_and_regions():
     rows = ons.build_rows(_fake_workbook())
     units = {r["metric"]: r["unit"] for r in rows}

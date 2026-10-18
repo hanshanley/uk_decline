@@ -98,8 +98,8 @@ def _chart_share(df, out_dir):
 
 def _chart_per_head(df, out_dir):
     def decorate(ax, x, y):
-        ax.axhline(100, color=vs.BLUE, linewidth=1.6, linestyle="--")
-        vs.end_label(ax, x.iloc[-1], 100, "UK average = 100", vs.BLUE)
+        ax.axhline(100, color=vs.country_color("UK"), linewidth=1.6, linestyle="--")
+        vs.end_label(ax, x.iloc[-1], 100, "UK average = 100", vs.country_color("UK"))
         vs.end_label(ax, x.iloc[-1], y.iloc[-1], f"{y.iloc[-1]:.0f}", vs.ACCENT, fontsize=11)
 
     return _line_chart(

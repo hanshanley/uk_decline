@@ -162,6 +162,8 @@ def test_orr_official_missing_or_duplicate_data_is_not_silently_published():
 
 
 def test_official_rail_chart_uses_published_maa_without_smoothing_it_again(monkeypatch, tmp_path):
+    from vizstyle import country_color
+
     df = pd.DataFrame(orr.build_official_rows(_official_workbook()))
     captured = []
     monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
@@ -170,6 +172,9 @@ def test_official_rail_chart_uses_published_maa_without_smoothing_it_again(monke
     lines = captured[0].axes[0].lines
     assert list(lines[0].get_ydata()) == [90, 92]
     assert list(lines[1].get_ydata()) == [91, 93]
+    assert [line.get_color() for line in lines] == [country_color("UK")] * 2
+    assert [line.get_linestyle() for line in lines] == ["--", "-"]
+    assert [line.get_marker() for line in lines] == ["s", "o"]
     assert "Table 3113" in captured[0].texts[0].get_text()
     assert "trains-weighted" in captured[0].texts[0].get_text()
 

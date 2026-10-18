@@ -66,6 +66,7 @@ COUNTRY_COLORS: dict[str, str] = {
 }
 _COUNTRY_ALIASES = {
     "uk": "GBR", "united kingdom": "GBR", "london": "GBR", "gb": "GBR",
+    "great britain": "GBR", "britain": "GBR",
     "us": "USA", "united states": "USA", "united states of america": "USA",
     "germany": "DEU", "de": "DEU", "france": "FRA", "fr": "FRA",
     "italy": "ITA", "it": "ITA", "poland": "POL", "pl": "POL",

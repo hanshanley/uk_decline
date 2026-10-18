@@ -67,6 +67,8 @@ supported names and aliases and raises on unknown identities. Tuition's other EU
 country bars are neutral grey, not a second identity for the highlighted peers.
 Subnational comparisons also agree: Scotland blue, Wales green and Northern
 Ireland gold.
+UK/Great Britain reference lines remain orange too; national and London series
+are distinguished with solid/dashed lines and different markers, not a new UK color.
 
 These rules apply when color identifies a country. Within-country categories
 (age groups, sex, spending functions and good/bad direction in the overview)

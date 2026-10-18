@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 
-from vizstyle import ACCENT, BLUE, MUTED, TEXT, house_style, source_note, save_chart
+from vizstyle import MUTED, TEXT, country_color, house_style, source_note, save_chart
 
 LONDON = "London and South East"
 GB = "Great Britain"
@@ -90,15 +90,15 @@ def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
 
     fig, ax = plt.subplots(figsize=(11, 6))
     line_style = {
-        "marker": "o",
         "markevery": 4,
         "markersize": 4.2,
         "markeredgecolor": "white",
         "markeredgewidth": 0.8,
-        "linewidth": 2.4,
     }
-    ax.plot(gb["date"], gb["maa"], color=BLUE, label="Great Britain", **line_style)
-    ax.plot(lon["date"], lon["maa"], color=ACCENT, label="London & South East", **line_style)
+    ax.plot(gb["date"], gb["maa"], color=country_color("Great Britain"),
+            label="Great Britain", linestyle="--", marker="s", linewidth=1.8, **line_style)
+    ax.plot(lon["date"], lon["maa"], color=country_color("London"),
+            label="London & South East", linestyle="-", marker="o", linewidth=2.4, **line_style)
 
     ax.set_title(title, fontweight="bold", pad=18)
     ax.text(0.5, 1.01, subtitle, transform=ax.transAxes, ha="center", va="bottom",
