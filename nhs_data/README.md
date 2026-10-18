@@ -9,6 +9,10 @@ and cadence. This package harmonises them onto a common schema while keeping the
 `source` on every row so comparisons stay honest — **compare trends, not exact
 levels** (see caveats below).
 
+The waiting-list charts are titled **Hospital treatment waiting lists**. The
+population-adjusted chart measures **recorded waits per 1,000 residents**, not
+unique patients; one person can have more than one wait.
+
 Charts do not connect lines across registered definition/recording changes.
 England's RTT scope excludes sexual-health pathways from **April 2013** and
 community-service pathways from **February 2024**; its cancer

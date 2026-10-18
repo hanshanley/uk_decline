@@ -130,7 +130,10 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR, indexed: b
         ax.set_ylabel(f"Index, {base_period} = 100 ({direction})", labelpad=2)
     else:
         ax.set_title(textwrap.fill(meta.label, width=58), fontweight="bold", pad=14)
-        unit = "Recorded waits" if meta.unit == "pathways / waits" else meta.unit
+        unit = {
+            "pathways / waits": "Recorded waits",
+            "waits per 1,000 residents": "Recorded waits per 1,000 residents",
+        }.get(meta.unit, meta.unit)
         ax.set_ylabel(f"{unit} ({direction})", labelpad=2)
     ax.set_xlabel("Period", labelpad=2)
     if not indexed and meta.unit == "percent":

@@ -3,7 +3,7 @@
 Coverage: **Jul 2007 – Sep 2026** across 4 nations. Source data is devolved and defined differently per nation — read each metric's caveat and compare *trends*, not exact levels.
 
 
-## Recorded waits for planned care (pathways / waits)
+## Hospital treatment waiting lists (pathways / waits)
 
 Recorded elective pathways / ongoing waits, not unique people. Scotland sums outpatient and inpatient/day-case waits; NI covers first outpatient appointments only, not a complete RTT pathway.
 
@@ -16,7 +16,7 @@ Recorded elective pathways / ongoing waits, not unique people. Scotland sums out
 
 > Caveat: England/Wales report referral-to-treatment 'incomplete pathways'; Scotland reports 'ongoing waits' by stage of treatment; NI reports outpatient/inpatient/day-case waits separately (only outpatient waits are used here). These count waits, not unique people, and are not directly comparable across nations. England excludes non-English commissioned treatment entries and estimates for missing providers. It excludes sexual-health pathways from April 2013 and community-service pathways from February 2024. NI's encompass rollout from November 2023 introduces a break: the Department says encompass and legacy figures are not directly comparable.
 
-## Planned-care waits per 1,000 residents (waits per 1,000 residents)
+## Hospital treatment waiting lists (waits per 1,000 residents)
 
 Recorded elective pathways / ongoing waits per 1,000 residents, using published mid-year population estimates. This is not the number or proportion of unique residents waiting.
 

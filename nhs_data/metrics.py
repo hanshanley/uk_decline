@@ -36,7 +36,7 @@ class Metric(NamedTuple):
 METRICS: dict[str, Metric] = {
     "rtt_waiting_list_total": Metric(
         "rtt_waiting_list_total",
-        "Recorded waits for planned care",
+        "Hospital treatment waiting lists",
         "pathways / waits",
         "rtt",
         higher_is_better=False,
@@ -48,7 +48,7 @@ METRICS: dict[str, Metric] = {
     ),
     "rtt_waiting_list_per_1000": Metric(
         "rtt_waiting_list_per_1000",
-        "Planned-care waits per 1,000 residents",
+        "Hospital treatment waiting lists",
         "waits per 1,000 residents",
         "rtt",
         higher_is_better=False,
