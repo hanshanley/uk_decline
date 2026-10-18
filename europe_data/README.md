@@ -125,6 +125,16 @@ and Italy. The current window is **2012–2023**, with **12 published observatio
 country**. This avoids isolated early points and uneven line starts masquerading
 as a complete historical comparison.
 
+The website's income topic uses this **one six-country comparison**, not separate
+UK/US and European panels with incompatible measures. An **18 October 2026** check
+of the current OECD feed across all units and methodologies found only 2023
+observations for these six countries in the requested 2023–2025 window.
+There are no comparable 2024 or 2025
+points to append. The [OECD's release notes](https://www.oecd.org/en/data/datasets/income-and-wealth-distribution-database.html)
+also identify 2023 as Germany's latest income year in the 16 June 2026 update.
+The chart is not extended with unapproved model estimates, carried-forward values
+or differently defined national income medians.
+
 The [full published history](../outputs/gdp_income/median_disposable_income_oecd_history.png)
 is retained separately, together with its hover-data sidecar and the complete CSV.
 The website links to this history from the GDP and incomes page. It preserves every
@@ -152,10 +162,12 @@ and conversion factor are saved with each observation. Missing conversions,
 mismatched currencies, duplicate observations, or lost published 2013–2023 coverage
 stop the refresh instead of silently creating a fragmented comparison.
 
-### Newer national and European observations
+### Supplementary national observations, not an extension of the comparison
 
-![Newer UK and US national income observations](../outputs/gdp_income/median_income_recent_national.png)
-![Newer European income observations](../outputs/gdp_income/median_income_recent_europe.png)
+[Download separate UK/US national figures](../outputs/gdp_income/median_income_recent_national.png)
+and [separate European figures](../outputs/gdp_income/median_income_recent_europe.png).
+These remain retained source outputs, but are not embedded in the website's
+median-income topic or offered as a replacement for the six-country chart.
 
 The OECD comparison currently ends in income year 2023. These separate figures
 retain newer source-published observations without splicing incompatible definitions.

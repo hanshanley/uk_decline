@@ -221,8 +221,16 @@ def test_public_gdp_comparisons_keep_nominal_and_fixed_ppp_without_third_measure
     assert page.find("a", href="../recent-incomes/") is not None
     recent = BeautifulSoup((output / "recent-incomes/index.html").read_text(), "html.parser")
     assert [Path(urlsplit(image["src"]).path).name for image in recent.select("main img")] == [
-        "median_income_recent_national.png", "median_income_recent_europe.png",
+        "median_disposable_income_oecd.png",
     ]
+    assert recent.select_one("h1").get_text() == "Median disposable income"
+    comparison = recent.select_one("#median_disposable_income_oecd img")
+    assert comparison["src"] == page.select_one("#median_disposable_income_oecd img")["src"]
+    observations = json.loads((output / "outputs/gdp_income/median_disposable_income_oecd.json").read_text())
+    assert {series["label"] for series in observations["series"]} == {
+        "United Kingdom", "United States", "Germany", "France", "Italy", "Poland",
+    }
+    assert recent.find("a", string="Full income history (PNG)") is not None
     assert recent.find("a", href="../gdp-income/") is not None
 
 

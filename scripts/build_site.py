@@ -60,10 +60,12 @@ ANALYSES = (
              "Nominal GDP at market exchange rates and real GDP at fixed 2021 purchasing power parities, "
              "alongside median disposable household income.",
              downloads=(("median_disposable_income_oecd_history.png", "Full income history (PNG)"),)),
-    Analysis("recent-incomes", "Recent household incomes", "Economy", "europe_data", "gdp_income",
-             ("median_income_recent_national.png", "median_income_recent_europe.png"),
-             "The latest national UK and US income medians, alongside newer European income "
-             "observations. Separate definitions and price bases—not a newer UK–Poland ranking."),
+    Analysis("recent-incomes", "Median disposable income", "Economy", "europe_data", "gdp_income",
+             ("median_disposable_income_oecd.png",),
+             "The UK, US, Germany, France, Italy and Poland on one household-size-adjusted, "
+             "purchasing-power basis. Only published comparable income observations are shown; "
+             "different national measures are not spliced into the lines.",
+             downloads=(("median_disposable_income_oecd_history.png", "Full income history (PNG)"),)),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
              ("ppp_gdp_per_capita_growth.png", "ppp_gdp_relative_to_peers.png",
               "ppp_gap_decomposition_uk_us.png", "consumer_price_inflation.png"),
@@ -530,8 +532,8 @@ def homepage() -> str:
 def analysis_page(analysis: Analysis) -> str:
     page = Path(analysis.slug) / "index.html"
     related = {
-        "gdp-income": ("recent-incomes", "Newer national and European income figures"),
-        "recent-incomes": ("gdp-income", "Harmonised OECD income comparison and GDP"),
+        "gdp-income": ("recent-incomes", "Median disposable income: six-country comparison"),
+        "recent-incomes": ("gdp-income", "GDP comparisons and the same OECD income series"),
     }
     related_link = ""
     if analysis.slug in related:
