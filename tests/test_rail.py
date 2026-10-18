@@ -193,6 +193,7 @@ def test_rail_charts_explain_delay_thresholds_without_measure_acronyms(monkeypat
     assert len(paths) == 3
     for fig in captured:
         ax = fig.axes[0]
+        assert ax.get_xlabel() == "Year"
         visible = " ".join([ax.get_title(), ax.get_ylabel(), *[t.get_text() for t in ax.texts]])
         assert "PPM" not in visible
         assert "CaSL" not in visible

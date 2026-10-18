@@ -103,7 +103,7 @@ def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
     ax.set_title(title, fontweight="bold", pad=18)
     ax.text(0.5, 1.01, subtitle, transform=ax.transAxes, ha="center", va="bottom",
             fontsize=10.5, color=MUTED)
-    ax.set_xlabel("Quarter ending", labelpad=4)
+    ax.set_xlabel("Year", labelpad=4)
     ax.set_ylabel(ylabel, labelpad=4)
     ax.yaxis.set_major_locator(mtick.MaxNLocator(integer=True))
     ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _p: f"{v:.0f}%"))
