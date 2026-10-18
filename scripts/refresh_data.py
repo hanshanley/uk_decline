@@ -53,7 +53,7 @@ STEPS = {
         ("-m", "tuition.build_history"),
         ("-m", "tuition.plot_history"),
     ),
-    "purchasing-power": (("-m", "ppp_data"), ("-m", "ppp_data.inflation")),
+    "purchasing-power": (("-m", "ppp_data"),),
 }
 FAILURE_NOTICE = re.compile(
     r"^\[[^\]\r\n]+\] WARNING:|\busing (?:manual )?fallback\b",

@@ -66,9 +66,8 @@ ANALYSES = (
              "observations. Separate definitions and price bases—not a newer UK–Poland ranking."),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
              ("ppp_gdp_per_capita_growth.png", "ppp_gdp_relative_to_peers.png",
-              "ppp_gap_decomposition_uk_us.png", "consumer_price_inflation.png"),
-             "Separate real economic growth, exchange rates and relative price levels; "
-             "consumer-price inflation shows how national prices change over time."),
+              "ppp_gap_decomposition_uk_us.png"),
+             "Separate real economic growth from exchange rates and relative price levels."),
     Analysis("markets", "Stock markets", "Economy", "markets_data", "stock_markets",
              ("stock_lse_uk_companies.png", "stock_listed_domestic_companies.png",
               "stock_market_cap_pct_gdp.png"),
@@ -165,7 +164,6 @@ CHART_COMPARATORS = {
     "gdp_per_capita_nominal_over_time": {"United Kingdom", "United States", "Poland", "EU average"},
     "gdp_per_capita_real_over_time": {"United Kingdom", "United States", "Poland", "EU average"},
     "ppp_gdp_relative_to_peers": {"United States", "Germany", "France", "EU average", "Poland"},
-    "consumer_price_inflation": {"United Kingdom", "United States", "Germany", "France", "Italy", "Poland"},
     **dict.fromkeys(
         ("stock_listed_domestic_companies", "stock_market_cap_pct_gdp"),
         {"United Kingdom", "United States", "European Union", "Japan", "China"},
@@ -280,7 +278,6 @@ CHART_TITLES = {
     "ppp_gap_decomposition_uk_us": "The UK–US GDP gap: output growth, prices and exchange rates",
     "ppp_gdp_long_run_maddison": "Long-run real GDP per person, adjusted for purchasing power",
     "ppp_gdp_per_capita_growth": "Growth in real GDP per person",
-    "consumer_price_inflation": "Consumer-price inflation: UK, US, Germany, France, Italy and Poland",
     "ppp_gdp_per_capita_over_time": "Real GDP per person at a fixed purchasing-power benchmark",
     "ppp_gdp_relative_to_peers": "GDP per person relative to the UK, adjusted for purchasing power",
     "ppp_tuition_history": "Historical tuition fees, adjusted for purchasing power",
