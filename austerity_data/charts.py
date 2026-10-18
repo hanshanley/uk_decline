@@ -237,15 +237,6 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         fontweight="bold",
         color=TEXT,
     )
-    fig.text(
-        0.94,
-        0.862,
-        "Shading: 2010–11 to 2019–20\nDotted links: source-vintage changes",
-        ha="right",
-        fontsize=9.5,
-        color=MUTED,
-    )
-
     # Public sector net investment, with the austerity period shaded.
     investment = df[
         (df["metric"] == "public_sector_net_investment_pct_gdp")
@@ -331,7 +322,8 @@ def make_chart(source, output: Path | str = DEFAULT_OUTPUT) -> Path:
         0.057,
         0.018,
         textwrap.fill(
-            "Note: 2000–01 to 2002–03 use Public Expenditure Statistical Analyses 2012; "
+            "Note: Shading marks 2010–11 to 2019–20. "
+            "2000–01 to 2002–03 use Public Expenditure Statistical Analyses 2012; "
             "later years use the saved Public Spending Statistics vintage. Each "
             "vintage is indexed to its own 2010–11 value; revision and definition "
             "differences remain at the seam; dotted links are not like-for-like growth. "

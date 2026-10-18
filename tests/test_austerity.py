@@ -164,7 +164,16 @@ def test_source_vintage_seam_is_dotted_without_inventing_missing_years(monkeypat
                     for segment in c.get_segments()]
         assert len(segments) == 1
         assert list(segments[0][:, 0]) == [2002, 2003]
-    assert "Dotted links: source-vintage changes" in " ".join(t.get_text() for t in captured[0].texts)
+    notes = [text for text in captured[0].texts if text.get_text().startswith("Note:")]
+    assert len(notes) == 1
+    note = " ".join(notes[0].get_text().split())
+    assert "Shading marks 2010–11 to 2019–20." in note
+    assert "dotted links are not like-for-like growth" in note
+    assert notes[0].get_position()[1] < 0.1
+    assert not any(
+        text.get_text().startswith(("Shading:", "Dotted links:"))
+        for text in captured[0].texts
+    )
 
 
 def test_new_spending_year_and_high_value_are_not_silently_dropped(monkeypatch, tmp_path):
