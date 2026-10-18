@@ -185,7 +185,7 @@ def test_gdp_figures_plot_distinct_volume_and_nominal_series(monkeypatch, tmp_pa
             rows.append(row)
     data = pd.DataFrame(rows)
     monkeypatch.setattr(plots.pd, "read_csv", lambda _: data)
-    monkeypatch.setattr(plots, "fig_median_income_oecd", lambda *args: None)
+    monkeypatch.setattr(plots, "fig_median_income_oecd", lambda *args, **kwargs: None)
     monkeypatch.setattr(plots, "fig_median_income_non_oecd", lambda *args, **kwargs: None)
     monkeypatch.setattr(plots.gdp_comparisons, "make_chart", lambda *args: None)
     captured = {}

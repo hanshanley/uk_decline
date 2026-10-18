@@ -63,8 +63,9 @@ ANALYSES = (
     Analysis("recent-incomes", "Median disposable income", "Economy", "europe_data", "gdp_income",
              ("median_disposable_income_oecd.png",),
              "The UK, US, Germany, France, Italy and Poland on one household-size-adjusted, "
-             "purchasing-power basis. Only published comparable income observations are shown; "
-             "different national measures are not spliced into the lines.",
+             "purchasing-power basis through 2025. Filled points are published OECD medians; "
+             "hollow points in the shaded recent tails are our model estimates, not observed OECD medians. "
+             "Different national median measures are not spliced into the lines.",
              downloads=(("median_disposable_income_oecd_history.png", "Full income history (PNG)"),)),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
              ("ppp_gdp_per_capita_growth.png", "ppp_gdp_relative_to_peers.png",

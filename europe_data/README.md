@@ -121,19 +121,59 @@ it does **not** identify a causal currency effect or establish a loss of househo
 
 The public comparison uses the **OECD Income Distribution Database**, showing the
 latest complete shared annual period for the UK, US, **Poland**, Germany, France
-and Italy. The current window is **2012–2023**, with **12 published observations per
-country**. This avoids isolated early points and uneven line starts masquerading
+and Italy. The chart spans **2012–2025**: **12 published observations per
+country through 2023**, followed by two visibly modelled points. This avoids isolated early points and uneven line starts masquerading
 as a complete historical comparison.
 
 The website's income topic uses this **one six-country comparison**, not separate
 UK/US and European panels with incompatible measures. An **18 October 2026** check
 of the current OECD feed across all units and methodologies found only 2023
 observations for these six countries in the requested 2023–2025 window.
-There are no comparable 2024 or 2025
+There are no comparable observed 2024 or 2025
 points to append. The [OECD's release notes](https://www.oecd.org/en/data/datasets/income-and-wealth-distribution-database.html)
 also identify 2023 as Germany's latest income year in the 16 June 2026 update.
-The chart is not extended with unapproved model estimates, carried-forward values
-or differently defined national income medians.
+The **2024–2025 tail is our illustrative model, not an OECD median-income series**.
+Shading, hollow markers, dash-dot lines, dated "est." end labels and explicit hover
+labels distinguish estimates from observations. No observed value is replaced.
+
+The distribution-neutral model anchors to each country's last observed median:
+
+```
+income_growth = (household_income_target / population_target)
+                / (household_income_base / population_base)
+ppp_growth = (consumption_deflator_target / consumption_deflator_base)
+             / (US_consumption_deflator_target / US_consumption_deflator_base)
+estimated_median_ppp = observed_median_ppp_base * income_growth / ppp_growth
+```
+
+Inputs are annual **OECD Economic Outlook 119** household/NPISH disposable income,
+population (`POP`) and private-consumption deflators (`PCP`). The fixed country
+conventions are **gross** disposable income (`YDH_G`) for the UK and France,
+**net** (`YDH`) for the US, Germany, Italy and Poland. Gross means before depreciation,
+not before income tax. Only each country's growth is used; raw gross and net levels
+are never compared. Deflator reference years differ; only within-series ratios are
+used, never cross-country index levels. The US deflator puts the extension in current
+purchasing-power dollars rather than holding US prices fixed at the anchor year.
+This is equivalent to projecting real disposable income/person, then allowing US
+consumption prices to change. It **models** later PPP changes, not fresh observed PPPs.
+See the [OECD variable documentation](https://stats.oecd.org/wbos/fileview2.aspx?IDFile=d4d06a70-db49-4123-b32a-1f2a6272fd07)
+for real household income's consumption-deflator adjustment.
+
+The model assumes the median grows like aggregate disposable income/person:
+the income distribution, median/mean relationship and household composition are held
+fixed. UK financial-year labels are approximated with calendar-year macro growth.
+NPISH coverage and the gross/net conventions are additional proxy limitations.
+This is the general [distribution-neutral projection principle](https://datatopics.worldbank.org/dataviz/pip-nowcasts/),
+not an official World Bank or OECD median nowcast. A 2021-to-2023 back-check using
+the current macro vintage produced absolute errors of approximately **0.7–7.6%**
+across the six countries; one historical window is not a validated uncertainty interval.
+The estimates should not establish precise rankings or measured changes in inequality.
+
+`data/oecd_income_estimates.csv` keeps all anchor and macro input values, the unrounded
+calculation, source URL, release and retrieval time. Plot values are rounded to $100.
+The observed source and combined actual-income tables remain untouched. The model is
+limited to a two-year tail through 2025; newly available observations take precedence,
+and missing or incompatible inputs fail the refresh rather than carrying values forward.
 
 The [full published history](../outputs/gdp_income/median_disposable_income_oecd_history.png)
 is retained separately, together with its hover-data sidecar and the complete CSV.
@@ -147,7 +187,7 @@ Missing years are not filled; dotted links identify definition changes, not
 like-for-like growth. Older methodology is not spliced in to manufacture annual values.
 
 Income is disposable household income after taxes and transfers, divided by the
-square root of household size. The national-currency medians are divided by
+square root of household size. For published observations, national-currency medians are divided by
 **same-country, same-year household-consumption purchasing power parities**, not
 GDP PPPs or market exchange rates. The result is current-price purchasing-power
 dollars: useful for same-year comparisons, **not inflation-adjusted income growth**.
@@ -323,18 +363,24 @@ python3 -m venv .venv && ./.venv/bin/pip install -r ../requirements.txt
 # Fetch all sources (default 1970..current) into ../data/ :
 ./.venv/bin/python -m europe_data.fetch_data --start 1970 --end 2025
 
-# Render the figures into ../outputs/ :
+# Generate the separately identified 2024–2025 model inputs:
+./.venv/bin/python -m europe_data.income_estimates
+
+# Render the figures into ../outputs/ (uses the tracked model CSV offline):
 ./.venv/bin/python -m europe_data.plot_uk_decline
 ```
 
 Outputs: per-source CSVs, `europe_combined_long.csv`, `europe_combined_wide.csv`, and
 `manifest.json` in `../data/`; ten PNGs in `../outputs/gdp_income/`.
 The derived OECD source table (`oecd_median_income_ppp.csv`) and combined wide table
-are tracked for reproducible offline chart generation; other raw downloads are git-ignored.
+and separate model-input table (`oecd_income_estimates.csv`) are tracked for reproducible
+offline chart generation; other raw downloads are git-ignored.
 
 ## Source observations and derived measures
 PIP is fetched with `fill_gaps=false` (survey observations only); no
-pipeline performs interpolation or gap-filling. That does not mean upstream GDP or PPP
+pipeline interpolates its survey observations. The separate, explicitly modelled OECD
+median-income tail is described above and is not inserted into the observed dataset.
+That does not mean upstream GDP or PPP
 estimates are free of modelling or extrapolation. Eurostat's `status` codes accompany
 the long-format observations and appear as `<metric>__status` columns in the wide table
 when flags are present; `b` identifies a break in series.

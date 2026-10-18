@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 STEPS = {
     "gdp-income": (
         ("-m", "europe_data.fetch_data"),
+        ("-m", "europe_data.income_estimates"),
         ("-m", "europe_data.plot_uk_decline"),
         ("-m", "europe_data.recent_income"),
     ),

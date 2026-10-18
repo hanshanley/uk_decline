@@ -224,6 +224,7 @@ def test_public_gdp_comparisons_keep_nominal_and_fixed_ppp_without_third_measure
         "median_disposable_income_oecd.png",
     ]
     assert recent.select_one("h1").get_text() == "Median disposable income"
+    assert "hollow points in the shaded recent tails are our model estimates" in recent.get_text()
     comparison = recent.select_one("#median_disposable_income_oecd img")
     assert comparison["src"] == page.select_one("#median_disposable_income_oecd img")["src"]
     observations = json.loads((output / "outputs/gdp_income/median_disposable_income_oecd.json").read_text())
