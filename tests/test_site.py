@@ -110,6 +110,14 @@ def site_repository(tmp_path):
             chart = root / "outputs" / analysis.output / filename
             chart.parent.mkdir(parents=True, exist_ok=True)
             chart.write_bytes(b"test image")
+    for filename in (
+        "gdp_income/median_disposable_income_oecd_four_country.png",
+        "gdp_income/median_disposable_income_oecd_uk_us_eu.png",
+        "ppp/ppp_gdp_relative_to_peers.png",
+    ):
+        chart = root / "outputs" / filename
+        chart.parent.mkdir(parents=True, exist_ok=True)
+        chart.write_bytes(b"supplemental image")
     (root / "outputs/uk_decline_scorecard.png").write_bytes(b"overview")
     for chart in (root / "outputs").rglob("*.png"):
         chart.with_suffix(".json").write_text(json.dumps({
@@ -223,7 +231,9 @@ def test_purchasing_power_page_includes_both_simpler_inflation_versions_and_full
         assert "Consumer-price inflation" in chart["alt"]
         data = json.loads((output / f"outputs/ppp/{name}.json").read_text())
         assert {series["label"] for series in data["series"]} == countries
-    assert len(page.select(".chart-gallery figure")) == 5
+    assert len(page.select(".chart-gallery figure")) == 4
+    assert page.select_one("#ppp_gdp_relative_to_peers") is None
+    assert (output / "outputs/ppp/ppp_gdp_relative_to_peers.png").is_file()
     full = page.find("a", string="Full six-country inflation comparison (PNG)")
     assert full is not None and full.has_attr("download")
     assert urlsplit(full["href"]).path == "../outputs/ppp/consumer_price_inflation.png"
@@ -244,7 +254,7 @@ def test_tuition_page_embeds_compact_ranking_and_links_to_full_ranking(site_repo
     assert (output / "outputs/tuition/tuition_by_country.json").exists()
 
 
-def test_public_gdp_comparisons_keep_nominal_and_fixed_ppp_without_third_measure(site_repository):
+def test_income_stays_in_gdp_without_separate_category_or_supplemental_embeds(site_repository):
     output = build_site.build(site_repository)
     page = BeautifulSoup((output / "gdp-income/index.html").read_text(), "html.parser")
     assert [Path(urlsplit(image["src"]).path).name for image in page.select("main img")] == [
@@ -257,28 +267,26 @@ def test_public_gdp_comparisons_keep_nominal_and_fixed_ppp_without_third_measure
         "../outputs/gdp_income/median_disposable_income_oecd_history.png"
     )
     assert (output / "outputs/gdp_income/median_disposable_income_oecd_history.json").exists()
-    assert page.find("a", href="../recent-incomes/") is not None
+    assert page.find("a", href="../recent-incomes/") is None
+    home = BeautifulSoup((output / "index.html").read_text(), "html.parser")
+    assert home.find("a", href="recent-incomes/") is None
     recent = BeautifulSoup((output / "recent-incomes/index.html").read_text(), "html.parser")
-    assert [Path(urlsplit(image["src"]).path).name for image in recent.select("main img")] == [
-        "median_disposable_income_oecd.png", "median_disposable_income_oecd_four_country.png",
-        "median_disposable_income_oecd_uk_us_eu.png",
-    ]
-    assert recent.select_one("h1").get_text() == "Median disposable income"
-    assert "Published observations only" in recent.get_text()
-    assert "hollow points in the shaded recent tails" not in recent.get_text()
-    comparison = recent.select_one("#median_disposable_income_oecd img")
-    assert comparison["src"] == page.select_one("#median_disposable_income_oecd img")["src"]
+    target = build_site.canonical_url(Path("gdp-income/index.html"))
+    assert recent.find("meta", attrs={"http-equiv": "refresh"})["content"] == f"0; url={target}"
+    assert recent.find("link", rel="canonical")["href"] == target
+    assert recent.find("a", href=target)
+    assert not recent.select(".chart-gallery, .topic-card")
+    assert "Published observations only" not in recent.get_text()
+    assert "Different national median measures are not spliced into the lines" not in recent.get_text()
     observations = json.loads((output / "outputs/gdp_income/median_disposable_income_oecd.json").read_text())
     assert {series["label"] for series in observations["series"]} == {
         "United Kingdom", "United States", "Germany", "France", "Italy", "Poland",
     }
-    assert recent.find("a", string="Full income history (PNG)") is not None
-    assert recent.find("a", href="../gdp-income/") is not None
     for name, countries in {
         "median_disposable_income_oecd_four_country": {"United Kingdom", "United States", "Germany", "France"},
         "median_disposable_income_oecd_uk_us_eu": {"United Kingdom", "United States", "EU-27"},
     }.items():
-        assert recent.select_one(f"#{name} img") is not None
+        assert page.select_one(f"#{name} img") is None
         data = json.loads((output / f"outputs/gdp_income/{name}.json").read_text())
         observed = {series["label"] for series in data["series"] if "(model estimate)" not in series["label"]}
         assert observed == countries
@@ -417,7 +425,7 @@ def test_topic_pages_only_embed_curated_charts_without_documentation_duplicates(
         page = BeautifulSoup((output / analysis.slug / "index.html").read_text(), "html.parser")
         images = page.select("main img")
         assert [Path(urlsplit(image["src"]).path).name for image in images] == list(analysis.charts)
-        limits = {"debt-borrowing": 4, "purchasing-power": 5, "gdp-income": 5, "tuition": 4}
+        limits = {"debt-borrowing": 4, "purchasing-power": 4, "gdp-income": 3, "tuition": 4}
         assert 1 <= len(images) <= limits.get(analysis.slug, 3)
         assert len({image["src"] for image in images}) == len(images)
         assert not page.select(".methodology, #methodology, .prose, pre")
@@ -466,13 +474,14 @@ def test_former_pages_addresses_redirect_to_matching_publication_pages(site_repo
         assert not soup.select(".topic-card, .chart-gallery")
 
 
-def test_invalid_build_keeps_the_previous_site(site_repository):
+@pytest.mark.parametrize("redirects", [False, True])
+def test_invalid_build_keeps_the_previous_site(site_repository, redirects):
     root = site_repository
     output = build_site.build(root)
     previous = (output / "index.html").read_bytes()
     (root / "README.md").write_text("# About the data\n\n[Missing section](#missing)\n")
     with pytest.raises(ValueError, match="missing anchor"):
-        build_site.build(root)
+        build_site.build(root, redirects=redirects)
     assert (output / "index.html").read_bytes() == previous
 
 

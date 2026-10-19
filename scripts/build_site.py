@@ -28,13 +28,33 @@ ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = "https://github.com/hanshanley/uk_decline"
 TITLE = "The UK, in context"
 CANONICAL_ROOT = "https://www.themarginoferror.com/uk_decline/"
+PAGE_ALIASES = {Path("recent-incomes/index.html"): Path("gdp-income/index.html")}
 
 
 def canonical_url(page: Path) -> str:
+    page = PAGE_ALIASES.get(page, page)
     path = page.as_posix()
     if page.name == "index.html":
         path = path.removesuffix("index.html")
     return CANONICAL_ROOT + path
+
+
+def redirect_page(page: Path) -> str:
+    target = escape(canonical_url(page), quote=True)
+    destination = json.dumps(canonical_url(page)).replace("<", "\\u003c")
+    return f"""<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The UK, in context is published by The Margin of Error.">
+<meta http-equiv="refresh" content="0; url={target}">
+<link rel="canonical" href="{target}">
+<title>{TITLE} | The Margin of Error</title>
+<script>location.replace({destination} + location.search + location.hash);</script>
+</head><body><h1>{TITLE}</h1>
+<p><a href="{target}">Continue to The Margin of Error.</a></p>
+</body></html>
+"""
 
 
 @dataclass(frozen=True)
@@ -61,19 +81,9 @@ ANALYSES = (
              "Nominal GDP at market exchange rates and real GDP at fixed 2021 purchasing power parities, "
              "alongside median disposable household income.",
              downloads=(("median_disposable_income_oecd_history.png", "Full income history (PNG)"),)),
-    Analysis("recent-incomes", "Median disposable income", "Economy", "europe_data", "gdp_income",
-             ("median_disposable_income_oecd.png", "median_disposable_income_oecd_four_country.png",
-              "median_disposable_income_oecd_uk_us_eu.png"),
-             "The UK, US, Germany, France, Italy and Poland on one household-size-adjusted, "
-             "purchasing-power basis. Published observations only; "
-             "the lines stop at their available source years. "
-             "Different national median measures are not spliced into the lines. "
-             "The UK/US/EU version indexes each published series to its shared starting year; "
-             "it does not compare income levels or inflation-adjusted growth.",
-             downloads=(("median_disposable_income_oecd_history.png", "Full income history (PNG)"),)),
     Analysis("purchasing-power", "Purchasing power", "Economy", "ppp_data", "ppp",
-             ("ppp_gdp_per_capita_growth.png", "ppp_gdp_relative_to_peers.png",
-              "ppp_gap_decomposition_uk_us.png", "consumer_price_inflation_four_country.png",
+             ("ppp_gdp_per_capita_growth.png", "ppp_gap_decomposition_uk_us.png",
+              "consumer_price_inflation_four_country.png",
               "consumer_price_inflation_uk_us_eu.png"),
              "Separate real economic growth, exchange rates and relative price levels; "
              "consumer-price inflation shows how national prices change over time.",
@@ -577,14 +587,6 @@ def homepage() -> str:
 
 def analysis_page(analysis: Analysis) -> str:
     page = Path(analysis.slug) / "index.html"
-    related = {
-        "gdp-income": ("recent-incomes", "Median disposable income: six-country comparison"),
-        "recent-incomes": ("gdp-income", "GDP comparisons and the same OECD income series"),
-    }
-    related_link = ""
-    if analysis.slug in related:
-        slug, label = related[analysis.slug]
-        related_link = f'<p class="context"><a href="../{slug}/">{label} &#8594;</a></p>'
     downloads = "".join(
         f'<a href="{relative_url(Path("outputs") / analysis.output / filename, page)}" download>'
         f'{escape(label)}</a> &middot; '
@@ -612,7 +614,6 @@ def analysis_page(analysis: Analysis) -> str:
       or tap a point on mobile. Observation periods and source notes
       are printed on each figure; the site's build date does not imply newer observations.</p>
     </section>
-    {related_link}
     <section class="chart-gallery" aria-label="Charts">{''.join(figures)}</section>
     <p class="context">
       {downloads}
@@ -756,30 +757,21 @@ def build(root: Path = ROOT, *, redirects: bool = False) -> Path:
             body = f'{heading}<article class="prose">{rendered}</article>'
             description = f"Definitions, methodology and source documentation. {source.as_posix()}."
             pages[page] = (title, description, body)
+        for alias, destination in PAGE_ALIASES.items():
+            pages[alias] = pages[destination]
         for page, (title, description, body) in pages.items():
             target = stage / page
             target.parent.mkdir(parents=True, exist_ok=True)
-            body = chart_interactions(body, page, observations)
-            target.write_text(layout(title, description, body, page, revision, built_at, refreshed_at))
+            if page in PAGE_ALIASES:
+                target.write_text(redirect_page(page))
+            else:
+                body = chart_interactions(body, page, observations)
+                target.write_text(layout(title, description, body, page, revision, built_at, refreshed_at))
         (stage / ".nojekyll").touch()
         validate_site(stage)
         if redirects:
             for page in pages:
-                target = escape(canonical_url(page), quote=True)
-                destination = json.dumps(canonical_url(page)).replace("<", "\\u003c")
-                (stage / page).write_text(f"""<!doctype html>
-<html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="The UK, in context is published by The Margin of Error.">
-<meta http-equiv="refresh" content="0; url={target}">
-<link rel="canonical" href="{target}">
-<title>{TITLE} | The Margin of Error</title>
-<script>location.replace({destination} + location.search + location.hash);</script>
-</head><body><h1>{TITLE}</h1>
-<p><a href="{target}">Continue to The Margin of Error.</a></p>
-</body></html>
-""")
+                (stage / page).write_text(redirect_page(page))
             validate_site(stage)
         if output.exists():
             shutil.rmtree(output)

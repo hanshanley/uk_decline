@@ -151,6 +151,9 @@ for why it is *computed* a different way, see [below](#deriving-the-price-level-
 ### The peer comparison changes character
 ![GDP per capita relative to the UK at PPP](../outputs/ppp/ppp_gdp_relative_to_peers.png)
 
+This figure is a GitHub supplement, not embedded in the website's Purchasing power
+topic. Its source data, PNG and hover sidecar remain in the weekly refresh.
+
 PPP **narrows** the UK's gap to the US and **widens** the convergence story with Poland:
 
 | Peer, latest year | Share of the UK at market rates | at PPP |
