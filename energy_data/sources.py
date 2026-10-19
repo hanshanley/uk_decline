@@ -1,4 +1,4 @@
-"""Published household retail energy prices, with explicit comparison conventions."""
+"""Published household and industrial retail energy prices with explicit scopes."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from europe_data._http import get_bytes, get_json, get_text
 from uk_migration._govuk import govuk_attachment
 
 PAGE = "/government/statistical-data-sets/international-domestic-energy-prices"
+INDUSTRIAL_PAGE = "/government/statistical-data-sets/international-non-domestic-energy-prices"
 COUNTRIES = {"GBR": "United Kingdom", "USA": "United States", "DEU": "Germany", "FRA": "France"}
 EU_COLUMNS = {"UK": "GBR", "Germany": "DEU", "France": "FRA"}
 TABLES = {"electricity": "5.6", "gas": "5.10"}
@@ -24,6 +25,18 @@ EIA = {
     "gas": (EIA_BASE + "T09.10", "NGRCUUS", "Dollars per Thousand Cubic Feet",
             "Natural Gas Price, Delivered to Consumers, Residential"),
 }
+INDUSTRIAL_TABLES = {"electricity": "5.4"}
+INDUSTRIAL_BANDS = {"electricity": "2,000-19,999 MWh/year"}
+INDUSTRIAL_EIA = {
+    "electricity": (EIA_BASE + "T09.08", "ESICUUS", "Cents per Kilowatthour,  Including Taxes",
+                    "Average Price of Electricity to Ultimate Customers, Industrial"),
+}
+EU_TAX = {
+    False: "All taxes and levies included",
+    True: "Including taxes, excluding VAT and other recoverable taxes and levies",
+}
+US_SCOPE = {False: "All residential customers", True: "All industrial customers"}
+US_TAX = {False: "EIA published residential basis", True: "EIA published industrial basis"}
 HEAT_URL = EIA_BASE + "TA4"
 HEAT_SERIES = "NGTXKUS"
 FX_URL = "https://api.worldbank.org/v2/country/GBR/indicator/PA.NUS.FCRF"
@@ -38,6 +51,10 @@ FIELDS = [
 OPTIONAL = {"gbp_per_usd", "btu_per_cubic_foot", "fx_source_url", "heat_source_url", "status"}
 
 
+def _definitions(industrial: bool):
+    return (INDUSTRIAL_TABLES, INDUSTRIAL_BANDS, INDUSTRIAL_EIA) if industrial else (TABLES, BANDS, EIA)
+
+
 def _number(value) -> tuple[float, str]:
     match = re.fullmatch(r"\s*(\d+(?:\.\d+)?)\s*([pr]?)\s*", str(value))
     if not match or float(match.group(1)) <= 0:
@@ -45,7 +62,10 @@ def _number(value) -> tuple[float, str]:
     return float(match.group(1)), match.group(2)
 
 
-def parse_workbook(content: bytes, fuel: str, url: str) -> pd.DataFrame:
+def parse_workbook(content: bytes, fuel: str, url: str, *, industrial: bool = False) -> pd.DataFrame:
+    tables, bands, _ = _definitions(industrial)
+    if fuel not in tables:
+        raise ValueError(f"Unsupported energy price profile: {fuel}, industrial={industrial}")
     with pd.ExcelFile(io.BytesIO(content)) as workbook:
         cover = workbook.parse("Cover sheet", header=None)
         sheet = workbook.parse("Annual incl tax", header=None)
@@ -55,14 +75,20 @@ def parse_workbook(content: bytes, fuel: str, url: str) -> pd.DataFrame:
     ]
     dates = [match.group(1) for match in dates if match]
     text = "\n".join(sheet.iloc[:15, 0].astype(str))
+    expected_title = (
+        "Annual non-domestic electricity prices in the EU including taxes "
+        "(excluding VAT and other recoverable taxes and levies)"
+        if industrial else f"Annual domestic {fuel} prices in the EU including all taxes and levies"
+    )
+    band = "2,000 - 19,999" if industrial else "2,500 - 4,999" if fuel == "electricity" else "5,557 - 55,556"
     if (
         len(dates) != 1
-        or sheet.iloc[0, 0] != f"Annual domestic {fuel} prices in the EU including all taxes and levies"
+        or sheet.iloc[0, 0] != expected_title
         or "In pence per kWh." not in text
         or "Annual average is presented as the unweighted average of semesters one and two" not in text
-        or ("2,500 - 4,999" if fuel == "electricity" else "5,557 - 55,556") not in text
+        or band not in text
     ):
-        raise ValueError(f"{fuel}: unexpected international household energy definition")
+        raise ValueError(f"{fuel}: unexpected international energy price definition")
     headers = sheet.index[sheet.iloc[:, 0].eq("Customer size")]
     if len(headers) != 1:
         raise ValueError(f"{fuel}: missing or ambiguous international price header")
@@ -85,9 +111,9 @@ def parse_workbook(content: bytes, fuel: str, url: str) -> pd.DataFrame:
             rows.append(dict(
                 iso3=code, country=COUNTRIES[code], fuel=fuel, year=int(year),
                 value=price, unit=UNIT, source_value=price, source_unit=UNIT,
-                conversion_factor=1., consumer_scope=BANDS[fuel],
-                tax_basis="All taxes and levies included", status=status or year_status,
-                source_table=f"QEP {TABLES[fuel]}, Annual incl tax", source_url=url,
+                conversion_factor=1., consumer_scope=bands[fuel],
+                tax_basis=EU_TAX[industrial], status=status or year_status,
+                source_table=f"QEP {tables[fuel]}, Annual incl tax", source_url=url,
                 source_vintage=pd.to_datetime(dates[0], format="%d/%m/%Y").strftime("%Y-%m-%d"),
                 vintage_kind="Workbook publication date",
             ))
@@ -138,8 +164,9 @@ def parse_fx(payload: list) -> dict[int, float]:
 
 def add_us(
     european: pd.DataFrame, prices: dict[str, dict[int, float]],
-    heat: dict[int, float], fx: dict[int, float], *, release: str,
+    heat: dict[int, float], fx: dict[int, float], *, release: str, industrial: bool = False,
 ) -> pd.DataFrame:
+    _, _, eia = _definitions(industrial)
     rows = european.to_dict("records")
     for fuel, part in european.groupby("fuel"):
         for year in sorted(set(part["year"])):
@@ -151,10 +178,10 @@ def add_us(
             rows.append(dict(
                 iso3="USA", country=COUNTRIES["USA"], fuel=fuel, year=year,
                 value=prices[fuel][year] * factor, unit=UNIT,
-                source_value=prices[fuel][year], source_unit=EIA[fuel][2],
-                conversion_factor=factor, consumer_scope="All residential customers",
-                tax_basis="EIA published residential basis", status="",
-                source_table=EIA[fuel][1], source_url=EIA[fuel][0], source_vintage=release,
+                source_value=prices[fuel][year], source_unit=eia[fuel][2],
+                conversion_factor=factor, consumer_scope=US_SCOPE[industrial],
+                tax_basis=US_TAX[industrial], status="",
+                source_table=eia[fuel][1], source_url=eia[fuel][0], source_vintage=release,
                 vintage_kind="Retrieved source snapshot",
                 gbp_per_usd=fx[year], btu_per_cubic_foot=heat[year] if fuel == "gas" else None,
                 fx_source_url=FX_URL, heat_source_url=HEAT_URL if fuel == "gas" else "",
@@ -164,14 +191,15 @@ def add_us(
     return frame
 
 
-def validate(frame: pd.DataFrame, *, previous=None, as_of=None) -> pd.DataFrame:
+def validate(frame: pd.DataFrame, *, previous=None, as_of=None, industrial: bool = False) -> pd.DataFrame:
+    tables, bands, eia = _definitions(industrial)
     if not set(FIELDS).issubset(frame.columns):
-        raise ValueError("Missing international household energy fields")
+        raise ValueError("Missing international energy fields")
     frame = frame[FIELDS].copy()
     for column in ("status", "fx_source_url", "heat_source_url"):
         frame[column] = frame[column].fillna("")
     if frame[list(set(FIELDS) - OPTIONAL)].isna().any().any() or frame.duplicated(["iso3", "fuel", "year"]).any():
-        raise ValueError("Missing or duplicate household energy prices")
+        raise ValueError("Missing or duplicate energy prices")
     for column in ("year", "value", "source_value", "conversion_factor"):
         frame[column] = pd.to_numeric(frame[column], errors="raise")
         if not frame[column].map(lambda value: math.isfinite(value) and value > 0).all():
@@ -185,9 +213,9 @@ def validate(frame: pd.DataFrame, *, previous=None, as_of=None) -> pd.DataFrame:
         or frame["year"].ge(releases.dt.year).any()
         or not frame["unit"].eq(UNIT).all() or not frame["status"].isin(["", "p", "r"]).all()
         or pd.to_datetime(frame["retrieved_utc"], errors="raise", utc=True).isna().any()
-        or set(zip(frame["iso3"], frame["fuel"])) != {(code, fuel) for code in COUNTRIES for fuel in TABLES}
+        or set(zip(frame["iso3"], frame["fuel"])) != {(code, fuel) for code in COUNTRIES for fuel in tables}
     ):
-        raise ValueError("Invalid household energy definitions, dates or coverage")
+        raise ValueError("Invalid energy definitions, dates or coverage")
     latest = int(frame["year"].max())
     for (code, fuel), part in frame.groupby(["iso3", "fuel"]):
         if (
@@ -207,24 +235,24 @@ def validate(frame: pd.DataFrame, *, previous=None, as_of=None) -> pd.DataFrame:
                     raise ValueError("Invalid US gas heat-content input")
                 factor = 100 * fx / (heat * 1000 / BTU_PER_KWH)
             if (
-                row["source_unit"] != EIA[row["fuel"]][2]
-                or row["source_table"] != EIA[row["fuel"]][1]
-                or row["source_url"] != EIA[row["fuel"]][0]
-                or row["consumer_scope"] != "All residential customers"
-                or row["tax_basis"] != "EIA published residential basis"
+                row["source_unit"] != eia[row["fuel"]][2]
+                or row["source_table"] != eia[row["fuel"]][1]
+                or row["source_url"] != eia[row["fuel"]][0]
+                or row["consumer_scope"] != US_SCOPE[industrial]
+                or row["tax_basis"] != US_TAX[industrial]
                 or row["vintage_kind"] != "Retrieved source snapshot"
             ):
-                raise ValueError("US energy price does not use the published residential series")
+                raise ValueError("US energy price does not use the selected sector series")
         else:
             factor = 1.
             if (
-                row["source_unit"] != UNIT or row["consumer_scope"] != BANDS[row["fuel"]]
-                or row["tax_basis"] != "All taxes and levies included"
-                or row["source_table"] != f"QEP {TABLES[row['fuel']]}, Annual incl tax"
+                row["source_unit"] != UNIT or row["consumer_scope"] != bands[row["fuel"]]
+                or row["tax_basis"] != EU_TAX[industrial]
+                or row["source_table"] != f"QEP {tables[row['fuel']]}, Annual incl tax"
                 or not row["source_url"].startswith("https://assets.publishing.service.gov.uk/")
                 or row["vintage_kind"] != "Workbook publication date"
             ):
-                raise ValueError("European energy price is not the tax-inclusive medium-household series")
+                raise ValueError("European energy price does not match the selected tax and consumer profile")
         if (
             not math.isclose(row["conversion_factor"], factor, rel_tol=1e-12)
             or not math.isclose(row["value"], row["source_value"] * factor, rel_tol=1e-12)
@@ -237,24 +265,33 @@ def validate(frame: pd.DataFrame, *, previous=None, as_of=None) -> pd.DataFrame:
     return frame.sort_values(["fuel", "iso3", "year"]).reset_index(drop=True)
 
 
-def fetch(*, previous=None) -> pd.DataFrame:
+def fetch(*, previous=None, industrial: bool = False) -> pd.DataFrame:
+    tables, _, eia = _definitions(industrial)
     frames = []
-    for fuel, table in TABLES.items():
-        url, _ = govuk_attachment("table_" + table.replace(".", "") + "1", PAGE)
-        frames.append(parse_workbook(get_bytes(url, timeout=120), fuel, url))
+    for fuel, table in tables.items():
+        url, _ = govuk_attachment(
+            "table_" + table.replace(".", "") + "1", INDUSTRIAL_PAGE if industrial else PAGE,
+        )
+        frames.append(parse_workbook(get_bytes(url, timeout=120), fuel, url, industrial=industrial))
     european = pd.concat(frames, ignore_index=True)
     start, end = int(european["year"].min()), int(european["year"].max())
     prices = {
         fuel: parse_eia(get_text(url, timeout=120), code, unit, description, start=start, end=end)
-        for fuel, (url, code, unit, description) in EIA.items()
+        for fuel, (url, code, unit, description) in eia.items()
     }
-    heat = parse_eia(get_text(HEAT_URL, timeout=120), HEAT_SERIES, "Btu per Cubic Foot",
-                     "Natural Gas Consumption, End-Use Sectors Heat Content", start=start, end=end)
+    heat = (
+        parse_eia(get_text(HEAT_URL, timeout=120), HEAT_SERIES, "Btu per Cubic Foot",
+                  "Natural Gas Consumption, End-Use Sectors Heat Content", start=start, end=end)
+        if "gas" in tables else {}
+    )
     fx = parse_fx(get_json(FX_URL, params={"format": "json", "date": f"{start}:{end}", "per_page": 100}, timeout=120))
     # MER CSVs do not carry a release date; retain the retrieval date rather than inventing one.
     release = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    frame = validate(add_us(european, prices, heat, fx, release=release), previous=previous)
+    frame = validate(
+        add_us(european, prices, heat, fx, release=release, industrial=industrial),
+        previous=previous, industrial=industrial,
+    )
     today = datetime.now(timezone.utc)
     if end < today.year - (1 if today.month >= 7 else 2):
-        raise ValueError("International household energy prices are stale")
+        raise ValueError("International energy prices are stale")
     return frame

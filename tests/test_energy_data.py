@@ -9,12 +9,20 @@ from energy_data import charts, sources
 from energy_data.__main__ import main
 
 
-def workbook(fuel, change=None):
+def workbook(fuel, change=None, *, industrial=False):
+    title = (
+        "Annual non-domestic electricity prices in the EU including taxes "
+        "(excluding VAT and other recoverable taxes and levies)"
+        if industrial else f"Annual domestic {fuel} prices in the EU including all taxes and levies"
+    )
+    band = "2,000 - 19,999 MWh" if industrial else (
+        "2,500 - 4,999" if fuel == "electricity" else "5,557 - 55,556"
+    )
     rows = [
-        [f"Annual domestic {fuel} prices in the EU including all taxes and levies"],
+        [title],
         ["In pence per kWh."],
         ["Prices are converted to sterling using the exchange rate at time of publication for each period."],
-        ["Medium consumers: consuming " + ("2,500 - 4,999" if fuel == "electricity" else "5,557 - 55,556") + " kWh per annum."],
+        ["Medium consumers: consuming " + band + " kWh per annum."],
         ["Annual average is presented as the unweighted average of semesters one and two for the year."],
         ["Customer size", "Year", "UK", "Germany", "France"],
     ]
@@ -48,6 +56,108 @@ def energy_frame():
         {year: 1000. for year in years}, {year: .8 for year in years},
         release="2026-10-18",
     ))
+
+
+@pytest.fixture
+def industrial_frame():
+    europe = sources.parse_workbook(
+        workbook("electricity", industrial=True), "electricity",
+        "https://assets.publishing.service.gov.uk/industrial.xlsx", industrial=True,
+    )
+    return sources.validate(sources.add_us(
+        europe, {"electricity": {year: 10. for year in range(2008, 2026)}}, {},
+        {year: .8 for year in range(2008, 2026)}, release="2026-10-19", industrial=True,
+    ), industrial=True)
+
+
+def test_industrial_profile_selects_business_band_and_industrial_not_residential_prices(industrial_frame):
+    assert len(industrial_frame) == 72
+    europe = industrial_frame.query("iso3 != 'USA'")
+    assert europe["consumer_scope"].eq("2,000-19,999 MWh/year").all()
+    assert europe["tax_basis"].str.contains("excluding VAT").all()
+    us = industrial_frame.query("iso3 == 'USA'")
+    assert us["source_table"].eq("ESICUUS").all()
+    assert us["value"].eq(8.).all()
+    with pytest.raises(ValueError, match="coverage"):
+        sources.validate(industrial_frame)
+    for column, value in [
+        ("source_table", "ESRCUUS"), ("consumer_scope", "All residential customers"),
+    ]:
+        changed = industrial_frame.copy()
+        changed.loc[changed["iso3"] == "USA", column] = value
+        with pytest.raises(ValueError):
+            sources.validate(changed, industrial=True)
+    changed = industrial_frame.copy()
+    changed.loc[changed["iso3"] != "USA", "tax_basis"] = "All taxes and levies included"
+    with pytest.raises(ValueError, match="tax and consumer"):
+        sources.validate(changed, industrial=True)
+
+
+def test_industrial_source_rejects_household_workbook():
+    with pytest.raises(ValueError, match="definition"):
+        sources.parse_workbook(
+            workbook("electricity"), "electricity",
+            "https://assets.publishing.service.gov.uk/industrial.xlsx", industrial=True,
+        )
+
+
+def test_industrial_fetch_failure_preserves_both_saved_datasets(energy_frame, industrial_frame, monkeypatch, tmp_path):
+    household, industry = tmp_path / "household.csv", tmp_path / "industry.csv"
+    energy_frame.to_csv(household, index=False)
+    industrial_frame.to_csv(industry, index=False)
+    before = household.read_bytes(), industry.read_bytes()
+
+    def fetch(*, previous=None, industrial=False):
+        if industrial:
+            raise ValueError("US industrial source unavailable")
+        return energy_frame
+
+    monkeypatch.setattr(sources, "fetch", fetch)
+    with pytest.raises(ValueError, match="industrial source"):
+        main(["--csv", str(household), "--industrial-csv", str(industry), "--out", str(tmp_path / "charts")])
+    assert (household.read_bytes(), industry.read_bytes()) == before
+    assert not (tmp_path / "charts").exists()
+
+
+def test_industrial_offline_rebuild_adds_one_four_country_chart_without_fetching(
+    energy_frame, industrial_frame, monkeypatch, tmp_path,
+):
+    household, industry = tmp_path / "household.csv", tmp_path / "industry.csv"
+    energy_frame.to_csv(household, index=False)
+    industrial_frame.to_csv(industry, index=False)
+    before = household.read_bytes(), industry.read_bytes()
+    monkeypatch.setattr(sources, "fetch", lambda **kwargs: pytest.fail("Offline energy rebuild fetched data"))
+    assert main([
+        "--from-csv", str(household), "--industrial-from-csv", str(industry),
+        "--out", str(tmp_path / "charts"),
+    ]) == 0
+    assert (household.read_bytes(), industry.read_bytes()) == before
+    files = list((tmp_path / "charts").glob("*.png"))
+    assert len(files) == 3
+    data = json.loads((tmp_path / "charts/industrial_electricity_prices.json").read_text())
+    assert {series["label"] for series in data["series"]} == set(sources.COUNTRIES.values())
+    assert sum(len(series["points"]) for series in data["series"]) == 72
+
+
+def test_industrial_chart_discloses_non_household_scope_and_tax_treatment(industrial_frame, monkeypatch, tmp_path):
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *args, **kwargs: captured.append(fig))
+    paths = charts.make_charts(industrial_frame, tmp_path, industrial=True)
+    assert [p.name for p in paths] == ["industrial_electricity_prices.png"]
+    fig = captured[0]
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    text = " ".join(" ".join(item.get_text() for item in fig.texts).split())
+    assert "medium non-household users; US: industrial sector" in text
+    assert "excludes VAT and other recoverable" in text
+    assert "ESICUUS" in text and "ESRCUUS" not in text
+    ax = fig.axes[0]
+    assert len(ax.lines) == 4
+    assert all(label.get_text().endswith("p") for label in ax.get_yticklabels())
+    ticks = ax.get_xticks()
+    assert all(right - left == 2 for left, right in zip(ticks, ticks[1:]))
+    note = next(item for item in fig.texts if item.get_text().startswith("Sources:"))
+    assert note.get_window_extent(canvas.get_renderer()).y1 < ax.xaxis.label.get_window_extent(canvas.get_renderer()).y0
 
 
 def test_comparison_selects_tax_inclusive_medium_prices_and_preserves_raw_units(energy_frame):

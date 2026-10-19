@@ -656,11 +656,13 @@ def test_energy_comparisons_are_published_with_auditable_inputs_and_complete_ref
     output = build_site.build(site_repository)
     page = BeautifulSoup((output / "energy-costs/index.html").read_text(), "html.parser")
     assert [Path(urlsplit(image["src"]).path).name for image in page.select("main img")] == [
-        "household_electricity_prices.png", "household_gas_prices.png",
+        "household_electricity_prices.png", "household_gas_prices.png", "industrial_electricity_prices.png",
     ]
     assert "US all-residential averages differ" in page.get_text()
     assert page.find("a", string="Energy prices and conversion inputs (CSV)") is not None
     assert (output / "data/household_energy_prices.csv").is_file()
+    assert (output / "data/industrial_electricity_prices.csv").is_file()
+    assert "separate industrial electricity chart" in page.get_text()
     commands = []
     monkeypatch.setattr(refresh_data, "nhs_coverage", lambda _: {})
     monkeypatch.setattr(refresh_data, "validate_refresh", lambda *args: None)

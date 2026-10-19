@@ -55,15 +55,40 @@ inflation-adjusted. Exchange-rate movements can change the international compari
 No projected prices, price caps, wholesale benchmarks or carried-forward observations
 are spliced into the lines.
 
+## Industrial electricity
+
+![Industrial electricity prices](../outputs/energy/industrial_electricity_prices.png)
+
+The third chart adds **industrial/business electricity**, with the same four countries,
+**2008–2025** annual coverage and **pence/kWh** units. It is separate from household
+prices and has its own saved dataset, `data/industrial_electricity_prices.csv`.
+
+The UK, Germany and France use [DESNZ/Eurostat QEP 5.4](https://www.gov.uk/government/statistical-data-sets/international-non-domestic-energy-prices),
+**Annual incl tax**, **Medium**: **2,000–19,999 MWh/year non-household users**.
+These figures include non-recoverable taxes and levies but **exclude VAT and other
+recoverable taxes and levies**. Non-household data cover businesses, not solely
+manufacturing plants. The US uses EIA **ESICUUS**, national **industrial-sector**
+retail electricity prices including taxes, converted from cents/kWh using the same
+annual World Bank GBP/USD series. It does not use household or commercial-sector prices.
+
+The different sector boundaries, consumption profiles and tax conventions are
+disclosed in the subtitle/footnote: this is a descriptive comparison, not a perfectly
+matched industrial contract or every factory's effective energy cost. US annual
+rates, European two-semester averages and exchange-rate conventions follow the
+same documented rules as the household comparisons. The current QEP 5.4 workbook
+was published **28 May 2026**.
+
 ## Rebuild and refresh
 
 ```bash
 MPLBACKEND=Agg .venv/bin/python -m energy_data
-MPLBACKEND=Agg .venv/bin/python -m energy_data --from-csv data/household_energy_prices.csv
+MPLBACKEND=Agg .venv/bin/python -m energy_data --from-csv data/household_energy_prices.csv \
+  --industrial-from-csv data/industrial_electricity_prices.csv
 ```
 
-The website and weekly source-refresh pipeline include both charts. The tracked
-CSV contains **144 country/fuel/year observations** and supports offline rebuilding.
+The website and weekly source-refresh pipeline include all three charts. The household
+CSV contains **144 country/fuel/year observations**, and the industrial CSV another
+**72**, both supporting offline rebuilding.
 GOV.UK workbook attachments are resolved on each refresh. Source dates distinguish
 actual workbook publication dates from the retrieval date of EIA's undated CSV
 snapshots; retrieval timestamps are not presented as publication dates.
