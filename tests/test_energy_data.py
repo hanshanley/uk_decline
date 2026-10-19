@@ -181,6 +181,14 @@ def test_comparison_disclosures_gridlines_and_notes_remain_visible(energy_frame,
         renderer = canvas.get_renderer()
         ax = fig.axes[0]
         assert len(ax.lines) == 4
+        ticks = ax.get_xticks()
+        assert all(right - left == 2 for left, right in zip(ticks, ticks[1:]))
+        assert all("(2025)" in text.get_text() for text in ax.texts if text.get_text())
+        first_year = ax.get_xticklabels()[0].get_window_extent(renderer)
+        assert all(text.get_text().endswith("p") for text in ax.get_yticklabels())
+        zero = next(text for text in ax.get_yticklabels() if text.get_text() == "0p").get_window_extent(renderer)
+        assert first_year.y1 + 5 < zero.y0
+        assert zero.x1 + 5 < first_year.x0
         assert all(line.get_visible() for line in ax.get_ygridlines())
         texts = " ".join(text.get_text() for text in fig.texts)
         assert "medium-use households; US: all residential" in texts

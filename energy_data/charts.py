@@ -4,6 +4,7 @@ from pathlib import Path
 import textwrap
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 import pandas as pd
 
 from ppp_data.figure import labelled_ends
@@ -29,12 +30,15 @@ def make_charts(frame: pd.DataFrame, out: Path) -> list[Path]:
                     linewidth=2.8 if code == "GBR" else 1.8, marker="o", markersize=3)
             final = part.iloc[-1]
             ends.append((final["value"], f"{name}\n{final['value']:.2f}p/kWh ({last})", color, last))
-        ax.set_xlim(first, last + .25)
+        ax.set_xlim(first - .5, last + .25)
         ymax = selected["value"].max() * 1.18
         ax.set_ylim(0, ymax)
         ax.set_xlabel("Year")
         ax.set_ylabel("Household retail price (pence per kWh)")
-        ax.set_xticks(sorted({*range(first, last + 1, 2), last}))
+        ax.set_xticks(range(first, last + 1, 2))
+        ax.tick_params(axis="x", pad=12)
+        ax.tick_params(axis="y", pad=8)
+        ax.yaxis.set_major_formatter(mtick.StrMethodFormatter("{x:g}p"))
         ax.grid(axis="y", visible=True)
         ax.grid(axis="x", visible=False)
         ax.set_axisbelow(True)
