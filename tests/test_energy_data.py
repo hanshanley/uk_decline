@@ -139,6 +139,36 @@ def test_industrial_offline_rebuild_adds_one_four_country_chart_without_fetching
     assert sum(len(series["points"]) for series in data["series"]) == 72
 
 
+def test_default_weekly_entrypoint_fetches_both_profiles_and_regenerates_every_energy_chart(
+    energy_frame, industrial_frame, monkeypatch, tmp_path,
+):
+    from scripts.build_site import ANALYSES
+    from scripts.refresh_data import STEPS
+
+    fetched = []
+
+    def fetch(*, previous=None, industrial=False):
+        fetched.append(industrial)
+        return industrial_frame if industrial else energy_frame
+
+    monkeypatch.setattr(sources, "fetch", fetch)
+    household, industry = tmp_path / "household.csv", tmp_path / "industry.csv"
+    out = tmp_path / "charts"
+    assert main([
+        "--csv", str(household), "--industrial-csv", str(industry), "--out", str(out),
+    ]) == 0
+    assert fetched == [False, True]
+    analysis = next(item for item in ANALYSES if item.slug == "energy-costs")
+    assert {path.name for path in out.glob("*.png")} == set(analysis.charts)
+    for frame, original in (
+        (sources.validate(pd.read_csv(household)), energy_frame),
+        (sources.validate(pd.read_csv(industry), industrial=True), industrial_frame),
+    ):
+        pd.testing.assert_frame_equal(frame[["iso3", "fuel", "year", "value"]],
+                                      original[["iso3", "fuel", "year", "value"]])
+    assert STEPS["energy-costs"] == (("-m", "energy_data"),)
+
+
 def test_industrial_chart_discloses_non_household_scope_and_tax_treatment(industrial_frame, monkeypatch, tmp_path):
     captured = []
     monkeypatch.setattr(charts, "save_chart", lambda fig, *args, **kwargs: captured.append(fig))

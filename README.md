@@ -70,6 +70,29 @@ rendering charts with:
 
 Automatic source refreshes regenerate these versions too.
 
+## Automatic updates
+
+The enabled [Update site workflow](.github/workflows/update-site.yml) is scheduled
+for **Monday at 06:37 UTC** on `master`. It runs every source group in
+`scripts/refresh_data.py`, including household and industrial energy prices,
+polling, and all income and inflation comparison variants. It regenerates the
+overview, hover-data sidecars and page-background copies as well.
+
+Every retained original PNG and its sidecar must be regenerated before the
+complete-refresh date advances. Source failures, lost required coverage or stale
+figures stop publication. A partial `--only` run does not claim a complete refresh.
+The workflow tests and builds the result before pushing refreshed inputs.
+
+The live host, `hanshanley/margin_of_error`, independently checks out the latest
+`master` and is scheduled to republish at **09:20 and 21:20 UTC each day**. This
+picks up weekly refresh commits without relying on a workflow-authored push to
+trigger another workflow. GitHub can delay scheduled runs; these are scheduled
+times, not exact publication guarantees.
+
+Regression tests check that every public analysis has a refresh command and that
+the default energy command fetches both household and industrial data and renders
+every energy chart registered on the website.
+
 ## Setup
 
 ```bash

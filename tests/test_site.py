@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 import pytest
 
 from scripts import build_site, refresh_data
+from scripts.chart_data import tracked_charts
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node is needed to execute the browser event handlers")
@@ -617,6 +618,30 @@ def test_complete_refresh_records_success_only_after_scorecard(monkeypatch, tmp_
     saved = json.loads(status.read_text())
     assert saved["last_successful_refresh_utc"].endswith("+00:00")
     assert saved["automated_analyses"] == ["trade"]
+
+
+def test_default_weekly_refresh_covers_every_public_module_and_retained_figure_owner(monkeypatch, tmp_path):
+    commands = []
+    monkeypatch.setattr(refresh_data, "nhs_coverage", lambda _: {})
+    monkeypatch.setattr(refresh_data, "validate_refresh", lambda *args: None)
+    monkeypatch.setattr(refresh_data, "run", lambda command, root: commands.append(command))
+    refresh_data.refresh(tmp_path)
+    modules = {
+        command[1].partition(".")[0] for command in commands
+        if command[0] == "-m"
+    }
+    missing = {analysis.module for analysis in build_site.ANALYSES} - modules
+    assert not missing, f"Published modules missing from the weekly refresh: {sorted(missing)}"
+    outputs = {analysis.output for analysis in build_site.ANALYSES}
+    unowned = [
+        str(chart) for chart in tracked_charts(build_site.ROOT)
+        if chart.name != "uk_decline_scorecard.png"
+        and (len(chart.parts) < 3 or chart.parts[1] not in outputs)
+    ]
+    assert not unowned, f"Retained figures without a refresh owner: {unowned}"
+    assert commands[-2:] == [("scorecard.py",), ("-m", "scripts.export_page_plots")]
+    saved = json.loads((tmp_path / "data/site/refresh.json").read_text())
+    assert set(saved["automated_analyses"]) == set(refresh_data.STEPS)
 
 
 def test_complete_refresh_runs_debt_borrowing_before_recording_success(monkeypatch, tmp_path):
