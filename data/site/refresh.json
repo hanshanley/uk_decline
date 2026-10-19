@@ -1,5 +1,5 @@
 {
-  "last_successful_refresh_utc": "2026-10-16T15:10:00+00:00",
+  "last_successful_refresh_utc": "2026-10-19T14:12:53+00:00",
   "automated_analyses": [
     "gdp-income",
     "markets",
@@ -13,9 +13,11 @@
     "london",
     "crime",
     "migration",
+    "polling",
     "public-spending",
     "debt-borrowing",
     "unemployment",
+    "energy-costs",
     "investment-funding",
     "food-banks",
     "tuition",
