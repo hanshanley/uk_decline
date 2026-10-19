@@ -31,6 +31,7 @@ data/processed/*.csv
 !data/uk_gilt_yields_daily.csv
 !data/unemployment_long.csv
 !data/unemployment_references.csv
+!data/household_energy_prices.csv
 !data/investment_funding_long.csv
 !data/uk_infrastructure_investment.csv
 !data/uk_listed_companies_lse.csv

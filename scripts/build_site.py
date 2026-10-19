@@ -126,6 +126,12 @@ ANALYSES = (
     Analysis("tax", "Tax", "Households", "tax", "tax",
              ("tax_to_gdp_over_time.png", "tax_wedge_by_earnings.png"),
              "National tax revenue and household labour-tax wedges are different measures."),
+    Analysis("energy-costs", "Energy costs", "Households", "energy_data", "energy",
+             ("household_electricity_prices.png", "household_gas_prices.png"),
+             "Household electricity and gas prices in the UK, US, Germany and France, through 2025. "
+             "Current pence per kWh, not total bills. UK/European medium-use bands and US "
+             "all-residential averages differ; currency, tax and consumption conventions are stated.",
+             data_downloads=(("data/household_energy_prices.csv", "Energy prices and conversion inputs (CSV)"),)),
     Analysis("tuition", "University tuition", "Households", "tuition", "tuition",
              ("tuition_england_cap_nominal.png", "tuition_history_real_usd.png",
               "tuition_region_comparison.png", "tuition_by_country_to_france.png"),
@@ -160,6 +166,8 @@ ANALYSES = (
 )
 
 CHART_COMPARATORS = {
+    "household_electricity_prices": {"United Kingdom", "United States", "Germany", "France"},
+    "household_gas_prices": {"United Kingdom", "United States", "Germany", "France"},
     "gb_voting_intention_average": {
         "Labour", "Conservatives", "Reform UK", "Liberal Democrats", "Greens",
     },
@@ -250,6 +258,8 @@ SUBSCRIBE_URL = (
 )
 
 CHART_TITLES = {
+    "household_electricity_prices": "Household electricity prices: UK, US, Germany and France",
+    "household_gas_prices": "Household gas prices: UK, US, Germany and France",
     "gb_voting_intention_average": "Great Britain: 30-day, pollster-balanced voting-intention averages",
     "uk_infrastructure_investment": "UK infrastructure: market-sector real investment and government investment relative to GDP",
     "public_capital_investment": "Public fixed investment: all general-government assets, not infrastructure alone",
