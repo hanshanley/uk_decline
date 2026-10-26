@@ -131,6 +131,26 @@ def test_orr_official_quarters_and_published_maa_are_separate_series():
     assert all("Table 3113" in r["source"] for r in rows)
 
 
+def test_orr_official_multiline_ods_headers_preserve_the_same_observations():
+    workbook = _official_workbook()
+    table = workbook["3113_PPM_(quarterly)"]
+    for i in (1, 6):
+        table.iloc[i] = [
+            "Time\nperiod", "Great Britain \n(percentage)",
+            "London and South East sector\n(percentage)",
+        ]
+    assert orr.build_official_rows(workbook) == orr.build_official_rows(_official_workbook())
+
+
+def test_orr_official_duplicate_headers_still_fail_after_whitespace_normalization():
+    workbook = _official_workbook()
+    table = workbook["3113_PPM_(quarterly)"]
+    table[3] = None
+    table.iloc[1, 3] = "Great Britain\n(percentage)"
+    with pytest.raises(ValueError, match="duplicate official Great Britain"):
+        orr.build_official_rows(workbook)
+
+
 def test_orr_official_maa_can_start_after_quarterly_but_not_have_internal_suppression():
     wb = _official_workbook()
     wb["3113_PPM_(quarterly)"].iloc[7, 1:] = ["[z]", "[z]"]

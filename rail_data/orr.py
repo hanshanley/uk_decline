@@ -190,7 +190,7 @@ def build_official_rows(workbook: dict | None = None) -> list[dict]:
     if workbook is None:
         workbook = download_workbook(ORR_TABLE_3113_URL)
     table = workbook["3113_PPM_(quarterly)"]
-    labels = [str(value).strip() for value in table.iloc[:, 0]]
+    labels = [" ".join(str(value).split()) for value in table.iloc[:, 0]]
     sections = {}
     for prefix, metric in [("Table 3113a:", "ppm_official_pct"),
                            ("Table 3113b:", "ppm_official_maa_pct")]:
@@ -210,7 +210,10 @@ def build_official_rows(workbook: dict | None = None) -> list[dict]:
             (GREAT_BRITAIN, "Great Britain (percentage)"),
             (LONDON_SE, "London and South East sector (percentage)"),
         ]:
-            matches = [i for i, value in enumerate(table.iloc[header]) if str(value) == label]
+            matches = [
+                i for i, value in enumerate(table.iloc[header])
+                if " ".join(str(value).split()) == label
+            ]
             if len(matches) != 1:
                 raise ValueError(f"ORR: missing or duplicate official {region} column")
             columns[region] = matches[0]

@@ -100,6 +100,10 @@ python3 -m venv .venv
 ./.venv/bin/pip install -r requirements.txt
 ```
 
+Pandas is pinned to the validated parser release so scheduled updates do not
+silently change spreadsheet parsing. Its upgrade requires rerunning the tests
+and a complete source refresh; ORR header matching tolerates multiline ODS cells.
+
 Each analysis runs as a module from the repo root, e.g.:
 
 ```bash
