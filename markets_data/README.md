@@ -94,6 +94,17 @@ The fetcher requires every requested year's Main Market and AIM counts, checks t
 UK plus international equals the published total, and rejects missing, fractional or
 negative counts before replacing the saved CSV.
 
+Automatic discovery reads the official Main Market and AIM `latest.json` and
+`historic.json` catalogues under `https://docs.londonstockexchange.com/reports/`.
+It selects the latest completed month present in both catalogues and uses their
+exact download links, including revision suffixes, rather than probing guessed URLs.
+The October 2026 website migration retired the old `/sites/default/files/reports/`
+paths and omitted the December 2022 Main Market workbook. For that observation
+only, `lse_historical_snapshots.csv` preserves the previously published counts and
+their original **16 October 2026** retrieval date and citations. If the workbook
+returns to the catalogue, it is fetched again. All other requested observations
+must be downloaded and validated; catalogue and download failures stop publication.
+
 ## Usage
 
 ```bash

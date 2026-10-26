@@ -9,10 +9,12 @@ not a continuation of World Bank/WFE listed domestic companies.
 from __future__ import annotations
 
 import calendar
+import csv
 import io
 import re
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -20,9 +22,11 @@ import openpyxl
 import requests
 
 DOCS_HOST = "docs.londonstockexchange.com"
-BASE = f"https://{DOCS_HOST}/sites/default/files/reports"
+BASE = f"https://{DOCS_HOST}/reports"
+MARKETS = {"Main Market": "main-market", "AIM": "aim"}
 SOURCE = "London Stock Exchange monthly factsheets (Main Market + AIM), primary-market summary"
 DEFAULT_CSV = Path(__file__).resolve().parent.parent / "data" / "uk_listed_companies_lse.csv"
+HISTORICAL_CSV = Path(__file__).with_name("lse_historical_snapshots.csv")
 FIELDS = [
     "region", "year", "date", "metric", "value", "unit", "source",
     "source_url", "aim_source_url", "source_accessed",
@@ -36,10 +40,38 @@ def _ensure_lse_host(url: str) -> None:
         raise ValueError(f"refusing to fetch untrusted host: {url!r}")
 
 
+@lru_cache(maxsize=2)
+def _factsheet_catalogue(market: str) -> dict[tuple[int, int], str]:
+    """Read exact published links, including revised filenames, from LSE's catalogue."""
+    sheets: dict[tuple[int, int], str] = {}
+    pattern = re.compile(
+        rf"{re.escape(market)} factsheet ([A-Za-z]+) (\d{{4}})(?:\.xlsx)?"
+    )
+    for edition in ("latest", "historic"):
+        url = f"{BASE}/{MARKETS[market]}/{edition}.json"
+        response = requests.get(url, headers=_UA, timeout=90)
+        _ensure_lse_host(response.url)
+        response.raise_for_status()
+        for item in response.json()["Data"]:
+            match = pattern.fullmatch(item["displayTitle"])
+            if match is None or item.get("fileType", "").lower() != "xlsx":
+                continue
+            month, year = match.groups()
+            month_number = list(calendar.month_name).index(month)
+            link = item["downloadLink"]
+            _ensure_lse_host(link)
+            sheets.setdefault((int(year), month_number), link)
+    if not sheets:
+        raise ValueError(f"{market}: catalogue contains no monthly XLSX factsheets")
+    return sheets
+
+
 def _factsheet_url(market: str, year: int, month: str = "December") -> str:
-    # market is "Main Market" or "AIM"; spaces are URL-encoded by requests' params-free path.
-    name = f"{market} factsheet {month} {year}.xlsx".replace(" ", "%20")
-    return f"{BASE}/{name}"
+    period = year, list(calendar.month_name).index(month)
+    try:
+        return _factsheet_catalogue(market)[period]
+    except KeyError:
+        raise ValueError(f"{market} {month} {year}: factsheet not published") from None
 
 
 def _download(url: str, timeout: int = 90) -> io.BytesIO:
@@ -143,6 +175,25 @@ def build_rows(
     rows: list[dict] = []
     for year, month_number in periods:
         month = calendar.month_name[month_number]
+        # LSE omitted December 2022 when migrating its archive in October 2026.
+        if (year, month_number) == (2022, 12) and (year, month_number) not in _factsheet_catalogue("Main Market"):
+            with HISTORICAL_CSV.open(newline="") as handle:
+                snapshots = list(csv.DictReader(handle))
+            expected = {"lse_companies_uk", "lse_companies_total"}
+            if len(snapshots) != 2 or {row["metric"] for row in snapshots} != expected:
+                raise ValueError("LSE historical snapshot must contain both company counts")
+            counts = {row["metric"]: _num(row["value"]) for row in snapshots}
+            if (
+                any(row["date"] != "2022-12-31" or row["year"] != "2022" for row in snapshots)
+                or any(value is None for value in counts.values())
+                or counts["lse_companies_uk"] > counts["lse_companies_total"]
+            ):
+                raise ValueError("LSE historical snapshot contains invalid dates or counts")
+            rows.extend(
+                {**row, "year": int(row["year"]), "value": counts[row["metric"]]}
+                for row in snapshots
+            )
+            continue
         mm_uk, mm_intl = main_market_year(year, month)
         if year not in aim:
             raise ValueError(f"AIM {month} {year}: company-count row not found")
@@ -168,22 +219,17 @@ def build_rows(
 
 def latest_available_month(end: int | None = None) -> str | None:
     """Find the latest completed month with both official market factsheets."""
-    from datetime import timedelta
-
     today = date.today()
     end = today.year - 2 if end is None else end
-    candidate = today.replace(day=1) - timedelta(days=1)
-    while candidate.year > end:
-        try:
-            for market in ("Main Market", "AIM"):
-                _download(_factsheet_url(market, candidate.year, calendar.month_name[candidate.month]))
-        except requests.HTTPError as error:
-            if error.response is None or error.response.status_code not in (404, 410):
-                raise
-        else:
-            return candidate.strftime("%Y-%m")
-        candidate = candidate.replace(day=1) - timedelta(days=1)
-    return None
+    common = _factsheet_catalogue("Main Market").keys() & _factsheet_catalogue("AIM").keys()
+    completed = [
+        (year, month) for year, month in common
+        if year > end and date(year, month, calendar.monthrange(year, month)[1]) < today
+    ]
+    if not completed:
+        raise ValueError("LSE catalogues contain no common completed month after the annual range")
+    year, month = max(completed)
+    return f"{year:04d}-{month:02d}"
 
 
 def write_csv(
@@ -191,7 +237,6 @@ def write_csv(
     end: int | None = None, latest_month: str | None = None,
 ) -> Path:
     """Fetch the LSE factsheets and write the tidy cited CSV. Returns the path."""
-    import csv
     rows = build_rows(start, end, latest_month)
     if not rows:
         raise RuntimeError("LSE returned no company counts; existing data was not replaced")

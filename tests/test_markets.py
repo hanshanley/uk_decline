@@ -9,6 +9,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from markets_data import charts, combine, markets, regions, worldbank  # noqa: E402
@@ -112,7 +114,23 @@ def _lse_workbook(sheet, month, year, rows):
     return buffer
 
 
-def test_lse_annual_and_partial_year_rows_preserve_dates_and_both_sources(monkeypatch, tmp_path):
+@pytest.fixture
+def lse_catalogue(monkeypatch):
+    from markets_data import lse_factsheets as lse
+
+    def catalogue(market):
+        return {
+            (year, month): (
+                f"{lse.BASE}/{lse.MARKETS[market]}/"
+                f"{market} factsheet {lse.calendar.month_name[month]} {year}.xlsx"
+            ).replace(" ", "%20")
+            for year in range(2018, 2027) for month in range(1, 13)
+        }
+
+    monkeypatch.setattr(lse, "_factsheet_catalogue", catalogue)
+
+
+def test_lse_annual_and_partial_year_rows_preserve_dates_and_both_sources(monkeypatch, tmp_path, lse_catalogue):
     import csv
     from datetime import date
     from markets_data import lse_factsheets as lse
@@ -166,10 +184,8 @@ def test_lse_annual_and_partial_year_rows_preserve_dates_and_both_sources(monkey
     assert len(requested) == 4
 
 
-def test_lse_discovers_latest_month_with_both_markets_and_surfaces_server_errors(monkeypatch):
+def test_lse_discovers_latest_common_completed_month_without_probing_urls(monkeypatch):
     from datetime import date
-    import pytest
-    import requests
     from markets_data import lse_factsheets as lse
 
     class Today(date):
@@ -178,29 +194,118 @@ def test_lse_discovers_latest_month_with_both_markets_and_surfaces_server_errors
             return cls(2026, 10, 15)
 
     monkeypatch.setattr(lse, "date", Today)
-    requested = []
-
-    def download(url):
-        requested.append(url)
-        if "September" in url or ("August" in url and "AIM" in url):
-            response = requests.Response()
-            response.status_code = 404
-            raise requests.HTTPError(response=response)
-        return b"workbook"
-
-    monkeypatch.setattr(lse, "_download", download)
+    monkeypatch.setattr(lse, "_factsheet_catalogue", lambda market: {
+        (2026, month): "published-link"
+        for month in ((7, 8, 10, 11) if market == "Main Market" else (7, 10, 11))
+    })
+    monkeypatch.setattr(lse, "_download", lambda url: pytest.fail("must not probe guessed URLs"))
     assert lse.latest_available_month() == "2026-07"
-    assert all("October" not in url for url in requested)
-    assert any("August" in url and "AIM" in url for url in requested)
-    response = requests.Response()
-    response.status_code = 503
 
-    def server_error(url):
-        raise requests.HTTPError(response=response)
 
-    monkeypatch.setattr(lse, "_download", server_error)
-    with pytest.raises(requests.HTTPError):
+def test_lse_catalogue_uses_migrated_links_and_revision_filenames(monkeypatch):
+    import requests
+    from markets_data import lse_factsheets as lse
+
+    requested = []
+    link = f"{lse.BASE}/aim/AIM%20factsheet%20April%202026_1.xlsx"
+
+    def get(url, **kwargs):
+        requested.append(url)
+        response = requests.Response()
+        response.url = url
+        response.status_code = 200
+        response.json = lambda: {"Data": [
+            {"displayTitle": "AIM Issuers by Country", "fileType": "xlsx"},
+            {"displayTitle": "AIM factsheet April 2026.xlsx", "fileType": "xlsx", "downloadLink": link},
+            {"displayTitle": "AIM factsheet March 2026.pdf", "fileType": "pdf"},
+        ]}
+        return response
+
+    lse._factsheet_catalogue.cache_clear()
+    monkeypatch.setattr(lse.requests, "get", get)
+    try:
+        assert lse._factsheet_url("AIM", 2026, "April") == link
+        assert lse._factsheet_url("AIM", 2026, "April") == link
+        assert requested == [f"{lse.BASE}/aim/latest.json", f"{lse.BASE}/aim/historic.json"]
+        with pytest.raises(ValueError, match="not published"):
+            lse._factsheet_url("AIM", 2026, "September")
+    finally:
+        lse._factsheet_catalogue.cache_clear()
+
+
+@pytest.mark.parametrize("status", [403, 503])
+def test_lse_catalogue_and_published_download_errors_are_not_hidden(monkeypatch, status):
+    import requests
+    from markets_data import lse_factsheets as lse
+
+    def get(url, **kwargs):
+        response = requests.Response()
+        response.url = url
+        response.status_code = status
+        return response
+
+    lse._factsheet_catalogue.cache_clear()
+    monkeypatch.setattr(lse.requests, "get", get)
+    try:
+        with pytest.raises(requests.HTTPError):
+            lse.latest_available_month()
+        with pytest.raises(requests.HTTPError):
+            lse._download(f"{lse.BASE}/aim/published.xlsx")
+    finally:
+        lse._factsheet_catalogue.cache_clear()
+
+
+def test_lse_discovery_rejects_catalogues_without_a_recent_common_month(monkeypatch):
+    from markets_data import lse_factsheets as lse
+
+    monkeypatch.setattr(lse, "_factsheet_catalogue", lambda market: {})
+    with pytest.raises(ValueError, match="no common completed month"):
         lse.latest_available_month()
+
+
+def test_lse_removed_2022_archive_preserves_original_provenance_only(monkeypatch):
+    from markets_data import lse_factsheets as lse
+
+    monkeypatch.setattr(lse, "_factsheet_catalogue", lambda market: {
+        (2023, 12): f"{lse.BASE}/{lse.MARKETS[market]}/published.xlsx",
+    })
+    monkeypatch.setattr(lse, "aim_history", lambda *args: {2023: (600, 100)})
+    fetched = []
+
+    def main_market(year, month):
+        fetched.append((year, month))
+        return 900, 200
+
+    monkeypatch.setattr(lse, "main_market_year", main_market)
+    rows = lse.build_rows(2022, 2023)
+    old = [row for row in rows if row["year"] == 2022]
+    assert {row["metric"]: row["value"] for row in old} == {
+        "lse_companies_uk": 1619, "lse_companies_total": 1922,
+    }
+    assert all(row["source_accessed"] == "2026-10-16" for row in old)
+    assert all("/sites/default/files/reports/" in row["source_url"] for row in old)
+    assert fetched == [(2023, "December")]
+    assert all(row["source_accessed"] == lse.date.today().isoformat()
+               for row in rows if row["year"] == 2023)
+
+
+def test_lse_restored_2022_archive_is_downloaded_again(monkeypatch, lse_catalogue):
+    from markets_data import lse_factsheets as lse
+
+    monkeypatch.setattr(lse, "aim_history", lambda *args: {2022: (600, 100)})
+    fetched = []
+
+    def main_market(year, month):
+        fetched.append((year, month))
+        return 900, 200
+
+    monkeypatch.setattr(lse, "main_market_year", main_market)
+    rows = lse.build_rows(2022, 2022)
+    assert fetched == [(2022, "December")]
+    assert {row["metric"]: row["value"] for row in rows} == {
+        "lse_companies_uk": 1500, "lse_companies_total": 1800,
+    }
+    assert all(row["source_accessed"] == lse.date.today().isoformat() for row in rows)
 
 
 def test_lse_refresh_cannot_replace_a_newer_month_with_an_older_snapshot(monkeypatch, tmp_path):
@@ -217,7 +322,6 @@ def test_lse_refresh_cannot_replace_a_newer_month_with_an_older_snapshot(monkeyp
 
 def test_lse_discovery_crosses_new_year_when_december_is_not_published(monkeypatch):
     from datetime import date
-    import requests
     from markets_data import lse_factsheets as lse
 
     class Today(date):
@@ -225,19 +329,14 @@ def test_lse_discovery_crosses_new_year_when_december_is_not_published(monkeypat
         def today(cls):
             return cls(2027, 1, 15)
 
-    def download(url):
-        if "December" in url:
-            response = requests.Response()
-            response.status_code = 404
-            raise requests.HTTPError(response=response)
-        return b"workbook"
-
     monkeypatch.setattr(lse, "date", Today)
-    monkeypatch.setattr(lse, "_download", download)
+    monkeypatch.setattr(lse, "_factsheet_catalogue", lambda market: {
+        (2026, 11): "published-link",
+    })
     assert lse.latest_available_month() == "2026-11"
 
 
-def test_lse_bad_main_market_counts_do_not_become_zero(monkeypatch):
+def test_lse_bad_main_market_counts_do_not_become_zero(monkeypatch, lse_catalogue):
     import pytest
     from markets_data import lse_factsheets as lse
 
@@ -253,7 +352,7 @@ def test_lse_bad_main_market_counts_do_not_become_zero(monkeypatch):
             lse.main_market_year(2025)
 
 
-def test_lse_wrong_factsheet_month_is_rejected(monkeypatch):
+def test_lse_wrong_factsheet_month_is_rejected(monkeypatch, lse_catalogue):
     import pytest
     from markets_data import lse_factsheets as lse
 
@@ -264,7 +363,7 @@ def test_lse_wrong_factsheet_month_is_rejected(monkeypatch):
         lse.main_market_year(2026, "July")
 
 
-def test_lse_duplicate_and_missing_aim_counts_are_rejected(monkeypatch):
+def test_lse_duplicate_and_missing_aim_counts_are_rejected(monkeypatch, lse_catalogue):
     import pytest
     from markets_data import lse_factsheets as lse
 
