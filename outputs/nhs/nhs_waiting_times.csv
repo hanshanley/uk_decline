@@ -308,18 +308,21 @@ Northern Ireland,NIR,2025-03,2025-03-31,ae_4hr_pct,44.66416735826918,percent,Dep
 Northern Ireland,NIR,2025-04,2025-04-30,ae_4hr_pct,45.380049225423484,percent,Department of Health (NI)
 Northern Ireland,NIR,2025-05,2025-05-31,ae_4hr_pct,43.73089550549077,percent,Department of Health (NI)
 Northern Ireland,NIR,2025-06,2025-06-30,ae_4hr_pct,44.66346369718468,percent,Department of Health (NI)
-Northern Ireland,NIR,2025-07,2025-07-31,ae_4hr_pct,44.72306173135043,percent,Department of Health (NI)
-Northern Ireland,NIR,2025-08,2025-08-31,ae_4hr_pct,44.595304178231196,percent,Department of Health (NI)
-Northern Ireland,NIR,2025-09,2025-09-30,ae_4hr_pct,44.73245528406446,percent,Department of Health (NI)
+Northern Ireland,NIR,2025-07,2025-07-31,ae_4hr_pct,44.72239261508999,percent,Department of Health (NI)
+Northern Ireland,NIR,2025-08,2025-08-31,ae_4hr_pct,44.59597323491463,percent,Department of Health (NI)
+Northern Ireland,NIR,2025-09,2025-09-30,ae_4hr_pct,44.73162526657256,percent,Department of Health (NI)
 Northern Ireland,NIR,2025-10,2025-10-31,ae_4hr_pct,44.293351250292126,percent,Department of Health (NI)
 Northern Ireland,NIR,2025-11,2025-11-30,ae_4hr_pct,42.23150214074655,percent,Department of Health (NI)
-Northern Ireland,NIR,2025-12,2025-12-31,ae_4hr_pct,41.325867107296396,percent,Department of Health (NI)
-Northern Ireland,NIR,2026-01,2026-01-31,ae_4hr_pct,40.50441970615742,percent,Department of Health (NI)
+Northern Ireland,NIR,2025-12,2025-12-31,ae_4hr_pct,41.32523484593495,percent,Department of Health (NI)
+Northern Ireland,NIR,2026-01,2026-01-31,ae_4hr_pct,40.505030697057,percent,Department of Health (NI)
 Northern Ireland,NIR,2026-02,2026-02-28,ae_4hr_pct,41.01866508376204,percent,Department of Health (NI)
-Northern Ireland,NIR,2026-03,2026-03-31,ae_4hr_pct,41.67244821385589,percent,Department of Health (NI)
-Northern Ireland,NIR,2026-04,2026-04-30,ae_4hr_pct,41.917733036771715,percent,Department of Health (NI)
-Northern Ireland,NIR,2026-05,2026-05-31,ae_4hr_pct,42.33034250951415,percent,Department of Health (NI)
-Northern Ireland,NIR,2026-06,2026-06-30,ae_4hr_pct,42.809403088269185,percent,Department of Health (NI)
+Northern Ireland,NIR,2026-03,2026-03-31,ae_4hr_pct,41.67221238938053,percent,Department of Health (NI)
+Northern Ireland,NIR,2026-04,2026-04-30,ae_4hr_pct,41.91451559317627,percent,Department of Health (NI)
+Northern Ireland,NIR,2026-05,2026-05-31,ae_4hr_pct,42.32852737728144,percent,Department of Health (NI)
+Northern Ireland,NIR,2026-06,2026-06-30,ae_4hr_pct,42.80754825698646,percent,Department of Health (NI)
+Northern Ireland,NIR,2026-07,2026-07-31,ae_4hr_pct,43.73186424996846,percent,Department of Health (NI)
+Northern Ireland,NIR,2026-08,2026-08-31,ae_4hr_pct,41.428836837065724,percent,Department of Health (NI)
+Northern Ireland,NIR,2026-09,2026-09-30,ae_4hr_pct,41.6595272538307,percent,Department of Health (NI)
 Scotland,SCO,2007-07,2007-07-31,ae_4hr_pct,96.63490623109497,percent,Public Health Scotland
 Scotland,SCO,2007-08,2007-08-31,ae_4hr_pct,96.33861699141714,percent,Public Health Scotland
 Scotland,SCO,2007-09,2007-09-30,ae_4hr_pct,96.7225271784835,percent,Public Health Scotland
@@ -753,6 +756,7 @@ Wales,WAL,2026-05,2026-05-31,ae_4hr_pct,64.4,percent,StatsWales (Welsh Governmen
 Wales,WAL,2026-06,2026-06-30,ae_4hr_pct,63.0,percent,StatsWales (Welsh Government)
 Wales,WAL,2026-07,2026-07-31,ae_4hr_pct,64.1,percent,StatsWales (Welsh Government)
 Wales,WAL,2026-08,2026-08-31,ae_4hr_pct,63.8,percent,StatsWales (Welsh Government)
+Wales,WAL,2026-09,2026-09-30,ae_4hr_pct,63.9,percent,StatsWales (Welsh Government)
 England,ENG,2022-04,2022-04-30,cancer_62day_pct,69.04407614551799,percent,NHS England
 England,ENG,2022-05,2022-05-31,cancer_62day_pct,65.46968628833275,percent,NHS England
 England,ENG,2022-06,2022-06-30,cancer_62day_pct,64.05658591975777,percent,NHS England
@@ -1282,6 +1286,7 @@ Wales,WAL,2026-04,2026-04-30,cancer_62day_pct,56.7,percent,StatsWales (Welsh Gov
 Wales,WAL,2026-05,2026-05-31,cancer_62day_pct,57.1,percent,StatsWales (Welsh Government)
 Wales,WAL,2026-06,2026-06-30,cancer_62day_pct,59.2,percent,StatsWales (Welsh Government)
 Wales,WAL,2026-07,2026-07-31,cancer_62day_pct,60.1,percent,StatsWales (Welsh Government)
+Wales,WAL,2026-08,2026-08-31,cancer_62day_pct,59.9,percent,StatsWales (Welsh Government)
 England,ENG,2012-06,2012-06-30,diagnostics_6week_breach_pct,1.2743774684246167,percent,NHS England
 England,ENG,2012-07,2012-07-31,diagnostics_6week_breach_pct,0.9335082969287244,percent,NHS England
 England,ENG,2012-08,2012-08-31,diagnostics_6week_breach_pct,1.0550790550758613,percent,NHS England
@@ -1763,6 +1768,7 @@ Wales,WAL,2026-04,2026-04-30,diagnostics_6week_breach_pct,37.951055539993376,per
 Wales,WAL,2026-05,2026-05-31,diagnostics_6week_breach_pct,42.731670944024415,percent,StatsWales (Welsh Government)
 Wales,WAL,2026-06,2026-06-30,diagnostics_6week_breach_pct,45.13280957725402,percent,StatsWales (Welsh Government)
 Wales,WAL,2026-07,2026-07-31,diagnostics_6week_breach_pct,42.86472774467583,percent,StatsWales (Welsh Government)
+Wales,WAL,2026-08,2026-08-31,diagnostics_6week_breach_pct,44.772603083317655,percent,StatsWales (Welsh Government)
 Wales,WAL,2009-10,2009-10-31,diagnostics_8week_breach_pct,3.972297404871836,percent,StatsWales (Welsh Government)
 Wales,WAL,2009-11,2009-11-30,diagnostics_8week_breach_pct,4.254572923973453,percent,StatsWales (Welsh Government)
 Wales,WAL,2009-12,2009-12-31,diagnostics_8week_breach_pct,5.2032431547050315,percent,StatsWales (Welsh Government)
@@ -1965,6 +1971,7 @@ Wales,WAL,2026-04,2026-04-30,diagnostics_8week_breach_pct,24.41450847572725,perc
 Wales,WAL,2026-05,2026-05-31,diagnostics_8week_breach_pct,31.051016161476035,percent,StatsWales (Welsh Government)
 Wales,WAL,2026-06,2026-06-30,diagnostics_8week_breach_pct,32.521927089828324,percent,StatsWales (Welsh Government)
 Wales,WAL,2026-07,2026-07-31,diagnostics_8week_breach_pct,31.575886799767396,percent,StatsWales (Welsh Government)
+Wales,WAL,2026-08,2026-08-31,diagnostics_8week_breach_pct,34.23539634337517,percent,StatsWales (Welsh Government)
 England,ENG,2015-10,2015-10-31,rtt_median_wait_weeks,6.5,weeks,NHS England
 England,ENG,2015-11,2015-11-30,rtt_median_wait_weeks,6.5,weeks,NHS England
 England,ENG,2015-12,2015-12-31,rtt_median_wait_weeks,6.5,weeks,NHS England
@@ -2275,6 +2282,7 @@ Wales,WAL,2026-04,2026-04-30,rtt_median_wait_weeks,14.8,weeks,StatsWales (Welsh 
 Wales,WAL,2026-05,2026-05-31,rtt_median_wait_weeks,15.7,weeks,StatsWales (Welsh Government)
 Wales,WAL,2026-06,2026-06-30,rtt_median_wait_weeks,15.9,weeks,StatsWales (Welsh Government)
 Wales,WAL,2026-07,2026-07-31,rtt_median_wait_weeks,16.3,weeks,StatsWales (Welsh Government)
+Wales,WAL,2026-08,2026-08-31,rtt_median_wait_weeks,17.2,weeks,StatsWales (Welsh Government)
 England,ENG,2007-08,2007-08-31,rtt_waiting_list_per_1000,81.48861294172936,"waits per 1,000 residents","NHS England (RTT Overview time series) / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 England,ENG,2007-09,2007-09-30,rtt_waiting_list_per_1000,77.80198447705268,"waits per 1,000 residents","NHS England (RTT Overview time series) / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 England,ENG,2007-10,2007-10-31,rtt_waiting_list_per_1000,76.67841943338962,"waits per 1,000 residents","NHS England (RTT Overview time series) / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
@@ -3478,3 +3486,4 @@ Wales,WAL,2026-04,2026-04-30,rtt_waiting_list_total,680003.0,pathways / waits,St
 Wales,WAL,2026-05,2026-05-31,rtt_waiting_list_total,689721.0,pathways / waits,StatsWales (Welsh Government)
 Wales,WAL,2026-06,2026-06-30,rtt_waiting_list_total,698390.0,pathways / waits,StatsWales (Welsh Government)
 Wales,WAL,2026-07,2026-07-31,rtt_waiting_list_total,709687.0,pathways / waits,StatsWales (Welsh Government)
+Wales,WAL,2026-08,2026-08-31,rtt_waiting_list_total,714218.0,pathways / waits,StatsWales (Welsh Government)
