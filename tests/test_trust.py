@@ -55,7 +55,7 @@ def test_governance_missing_years_break_but_pooled_survey_periods_remain_explici
     captured = []
     monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
     for metric, years in (
-        ("wgi_government_effectiveness", (1996, 1998, 2000)),
+        ("wgi_rule_of_law", (1996, 1998, 2000)),
         ("trust_national_govt_pct", (2007, 2010, 2013)),
     ):
         rows = [metrics.make_row(iso3, countries.name_for_iso3(iso3), year, metric,
@@ -115,13 +115,13 @@ def test_governance_chart_keeps_plot_wide_and_isolated_eu_ranges_visible(monkeyp
 
     rows = [
         metrics.make_row(iso3, countries.name_for_iso3(iso3), year,
-                         "wgi_government_effectiveness", value, "World Bank WGI")
+                         "wgi_rule_of_law", value, "World Bank WGI")
         for year in (1996, 1998, 2000, 2002, 2003)
         for iso3, value in (("GBR", 1.7), ("USA", 1.8), ("FRA", 0.5), ("DEU", 1.5))
     ]
     captured = []
     monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
-    charts.chart_metric(pd.DataFrame(rows), "wgi_government_effectiveness", tmp_path)
+    charts.chart_metric(pd.DataFrame(rows), "wgi_rule_of_law", tmp_path)
     fig = captured[0]
     ax = fig.axes[0]
     assert ax.get_position().width > 0.85
@@ -141,6 +141,30 @@ def test_governance_chart_keeps_plot_wide_and_isolated_eu_ranges_visible(monkeyp
     uk = next(line for line in ax.lines if line.get_label() == "United Kingdom")
     assert np.isnan(uk.get_ydata()).sum() == 3
     assert np.allclose(uk.get_ydata()[~np.isnan(uk.get_ydata())], 1.7)
+
+
+def test_government_effectiveness_display_starts_in_2004_without_removing_source_history(monkeypatch, tmp_path):
+    import pandas as pd
+    from trust_data import charts
+
+    rows = [
+        metrics.make_row(iso3, countries.name_for_iso3(iso3), year,
+                         "wgi_government_effectiveness", year / 2000, "World Bank WGI")
+        for year in (1996, 1998, 2000, 2002, 2003, 2004, 2005)
+        for iso3 in ("GBR", "USA", "FRA")
+    ]
+    source = pd.DataFrame(rows)
+    original = source.copy(deep=True)
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    charts.chart_metric(source, "wgi_government_effectiveness", tmp_path)
+    for line in captured[0].axes[0].lines:
+        assert list(line.get_xdata()) == [2004, 2005]
+        assert list(line.get_ydata()) == [2004 / 2000, 2005 / 2000]
+    assert "Data: 2004\u20132005." in captured[0].texts[0].get_text()
+    pd.testing.assert_frame_equal(source, original)
+    assert charts.chart_metric(source[source["year"] < 2004],
+                               "wgi_government_effectiveness", tmp_path) is None
 
 
 def test_oecd_fetch_requests_sdmx_v2(monkeypatch) -> None:

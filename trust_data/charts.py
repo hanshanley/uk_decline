@@ -45,6 +45,10 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     if sub.empty:
         return None
     sub["year"] = sub["year"].astype(int)
+    if metric_id == "wgi_government_effectiveness":
+        sub = sub[sub["year"] >= 2004]
+        if sub.empty:
+            return None
     sub = sub.sort_values("year")
 
     fig, ax = plt.subplots(figsize=(10, 6.5))
@@ -111,6 +115,8 @@ def chart_metric(df, metric_id: str, out_dir: Path | str = CHART_DIR):
     caption += f"\nHigher values indicate {direction}."
     if meta.family == "survey":
         caption += "\nSurvey values are 2- or 3-year pooled averages, labelled by period end."
+    elif metric_id == "wgi_government_effectiveness":
+        caption += "\nDisplay starts in 2004; earlier observations remain in the source dataset."
     else:
         caption += "\nLines break at missing annual observations; isolated estimates are shown as points."
     if not eu.empty:
