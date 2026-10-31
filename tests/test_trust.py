@@ -107,6 +107,42 @@ def test_oecd_decoder() -> None:
     assert all(r["iso3"] == "GBR" and r["metric"] == "trust_national_govt_pct" for r in rows)
 
 
+def test_governance_chart_keeps_plot_wide_and_isolated_eu_ranges_visible(monkeypatch, tmp_path):
+    import numpy as np
+    import pandas as pd
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    from trust_data import charts
+
+    rows = [
+        metrics.make_row(iso3, countries.name_for_iso3(iso3), year,
+                         "wgi_government_effectiveness", value, "World Bank WGI")
+        for year in (1996, 1998, 2000, 2002, 2003)
+        for iso3, value in (("GBR", 1.7), ("USA", 1.8), ("FRA", 0.5), ("DEU", 1.5))
+    ]
+    captured = []
+    monkeypatch.setattr(charts, "save_chart", lambda fig, *a, **k: captured.append(fig))
+    charts.chart_metric(pd.DataFrame(rows), "wgi_government_effectiveness", tmp_path)
+    fig = captured[0]
+    ax = fig.axes[0]
+    assert ax.get_position().width > 0.85
+    assert ax.get_ylabel() == "Governance score"
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    legend = fig.legends[0].get_window_extent(renderer)
+    caption = fig.texts[0].get_window_extent(renderer)
+    xlabel = ax.xaxis.label.get_window_extent(renderer)
+    assert caption.y1 < legend.y0 < legend.y1 < xlabel.y0
+    assert 0 <= legend.x0 < legend.x1 <= fig.bbox.width
+    assert "Higher values indicate better governance." in fig.texts[0].get_text()
+    ranges = ax.collections[1].get_segments()
+    assert [segment[0, 0] for segment in ranges] == [1996, 1998, 2000]
+    assert all(np.allclose(segment[:, 1], [0.75, 1.25]) for segment in ranges)
+    uk = next(line for line in ax.lines if line.get_label() == "United Kingdom")
+    assert np.isnan(uk.get_ydata()).sum() == 3
+    assert np.allclose(uk.get_ydata()[~np.isnan(uk.get_ydata())], 1.7)
+
+
 def test_oecd_fetch_requests_sdmx_v2(monkeypatch) -> None:
     captured = {}
 
