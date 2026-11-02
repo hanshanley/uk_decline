@@ -2562,13 +2562,13 @@ Northern Ireland,NIR,2024-Q1,2024-03-31,rtt_waiting_list_per_1000,239.8551758301
 Northern Ireland,NIR,2025-Q1,2025-03-31,rtt_waiting_list_per_1000,274.3369531736953,"waits per 1,000 residents","Department of Health (NI) / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 Northern Ireland,NIR,2025-Q3,2025-09-30,rtt_waiting_list_per_1000,281.28918310390856,"waits per 1,000 residents","Department of Health (NI) / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 Northern Ireland,NIR,2025-Q4,2025-12-31,rtt_waiting_list_per_1000,273.3091826268404,"waits per 1,000 residents","Department of Health (NI) / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2012-10,2012-10-31,rtt_waiting_list_per_1000,46.555141102445276,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2012-11,2012-11-30,rtt_waiting_list_per_1000,48.421875588711806,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2012-12,2012-12-31,rtt_waiting_list_per_1000,47.98293206736747,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2013-01,2013-01-31,rtt_waiting_list_per_1000,47.45072223894071,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2013-02,2013-02-28,rtt_waiting_list_per_1000,48.10017303641288,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2012-10,2012-10-31,rtt_waiting_list_per_1000,46.555329490222675,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2012-11,2012-11-30,rtt_waiting_list_per_1000,48.42244075204401,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2012-12,2012-12-31,rtt_waiting_list_per_1000,47.98312045514487,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2013-01,2013-01-31,rtt_waiting_list_per_1000,47.4509103219982,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2013-02,2013-02-28,rtt_waiting_list_per_1000,48.10036111947036,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 Scotland,SCO,2013-03,2013-03-31,rtt_waiting_list_per_1000,49.54446283478784,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2013-04,2013-04-30,rtt_waiting_list_per_1000,51.50278362925068,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2013-04,2013-04-30,rtt_waiting_list_per_1000,51.5025955461932,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 Scotland,SCO,2013-05,2013-05-31,rtt_waiting_list_per_1000,53.46016400842612,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 Scotland,SCO,2013-06,2013-06-30,rtt_waiting_list_per_1000,54.11676196208246,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 Scotland,SCO,2013-07,2013-07-31,rtt_waiting_list_per_1000,55.83001053265122,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
@@ -2578,128 +2578,128 @@ Scotland,SCO,2013-10,2013-10-31,rtt_waiting_list_per_1000,56.43206439963888,"wai
 Scotland,SCO,2013-11,2013-11-30,rtt_waiting_list_per_1000,55.71245862172736,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 Scotland,SCO,2013-12,2013-12-31,rtt_waiting_list_per_1000,55.077866385795964,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 Scotland,SCO,2014-01,2014-01-31,rtt_waiting_list_per_1000,54.42360355628915,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2014-02,2014-02-28,rtt_waiting_list_per_1000,54.607607757812204,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2014-03,2014-03-31,rtt_waiting_list_per_1000,55.438721536557004,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2014-04,2014-04-30,rtt_waiting_list_per_1000,56.60051768766178,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2014-05,2014-05-31,rtt_waiting_list_per_1000,57.95850995986044,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2014-06,2014-06-30,rtt_waiting_list_per_1000,58.148328769178825,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2014-07,2014-07-31,rtt_waiting_list_per_1000,59.79348763926924,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2014-08,2014-08-31,rtt_waiting_list_per_1000,59.146002926060696,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2014-09,2014-09-30,rtt_waiting_list_per_1000,58.86240012004352,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2014-10,2014-10-31,rtt_waiting_list_per_1000,60.32749371647222,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2014-11,2014-11-30,rtt_waiting_list_per_1000,59.346888246989536,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2014-12,2014-12-31,rtt_waiting_list_per_1000,58.52233934801365,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2015-01,2015-01-31,rtt_waiting_list_per_1000,57.25675625163533,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2015-02,2015-02-28,rtt_waiting_list_per_1000,57.78342615781408,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2015-03,2015-03-31,rtt_waiting_list_per_1000,58.47624565469293,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2015-04,2015-04-30,rtt_waiting_list_per_1000,60.2691286958472,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2015-05,2015-05-31,rtt_waiting_list_per_1000,61.481889881508614,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2015-06,2015-06-30,rtt_waiting_list_per_1000,62.587747168541846,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2015-07,2015-07-31,rtt_waiting_list_per_1000,65.07475797106866,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2015-08,2015-08-31,rtt_waiting_list_per_1000,64.63387283669121,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2015-09,2015-09-30,rtt_waiting_list_per_1000,63.89694613688185,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2015-10,2015-10-31,rtt_waiting_list_per_1000,64.18700706462826,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2015-11,2015-11-30,rtt_waiting_list_per_1000,61.97211527679139,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2015-12,2015-12-31,rtt_waiting_list_per_1000,60.82943968900685,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2016-01,2016-01-31,rtt_waiting_list_per_1000,59.934680661009374,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2016-02,2016-02-29,rtt_waiting_list_per_1000,60.408850677385736,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2016-03,2016-03-31,rtt_waiting_list_per_1000,60.69599523596843,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2016-04,2016-04-30,rtt_waiting_list_per_1000,63.68598332588954,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2016-05,2016-05-31,rtt_waiting_list_per_1000,64.90899955337204,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2016-06,2016-06-30,rtt_waiting_list_per_1000,66.35272443054934,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2016-07,2016-07-31,rtt_waiting_list_per_1000,68.62140836683044,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2016-08,2016-08-31,rtt_waiting_list_per_1000,68.51458984665773,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2016-09,2016-09-30,rtt_waiting_list_per_1000,69.15364001786511,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2016-10,2016-10-31,rtt_waiting_list_per_1000,69.58351942831621,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2016-11,2016-11-30,rtt_waiting_list_per_1000,68.37967098407027,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2016-12,2016-12-31,rtt_waiting_list_per_1000,67.66990471936876,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2017-01,2017-01-31,rtt_waiting_list_per_1000,66.54559964366578,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2017-02,2017-02-28,rtt_waiting_list_per_1000,66.57028321146208,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2017-03,2017-03-31,rtt_waiting_list_per_1000,67.17233955680932,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2019-01,2019-01-31,rtt_waiting_list_per_1000,72.21244825547014,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2019-02,2019-02-28,rtt_waiting_list_per_1000,72.0344840331165,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2019-03,2019-03-31,rtt_waiting_list_per_1000,71.63919278533412,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2019-04,2019-04-30,rtt_waiting_list_per_1000,72.46747486694264,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2019-05,2019-05-31,rtt_waiting_list_per_1000,73.70989798935541,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2019-06,2019-06-30,rtt_waiting_list_per_1000,73.81246303962152,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2019-07,2019-07-31,rtt_waiting_list_per_1000,75.051744529864,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2019-08,2019-08-31,rtt_waiting_list_per_1000,74.93531933767002,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2019-09,2019-09-30,rtt_waiting_list_per_1000,73.22072738024838,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2019-10,2019-10-31,rtt_waiting_list_per_1000,71.40449438202246,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2019-11,2019-11-30,rtt_waiting_list_per_1000,68.67071998817268,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2019-12,2019-12-31,rtt_waiting_list_per_1000,66.81604819633354,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2020-01,2020-01-31,rtt_waiting_list_per_1000,65.60169350514893,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2020-02,2020-02-29,rtt_waiting_list_per_1000,64.38407069829356,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2020-03,2020-03-31,rtt_waiting_list_per_1000,61.96084231544306,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2020-04,2020-04-30,rtt_waiting_list_per_1000,62.712936086819866,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2020-05,2020-05-31,rtt_waiting_list_per_1000,63.57022684834254,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2020-06,2020-06-30,rtt_waiting_list_per_1000,64.74791547264694,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2020-07,2020-07-31,rtt_waiting_list_per_1000,68.60581633973636,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2020-08,2020-08-31,rtt_waiting_list_per_1000,71.92941263473163,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2020-09,2020-09-30,rtt_waiting_list_per_1000,74.54953872321545,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2020-10,2020-10-31,rtt_waiting_list_per_1000,77.20922923330068,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2020-11,2020-11-30,rtt_waiting_list_per_1000,77.2844755865333,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2020-12,2020-12-31,rtt_waiting_list_per_1000,78.3050158072806,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2021-01,2021-01-31,rtt_waiting_list_per_1000,78.02102385043138,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2021-02,2021-02-28,rtt_waiting_list_per_1000,79.26194830867003,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2021-03,2021-03-31,rtt_waiting_list_per_1000,81.97805243030538,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2021-04,2021-04-30,rtt_waiting_list_per_1000,85.66295331522844,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2021-05,2021-05-31,rtt_waiting_list_per_1000,88.1473886456428,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2021-06,2021-06-30,rtt_waiting_list_per_1000,90.2723124388036,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2021-07,2021-07-31,rtt_waiting_list_per_1000,93.47078275970368,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2021-08,2021-08-31,rtt_waiting_list_per_1000,94.71909697204825,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2021-09,2021-09-30,rtt_waiting_list_per_1000,96.22826950433225,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2021-10,2021-10-31,rtt_waiting_list_per_1000,98.1599512276229,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2021-11,2021-11-30,rtt_waiting_list_per_1000,97.75259103253339,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2021-12,2021-12-31,rtt_waiting_list_per_1000,98.13002272349388,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2022-01,2022-01-31,rtt_waiting_list_per_1000,98.38461538461539,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2022-02,2022-02-28,rtt_waiting_list_per_1000,99.50743528547824,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2022-03,2022-03-31,rtt_waiting_list_per_1000,101.00055076188728,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2022-04,2022-04-30,rtt_waiting_list_per_1000,103.71085000917935,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2022-05,2022-05-31,rtt_waiting_list_per_1000,105.69249127960344,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2022-06,2022-06-30,rtt_waiting_list_per_1000,107.8652469249128,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2022-07,2022-07-31,rtt_waiting_list_per_1000,110.61630255186341,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2022-08,2022-08-31,rtt_waiting_list_per_1000,111.97191114374886,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2022-09,2022-09-30,rtt_waiting_list_per_1000,113.58821369561227,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2022-10,2022-10-31,rtt_waiting_list_per_1000,114.43840646227281,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2022-11,2022-11-30,rtt_waiting_list_per_1000,114.39636497154397,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2022-12,2022-12-31,rtt_waiting_list_per_1000,114.18046631173124,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2023-01,2023-01-31,rtt_waiting_list_per_1000,112.53492506985013,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2023-02,2023-02-28,rtt_waiting_list_per_1000,112.93533872782031,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2023-03,2023-03-31,rtt_waiting_list_per_1000,114.95028847200551,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2023-04,2023-04-30,rtt_waiting_list_per_1000,117.48394353931566,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2023-05,2023-05-31,rtt_waiting_list_per_1000,119.5678362785297,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2023-06,2023-06-30,rtt_waiting_list_per_1000,122.04343408686817,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2023-07,2023-07-31,rtt_waiting_list_per_1000,124.33978010813163,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2023-08,2023-08-31,rtt_waiting_list_per_1000,124.87118545665662,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2023-09,2023-09-30,rtt_waiting_list_per_1000,126.02725062592981,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2023-10,2023-10-31,rtt_waiting_list_per_1000,126.01654631880693,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2023-11,2023-11-30,rtt_waiting_list_per_1000,125.16002032004064,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2023-12,2023-12-31,rtt_waiting_list_per_1000,124.92343698973113,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2024-01,2024-01-31,rtt_waiting_list_per_1000,123.86268107445024,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2024-02,2024-02-29,rtt_waiting_list_per_1000,124.5808453448307,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2024-03,2024-03-31,rtt_waiting_list_per_1000,125.76028719354898,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2024-04,2024-04-30,rtt_waiting_list_per_1000,127.64508505763713,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2024-05,2024-05-31,rtt_waiting_list_per_1000,128.95297025237673,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2024-06,2024-06-30,rtt_waiting_list_per_1000,129.84828531741022,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2024-07,2024-07-31,rtt_waiting_list_per_1000,131.725145671351,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2024-08,2024-08-31,rtt_waiting_list_per_1000,132.34174589143652,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2024-09,2024-09-30,rtt_waiting_list_per_1000,131.58930600905597,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2024-10,2024-10-31,rtt_waiting_list_per_1000,131.6585788248877,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2024-11,2024-11-30,rtt_waiting_list_per_1000,131.12117330831816,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2024-12,2024-12-31,rtt_waiting_list_per_1000,130.6981400970541,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2025-01,2025-01-31,rtt_waiting_list_per_1000,130.48165178973943,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2025-02,2025-02-28,rtt_waiting_list_per_1000,130.03119646560273,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2025-03,2025-03-31,rtt_waiting_list_per_1000,129.74014967090434,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2025-04,2025-04-30,rtt_waiting_list_per_1000,130.80443602921287,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2025-05,2025-05-31,rtt_waiting_list_per_1000,131.62185555856098,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2025-06,2025-06-30,rtt_waiting_list_per_1000,131.40870976467406,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2025-07,2025-07-31,rtt_waiting_list_per_1000,132.1940311964656,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2025-08,2025-08-31,rtt_waiting_list_per_1000,131.2520061310973,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2025-09,2025-09-30,rtt_waiting_list_per_1000,129.5473807591741,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2025-10,2025-10-31,rtt_waiting_list_per_1000,128.03606527815344,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2025-11,2025-11-30,rtt_waiting_list_per_1000,124.72112523667839,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
-Scotland,SCO,2025-12,2025-12-31,rtt_waiting_list_per_1000,122.3373906771256,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2014-02,2014-02-28,rtt_waiting_list_per_1000,54.607795325805604,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2014-03,2014-03-31,rtt_waiting_list_per_1000,55.4390966725438,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2014-04,2014-04-30,rtt_waiting_list_per_1000,56.60089282364857,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2014-05,2014-05-31,rtt_waiting_list_per_1000,57.95888509584724,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2014-06,2014-06-30,rtt_waiting_list_per_1000,58.148516337172225,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2014-07,2014-07-31,rtt_waiting_list_per_1000,59.79367520726264,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2014-08,2014-08-31,rtt_waiting_list_per_1000,59.146190494054096,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2014-09,2014-09-30,rtt_waiting_list_per_1000,58.86277525603031,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2014-10,2014-10-31,rtt_waiting_list_per_1000,60.32786885245902,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2014-11,2014-11-30,rtt_waiting_list_per_1000,59.34707581498294,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2014-12,2014-12-31,rtt_waiting_list_per_1000,58.522714484000446,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2015-01,2015-01-31,rtt_waiting_list_per_1000,57.25731693641835,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2015-02,2015-02-28,rtt_waiting_list_per_1000,57.783986842597095,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2015-03,2015-03-31,rtt_waiting_list_per_1000,58.47811460396965,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2015-04,2015-04-30,rtt_waiting_list_per_1000,60.27211901468994,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2015-05,2015-05-31,rtt_waiting_list_per_1000,61.48899188876014,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2015-06,2015-06-30,rtt_waiting_list_per_1000,62.6032594475386,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2015-07,2015-07-31,rtt_waiting_list_per_1000,65.09363435876351,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2015-08,2015-08-31,rtt_waiting_list_per_1000,64.64882443090494,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2015-09,2015-09-30,rtt_waiting_list_per_1000,63.90591709341009,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2015-10,2015-10-31,rtt_waiting_list_per_1000,64.18906290883265,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2015-11,2015-11-30,rtt_waiting_list_per_1000,61.973423541285094,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2015-12,2015-12-31,rtt_waiting_list_per_1000,60.83018726871753,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2016-01,2016-01-31,rtt_waiting_list_per_1000,59.93523894595801,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2016-02,2016-02-29,rtt_waiting_list_per_1000,60.409222867351495,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2016-03,2016-03-31,rtt_waiting_list_per_1000,60.6963674259342,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2016-04,2016-04-30,rtt_waiting_list_per_1000,63.68654161083817,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2016-05,2016-05-31,rtt_waiting_list_per_1000,64.90974393330355,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2016-06,2016-06-30,rtt_waiting_list_per_1000,66.353282715498,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2016-07,2016-07-31,rtt_waiting_list_per_1000,68.6225249367277,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2016-08,2016-08-31,rtt_waiting_list_per_1000,68.51552032157213,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2016-09,2016-09-30,rtt_waiting_list_per_1000,69.15419830281375,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2016-10,2016-10-31,rtt_waiting_list_per_1000,69.58407771326485,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2016-11,2016-11-30,rtt_waiting_list_per_1000,68.38022926901891,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2016-12,2016-12-31,rtt_waiting_list_per_1000,67.67064909930029,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2017-01,2017-01-31,rtt_waiting_list_per_1000,66.54634200660703,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2017-02,2017-02-28,rtt_waiting_list_per_1000,66.57083998366801,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2017-03,2017-03-31,rtt_waiting_list_per_1000,67.17326751048587,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2019-01,2019-01-31,rtt_waiting_list_per_1000,72.21374186871674,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2019-02,2019-02-28,rtt_waiting_list_per_1000,72.0357776463631,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2019-03,2019-03-31,rtt_waiting_list_per_1000,71.64048639858073,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2019-04,2019-04-30,rtt_waiting_list_per_1000,72.46876848018924,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2019-05,2019-05-31,rtt_waiting_list_per_1000,73.71137640449437,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2019-06,2019-06-30,rtt_waiting_list_per_1000,73.81375665286812,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2019-07,2019-07-31,rtt_waiting_list_per_1000,75.05322294500296,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2019-08,2019-08-31,rtt_waiting_list_per_1000,74.93661295091663,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2019-09,2019-09-30,rtt_waiting_list_per_1000,73.2218361916026,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2019-10,2019-10-31,rtt_waiting_list_per_1000,71.4056031933767,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2019-11,2019-11-30,rtt_waiting_list_per_1000,68.67201360141928,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2019-12,2019-12-31,rtt_waiting_list_per_1000,66.816787403903,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2020-01,2020-01-31,rtt_waiting_list_per_1000,65.60280278799756,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2020-02,2020-02-29,rtt_waiting_list_per_1000,64.38499510066742,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2020-03,2020-03-31,rtt_waiting_list_per_1000,61.961766717816936,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2020-04,2020-04-30,rtt_waiting_list_per_1000,62.71404536966851,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2020-05,2020-05-31,rtt_waiting_list_per_1000,63.57115125071641,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2020-06,2020-06-30,rtt_waiting_list_per_1000,64.74865499454603,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2020-07,2020-07-31,rtt_waiting_list_per_1000,68.606925622585,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2020-08,2020-08-31,rtt_waiting_list_per_1000,71.9305219175803,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2020-09,2020-09-30,rtt_waiting_list_per_1000,74.55064800606408,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2020-10,2020-10-31,rtt_waiting_list_per_1000,77.21070827709886,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2020-11,2020-11-30,rtt_waiting_list_per_1000,77.28613951080627,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2020-12,2020-12-31,rtt_waiting_list_per_1000,78.306309970604,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2021-01,2021-01-31,rtt_waiting_list_per_1000,78.02287128895786,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2021-02,2021-02-28,rtt_waiting_list_per_1000,79.26379574719651,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2021-03,2021-03-31,rtt_waiting_list_per_1000,81.97971512497922,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2021-04,2021-04-30,rtt_waiting_list_per_1000,85.66461600990228,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2021-05,2021-05-31,rtt_waiting_list_per_1000,88.1484971087587,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2021-06,2021-06-30,rtt_waiting_list_per_1000,90.27379038962478,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2021-07,2021-07-31,rtt_waiting_list_per_1000,93.47226071052486,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2021-08,2021-08-31,rtt_waiting_list_per_1000,94.72020543516415,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2021-09,2021-09-30,rtt_waiting_list_per_1000,96.22919322359547,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2021-10,2021-10-31,rtt_waiting_list_per_1000,98.16124443459144,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2021-11,2021-11-30,rtt_waiting_list_per_1000,97.75369949564929,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2021-12,2021-12-31,rtt_waiting_list_per_1000,98.1316854181677,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2022-01,2022-01-31,rtt_waiting_list_per_1000,98.38645125757297,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2022-02,2022-02-28,rtt_waiting_list_per_1000,99.50908757114007,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2022-03,2022-03-31,rtt_waiting_list_per_1000,101.00220304754912,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2022-04,2022-04-30,rtt_waiting_list_per_1000,103.71213512024968,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2022-05,2022-05-31,rtt_waiting_list_per_1000,105.69395997796953,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2022-06,2022-06-30,rtt_waiting_list_per_1000,107.86689921057463,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2022-07,2022-07-31,rtt_waiting_list_per_1000,110.61795483752525,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2022-08,2022-08-31,rtt_waiting_list_per_1000,111.97466495318524,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2022-09,2022-09-30,rtt_waiting_list_per_1000,113.59188544152744,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2022-10,2022-10-31,rtt_waiting_list_per_1000,114.442078208188,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2022-11,2022-11-30,rtt_waiting_list_per_1000,114.40040389205066,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2022-12,2022-12-31,rtt_waiting_list_per_1000,114.18505599412521,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2023-01,2023-01-31,rtt_waiting_list_per_1000,112.54163794041874,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2023-02,2023-02-28,rtt_waiting_list_per_1000,112.94459160346892,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2023-03,2023-03-31,rtt_waiting_list_per_1000,114.96099277912842,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2023-04,2023-04-30,rtt_waiting_list_per_1000,117.49682499364998,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2023-05,2023-05-31,rtt_waiting_list_per_1000,119.58343916687834,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2023-06,2023-06-30,rtt_waiting_list_per_1000,122.06393555644254,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2023-07,2023-07-31,rtt_waiting_list_per_1000,124.36245872491746,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2023-08,2023-08-31,rtt_waiting_list_per_1000,124.8956783627853,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2023-09,2023-09-30,rtt_waiting_list_per_1000,126.05246924779564,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2023-10,2023-10-31,rtt_waiting_list_per_1000,126.04285351427846,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2023-11,2023-11-30,rtt_waiting_list_per_1000,125.18777894698646,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2023-12,2023-12-31,rtt_waiting_list_per_1000,124.9517399034798,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2024-01,2024-01-31,rtt_waiting_list_per_1000,123.89208594158714,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2024-02,2024-02-29,rtt_waiting_list_per_1000,124.61223458950445,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2024-03,2024-03-31,rtt_waiting_list_per_1000,125.79348041780166,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2024-04,2024-04-30,rtt_waiting_list_per_1000,127.68188624104776,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2024-05,2024-05-31,rtt_waiting_list_per_1000,128.99428138473473,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2024-06,2024-06-30,rtt_waiting_list_per_1000,129.89284361301029,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2024-07,2024-07-31,rtt_waiting_list_per_1000,131.77637869139323,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2024-08,2024-08-31,rtt_waiting_list_per_1000,132.35509534032076,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2024-09,2024-09-30,rtt_waiting_list_per_1000,131.60337704977178,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2024-10,2024-10-31,rtt_waiting_list_per_1000,131.67355185539301,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2024-11,2024-11-30,rtt_waiting_list_per_1000,131.13506395107606,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2024-12,2024-12-31,rtt_waiting_list_per_1000,130.7134739234752,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2025-01,2025-01-31,rtt_waiting_list_per_1000,130.49806149129924,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2025-02,2025-02-28,rtt_waiting_list_per_1000,130.0474258407718,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2025-03,2025-03-31,rtt_waiting_list_per_1000,129.7601659002795,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2025-04,2025-04-30,rtt_waiting_list_per_1000,130.8269768280588,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2025-05,2025-05-31,rtt_waiting_list_per_1000,131.64764223244072,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2025-06,2025-06-30,rtt_waiting_list_per_1000,131.43756198719683,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2025-07,2025-07-31,rtt_waiting_list_per_1000,132.2328013704806,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2025-08,2025-08-31,rtt_waiting_list_per_1000,131.31115318726896,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2025-09,2025-09-30,rtt_waiting_list_per_1000,129.62041294743486,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2025-10,2025-10-31,rtt_waiting_list_per_1000,128.12027770264177,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2025-11,2025-11-30,rtt_waiting_list_per_1000,124.79668199440988,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
+Scotland,SCO,2025-12,2025-12-31,rtt_waiting_list_per_1000,122.4178162474078,"waits per 1,000 residents","Public Health Scotland / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 Wales,WAL,2011-09,2011-09-30,rtt_waiting_list_per_1000,128.09986950666467,"waits per 1,000 residents","StatsWales (Welsh Government) / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 Wales,WAL,2011-10,2011-10-31,rtt_waiting_list_per_1000,127.22839075410003,"waits per 1,000 residents","StatsWales (Welsh Government) / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
 Wales,WAL,2011-11,2011-11-30,rtt_waiting_list_per_1000,126.3079525210542,"waits per 1,000 residents","StatsWales (Welsh Government) / ONS/NRS/NISRA mid-year population estimates (via Nomis, NM_2002_1)"
@@ -3161,13 +3161,13 @@ Northern Ireland,NIR,2025-Q3,2025-09-30,rtt_waiting_list_total,542451.0,pathways
 Northern Ireland,NIR,2025-Q4,2025-12-31,rtt_waiting_list_total,527062.0,pathways / waits,Department of Health (NI)
 Northern Ireland,NIR,2026-Q1,2026-03-31,rtt_waiting_list_total,510680.0,pathways / waits,Department of Health (NI)
 Northern Ireland,NIR,2026-Q2,2026-06-30,rtt_waiting_list_total,504537.0,pathways / waits,Department of Health (NI)
-Scotland,SCO,2012-10,2012-10-31,rtt_waiting_list_total,247124.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2012-11,2012-11-30,rtt_waiting_list_total,257033.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2012-12,2012-12-31,rtt_waiting_list_total,254703.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2013-01,2013-01-31,rtt_waiting_list_total,252286.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2013-02,2013-02-28,rtt_waiting_list_total,255739.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2012-10,2012-10-31,rtt_waiting_list_total,247125.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2012-11,2012-11-30,rtt_waiting_list_total,257036.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2012-12,2012-12-31,rtt_waiting_list_total,254704.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2013-01,2013-01-31,rtt_waiting_list_total,252287.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2013-02,2013-02-28,rtt_waiting_list_total,255740.0,pathways / waits,Public Health Scotland
 Scotland,SCO,2013-03,2013-03-31,rtt_waiting_list_total,263418.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2013-04,2013-04-30,rtt_waiting_list_total,273830.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2013-04,2013-04-30,rtt_waiting_list_total,273829.0,pathways / waits,Public Health Scotland
 Scotland,SCO,2013-05,2013-05-31,rtt_waiting_list_total,284237.0,pathways / waits,Public Health Scotland
 Scotland,SCO,2013-06,2013-06-30,rtt_waiting_list_total,287728.0,pathways / waits,Public Health Scotland
 Scotland,SCO,2013-07,2013-07-31,rtt_waiting_list_total,296837.0,pathways / waits,Public Health Scotland
@@ -3177,136 +3177,137 @@ Scotland,SCO,2013-10,2013-10-31,rtt_waiting_list_total,300038.0,pathways / waits
 Scotland,SCO,2013-11,2013-11-30,rtt_waiting_list_total,296212.0,pathways / waits,Public Health Scotland
 Scotland,SCO,2013-12,2013-12-31,rtt_waiting_list_total,292838.0,pathways / waits,Public Health Scotland
 Scotland,SCO,2014-01,2014-01-31,rtt_waiting_list_total,290154.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2014-02,2014-02-28,rtt_waiting_list_total,291135.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2014-03,2014-03-31,rtt_waiting_list_total,295566.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2014-04,2014-04-30,rtt_waiting_list_total,301760.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2014-05,2014-05-31,rtt_waiting_list_total,309000.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2014-06,2014-06-30,rtt_waiting_list_total,310012.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2014-07,2014-07-31,rtt_waiting_list_total,318783.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2014-08,2014-08-31,rtt_waiting_list_total,315331.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2014-09,2014-09-30,rtt_waiting_list_total,313819.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2014-10,2014-10-31,rtt_waiting_list_total,321630.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2014-11,2014-11-30,rtt_waiting_list_total,316402.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2014-12,2014-12-31,rtt_waiting_list_total,312006.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2015-01,2015-01-31,rtt_waiting_list_total,306358.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2015-02,2015-02-28,rtt_waiting_list_total,309176.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2015-03,2015-03-31,rtt_waiting_list_total,312883.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2015-04,2015-04-30,rtt_waiting_list_total,322476.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2015-05,2015-05-31,rtt_waiting_list_total,328965.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2015-06,2015-06-30,rtt_waiting_list_total,334882.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2015-07,2015-07-31,rtt_waiting_list_total,348189.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2015-08,2015-08-31,rtt_waiting_list_total,345830.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2015-09,2015-09-30,rtt_waiting_list_total,341887.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2015-10,2015-10-31,rtt_waiting_list_total,343439.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2015-11,2015-11-30,rtt_waiting_list_total,331588.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2015-12,2015-12-31,rtt_waiting_list_total,325474.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2016-01,2016-01-31,rtt_waiting_list_total,322065.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2016-02,2016-02-29,rtt_waiting_list_total,324613.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2016-03,2016-03-31,rtt_waiting_list_total,326156.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2016-04,2016-04-30,rtt_waiting_list_total,342223.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2016-05,2016-05-31,rtt_waiting_list_total,348795.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2016-06,2016-06-30,rtt_waiting_list_total,356553.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2016-07,2016-07-31,rtt_waiting_list_total,368744.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2016-08,2016-08-31,rtt_waiting_list_total,368170.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2016-09,2016-09-30,rtt_waiting_list_total,371604.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2016-10,2016-10-31,rtt_waiting_list_total,373914.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2016-11,2016-11-30,rtt_waiting_list_total,367445.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2016-12,2016-12-31,rtt_waiting_list_total,363631.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2017-01,2017-01-31,rtt_waiting_list_total,358561.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2017-02,2017-02-28,rtt_waiting_list_total,358694.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2017-03,2017-03-31,rtt_waiting_list_total,361938.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2019-01,2019-01-31,rtt_waiting_list_total,390756.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2019-02,2019-02-28,rtt_waiting_list_total,389793.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2019-03,2019-03-31,rtt_waiting_list_total,387654.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2019-04,2019-04-30,rtt_waiting_list_total,392136.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2019-05,2019-05-31,rtt_waiting_list_total,398859.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2019-06,2019-06-30,rtt_waiting_list_total,399414.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2019-07,2019-07-31,rtt_waiting_list_total,406120.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2019-08,2019-08-31,rtt_waiting_list_total,405490.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2019-09,2019-09-30,rtt_waiting_list_total,396212.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2019-10,2019-10-31,rtt_waiting_list_total,386384.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2019-11,2019-11-30,rtt_waiting_list_total,371591.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2019-12,2019-12-31,rtt_waiting_list_total,361555.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2020-01,2020-01-31,rtt_waiting_list_total,354833.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2020-02,2020-02-29,rtt_waiting_list_total,348247.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2020-03,2020-03-31,rtt_waiting_list_total,335140.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2020-04,2020-04-30,rtt_waiting_list_total,339208.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2020-05,2020-05-31,rtt_waiting_list_total,343845.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2020-06,2020-06-30,rtt_waiting_list_total,350215.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2020-07,2020-07-31,rtt_waiting_list_total,371082.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2020-08,2020-08-31,rtt_waiting_list_total,389059.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2020-09,2020-09-30,rtt_waiting_list_total,403231.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2020-10,2020-10-31,rtt_waiting_list_total,417617.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2020-11,2020-11-30,rtt_waiting_list_total,418024.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2020-12,2020-12-31,rtt_waiting_list_total,423544.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2021-01,2021-01-31,rtt_waiting_list_total,422320.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2021-02,2021-02-28,rtt_waiting_list_total,429037.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2021-03,2021-03-31,rtt_waiting_list_total,443739.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2021-04,2021-04-30,rtt_waiting_list_total,463685.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2021-05,2021-05-31,rtt_waiting_list_total,477133.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2021-06,2021-06-30,rtt_waiting_list_total,488635.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2021-07,2021-07-31,rtt_waiting_list_total,505948.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2021-08,2021-08-31,rtt_waiting_list_total,512705.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2021-09,2021-09-30,rtt_waiting_list_total,520874.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2021-10,2021-10-31,rtt_waiting_list_total,531330.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2021-11,2021-11-30,rtt_waiting_list_total,529125.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2021-12,2021-12-31,rtt_waiting_list_total,531168.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2022-01,2022-01-31,rtt_waiting_list_total,535901.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2022-02,2022-02-28,rtt_waiting_list_total,542017.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2022-03,2022-03-31,rtt_waiting_list_total,550150.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2022-04,2022-04-30,rtt_waiting_list_total,564913.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2022-05,2022-05-31,rtt_waiting_list_total,575707.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2022-06,2022-06-30,rtt_waiting_list_total,587542.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2022-07,2022-07-31,rtt_waiting_list_total,602527.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2022-08,2022-08-31,rtt_waiting_list_total,609911.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2022-09,2022-09-30,rtt_waiting_list_total,618715.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2022-10,2022-10-31,rtt_waiting_list_total,623346.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2022-11,2022-11-30,rtt_waiting_list_total,623117.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2022-12,2022-12-31,rtt_waiting_list_total,621941.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2023-01,2023-01-31,rtt_waiting_list_total,620270.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2023-02,2023-02-28,rtt_waiting_list_total,622477.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2023-03,2023-03-31,rtt_waiting_list_total,633583.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2023-04,2023-04-30,rtt_waiting_list_total,647548.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2023-05,2023-05-31,rtt_waiting_list_total,659034.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2023-06,2023-06-30,rtt_waiting_list_total,672679.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2023-07,2023-07-31,rtt_waiting_list_total,685336.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2023-08,2023-08-31,rtt_waiting_list_total,688265.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2023-09,2023-09-30,rtt_waiting_list_total,694637.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2023-10,2023-10-31,rtt_waiting_list_total,694578.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2023-11,2023-11-30,rtt_waiting_list_total,689857.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2023-12,2023-12-31,rtt_waiting_list_total,688553.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2024-01,2024-01-31,rtt_waiting_list_total,686608.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2024-02,2024-02-29,rtt_waiting_list_total,690589.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2024-03,2024-03-31,rtt_waiting_list_total,697127.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2024-04,2024-04-30,rtt_waiting_list_total,707575.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2024-05,2024-05-31,rtt_waiting_list_total,714825.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2024-06,2024-06-30,rtt_waiting_list_total,719788.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2024-07,2024-07-31,rtt_waiting_list_total,730192.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2024-08,2024-08-31,rtt_waiting_list_total,733610.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2024-09,2024-09-30,rtt_waiting_list_total,729439.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2024-10,2024-10-31,rtt_waiting_list_total,729823.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2024-11,2024-11-30,rtt_waiting_list_total,726844.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2024-12,2024-12-31,rtt_waiting_list_total,724499.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2025-01,2025-01-31,rtt_waiting_list_total,723586.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2025-02,2025-02-28,rtt_waiting_list_total,721088.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2025-03,2025-03-31,rtt_waiting_list_total,719474.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2025-04,2025-04-30,rtt_waiting_list_total,725376.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2025-05,2025-05-31,rtt_waiting_list_total,729909.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2025-06,2025-06-30,rtt_waiting_list_total,728727.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2025-07,2025-07-31,rtt_waiting_list_total,733082.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2025-08,2025-08-31,rtt_waiting_list_total,727858.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2025-09,2025-09-30,rtt_waiting_list_total,718405.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2025-10,2025-10-31,rtt_waiting_list_total,710024.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2025-11,2025-11-30,rtt_waiting_list_total,691641.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2025-12,2025-12-31,rtt_waiting_list_total,678422.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2026-01,2026-01-31,rtt_waiting_list_total,666265.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2026-02,2026-02-28,rtt_waiting_list_total,655178.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2026-03,2026-03-31,rtt_waiting_list_total,645345.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2026-04,2026-04-30,rtt_waiting_list_total,646198.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2026-05,2026-05-31,rtt_waiting_list_total,652540.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2026-06,2026-06-30,rtt_waiting_list_total,655138.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2026-07,2026-07-31,rtt_waiting_list_total,664827.0,pathways / waits,Public Health Scotland
-Scotland,SCO,2026-08,2026-08-31,rtt_waiting_list_total,663997.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2014-02,2014-02-28,rtt_waiting_list_total,291136.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2014-03,2014-03-31,rtt_waiting_list_total,295568.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2014-04,2014-04-30,rtt_waiting_list_total,301762.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2014-05,2014-05-31,rtt_waiting_list_total,309002.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2014-06,2014-06-30,rtt_waiting_list_total,310013.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2014-07,2014-07-31,rtt_waiting_list_total,318784.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2014-08,2014-08-31,rtt_waiting_list_total,315332.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2014-09,2014-09-30,rtt_waiting_list_total,313821.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2014-10,2014-10-31,rtt_waiting_list_total,321632.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2014-11,2014-11-30,rtt_waiting_list_total,316403.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2014-12,2014-12-31,rtt_waiting_list_total,312008.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2015-01,2015-01-31,rtt_waiting_list_total,306361.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2015-02,2015-02-28,rtt_waiting_list_total,309179.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2015-03,2015-03-31,rtt_waiting_list_total,312893.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2015-04,2015-04-30,rtt_waiting_list_total,322492.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2015-05,2015-05-31,rtt_waiting_list_total,329003.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2015-06,2015-06-30,rtt_waiting_list_total,334965.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2015-07,2015-07-31,rtt_waiting_list_total,348290.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2015-08,2015-08-31,rtt_waiting_list_total,345910.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2015-09,2015-09-30,rtt_waiting_list_total,341935.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2015-10,2015-10-31,rtt_waiting_list_total,343450.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2015-11,2015-11-30,rtt_waiting_list_total,331595.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2015-12,2015-12-31,rtt_waiting_list_total,325478.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2016-01,2016-01-31,rtt_waiting_list_total,322068.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2016-02,2016-02-29,rtt_waiting_list_total,324615.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2016-03,2016-03-31,rtt_waiting_list_total,326158.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2016-04,2016-04-30,rtt_waiting_list_total,342226.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2016-05,2016-05-31,rtt_waiting_list_total,348799.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2016-06,2016-06-30,rtt_waiting_list_total,356556.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2016-07,2016-07-31,rtt_waiting_list_total,368750.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2016-08,2016-08-31,rtt_waiting_list_total,368175.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2016-09,2016-09-30,rtt_waiting_list_total,371607.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2016-10,2016-10-31,rtt_waiting_list_total,373917.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2016-11,2016-11-30,rtt_waiting_list_total,367448.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2016-12,2016-12-31,rtt_waiting_list_total,363635.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2017-01,2017-01-31,rtt_waiting_list_total,358565.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2017-02,2017-02-28,rtt_waiting_list_total,358697.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2017-03,2017-03-31,rtt_waiting_list_total,361943.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2019-01,2019-01-31,rtt_waiting_list_total,390763.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2019-02,2019-02-28,rtt_waiting_list_total,389800.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2019-03,2019-03-31,rtt_waiting_list_total,387661.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2019-04,2019-04-30,rtt_waiting_list_total,392143.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2019-05,2019-05-31,rtt_waiting_list_total,398867.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2019-06,2019-06-30,rtt_waiting_list_total,399421.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2019-07,2019-07-31,rtt_waiting_list_total,406128.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2019-08,2019-08-31,rtt_waiting_list_total,405497.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2019-09,2019-09-30,rtt_waiting_list_total,396218.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2019-10,2019-10-31,rtt_waiting_list_total,386390.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2019-11,2019-11-30,rtt_waiting_list_total,371598.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2019-12,2019-12-31,rtt_waiting_list_total,361559.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2020-01,2020-01-31,rtt_waiting_list_total,354839.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2020-02,2020-02-29,rtt_waiting_list_total,348252.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2020-03,2020-03-31,rtt_waiting_list_total,335145.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2020-04,2020-04-30,rtt_waiting_list_total,339214.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2020-05,2020-05-31,rtt_waiting_list_total,343850.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2020-06,2020-06-30,rtt_waiting_list_total,350219.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2020-07,2020-07-31,rtt_waiting_list_total,371088.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2020-08,2020-08-31,rtt_waiting_list_total,389065.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2020-09,2020-09-30,rtt_waiting_list_total,403237.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2020-10,2020-10-31,rtt_waiting_list_total,417625.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2020-11,2020-11-30,rtt_waiting_list_total,418033.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2020-12,2020-12-31,rtt_waiting_list_total,423551.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2021-01,2021-01-31,rtt_waiting_list_total,422330.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2021-02,2021-02-28,rtt_waiting_list_total,429047.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2021-03,2021-03-31,rtt_waiting_list_total,443748.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2021-04,2021-04-30,rtt_waiting_list_total,463694.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2021-05,2021-05-31,rtt_waiting_list_total,477139.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2021-06,2021-06-30,rtt_waiting_list_total,488643.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2021-07,2021-07-31,rtt_waiting_list_total,505956.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2021-08,2021-08-31,rtt_waiting_list_total,512711.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2021-09,2021-09-30,rtt_waiting_list_total,520879.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2021-10,2021-10-31,rtt_waiting_list_total,531337.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2021-11,2021-11-30,rtt_waiting_list_total,529131.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2021-12,2021-12-31,rtt_waiting_list_total,531177.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2022-01,2022-01-31,rtt_waiting_list_total,535911.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2022-02,2022-02-28,rtt_waiting_list_total,542026.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2022-03,2022-03-31,rtt_waiting_list_total,550159.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2022-04,2022-04-30,rtt_waiting_list_total,564920.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2022-05,2022-05-31,rtt_waiting_list_total,575715.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2022-06,2022-06-30,rtt_waiting_list_total,587551.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2022-07,2022-07-31,rtt_waiting_list_total,602536.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2022-08,2022-08-31,rtt_waiting_list_total,609926.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2022-09,2022-09-30,rtt_waiting_list_total,618735.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2022-10,2022-10-31,rtt_waiting_list_total,623366.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2022-11,2022-11-30,rtt_waiting_list_total,623139.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2022-12,2022-12-31,rtt_waiting_list_total,621966.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2023-01,2023-01-31,rtt_waiting_list_total,620307.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2023-02,2023-02-28,rtt_waiting_list_total,622528.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2023-03,2023-03-31,rtt_waiting_list_total,633642.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2023-04,2023-04-30,rtt_waiting_list_total,647619.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2023-05,2023-05-31,rtt_waiting_list_total,659120.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2023-06,2023-06-30,rtt_waiting_list_total,672792.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2023-07,2023-07-31,rtt_waiting_list_total,685461.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2023-08,2023-08-31,rtt_waiting_list_total,688400.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2023-09,2023-09-30,rtt_waiting_list_total,694776.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2023-10,2023-10-31,rtt_waiting_list_total,694723.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2023-11,2023-11-30,rtt_waiting_list_total,690010.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2023-12,2023-12-31,rtt_waiting_list_total,688709.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2024-01,2024-01-31,rtt_waiting_list_total,686771.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2024-02,2024-02-29,rtt_waiting_list_total,690763.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2024-03,2024-03-31,rtt_waiting_list_total,697311.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2024-04,2024-04-30,rtt_waiting_list_total,707779.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2024-05,2024-05-31,rtt_waiting_list_total,715054.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2024-06,2024-06-30,rtt_waiting_list_total,720035.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2024-07,2024-07-31,rtt_waiting_list_total,730476.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2024-08,2024-08-31,rtt_waiting_list_total,733684.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2024-09,2024-09-30,rtt_waiting_list_total,729517.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2024-10,2024-10-31,rtt_waiting_list_total,729906.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2024-11,2024-11-30,rtt_waiting_list_total,726921.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2024-12,2024-12-31,rtt_waiting_list_total,724584.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2025-01,2025-01-31,rtt_waiting_list_total,723677.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2025-02,2025-02-28,rtt_waiting_list_total,721178.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2025-03,2025-03-31,rtt_waiting_list_total,719585.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2025-04,2025-04-30,rtt_waiting_list_total,725501.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2025-05,2025-05-31,rtt_waiting_list_total,730052.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2025-06,2025-06-30,rtt_waiting_list_total,728887.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2025-07,2025-07-31,rtt_waiting_list_total,733297.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2025-08,2025-08-31,rtt_waiting_list_total,728186.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2025-09,2025-09-30,rtt_waiting_list_total,718810.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2025-10,2025-10-31,rtt_waiting_list_total,710491.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2025-11,2025-11-30,rtt_waiting_list_total,692060.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2025-12,2025-12-31,rtt_waiting_list_total,678868.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2026-01,2026-01-31,rtt_waiting_list_total,666782.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2026-02,2026-02-28,rtt_waiting_list_total,655843.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2026-03,2026-03-31,rtt_waiting_list_total,646118.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2026-04,2026-04-30,rtt_waiting_list_total,647260.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2026-05,2026-05-31,rtt_waiting_list_total,653900.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2026-06,2026-06-30,rtt_waiting_list_total,656840.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2026-07,2026-07-31,rtt_waiting_list_total,667440.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2026-08,2026-08-31,rtt_waiting_list_total,668559.0,pathways / waits,Public Health Scotland
+Scotland,SCO,2026-09,2026-09-30,rtt_waiting_list_total,664800.0,pathways / waits,Public Health Scotland
 Wales,WAL,2011-09,2011-09-30,rtt_waiting_list_total,392467.0,pathways / waits,StatsWales (Welsh Government)
 Wales,WAL,2011-10,2011-10-31,rtt_waiting_list_total,389797.0,pathways / waits,StatsWales (Welsh Government)
 Wales,WAL,2011-11,2011-11-30,rtt_waiting_list_total,386977.0,pathways / waits,StatsWales (Welsh Government)
