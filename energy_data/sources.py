@@ -37,7 +37,8 @@ EU_TAX = {
 }
 US_SCOPE = {False: "All residential customers", True: "All industrial customers"}
 US_TAX = {False: "EIA published residential basis", True: "EIA published industrial basis"}
-HEAT_URL = EIA_BASE + "TA4"
+LEGACY_HEAT_URL = EIA_BASE + "TA4"
+HEAT_URL = "https://www.eia.gov/totalenergy/conversion/factors/conversion_factors.csv"
 HEAT_SERIES = "NGTXKUS"
 FX_URL = "https://api.worldbank.org/v2/country/GBR/indicator/PA.NUS.FCRF"
 BTU_PER_KWH = 3412.0  # EIA Appendix A6 conventional conversion.
@@ -162,6 +163,28 @@ def parse_fx(payload: list) -> dict[int, float]:
     return rates
 
 
+def parse_heat(text: str, *, start: int, end: int) -> dict[int, float]:
+    frame = pd.read_csv(io.StringIO(text), dtype=str)
+    if not {"MSN", "Year", "Value", "Description", "Unit"}.issubset(frame.columns):
+        raise ValueError("EIA heat-content response has missing fields")
+    frame = frame.loc[frame["MSN"].eq(HEAT_SERIES)]
+    if (
+        frame.empty
+        or not frame["Description"].eq("Natural Gas Consumption, End-Use Sectors Heat Content").all()
+        or not frame["Unit"].eq("Btu per cubic foot").all()
+        or not frame["Year"].str.fullmatch(r"\d{4}").all()
+    ):
+        raise ValueError("Unexpected EIA heat-content series or units")
+    frame = frame.loc[frame["Year"].astype(int).between(start, end)]
+    if frame["Year"].duplicated().any() or set(frame["Year"].astype(int)) != set(range(start, end + 1)):
+        raise ValueError("Missing or duplicate EIA annual heat-content observation")
+    # EIA's replacement download stores million-Btu factors; its display scales gas by 1e6.
+    heat = {int(row.Year): _number(row.Value)[0] * 1e6 for row in frame.itertuples()}
+    if not all(500 <= value <= 1500 for value in heat.values()):
+        raise ValueError("Unexpected EIA natural-gas heat-content scale")
+    return heat
+
+
 def add_us(
     european: pd.DataFrame, prices: dict[str, dict[int, float]],
     heat: dict[int, float], fx: dict[int, float], *, release: str, industrial: bool = False,
@@ -231,7 +254,10 @@ def validate(frame: pd.DataFrame, *, previous=None, as_of=None, industrial: bool
             factor = fx
             if row["fuel"] == "gas":
                 heat = float(row["btu_per_cubic_foot"])
-                if not math.isfinite(heat) or heat <= 0 or row["heat_source_url"] != HEAT_URL:
+                if (
+                    not math.isfinite(heat) or heat <= 0
+                    or row["heat_source_url"] not in {HEAT_URL, LEGACY_HEAT_URL}
+                ):
                     raise ValueError("Invalid US gas heat-content input")
                 factor = 100 * fx / (heat * 1000 / BTU_PER_KWH)
             if (
@@ -280,8 +306,7 @@ def fetch(*, previous=None, industrial: bool = False) -> pd.DataFrame:
         for fuel, (url, code, unit, description) in eia.items()
     }
     heat = (
-        parse_eia(get_text(HEAT_URL, timeout=120), HEAT_SERIES, "Btu per Cubic Foot",
-                  "Natural Gas Consumption, End-Use Sectors Heat Content", start=start, end=end)
+        parse_heat(get_text(HEAT_URL, timeout=120), start=start, end=end)
         if "gas" in tables else {}
     )
     fx = parse_fx(get_json(FX_URL, params={"format": "json", "date": f"{start}:{end}", "per_page": 100}, timeout=120))

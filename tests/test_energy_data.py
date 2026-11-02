@@ -242,6 +242,47 @@ def test_eia_uses_published_annual_rate_not_mean_of_monthly_prices():
         sources.parse_eia(frame.to_csv(index=False), code, unit, description)
 
 
+def heat_csv():
+    return pd.DataFrame([
+        dict(MSN="NGTXKUS", Year=str(year), Value=value,
+             Description="Natural Gas Consumption, End-Use Sectors Heat Content",
+             Unit="Btu per cubic foot")
+        for year, value in [(2024, "0.001039"), (2025, "0.001037")]
+    ])
+
+
+def test_relocated_eia_heat_factors_preserve_physical_units_and_annual_values():
+    assert sources.parse_heat(heat_csv().to_csv(index=False), start=2024, end=2025) == {
+        2024: pytest.approx(1039), 2025: pytest.approx(1037),
+    }
+
+
+@pytest.mark.parametrize("change", [
+    lambda f: f.iloc[:0],
+    lambda f: f.iloc[:1],
+    lambda f: pd.concat([f, f.iloc[:1]]),
+    lambda f: f.assign(MSN="NGTCKUS"),
+    lambda f: f.assign(Unit="million Btu per barrel"),
+    lambda f: f.assign(Description="Natural Gas Consumption, Electric Power Sector Heat Content"),
+    lambda f: f.assign(Value="1037"),
+    lambda f: f.assign(Value="Not Available"),
+    lambda f: f.assign(Year="202513"),
+    lambda f: f.rename(columns={"Year": "YYYYMM"}),
+])
+def test_relocated_heat_factors_reject_incomplete_or_incompatible_inputs(change):
+    with pytest.raises(ValueError):
+        sources.parse_heat(change(heat_csv()).to_csv(index=False), start=2024, end=2025)
+
+
+def test_saved_energy_heat_provenance_remains_valid_after_eia_relocation(energy_frame):
+    gas = energy_frame["iso3"].eq("USA") & energy_frame["fuel"].eq("gas")
+    energy_frame.loc[gas, "heat_source_url"] = sources.LEGACY_HEAT_URL
+    sources.validate(energy_frame)
+    energy_frame.loc[gas, "heat_source_url"] = "https://example.com/unverified.csv"
+    with pytest.raises(ValueError, match="heat-content"):
+        sources.validate(energy_frame)
+
+
 @pytest.mark.parametrize("column,value", [
     ("value", 0), ("source_value", 200), ("conversion_factor", .01),
     ("unit", "USD/kWh"), ("consumer_scope", "Industrial"), ("tax_basis", "Before VAT"),
