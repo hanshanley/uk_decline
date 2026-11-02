@@ -283,6 +283,37 @@ def test_saved_energy_heat_provenance_remains_valid_after_eia_relocation(energy_
         sources.validate(energy_frame)
 
 
+def test_live_fetch_requests_eia_static_csv_without_json_content_negotiation(monkeypatch):
+    years = range(2008, 2026)
+    monkeypatch.setattr(sources, "govuk_attachment", lambda table, page: (
+        f"https://assets.publishing.service.gov.uk/{table}.xlsx", None,
+    ))
+    monkeypatch.setattr(sources, "get_bytes", lambda url, **kwargs: workbook(
+        "gas" if "5101" in url else "electricity",
+    ))
+    monkeypatch.setattr(sources, "get_json", lambda *args, **kwargs: [
+        dict(pages=1, sourceid="2", total=len(years)),
+        [dict(countryiso3code="GBR", indicator={"id": "PA.NUS.FCRF"},
+              date=str(year), value=.8) for year in years],
+    ])
+
+    def get_text(url, **kwargs):
+        if url == sources.HEAT_URL:
+            assert kwargs["headers"] == {"Accept": "*/*"}
+            frame = heat_csv().iloc[[0]].copy()
+            return pd.concat([frame.assign(Year=str(year)) for year in years]).to_csv(index=False)
+        _, code, unit, description = next(value for value in sources.EIA.values() if value[0] == url)
+        return pd.DataFrame([
+            dict(MSN=code, YYYYMM=f"{year}13", Value="12", Unit=unit, Description=description)
+            for year in years
+        ]).to_csv(index=False)
+
+    monkeypatch.setattr(sources, "get_text", get_text)
+    frame = sources.fetch()
+    assert len(frame) == 144
+    assert frame.query("iso3 == 'USA' and fuel == 'gas'")["btu_per_cubic_foot"].eq(1039).all()
+
+
 @pytest.mark.parametrize("column,value", [
     ("value", 0), ("source_value", 200), ("conversion_factor", .01),
     ("unit", "USD/kWh"), ("consumer_scope", "Industrial"), ("tax_basis", "Before VAT"),

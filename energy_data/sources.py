@@ -306,7 +306,7 @@ def fetch(*, previous=None, industrial: bool = False) -> pd.DataFrame:
         for fuel, (url, code, unit, description) in eia.items()
     }
     heat = (
-        parse_heat(get_text(HEAT_URL, timeout=120), start=start, end=end)
+        parse_heat(get_text(HEAT_URL, timeout=120, headers={"Accept": "*/*"}), start=start, end=end)
         if "gas" in tables else {}
     )
     fx = parse_fx(get_json(FX_URL, params={"format": "json", "date": f"{start}:{end}", "per_page": 100}, timeout=120))
