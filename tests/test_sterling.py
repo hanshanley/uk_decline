@@ -6,6 +6,7 @@ import io
 
 import pandas as pd
 import pytest
+import requests
 
 from sterling_data import charts, ecb
 
@@ -40,6 +41,44 @@ def test_parse_monthly_csv() -> None:
     assert frame["date"].dt.strftime("%Y-%m").unique().tolist() == ["2000-01"]
 
 
+@pytest.mark.parametrize("failure", [504, 429, requests.Timeout(), requests.ConnectionError()])
+def test_download_recovers_from_transient_failures(monkeypatch, failure) -> None:
+    calls = []
+
+    def download(url, **kwargs):
+        calls.append((url, kwargs))
+        if len(calls) == 1 and isinstance(failure, Exception):
+            raise failure
+        response = requests.Response()
+        response.status_code = failure if len(calls) == 1 else 200
+        response._content = b"official ECB CSV"
+        return response
+
+    monkeypatch.setattr(ecb.requests, "get", download)
+    monkeypatch.setattr(ecb.download_csv.retry, "sleep", lambda _: None)
+    assert ecb.download_csv(timeout=7) == b"official ECB CSV"
+    assert len(calls) == 2
+    assert all(url == ecb.ECB_URL and kwargs["timeout"] == 7 for url, kwargs in calls)
+    assert all(kwargs["headers"]["Accept"] == "text/csv" for _, kwargs in calls)
+
+
+@pytest.mark.parametrize(("status", "attempts"), [(504, 5), (400, 1)])
+def test_download_failure_is_bounded_and_never_uses_saved_data(monkeypatch, status, attempts) -> None:
+    calls = []
+
+    def download(*args, **kwargs):
+        calls.append(args)
+        response = requests.Response()
+        response.status_code = status
+        return response
+
+    monkeypatch.setattr(ecb.requests, "get", download)
+    monkeypatch.setattr(ecb.download_csv.retry, "sleep", lambda _: None)
+    with pytest.raises(requests.HTTPError):
+        ecb.download_csv()
+    assert len(calls) == attempts
+
+
 def test_cross_rate_math_and_ytd_status() -> None:
     annual = ecb.build_annual(_monthly())
     by = {(row.year, row.currency): row for row in annual.itertuples()}
@@ -65,7 +104,7 @@ def test_missing_currency_rejected() -> None:
 
 def test_untrusted_host_rejected() -> None:
     with pytest.raises(ValueError):
-        ecb._ensure_host("https://example.com/data.csv")
+        ecb.download_csv("https://example.com/data.csv")
 
 
 def test_chart_renders(tmp_path) -> None:

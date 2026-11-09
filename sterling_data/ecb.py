@@ -16,6 +16,7 @@ from urllib.parse import urlsplit
 
 import pandas as pd
 import requests
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 ECB_HOST = "data-api.ecb.europa.eu"
 ECB_URL = (
@@ -43,8 +44,24 @@ def _ensure_host(url: str) -> None:
         raise ValueError(f"refusing to fetch untrusted host: {url!r}")
 
 
+def _transient_download_error(error: BaseException) -> bool:
+    if isinstance(error, (requests.ConnectionError, requests.Timeout)):
+        return True
+    return (
+        isinstance(error, requests.HTTPError)
+        and error.response is not None
+        and error.response.status_code in {408, 429, 500, 502, 503, 504}
+    )
+
+
+@retry(
+    retry=retry_if_exception(_transient_download_error),
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=1, max=30),
+    reraise=True,
+)
 def download_csv(url: str = ECB_URL, timeout: int = 120) -> bytes:
-    """Download the official ECB monthly exchange-rate CSV."""
+    """Download the official ECB CSV, retrying transient transport failures."""
     _ensure_host(url)
     response = requests.get(
         url,
