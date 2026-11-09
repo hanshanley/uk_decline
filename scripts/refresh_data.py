@@ -106,33 +106,76 @@ def nhs_coverage(root: Path) -> dict[tuple[str, str], set[str]]:
     return coverage
 
 
-def refresh(root: Path = ROOT, only: list[str] | None = None) -> None:
+def refresh(
+    root: Path = ROOT, only: list[str] | None = None, *,
+    check_all: bool = False, report: Path | None = None,
+) -> None:
     started_ns = time.time_ns()
     selected = list(STEPS) if only is None else only
-    baseline = nhs_coverage(root) if "nhs" in selected else {}
-    for name in selected:
-        for command in STEPS[name]:
-            run(command, root)
-        if name == "nhs":
-            current = nhs_coverage(root)
-            regressed = [
-                (key, sorted(dates - current.get(key, set()))[:5])
-                for key, dates in baseline.items()
-                if not dates.issubset(current.get(key, set()))
-            ]
-            if regressed:
-                raise RuntimeError(f"NHS refresh lost published series or date coverage: {regressed}")
-    run(("scorecard.py",), root)
-    run(("-m", "scripts.export_page_plots"), root)
-    if only is None:
-        validate_refresh(root, started_ns)
-        status = root / "data/site/refresh.json"
-        status.parent.mkdir(parents=True, exist_ok=True)
-        status.write_text(json.dumps({
-            "last_successful_refresh_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "automated_analyses": selected,
-            "curated_inputs": CURATED_INPUTS,
-        }, indent=2) + "\n")
+    results = {name: {"status": "not_checked"} for name in selected}
+    diagnostic = {
+        "started_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "status": "running", "sources": results,
+    }
+
+    def write_report():
+        if report is not None:
+            report.parent.mkdir(parents=True, exist_ok=True)
+            report.write_text(json.dumps(diagnostic, indent=2) + "\n")
+
+    write_report()
+    try:
+        baseline = nhs_coverage(root) if "nhs" in selected else {}
+        failures = {}
+        for name in selected:
+            results[name] = {"status": "running"}
+            write_report()
+            try:
+                for command in STEPS[name]:
+                    run(command, root)
+                if name == "nhs":
+                    current = nhs_coverage(root)
+                    regressed = [
+                        (key, sorted(dates - current.get(key, set()))[:5])
+                        for key, dates in baseline.items()
+                        if not dates.issubset(current.get(key, set()))
+                    ]
+                    if regressed:
+                        raise RuntimeError(f"NHS refresh lost published series or date coverage: {regressed}")
+            except Exception as error:
+                results[name] = {"status": "failure", "error": f"{type(error).__name__}: {error}"}
+                failures[name] = error
+                print(f"[refresh] FAILED {name}: {error}", flush=True)
+                if not check_all:
+                    raise
+            else:
+                results[name] = {"status": "success"}
+            finally:
+                write_report()
+        if failures:
+            raise RuntimeError(
+                "Incomplete refresh; refusing publication. Failed sources: "
+                + "; ".join(f"{name}: {error}" for name, error in failures.items())
+            ) from next(iter(failures.values()))
+        run(("scorecard.py",), root)
+        run(("-m", "scripts.export_page_plots"), root)
+        if only is None:
+            validate_refresh(root, started_ns)
+            status = root / "data/site/refresh.json"
+            status.parent.mkdir(parents=True, exist_ok=True)
+            status.write_text(json.dumps({
+                "last_successful_refresh_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "automated_analyses": selected,
+                "curated_inputs": CURATED_INPUTS,
+            }, indent=2) + "\n")
+    except Exception as error:
+        diagnostic.update(status="failure", error=f"{type(error).__name__}: {error}")
+        raise
+    else:
+        diagnostic["status"] = "success"
+    finally:
+        diagnostic["finished_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        write_report()
 
 
 def main() -> None:
@@ -141,8 +184,13 @@ def main() -> None:
         "--only", nargs="+", choices=STEPS,
         help="Refresh selected analyses; a partial run does not advance the full-refresh date.",
     )
+    parser.add_argument(
+        "--check-all", action="store_true",
+        help="Check all independent source groups even after a failure; never publish partial results.",
+    )
+    parser.add_argument("--report", type=Path, help="Write machine-readable source-check diagnostics.")
     args = parser.parse_args()
-    refresh(only=args.only)
+    refresh(only=args.only, check_all=args.check_all, report=args.report)
 
 
 if __name__ == "__main__":

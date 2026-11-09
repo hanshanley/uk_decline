@@ -6,10 +6,16 @@ on:
   pull_request:
   schedule:
     - cron: "37 6 * * 1"
+    # Validate live sources between publications, without committing or deploying.
+    - cron: "37 6 * * 0,2-6"
   workflow_dispatch:
     inputs:
       refresh_data:
         description: "Refresh source data before publishing (otherwise use saved figures)"
+        type: boolean
+        default: false
+      source_check_only:
+        description: "Run the full live-source check without committing or deploying"
         type: boolean
         default: false
 
@@ -23,7 +29,8 @@ permissions:
 env:
   MPLBACKEND: Agg
   PYTHONUNBUFFERED: "1"
-  REFRESH_DATA: ${{ github.ref == 'refs/heads/master' && (github.event_name == 'schedule' || inputs.refresh_data == true) }}
+  REFRESH_DATA: ${{ github.ref == 'refs/heads/master' && (github.event_name == 'schedule' || inputs.refresh_data == true || inputs.source_check_only == true) }}
+  SOURCE_CHECK_ONLY: ${{ (github.event_name == 'schedule' && github.event.schedule == '37 6 * * 0,2-6') || inputs.source_check_only == true }}
 
 jobs:
   build:
@@ -44,12 +51,25 @@ jobs:
         run: python -m pytest tests/ -q
       - name: Refresh source data and figures
         if: env.REFRESH_DATA == 'true'
-        run: python scripts/refresh_data.py
+        shell: bash
+        run: |
+          python scripts/refresh_data.py --check-all --report "$RUNNER_TEMP/refresh-report.json" \
+            2>&1 | tee "$RUNNER_TEMP/refresh.log"
+      - name: Retain live-source diagnostics
+        if: always() && env.REFRESH_DATA == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-check-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/refresh-report.json
+            ${{ runner.temp }}/refresh.log
+          retention-days: 14
+          if-no-files-found: warn
       - name: Validate refreshed results
         if: env.REFRESH_DATA == 'true'
         run: python -m pytest tests/ -q
       - name: Record refreshed publication inputs
-        if: env.REFRESH_DATA == 'true'
+        if: env.REFRESH_DATA == 'true' && env.SOURCE_CHECK_ONLY != 'true'
         run: |
           git config user.name "hanshanley"
           git config user.email "hanshanley@users.noreply.github.com"
@@ -61,17 +81,18 @@ jobs:
       - name: Build and check the public site
         run: python scripts/build_site.py
       - name: Publish refreshed inputs
-        if: env.REFRESH_DATA == 'true'
+        if: env.REFRESH_DATA == 'true' && env.SOURCE_CHECK_ONLY != 'true'
         run: git push origin HEAD:master
       - name: Build redirects to The Margin of Error
+        if: env.SOURCE_CHECK_ONLY != 'true'
         run: python scripts/build_site.py --redirects
       - uses: actions/upload-pages-artifact@v4
-        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request' && env.SOURCE_CHECK_ONLY != 'true'
         with:
           path: _site
 
   deploy:
-    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request' && github.event.schedule != '37 6 * * 0,2-6' && inputs.source_check_only != true
     needs: build
     runs-on: ubuntu-latest
     permissions:

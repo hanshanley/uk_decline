@@ -50,7 +50,9 @@ def get_text(
     *, headers: dict[str, str] | None = None,
 ) -> str:
     """GET ``url`` and return the response body as text (e.g. a CSV download)."""
-    resp = session().get(url, params=params, timeout=timeout, headers=headers)
+    resp = session().get(
+        url, params=params, timeout=timeout, headers={"Accept": "*/*", **(headers or {})},
+    )
     resp.raise_for_status()
     return resp.text
 

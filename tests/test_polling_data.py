@@ -163,6 +163,102 @@ def test_source_validation_guards_freshness_history_future_dates_and_lost_record
         polling.validate_polls(frame, previous=polls)
 
 
+def test_refresh_accepts_unambiguous_date_correction_without_duplicating_the_poll():
+    original = dict(firm="BMG Research", end="2026-07-30", label="29-30 Jul",
+                    url="https://example.org/july-tables.xlsx")
+    previous = _parse([original])
+    current = _parse([{**original, "end": "2026-07-29", "label": "28-29 Jul"}])
+    corrected = polling.validate_polls(current, previous=previous)
+    assert len(corrected) == 1
+    revision, = polling.source_revisions(corrected, previous)
+    assert revision["previous"]["poll_id"] == previous.iloc[0]["poll_id"]
+    assert revision["current"]["poll_id"] == corrected.iloc[0]["poll_id"]
+    assert revision["previous"]["fieldwork_end"].startswith("2026-07-30")
+    assert revision["current"]["fieldwork_end"].startswith("2026-07-29")
+    assert revision["source_url"] == original["url"]
+    assert revision["previous"]["snapshot_sha256"] != revision["current"]["snapshot_sha256"]
+    assert polling.source_revisions(corrected, corrected) == []
+
+
+@pytest.mark.parametrize("change", [
+    {"url": "https://example.org/different-report"},
+    {"firm": "Different firm"},
+    {"shares": (31, 25, 20, 10, 5)},
+    {"area": "UK"},
+    {"end": "2026-08-05", "label": "4-5 Aug"},
+])
+def test_date_correction_does_not_hide_deleted_or_substantively_changed_polls(change):
+    row = dict(firm="Firm", end="2026-07-30", label="29-30 Jul",
+               url="https://example.org/report")
+    anchor = dict(firm="Unchanged firm", url="https://example.org/unchanged")
+    previous = _parse([row, anchor])
+    current = _parse([{**row, "end": "2026-07-29", "label": "28-29 Jul", **change}, anchor])
+    with pytest.raises(ValueError, match="lost previously published poll records.*Firm"):
+        polling.validate_polls(current, previous=previous)
+
+
+def test_date_correction_rejects_reused_citations_and_changed_sample_sizes():
+    row = dict(firm="Firm", end="2026-07-30", label="29-30 Jul",
+               url="https://example.org/report")
+    corrected = {**row, "end": "2026-07-29", "label": "28-29 Jul"}
+    other = {**row, "end": "2026-07-28", "label": "27-28 Jul"}
+    for previous, current in [
+        (_parse([row, other]), _parse([corrected, other])),
+        (_parse([row]), _parse([corrected, other])),
+    ]:
+        with pytest.raises(ValueError, match="lost previously published"):
+            polling.validate_polls(current, previous=previous)
+    current = _parse([corrected])
+    current["sample_size_reported"] = "2,000"
+    with pytest.raises(ValueError, match="lost previously published"):
+        polling.validate_polls(current, previous=_parse([row]))
+
+
+@pytest.mark.parametrize("deleted", [False, True])
+def test_refresh_records_corrections_once_but_preserves_files_when_polls_disappear(
+    monkeypatch, tmp_path, deleted,
+):
+    row = dict(firm="Firm", end="2026-07-30", label="29-30 Jul",
+               url="https://example.org/report")
+    anchors = [dict(firm=f"Other {i}", end="2026-07-28", url=f"https://example.org/other-{i}")
+               for i in range(3)]
+    previous = _parse([row, *anchors])
+    raw, averages, revisions = (tmp_path / name for name in ("polls.csv", "averages.csv", "revisions.json"))
+    previous.to_csv(raw, index=False)
+    averages.write_text("unchanged")
+    revisions.write_text("[]")
+    before = raw.read_bytes(), averages.read_bytes(), revisions.read_bytes()
+    monkeypatch.setattr(polling, "SAVED_POLLS", raw)
+    monkeypatch.setattr(polling, "SAVED_AVERAGES", averages)
+    monkeypatch.setattr(polling, "REVISIONS", revisions)
+    monkeypatch.setattr("sys.argv", ["polling_data"])
+    current = anchors if deleted else [
+        {**row, "end": "2026-07-29", "label": "28-29 Jul"}, *anchors,
+    ]
+    monkeypatch.setattr(polling, "get_text", lambda *args, **kwargs: _html(current))
+    monkeypatch.setattr(polling, "make_chart", lambda frame: tmp_path / "chart.png")
+    validate = polling.validate_polls
+
+    def small_snapshot(frame, previous=None, **kwargs):
+        return validate(frame, previous=previous)
+
+    monkeypatch.setattr(polling, "validate_polls", small_snapshot)
+    if deleted:
+        with pytest.raises(ValueError, match="lost previously published"):
+            polling.main()
+        assert (raw.read_bytes(), averages.read_bytes(), revisions.read_bytes()) == before
+    else:
+        polling.main()
+        audit = json.loads(revisions.read_text())
+        assert len(audit) == 1
+        assert audit[0]["previous"]["poll_id"] == previous.loc[
+            previous["pollster"].eq("Firm"), "poll_id"
+        ].iloc[0]
+        assert len(pd.read_csv(raw)) == len(previous)
+        polling.main()
+        assert json.loads(revisions.read_text()) == audit
+
+
 def test_average_weights_firms_equally_and_averages_latest_day_ties_within_firm(polls):
     averages = polling.average(polls)
     assert averages["date"].unique().tolist() == [pd.Timestamp("2024-08-01")]

@@ -27,6 +27,7 @@ SOURCE = "https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_United_King
 SAVED_POLLS = ROOT / "data/gb_voting_intention_polls.csv"
 SAVED_AVERAGES = ROOT / "data/gb_voting_intention_average.csv"
 OUTPUT = ROOT / "outputs/polling"
+REVISIONS = OUTPUT / "source_revisions.json"
 START = pd.Timestamp("2024-07-05")
 WINDOW_DAYS = 30
 MIN_POLLSTERS = 3
@@ -237,6 +238,50 @@ def parse(html: str, retrieved: str) -> pd.DataFrame:
     return validate_polls(pd.DataFrame(records.values(), columns=RAW_FIELDS))
 
 
+def source_revisions(frame: pd.DataFrame, previous: pd.DataFrame) -> list[dict]:
+    revisions = []
+    identity = ["pollster_id", "source_url"]
+    unchanged = ["pollster", "client", "area", "sample_size_reported", "reported_results",
+                 "exclusion_reason", *PARTIES]
+    missing = previous.loc[~previous["poll_id"].isin(frame["poll_id"])]
+    added = frame.loc[~frame["poll_id"].isin(previous["poll_id"])]
+    for old in missing.to_dict("records"):
+        candidates = added.loc[
+            added["pollster_id"].eq(old["pollster_id"])
+            & added["source_url"].eq(old["source_url"])
+        ]
+        old_count = previous[identity].eq(pd.Series({key: old[key] for key in identity})).all(axis=1).sum()
+        new_count = frame[identity].eq(pd.Series({key: old[key] for key in identity})).all(axis=1).sum()
+        if len(candidates) != 1 or old_count != 1 or new_count != 1:
+            continue
+        new = candidates.iloc[0].to_dict()
+        if (
+            not old["sample_size_reported"] or not any(pd.notna(old[party]) for party in PARTIES)
+            or any(
+                not (pd.isna(old[key]) and pd.isna(new[key])) and old[key] != new[key]
+                for key in unchanged
+            )
+            or pd.Timestamp(old["fieldwork_start"]) > pd.Timestamp(new["fieldwork_end"])
+            or pd.Timestamp(new["fieldwork_start"]) > pd.Timestamp(old["fieldwork_end"])
+        ):
+            continue
+        revisions.append({
+            "reason": "source fieldwork-date correction; same unique citation and reported results",
+            "pollster": new["pollster"], "source_url": new["source_url"],
+            "previous": {
+                key: str(old[key]) for key in (
+                    "poll_id", "fieldwork_start", "fieldwork_end", "retrieved_utc", "snapshot_sha256",
+                )
+            },
+            "current": {
+                key: str(new[key]) for key in (
+                    "poll_id", "fieldwork_start", "fieldwork_end", "retrieved_utc", "snapshot_sha256",
+                )
+            },
+        })
+    return revisions
+
+
 def validate_polls(
     frame: pd.DataFrame, previous: pd.DataFrame | None = None, *,
     require_recent: bool = False, require_history: bool = False,
@@ -300,12 +345,23 @@ def validate_polls(
         or eligible["fieldwork_end"].min() > START + pd.Timedelta(days=90)
     ):
         raise ValueError("Polling source returned incomplete post-2024 coverage")
-    if previous is not None and not set(previous["poll_id"]).issubset(frame["poll_id"]):
-        raise ValueError("Polling refresh lost previously published poll records")
-    if previous is not None and not set(
-        previous.loc[previous["exclusion_reason"].eq(""), "poll_id"]
-    ).issubset(eligible["poll_id"]):
-        raise ValueError("Polling refresh lost previously published qualifying poll coverage")
+    if previous is not None:
+        revisions = {
+            item["previous"]["poll_id"]: item["current"]["poll_id"]
+            for item in source_revisions(frame, previous)
+        }
+        missing = previous.loc[
+            ~previous["poll_id"].isin(set(frame["poll_id"]) | set(revisions))
+        ]
+        if not missing.empty:
+            details = missing[["pollster", "fieldwork_start", "fieldwork_end", "source_url"]]
+            raise ValueError(
+                "Polling refresh lost previously published poll records: "
+                + details.to_json(orient="records", date_format="iso")
+            )
+        qualifying = previous.loc[previous["exclusion_reason"].eq(""), "poll_id"]
+        if not {revisions.get(poll_id, poll_id) for poll_id in qualifying}.issubset(eligible["poll_id"]):
+            raise ValueError("Polling refresh lost previously published qualifying poll coverage")
     return frame.sort_values(["fieldwork_end", "pollster_id", "poll_id"]).reset_index(drop=True)
 
 
@@ -442,7 +498,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--from-csv", type=Path, help="Recalculate from saved polls without fetching")
     args = parser.parse_args()
-    previous = pd.read_csv(SAVED_POLLS, keep_default_na=False) if SAVED_POLLS.exists() else None
+    previous = (
+        validate_polls(pd.read_csv(SAVED_POLLS, keep_default_na=False)) if SAVED_POLLS.exists() else None
+    )
     if args.from_csv:
         polls = validate_polls(pd.read_csv(args.from_csv, keep_default_na=False, float_precision="round_trip"))
     else:
@@ -457,6 +515,19 @@ def main() -> None:
     ].max():
         raise ValueError("Newest polling window has fewer than three pollsters; refusing a stale average")
     path = make_chart(averages)
+    if not args.from_csv and previous is not None:
+        revisions = source_revisions(polls, previous)
+        if revisions:
+            history = json.loads(REVISIONS.read_text()) if REVISIONS.exists() else []
+            history.extend(revisions)
+            REVISIONS.parent.mkdir(parents=True, exist_ok=True)
+            REVISIONS.write_text(json.dumps(history, indent=2) + "\n")
+            for revision in revisions:
+                print(
+                    f"[polling] recorded fieldwork-date correction: {revision['pollster']} "
+                    f"{revision['previous']['fieldwork_start']} to {revision['previous']['fieldwork_end']} "
+                    f"-> {revision['current']['fieldwork_start']} to {revision['current']['fieldwork_end']}"
+                )
     for frame, target in ((polls, SAVED_POLLS), (averages, SAVED_AVERAGES)):
         target.parent.mkdir(parents=True, exist_ok=True)
         frame.to_csv(target, index=False, date_format="%Y-%m-%d")

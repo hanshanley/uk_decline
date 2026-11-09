@@ -17,6 +17,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from europe_data import combine, countries, eurostat  # noqa: E402
 
 
+def test_text_downloads_do_not_inherit_json_only_accept_headers(monkeypatch):
+    from unittest.mock import Mock
+    from europe_data import _http
+
+    client = Mock()
+    client.get.return_value.text = "source text"
+    client.get.return_value.json.return_value = {"value": 1}
+    monkeypatch.setattr(_http, "session", lambda: client)
+    assert _http.get_text("https://example.org/source.csv") == "source text"
+    assert client.get.call_args.kwargs["headers"] == {"Accept": "*/*"}
+    _http.get_text("https://example.org/page", headers={"Accept": "text/html", "X-Test": "value"})
+    assert client.get.call_args.kwargs["headers"] == {"Accept": "text/html", "X-Test": "value"}
+    _http.get_text("https://example.org/source.csv", headers={"X-Test": "value"})
+    assert client.get.call_args.kwargs["headers"] == {"Accept": "*/*", "X-Test": "value"}
+    assert _http.get_json("https://example.org/api") == {"value": 1}
+    assert "headers" not in client.get.call_args.kwargs
+
+
 def test_pip_request_pins_ppp_vintage_and_labels_it(monkeypatch):
     from europe_data import pip
 

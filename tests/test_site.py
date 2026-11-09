@@ -562,6 +562,64 @@ def test_failed_refresh_does_not_advance_success_date(monkeypatch, tmp_path):
     assert json.loads(status.read_text())["last_successful_refresh_utc"] == "previous"
 
 
+def test_check_all_reports_every_failed_source_without_publishing_partial_results(monkeypatch, tmp_path):
+    status = tmp_path / "data/site/refresh.json"
+    status.parent.mkdir(parents=True)
+    status.write_text('{"last_successful_refresh_utc":"previous"}\n')
+    monkeypatch.setattr(refresh_data, "STEPS", {
+        "trade": (("-m", "trade_data"), ("-m", "dependent_trade_chart")),
+        "polling": (("-m", "polling_data"),),
+        "energy-costs": (("-m", "energy_data"),),
+    })
+    commands = []
+
+    def run(command, root):
+        commands.append(command)
+        if command[1] == "trade_data":
+            raise subprocess.CalledProcessError(1, command)
+        if command[1] == "polling_data":
+            raise ValueError("Missing cited poll")
+
+    monkeypatch.setattr(refresh_data, "run", run)
+    report = tmp_path / "diagnostics/report.json"
+    with pytest.raises(RuntimeError, match="Failed sources: trade:.*polling: Missing cited poll"):
+        refresh_data.refresh(tmp_path, check_all=True, report=report)
+    assert commands == [("-m", "trade_data"), ("-m", "polling_data"), ("-m", "energy_data")]
+    saved = json.loads(report.read_text())
+    assert saved["status"] == "failure"
+    assert {name: result["status"] for name, result in saved["sources"].items()} == {
+        "trade": "failure", "polling": "failure", "energy-costs": "success",
+    }
+    assert "CalledProcessError" in saved["sources"]["trade"]["error"]
+    assert "Missing cited poll" in saved["sources"]["polling"]["error"]
+    assert saved["finished_utc"] >= saved["started_utc"]
+    assert json.loads(status.read_text())["last_successful_refresh_utc"] == "previous"
+
+
+@pytest.mark.parametrize("validation_fails", [False, True])
+def test_source_report_cannot_claim_success_before_publication_validation(
+    monkeypatch, tmp_path, validation_fails,
+):
+    monkeypatch.setattr(refresh_data, "STEPS", {"trade": (("-m", "trade_data"),)})
+    monkeypatch.setattr(refresh_data, "run", lambda *args: None)
+
+    def validate(*args):
+        if validation_fails:
+            raise ValueError("Chart data does not match image")
+
+    monkeypatch.setattr(refresh_data, "validate_refresh", validate)
+    report = tmp_path / "report.json"
+    if validation_fails:
+        with pytest.raises(ValueError, match="Chart data"):
+            refresh_data.refresh(tmp_path, check_all=True, report=report)
+    else:
+        refresh_data.refresh(tmp_path, check_all=True, report=report)
+    saved = json.loads(report.read_text())
+    assert saved["status"] == ("failure" if validation_fails else "success")
+    assert saved["sources"]["trade"]["status"] == "success"
+    assert (tmp_path / "data/site/refresh.json").exists() is not validation_fails
+
+
 @pytest.mark.parametrize("current_dates", [["2026-07-31"], ["2026-08-31"]])
 def test_refresh_rejects_nhs_date_regression(monkeypatch, tmp_path, current_dates):
     table = tmp_path / "outputs/nhs/nhs_waiting_times.csv"
