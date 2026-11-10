@@ -83,11 +83,22 @@ complete-refresh date advances. Source failures, lost required coverage or stale
 figures stop publication. A partial `--only` run does not claim a complete refresh.
 The workflow tests and builds the result before pushing refreshed inputs.
 
+Tuesday-Sunday runs at the same scheduled time check all live sources, tests and
+the site build without committing or deploying. Manual `source_check_only` runs
+do the same on any branch; `refresh_data` on a non-`master` branch also checks
+without publishing. Only `master` may publish, and check-only takes precedence
+when both inputs are enabled. Pending runs queue instead of replacing one another.
+
 The live host, `hanshanley/margin_of_error`, independently checks out the latest
 `master` and is scheduled to republish at **09:20 and 21:20 UTC each day**. This
 picks up weekly refresh commits without relying on a workflow-authored push to
 trigger another workflow. GitHub can delay scheduled runs; these are scheduled
 times, not exact publication guarantees.
+
+The host fingerprints the staged UK downloads and verifies their live bytes after
+deployment. A green Pages API response alone is not sufficient. Stale content or
+a failed deployment gets one delayed, deployment-only retry; an unverified retry
+fails without rerunning the data refresh.
 
 Regression tests check that every public analysis has a refresh command and that
 the default energy command fetches both household and industrial data and renders
