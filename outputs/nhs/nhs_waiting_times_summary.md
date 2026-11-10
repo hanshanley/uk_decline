@@ -73,7 +73,7 @@ Share of patients on the diagnostic-test waiting list who have been waiting 6 we
 | Nation | First | Latest | Change |
 |---|---|---|---|
 | England | 1.3% (Jun 2012) | 24.7% (Aug 2026) | ↑ 23.4 pp (worse) |
-| Scotland | 14.0% (Sep 2007) | 27.7% (Jun 2026) | ↑ 13.7 pp (worse) |
+| Scotland | 14.0% (Sep 2007) | 27.5% (Sep 2026) | ↑ 13.5 pp (worse) |
 | Wales | 48.5% (Aug 2024) | 44.8% (Aug 2026) | ↓ 3.7 pp (better) |
 | Northern Ireland | 36.1% (Mar 2008) | 69.2% (Jun 2026) | Not like-for-like (encompass break) |
 

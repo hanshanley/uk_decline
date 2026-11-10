@@ -17,5 +17,32 @@
       "retrieved_utc": "2026-11-10T00:30:26+00:00",
       "snapshot_sha256": "85bee27597fee6220d08ecf913de2aebcc33f24e5e8b416d6e42acf281fec9c1"
     }
+  },
+  {
+    "reason": "source citation update; same unique fieldwork and headline results, no loss of reported metadata",
+    "pollster": "Deltapoll",
+    "source_url": "https://deltapoll.co.uk/wp-content/uploads/2026/11/261109_Deltapoll-VI.pdf",
+    "previous": {
+      "poll_id": "476c1151311e44f91234",
+      "fieldwork_start": "2026-11-06 00:00:00",
+      "fieldwork_end": "2026-11-09 00:00:00",
+      "source_url": "https://bsky.app/profile/electionmaps.uk/post/3mzvlmmh2ck2b",
+      "source_title": "\u2191 \"Westminster Voting Intention\" . 9 November 2026 . Retrieved 9 November 2026 .",
+      "sample_size_reported": "TBA",
+      "reported_results": "{\"Con\": \"20%\", \"Grn\": \"8%\", \"LD\": \"9%\", \"Lab\": \"31%\", \"Lead\": \"7\", \"Others\": \"TBA\", \"PC\": \"TBA\", \"RB\": \"TBA\", \"Ref\": \"24%\", \"SNP\": \"3%\"}",
+      "retrieved_utc": "2026-11-10T00:30:26+00:00",
+      "snapshot_sha256": "85bee27597fee6220d08ecf913de2aebcc33f24e5e8b416d6e42acf281fec9c1"
+    },
+    "current": {
+      "poll_id": "1ff830de52d9b3190eca",
+      "fieldwork_start": "2026-11-06 00:00:00",
+      "fieldwork_end": "2026-11-09 00:00:00",
+      "source_url": "https://deltapoll.co.uk/wp-content/uploads/2026/11/261109_Deltapoll-VI.pdf",
+      "source_title": "\u2191 \"Deltapoll Survey Results\" (PDF) . 10 November 2026 . Retrieved 10 November 2026 .",
+      "sample_size_reported": "2,023",
+      "reported_results": "{\"Con\": \"20%\", \"Grn\": \"8%\", \"LD\": \"9%\", \"Lab\": \"31%\", \"Lead\": \"7\", \"Others\": \"4%\", \"PC\": \"1%\", \"RB\": \"N/A\", \"Ref\": \"24%\", \"SNP\": \"3%\"}",
+      "retrieved_utc": "2026-11-10T15:53:01+00:00",
+      "snapshot_sha256": "9203413eb05916ad9b3196195310d84e03a9d659a480c4535e90fcd4548e5aca"
+    }
   }
 ]
