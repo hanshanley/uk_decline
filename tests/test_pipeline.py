@@ -35,6 +35,57 @@ def test_text_downloads_do_not_inherit_json_only_accept_headers(monkeypatch):
     assert "headers" not in client.get.call_args.kwargs
 
 
+def test_json_retries_revalidate_cached_gateway_errors(monkeypatch):
+    from unittest.mock import Mock
+    import requests
+    from tenacity import wait_none
+    from europe_data import _http
+
+    failed = Mock()
+    failed.raise_for_status.side_effect = requests.HTTPError("502 cached gateway failure")
+    current = Mock()
+    current.json.return_value = [{"country_code": "GBR"}]
+    client = Mock()
+    client.get.side_effect = [failed, current]
+    monkeypatch.setattr(_http, "session", lambda: client)
+    monkeypatch.setattr(_http, "wait_exponential", lambda **kwargs: wait_none())
+    params = {"table": "countries", "format": "json"}
+
+    assert _http.get_json("https://example.org/aux", params=params, timeout=30) == [
+        {"country_code": "GBR"},
+    ]
+    first, second = client.get.call_args_list
+    assert first.kwargs == {"params": params, "timeout": 30}
+    assert second.args == first.args
+    assert second.kwargs == {
+        "params": params, "timeout": 30, "headers": {"Cache-Control": "no-cache"},
+    }
+
+
+def test_json_revalidation_remains_bounded_and_fails_closed(monkeypatch):
+    from unittest.mock import Mock
+    import pytest
+    import requests
+    from tenacity import wait_none
+    from europe_data import _http
+
+    failed = Mock()
+    failed.raise_for_status.side_effect = requests.HTTPError("502 persistent gateway failure")
+    client = Mock()
+    client.get.return_value = failed
+    monkeypatch.setattr(_http, "session", lambda: client)
+    monkeypatch.setattr(_http, "wait_exponential", lambda **kwargs: wait_none())
+
+    with pytest.raises(requests.HTTPError, match="persistent gateway failure"):
+        _http.get_json("https://example.org/aux")
+    assert client.get.call_count == 5
+    assert all(
+        call.kwargs["headers"] == {"Cache-Control": "no-cache"}
+        for call in client.get.call_args_list[1:]
+    )
+    failed.json.assert_not_called()
+
+
 def test_pip_request_pins_ppp_vintage_and_labels_it(monkeypatch):
     from europe_data import pip
 

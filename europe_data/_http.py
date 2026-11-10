@@ -6,6 +6,7 @@ from typing import Any
 
 import requests
 from tenacity import (
+    Retrying,
     retry,
     retry_if_exception_type,
     stop_after_attempt,
@@ -26,17 +27,20 @@ def session() -> requests.Session:
     return _session
 
 
-@retry(
-    retry=retry_if_exception_type((requests.RequestException,)),
-    stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=1, min=1, max=30),
-    reraise=True,
-)
 def get_json(url: str, params: dict[str, Any] | None = None, timeout: int = 60) -> Any:
     """GET ``url`` and return parsed JSON, retrying transient network/HTTP errors."""
-    resp = session().get(url, params=params, timeout=timeout)
-    resp.raise_for_status()
-    return resp.json()
+    for attempt in Retrying(
+        retry=retry_if_exception_type((requests.RequestException,)),
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=1, min=1, max=30),
+        reraise=True,
+    ):
+        with attempt:
+            # Gateways can cache errors; retries must revalidate the same request.
+            options = {"headers": {"Cache-Control": "no-cache"}} if attempt.retry_state.attempt_number > 1 else {}
+            resp = session().get(url, params=params, timeout=timeout, **options)
+            resp.raise_for_status()
+            return resp.json()
 
 
 @retry(
