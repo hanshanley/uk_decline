@@ -177,7 +177,7 @@ ANALYSES = (
              data_downloads=(
                  ("data/gb_voting_intention_polls.csv", "Underlying polls, including exclusions (CSV)"),
                  ("data/gb_voting_intention_average.csv", "Daily averages and contributors (CSV)"),
-                 ("outputs/polling/source_revisions.json", "Source fieldwork-date corrections (JSON)"),
+                 ("outputs/polling/source_revisions.json", "Source corrections and citation updates (JSON)"),
              )),
 )
 

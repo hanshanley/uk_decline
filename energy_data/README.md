@@ -44,6 +44,13 @@ gross-energy conversion using the published end-use heat-content factor, not a
 claimed residential-only laboratory measurement. The CSV records every raw rate,
 currency rate and heat-content factor needed to reproduce the US lines.
 
+The [EIA conversion-factor download](https://www.eia.gov/totalenergy/conversion/factors/)
+reports `NGTXKUS` in million Btu/cubic foot; values are multiplied by one million
+before conversion. Its initial replacement export used the label Btu/cubic foot
+for those same million-Btu values. Both that legacy export and correctly scaled
+Btu/cubic-foot values are supported, with complete annual coverage, one consistent
+unit and a 500-1,500 Btu/cubic-foot physical range required.
+
 **Important:** consumption profiles, annual weighting, exchange-rate conventions,
 support schemes and tax reporting differ. The graphs disclose the US/European
 coverage difference in their subtitles. They are descriptive retail-price comparisons,

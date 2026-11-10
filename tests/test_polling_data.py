@@ -26,8 +26,9 @@ def _html(rows):
         body.append(
             f'<tr><td data-sort-value="{sort_end}">{label}</td>'
             f'<td>{firm}<sup><a href="#cite_note-{i}">[{i}]</a></sup></td>'
-            f'<td>Client</td><td>{row.get("area", "GB")}</td><td>1,000</td>'
-            f'{values}<td colspan="2">10%</td><td>5</td></tr>'
+            f'<td>Client</td><td>{row.get("area", "GB")}</td>'
+            f'<td>{row.get("sample", "1,000")}</td>'
+            f'{values}<td colspan="2">{row.get("others", "10%")}</td><td>5</td></tr>'
         )
         references.append(
             f'<li id="cite_note-{i}"><a class="external" '
@@ -214,9 +215,67 @@ def test_date_correction_rejects_reused_citations_and_changed_sample_sizes():
         polling.validate_polls(current, previous=_parse([row]))
 
 
+@pytest.mark.parametrize("sample", ["TBA", "2,023"])
+def test_refresh_accepts_unique_citation_upgrade_and_only_completes_unreported_metadata(sample):
+    row = dict(firm="Deltapoll", end="2026-10-09", label="6-9 Oct", sample=sample,
+               others="TBA", url="https://example.org/preliminary-post")
+    previous = _parse([row])
+    current = _parse([{**row, "url": "https://example.org/full-report.pdf",
+                       "sample": "2,023", "others": "10%"}])
+    revised = polling.validate_polls(current, previous=previous)
+    assert len(revised) == 1
+    revision, = polling.source_revisions(revised, previous)
+    assert "citation update" in revision["reason"]
+    assert revision["previous"]["source_url"] == row["url"]
+    assert revision["previous"]["sample_size_reported"] == sample
+    assert revision["current"]["source_url"] == "https://example.org/full-report.pdf"
+    assert revision["current"]["sample_size_reported"] == "2,023"
+    assert json.loads(revision["previous"]["reported_results"])["RB / Others"] == "TBA"
+    assert json.loads(revision["current"]["reported_results"])["RB / Others"] == "10%"
+
+
+@pytest.mark.parametrize("change", [
+    {"shares": (31, 25, 20, 10, 5)}, {"sample": "2,023"}, {"sample": "TBA"},
+    {"others": "11%"}, {"others": "TBA"}, {"area": "UK"},
+    {"end": "2026-10-08", "label": "6-8 Oct"},
+])
+def test_citation_upgrade_rejects_changed_results_sample_scope_or_dates(change):
+    row = dict(firm="Firm", end="2026-10-09", label="6-9 Oct",
+               url="https://example.org/preliminary")
+    anchor = dict(firm="Unchanged firm", url="https://example.org/unchanged")
+    previous = _parse([row, anchor])
+    current = _parse([{**row, "url": "https://example.org/full-report", **change}, anchor])
+    with pytest.raises(ValueError, match="lost previously published"):
+        polling.validate_polls(current, previous=previous)
+
+
+@pytest.mark.parametrize("side", ["previous", "current"])
+def test_citation_upgrade_rejects_ambiguous_same_firm_fieldwork(side):
+    row = dict(firm="Firm", end="2026-10-09", label="6-9 Oct",
+               url="https://example.org/preliminary")
+    other = {**row, "url": "https://example.org/another-poll"}
+    previous = _parse([row, other] if side == "previous" else [row])
+    current_rows = [{**row, "url": "https://example.org/full-report"}]
+    current = _parse([*current_rows, other] if side == "current" else current_rows)
+    with pytest.raises(ValueError, match="lost previously published"):
+        polling.validate_polls(current, previous=previous)
+
+
+def test_date_and_citation_revisions_cannot_merge_two_old_polls_into_one():
+    row = dict(firm="Firm", end="2026-07-30", label="29-30 Jul",
+               url="https://example.org/report")
+    other = {**row, "end": "2026-07-29", "label": "28-29 Jul",
+             "url": "https://example.org/different-report"}
+    previous = _parse([row, other])
+    current = _parse([{**other, "url": row["url"]}])
+    with pytest.raises(ValueError, match="lost previously published"):
+        polling.validate_polls(current, previous=previous)
+
+
+@pytest.mark.parametrize("kind", ["date", "citation"])
 @pytest.mark.parametrize("deleted", [False, True])
 def test_refresh_records_corrections_once_but_preserves_files_when_polls_disappear(
-    monkeypatch, tmp_path, deleted,
+    monkeypatch, tmp_path, deleted, kind,
 ):
     row = dict(firm="Firm", end="2026-07-30", label="29-30 Jul",
                url="https://example.org/report")
@@ -232,9 +291,11 @@ def test_refresh_records_corrections_once_but_preserves_files_when_polls_disappe
     monkeypatch.setattr(polling, "SAVED_AVERAGES", averages)
     monkeypatch.setattr(polling, "REVISIONS", revisions)
     monkeypatch.setattr("sys.argv", ["polling_data"])
-    current = anchors if deleted else [
-        {**row, "end": "2026-07-29", "label": "28-29 Jul"}, *anchors,
-    ]
+    change = (
+        {"end": "2026-07-29", "label": "28-29 Jul"} if kind == "date"
+        else {"url": "https://example.org/full-report"}
+    )
+    current = anchors if deleted else [{**row, **change}, *anchors]
     monkeypatch.setattr(polling, "get_text", lambda *args, **kwargs: _html(current))
     monkeypatch.setattr(polling, "make_chart", lambda frame: tmp_path / "chart.png")
     validate = polling.validate_polls

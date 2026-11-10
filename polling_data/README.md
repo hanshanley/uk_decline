@@ -88,7 +88,7 @@ used consistently with the compilation.
 
 - [Underlying polls, including excluded records (CSV)](../data/gb_voting_intention_polls.csv)
 - [Daily party averages and exact contributor IDs (CSV)](../data/gb_voting_intention_average.csv)
-- [Source fieldwork-date correction history (JSON)](../outputs/polling/source_revisions.json)
+- [Source corrections and citation updates (JSON)](../outputs/polling/source_revisions.json)
 
 The first file also preserves all other reported result columns in
 `reported_results`. A source cell spanning multiple party columns stays a
@@ -109,7 +109,13 @@ a qualifying endpoint more than 45 days old, future fieldwork, conflicting
 duplicates, malformed results or missing previously published polls. A fieldwork-date
 correction is accepted only for a unique pollster/citation match with unchanged
 client, geography, sample and reported results, and overlapping fieldwork ranges.
-The correction history retains both record IDs, dates and snapshot provenance;
+Citation replacements are accepted only for a unique pollster/fieldwork match
+with unchanged client, geography, eligibility and selected-party percentages.
+Previously reported sample sizes and other results cannot change or disappear;
+unreported details may be completed when a preliminary citation is replaced
+by the full report. Date and citation revisions must remain one-to-one.
+The correction history retains both record IDs, citations, reported metadata,
+dates and snapshot provenance;
 the corrected poll replaces the old one rather than being counted twice.
 Ambiguous matches, changed results and genuinely missing polls still fail.
 It does not silently fall back to saved values. The second explicitly rebuilds offline

@@ -251,8 +251,14 @@ def heat_csv():
     ])
 
 
-def test_relocated_eia_heat_factors_preserve_physical_units_and_annual_values():
-    assert sources.parse_heat(heat_csv().to_csv(index=False), start=2024, end=2025) == {
+@pytest.mark.parametrize(("unit", "values"), [
+    ("Btu per cubic foot", ["0.001039", "0.001037"]),
+    ("million Btu per cubic foot", ["0.001039", "0.001037"]),
+    ("Btu per cubic foot", ["1039", "1037"]),
+])
+def test_relocated_eia_heat_factors_preserve_physical_units_and_annual_values(unit, values):
+    frame = heat_csv().assign(Unit=unit, Value=values)
+    assert sources.parse_heat(frame.to_csv(index=False), start=2024, end=2025) == {
         2024: pytest.approx(1039), 2025: pytest.approx(1037),
     }
 
@@ -264,7 +270,9 @@ def test_relocated_eia_heat_factors_preserve_physical_units_and_annual_values():
     lambda f: f.assign(MSN="NGTCKUS"),
     lambda f: f.assign(Unit="million Btu per barrel"),
     lambda f: f.assign(Description="Natural Gas Consumption, Electric Power Sector Heat Content"),
-    lambda f: f.assign(Value="1037"),
+    lambda f: f.assign(Unit="million Btu per cubic foot", Value="1037"),
+    lambda f: f.assign(Value=["0.001039", "1037"]),
+    lambda f: f.assign(Unit=["Btu per cubic foot", "million Btu per cubic foot"]),
     lambda f: f.assign(Value="Not Available"),
     lambda f: f.assign(Year="202513"),
     lambda f: f.rename(columns={"Year": "YYYYMM"}),

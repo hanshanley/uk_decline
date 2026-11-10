@@ -171,15 +171,19 @@ def parse_heat(text: str, *, start: int, end: int) -> dict[int, float]:
     if (
         frame.empty
         or not frame["Description"].eq("Natural Gas Consumption, End-Use Sectors Heat Content").all()
-        or not frame["Unit"].eq("Btu per cubic foot").all()
+        or frame["Unit"].nunique() != 1
+        or not frame["Unit"].isin({"Btu per cubic foot", "million Btu per cubic foot"}).all()
         or not frame["Year"].str.fullmatch(r"\d{4}").all()
     ):
         raise ValueError("Unexpected EIA heat-content series or units")
     frame = frame.loc[frame["Year"].astype(int).between(start, end)]
     if frame["Year"].duplicated().any() or set(frame["Year"].astype(int)) != set(range(start, end + 1)):
         raise ValueError("Missing or duplicate EIA annual heat-content observation")
-    # EIA's replacement download stores million-Btu factors; its display scales gas by 1e6.
-    heat = {int(row.Year): _number(row.Value)[0] * 1e6 for row in frame.itertuples()}
+    heat = {int(row.Year): _number(row.Value)[0] for row in frame.itertuples()}
+    # The initial replacement export mislabeled million-Btu values as Btu.
+    legacy_scale = all(.0005 <= value <= .0015 for value in heat.values())
+    if frame["Unit"].eq("million Btu per cubic foot").all() or legacy_scale:
+        heat = {year: value * 1e6 for year, value in heat.items()}
     if not all(500 <= value <= 1500 for value in heat.values()):
         raise ValueError("Unexpected EIA natural-gas heat-content scale")
     return heat

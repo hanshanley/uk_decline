@@ -238,47 +238,73 @@ def parse(html: str, retrieved: str) -> pd.DataFrame:
     return validate_polls(pd.DataFrame(records.values(), columns=RAW_FIELDS))
 
 
+def _metadata_completed(old: dict, new: dict) -> bool:
+    unreported = {"", "-", "\u2013", "\u2014", "TBA", "N/A"}
+    old_results, new_results = (
+        json.loads(row["reported_results"]) for row in (old, new)
+    )
+    sample = new["sample_size_reported"].replace(",", "")
+    return (
+        (
+            old["sample_size_reported"] == new["sample_size_reported"]
+            or (
+                old["sample_size_reported"] in unreported
+                and re.fullmatch(r"[1-9]\d*", sample) is not None
+            )
+        )
+        and old_results.keys() <= new_results.keys()
+        and all(value in unreported or value == new_results[key] for key, value in old_results.items())
+    )
+
+
 def source_revisions(frame: pd.DataFrame, previous: pd.DataFrame) -> list[dict]:
     revisions = []
-    identity = ["pollster_id", "source_url"]
-    unchanged = ["pollster", "client", "area", "sample_size_reported", "reported_results",
-                 "exclusion_reason", *PARTIES]
+    claimed = set()
+    unchanged = ["pollster", "client", "area", "exclusion_reason", *PARTIES]
+    rules = [
+        (["pollster_id", "source_url"], "source fieldwork-date correction; same unique citation and reported results"),
+        (["pollster_id", "fieldwork_start", "fieldwork_end"],
+         "source citation update; same unique fieldwork and headline results, no loss of reported metadata"),
+    ]
     missing = previous.loc[~previous["poll_id"].isin(frame["poll_id"])]
     added = frame.loc[~frame["poll_id"].isin(previous["poll_id"])]
     for old in missing.to_dict("records"):
-        candidates = added.loc[
-            added["pollster_id"].eq(old["pollster_id"])
-            & added["source_url"].eq(old["source_url"])
-        ]
-        old_count = previous[identity].eq(pd.Series({key: old[key] for key in identity})).all(axis=1).sum()
-        new_count = frame[identity].eq(pd.Series({key: old[key] for key in identity})).all(axis=1).sum()
-        if len(candidates) != 1 or old_count != 1 or new_count != 1:
-            continue
-        new = candidates.iloc[0].to_dict()
-        if (
-            not old["sample_size_reported"] or not any(pd.notna(old[party]) for party in PARTIES)
-            or any(
-                not (pd.isna(old[key]) and pd.isna(new[key])) and old[key] != new[key]
-                for key in unchanged
+        for identity, reason in rules:
+            match = pd.Series({key: old[key] for key in identity})
+            candidates = added.loc[added[identity].eq(match).all(axis=1)]
+            old_count = previous[identity].eq(match).all(axis=1).sum()
+            new_count = frame[identity].eq(match).all(axis=1).sum()
+            if len(candidates) != 1 or old_count != 1 or new_count != 1:
+                continue
+            new = candidates.iloc[0].to_dict()
+            if new["poll_id"] in claimed:
+                continue
+            fields = unchanged + (
+                ["sample_size_reported", "reported_results"] if "source_url" in identity else []
             )
-            or pd.Timestamp(old["fieldwork_start"]) > pd.Timestamp(new["fieldwork_end"])
-            or pd.Timestamp(new["fieldwork_start"]) > pd.Timestamp(old["fieldwork_end"])
-        ):
-            continue
-        revisions.append({
-            "reason": "source fieldwork-date correction; same unique citation and reported results",
-            "pollster": new["pollster"], "source_url": new["source_url"],
-            "previous": {
-                key: str(old[key]) for key in (
-                    "poll_id", "fieldwork_start", "fieldwork_end", "retrieved_utc", "snapshot_sha256",
+            if (
+                not any(pd.notna(old[party]) for party in PARTIES)
+                or any(
+                    not (pd.isna(old[key]) and pd.isna(new[key])) and old[key] != new[key]
+                    for key in fields
                 )
-            },
-            "current": {
-                key: str(new[key]) for key in (
-                    "poll_id", "fieldwork_start", "fieldwork_end", "retrieved_utc", "snapshot_sha256",
-                )
-            },
-        })
+                or pd.Timestamp(old["fieldwork_start"]) > pd.Timestamp(new["fieldwork_end"])
+                or pd.Timestamp(new["fieldwork_start"]) > pd.Timestamp(old["fieldwork_end"])
+                or ("source_url" in identity and not old["sample_size_reported"])
+                or ("source_url" not in identity and not _metadata_completed(old, new))
+            ):
+                continue
+            provenance = (
+                "poll_id", "fieldwork_start", "fieldwork_end", "source_url", "source_title",
+                "sample_size_reported", "reported_results", "retrieved_utc", "snapshot_sha256",
+            )
+            revisions.append({
+                "reason": reason, "pollster": new["pollster"], "source_url": new["source_url"],
+                "previous": {key: str(old[key]) for key in provenance},
+                "current": {key: str(new[key]) for key in provenance},
+            })
+            claimed.add(new["poll_id"])
+            break
     return revisions
 
 
@@ -524,9 +550,7 @@ def main() -> None:
             REVISIONS.write_text(json.dumps(history, indent=2) + "\n")
             for revision in revisions:
                 print(
-                    f"[polling] recorded fieldwork-date correction: {revision['pollster']} "
-                    f"{revision['previous']['fieldwork_start']} to {revision['previous']['fieldwork_end']} "
-                    f"-> {revision['current']['fieldwork_start']} to {revision['current']['fieldwork_end']}"
+                    f"[polling] recorded source revision: {revision['pollster']}: {revision['reason']}"
                 )
     for frame, target in ((polls, SAVED_POLLS), (averages, SAVED_AVERAGES)):
         target.parent.mkdir(parents=True, exist_ok=True)
