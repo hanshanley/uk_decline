@@ -95,16 +95,19 @@ jobs:
     if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request' && github.event.schedule != '37 6 * * 0,2-6' && inputs.source_check_only != true
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 25
     permissions:
       pages: write
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry.outputs.page_url }}
     steps:
       - name: Deploy GitHub Pages
         id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v4
-        with:
-          timeout: 1800000
+      - name: Retry GitHub Pages deployment
+        if: steps.deployment.outcome == 'failure'
+        id: deployment_retry
+        uses: actions/deploy-pages@v4
