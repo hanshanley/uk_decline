@@ -47,7 +47,7 @@ Share of A&E attendances admitted, transferred or discharged within 4 hours (tar
 | Nation | First | Latest | Change |
 |---|---|---|---|
 | England | 88.6% (Apr 2018) | 74.4% (Sep 2026) | ↓ 14.2 pp (worse) |
-| Scotland | 96.6% (Jul 2007) | 66.7% (Aug 2026) | ↓ 29.9 pp (worse) |
+| Scotland | 96.6% (Jul 2007) | 64.9% (Sep 2026) | ↓ 31.7 pp (worse) |
 | Wales | 91.7% (Oct 2009) | 63.9% (Sep 2026) | ↓ 27.8 pp (worse) |
 | Northern Ireland | 91.4% (Apr 2008) | 41.7% (Sep 2026) | Not like-for-like (encompass break) |
 

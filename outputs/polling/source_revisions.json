@@ -1,1 +1,21 @@
-[]
+[
+  {
+    "reason": "source fieldwork-date correction; same unique citation and reported results",
+    "pollster": "BMG Research",
+    "source_url": "https://bmgresearch.com/wp-content/uploads/2026/08/july-2026-omnibus-tables-for-the-i.xlsx",
+    "previous": {
+      "poll_id": "008f56dab18fe533e8ea",
+      "fieldwork_start": "2026-07-29 00:00:00",
+      "fieldwork_end": "2026-07-30 00:00:00",
+      "retrieved_utc": "2026-11-02T17:41:16+00:00",
+      "snapshot_sha256": "767ce4a619ae1137fccc1a5d96da5c09ea7c14146bd1aa927bf93a8111c227c2"
+    },
+    "current": {
+      "poll_id": "fb6f4b5d3219a6efdb3f",
+      "fieldwork_start": "2026-07-28 00:00:00",
+      "fieldwork_end": "2026-07-29 00:00:00",
+      "retrieved_utc": "2026-11-10T00:30:26+00:00",
+      "snapshot_sha256": "85bee27597fee6220d08ecf913de2aebcc33f24e5e8b416d6e42acf281fec9c1"
+    }
+  }
+]
