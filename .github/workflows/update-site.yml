@@ -95,6 +95,7 @@ jobs:
     if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request' && github.event.schedule != '37 6 * * 0,2-6' && inputs.source_check_only != true
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     permissions:
       pages: write
       id-token: write
@@ -105,3 +106,5 @@ jobs:
       - name: Deploy GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          timeout: 1800000
