@@ -7,6 +7,7 @@ import csv
 from pathlib import Path
 
 import pandas as pd
+from europe_data._coverage import validate_csv_refresh
 
 from . import charts, worldbank
 
@@ -17,6 +18,7 @@ DEFAULT_CSV = ROOT / "data" / "trade_share_gdp.csv"
 def _write(rows: list[dict], path: Path) -> None:
     if not rows:
         raise RuntimeError("Trade source returned no observations; existing data was not replaced")
+    validate_csv_refresh(rows, path, ("country_code", "year"))
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=worldbank.ROW_FIELDS)
