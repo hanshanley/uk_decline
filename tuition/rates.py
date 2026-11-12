@@ -16,8 +16,9 @@ import datetime as dt
 import os
 from typing import Iterable, Optional
 
+from europe_data._http import get_json
+
 from . import config
-from .http import get_json
 
 
 def _fallback_record(country: config.Country) -> dict:

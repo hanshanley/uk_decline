@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from typing import Iterable, Iterator
 
+from europe_data._http import get_json
+
 from . import markets, regions
-from ._http import get_json
 
 BASE = "https://api.worldbank.org/v2"
 

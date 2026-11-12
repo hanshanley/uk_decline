@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlsplit
 
 import requests
 from tenacity import (
@@ -36,8 +37,12 @@ def get_json(url: str, params: dict[str, Any] | None = None, timeout: int = 60) 
         reraise=True,
     ):
         with attempt:
-            # Gateways can cache errors; retries must revalidate the same request.
-            options = {"headers": {"Cache-Control": "no-cache"}} if attempt.retry_state.attempt_number > 1 else {}
+            # World Bank gateways can cache failures even before our first request.
+            revalidate = (
+                urlsplit(url).hostname == "api.worldbank.org"
+                or attempt.retry_state.attempt_number > 1
+            )
+            options = {"headers": {"Cache-Control": "no-cache"}} if revalidate else {}
             resp = session().get(url, params=params, timeout=timeout, **options)
             resp.raise_for_status()
             return resp.json()

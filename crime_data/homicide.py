@@ -12,7 +12,7 @@ from __future__ import annotations
 import datetime as _dt
 from typing import Iterable, Iterator
 
-import requests
+from europe_data._http import get_json
 
 from . import countries
 
@@ -22,21 +22,17 @@ METRIC = "homicide_rate_per_100k"
 UNIT = "per 100,000 population"
 SOURCE = "UN Office on Drugs and Crime (UNODC) via World Bank WDI"
 
-_UA = {"User-Agent": "uk_decline/0.1 (crime statistics research)"}
-
 
 def _fetch(codes: list[str], start: int, end: int, timeout: int = 60) -> Iterator[dict]:
     joined = ";".join(codes)
     page = 1
     while True:
-        resp = requests.get(
+        payload = get_json(
             f"{BASE}/country/{joined}/indicator/{INDICATOR}",
             params={"format": "json", "per_page": 1000,
                     "date": f"{start}:{end}", "page": page},
-            headers=_UA, timeout=timeout,
+            timeout=timeout,
         )
-        resp.raise_for_status()
-        payload = resp.json()
         if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
             return
         meta, rows = payload[0], payload[1]

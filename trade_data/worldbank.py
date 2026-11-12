@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from urllib.parse import urlsplit
 
-import requests
+from europe_data._http import get_json
 
 BASE = "https://api.worldbank.org/v2"
 INDICATOR = "NE.TRD.GNFS.ZS"
@@ -61,7 +61,7 @@ def fetch(start: int = 2000, end: int | None = None, timeout: int = 60) -> list[
     page = 1
     rows: list[dict] = []
     while True:
-        response = requests.get(
+        payload = get_json(
             url,
             params={
                 "format": "json",
@@ -70,10 +70,8 @@ def fetch(start: int = 2000, end: int | None = None, timeout: int = 60) -> list[
                 "page": page,
             },
             timeout=timeout,
-            headers={"User-Agent": "uk_decline/0.1 (trade openness research)"},
         )
-        response.raise_for_status()
-        pages, parsed = parse_payload(response.json())
+        pages, parsed = parse_payload(payload)
         rows.extend(parsed)
         if page >= pages:
             break

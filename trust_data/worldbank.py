@@ -10,8 +10,9 @@ from __future__ import annotations
 
 from typing import Iterable, Iterator
 
+from europe_data._http import get_json
+
 from . import countries, metrics
-from ._http import get_json
 
 BASE = "https://api.worldbank.org/v2"
 WGI_SOURCE = 3

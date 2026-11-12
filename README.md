@@ -83,6 +83,13 @@ complete-refresh date advances. Source failures, lost required coverage or stale
 figures stop publication. A partial `--only` run does not claim a complete refresh.
 The workflow tests and builds the result before pushing refreshed inputs.
 
+All World Bank clients use the same pooled HTTP helper, including trade, homicide,
+age structure and population pyramids. Requests revalidate cached responses from
+the first attempt and retry network/HTTP failures up to five times with backoff.
+Retries preserve the country, year, indicator, source database and pagination
+parameters. Persistent upstream failures still stop publication; saved data is
+not substituted for a successful live refresh.
+
 Tuesday-Sunday runs at the same scheduled time check all live sources, tests and
 the site build without committing or deploying. Manual `source_check_only` runs
 do the same on any branch; `refresh_data` on a non-`master` branch also checks

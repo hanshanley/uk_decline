@@ -219,14 +219,7 @@ def test_homicide_parser(monkeypatch) -> None:  # type: ignore[no-untyped-def]
         ],
     ]
 
-    class _Resp:
-        def raise_for_status(self):  # noqa: D401
-            pass
-
-        def json(self):
-            return payload
-
-    monkeypatch.setattr(homicide.requests, "get", lambda *a, **k: _Resp())
+    monkeypatch.setattr(homicide, "get_json", lambda *a, **k: payload)
     rows = homicide.build_rows(2019, 2020, iso3s=["GBR", "USA"])
     assert len(rows) == 2
     by = {r["iso3"]: r for r in rows}

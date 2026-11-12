@@ -12,8 +12,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from europe_data._http import get_json
+
 from .. import schema
-from .._http import get_json
 
 BASE = "https://api.worldbank.org/v2"
 SOURCE = "World Bank WDI"
