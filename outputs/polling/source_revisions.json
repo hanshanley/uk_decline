@@ -44,5 +44,59 @@
       "retrieved_utc": "2026-11-10T15:53:01+00:00",
       "snapshot_sha256": "9203413eb05916ad9b3196195310d84e03a9d659a480c4535e90fcd4548e5aca"
     }
+  },
+  {
+    "reason": "source citation update; same unique fieldwork and headline results, no loss of reported metadata",
+    "pollster": "BMG Research",
+    "source_url": "https://bmgresearch.com/wp-content/uploads/2026/11/october-2026-omnibus-tables-for-the-i.xlsx",
+    "previous": {
+      "poll_id": "adf0e7b4861d5845f8c7",
+      "fieldwork_start": "2026-10-28 00:00:00",
+      "fieldwork_end": "2026-10-29 00:00:00",
+      "source_url": "https://inews.co.uk/news/politics/burnhams-poll-bounce-grows-100-giveaway-benefits-danger-looms-4848482",
+      "source_title": "\u2191 \"Burnham's poll bounce grows after \u00a3100 giveaway - but benefits danger looms\" . The i Paper. 30 October 2026 . Retrieved 30 October 2026 .",
+      "sample_size_reported": "1,529",
+      "reported_results": "{\"Con\": \"21%\", \"Grn\": \"8%\", \"LD\": \"8%\", \"Lab\": \"31%\", \"Lead\": \"9\", \"Others\": \"2%\", \"PC\": \"1%\", \"RB\": \"5%\", \"Ref\": \"22%\", \"SNP\": \"2%\"}",
+      "retrieved_utc": "2026-11-10T19:09:54+00:00",
+      "snapshot_sha256": "807b1e3c1c2d891f4496268ba025f47a1e937bd6cd016c4127ff159796005d0d"
+    },
+    "current": {
+      "poll_id": "46d6deca9ef32981b2fe",
+      "fieldwork_start": "2026-10-28 00:00:00",
+      "fieldwork_end": "2026-10-29 00:00:00",
+      "source_url": "https://bmgresearch.com/wp-content/uploads/2026/11/october-2026-omnibus-tables-for-the-i.xlsx",
+      "source_title": "\u2191 \"BMG Polling Results - On behalf of The i\" . BMG Research. 2 November 2026 . Retrieved 2 November 2026 .",
+      "sample_size_reported": "1,529",
+      "reported_results": "{\"Con\": \"21%\", \"Grn\": \"8%\", \"LD\": \"8%\", \"Lab\": \"31%\", \"Lead\": \"9\", \"Others\": \"2%\", \"PC\": \"1%\", \"RB\": \"5%\", \"Ref\": \"22%\", \"SNP\": \"2%\"}",
+      "retrieved_utc": "2026-11-12T20:42:11+00:00",
+      "snapshot_sha256": "35e12fe560f26a5e4f4e01836a58192cfc23068477998eacdf8bd21eff785392"
+    }
+  },
+  {
+    "reason": "source citation update; same unique fieldwork and headline results, no loss of reported metadata",
+    "pollster": "More in Common",
+    "source_url": "https://www.moreincommon.org.uk/wp-content/uploads/2026/11/November-9th-Votingintention-1.xlsx",
+    "previous": {
+      "poll_id": "3ffb5a26f25df489aa0e",
+      "fieldwork_start": "2026-11-06 00:00:00",
+      "fieldwork_end": "2026-11-09 00:00:00",
+      "source_url": "https://x.com/LukeTryl/status/2120123604247658969",
+      "source_title": "\u2191 \"Latest voting intention in @Telegraph. Reform at 20% their lowest since 2024, 5pts behind the Tories. While Labour lead the Tories by 3\" . Luke Tryl on X (formerly Twitter). 10 November 2026 . Retrieved 10 November 2026 .",
+      "sample_size_reported": "2,013",
+      "reported_results": "{\"Con\": \"25%\", \"Grn\": \"7%\", \"LD\": \"9%\", \"Lab\": \"28%\", \"Lead\": \"3\", \"Others\": \"1%\", \"PC\": \"TBA\", \"RB\": \"6%\", \"Ref\": \"20%\", \"SNP\": \"3%\"}",
+      "retrieved_utc": "2026-11-10T19:09:54+00:00",
+      "snapshot_sha256": "807b1e3c1c2d891f4496268ba025f47a1e937bd6cd016c4127ff159796005d0d"
+    },
+    "current": {
+      "poll_id": "184aeca19916f00fba32",
+      "fieldwork_start": "2026-11-06 00:00:00",
+      "fieldwork_end": "2026-11-09 00:00:00",
+      "source_url": "https://www.moreincommon.org.uk/wp-content/uploads/2026/11/November-9th-Votingintention-1.xlsx",
+      "source_title": "\u2191 \"Voting Intention and trackers\" . 10 November 2026 . Retrieved 10 November 2026 .",
+      "sample_size_reported": "2,013",
+      "reported_results": "{\"Con\": \"25%\", \"Grn\": \"7%\", \"LD\": \"9%\", \"Lab\": \"28%\", \"Lead\": \"3\", \"Others\": \"1%\", \"PC\": \"1%\", \"RB\": \"6%\", \"Ref\": \"20%\", \"SNP\": \"3%\"}",
+      "retrieved_utc": "2026-11-12T20:42:11+00:00",
+      "snapshot_sha256": "35e12fe560f26a5e4f4e01836a58192cfc23068477998eacdf8bd21eff785392"
+    }
   }
 ]

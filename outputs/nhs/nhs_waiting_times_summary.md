@@ -1,6 +1,6 @@
 # UK NHS waiting times & waiting lists — trend summary
 
-Coverage: **Jul 2007 – Sep 2026** across 4 nations. Source data is devolved and defined differently per nation — read each metric's caveat and compare *trends*, not exact levels.
+Coverage: **Jul 2007 – Oct 2026** across 4 nations. Source data is devolved and defined differently per nation — read each metric's caveat and compare *trends*, not exact levels.
 
 
 ## Hospital treatment waiting lists (pathways / waits)
@@ -9,7 +9,7 @@ Recorded elective pathways / ongoing waits, not unique people. Scotland sums out
 
 | Nation | First | Latest | Change |
 |---|---|---|---|
-| England | 4.19M (Aug 2007) | 7.16M (Aug 2026) | Not like-for-like (community-service scope, sexual-health scope break) |
+| England | 4.19M (Aug 2007) | 7.07M (Sep 2026) | Not like-for-like (community-service scope, sexual-health scope break) |
 | Scotland | 247k (Oct 2012) | 665k (Sep 2026) | ↑ 418k (worse) |
 | Wales | 392k (Sep 2011) | 714k (Aug 2026) | ↑ 322k (worse) |
 | Northern Ireland | 77k (Jun 2008) | 505k (Jun 2026) | Not like-for-like (encompass break) |
@@ -35,7 +35,7 @@ Median waiting time of patients still waiting to start treatment.
 
 | Nation | First | Latest | Change |
 |---|---|---|---|
-| England | 6.5 wks (Oct 2015) | 12.5 wks (Aug 2026) | Not like-for-like (community-service scope break) |
+| England | 6.5 wks (Oct 2015) | 12.5 wks (Sep 2026) | Not like-for-like (community-service scope break) |
 | Wales | 8.7 wks (Sep 2011) | 17.2 wks (Aug 2026) | ↑ 8.5 wks (worse) |
 
 > Caveat: England is estimated from weekly count bands (midpoint of the median band); Wales reports its median. Scotland's stage medians cannot be combined into a pooled median and are not included.
@@ -46,7 +46,7 @@ Share of A&E attendances admitted, transferred or discharged within 4 hours (tar
 
 | Nation | First | Latest | Change |
 |---|---|---|---|
-| England | 88.6% (Apr 2018) | 74.4% (Sep 2026) | ↓ 14.2 pp (worse) |
+| England | 88.6% (Apr 2018) | 74.0% (Oct 2026) | ↓ 14.6 pp (worse) |
 | Scotland | 96.6% (Jul 2007) | 64.9% (Sep 2026) | ↓ 31.7 pp (worse) |
 | Wales | 91.7% (Oct 2009) | 63.9% (Sep 2026) | ↓ 27.8 pp (worse) |
 | Northern Ireland | 91.4% (Apr 2008) | 41.7% (Sep 2026) | Not like-for-like (encompass break) |
@@ -59,7 +59,7 @@ Share of patients starting first cancer treatment within 62 days of an urgent re
 
 | Nation | First | Latest | Change |
 |---|---|---|---|
-| England | 69.0% (Apr 2022) | 71.9% (Aug 2026) | Not like-for-like (cancer standards break) |
+| England | 69.0% (Apr 2022) | 70.7% (Sep 2026) | Not like-for-like (cancer standards break) |
 | Scotland | 94.8% (Mar 2012) | 73.6% (Jun 2026) | ↓ 21.2 pp (worse) |
 | Wales | 88.1% (Oct 2009) | 59.9% (Aug 2026) | Not like-for-like (suspected cancer pathway break) |
 | Northern Ireland | 83.5% (Apr 2008) | 30.8% (Jun 2026) | Not like-for-like (encompass break) |
@@ -72,7 +72,7 @@ Share of patients on the diagnostic-test waiting list who have been waiting 6 we
 
 | Nation | First | Latest | Change |
 |---|---|---|---|
-| England | 1.3% (Jun 2012) | 24.7% (Aug 2026) | ↑ 23.4 pp (worse) |
+| England | 1.3% (Jun 2012) | 22.6% (Sep 2026) | ↑ 21.3 pp (worse) |
 | Scotland | 14.0% (Sep 2007) | 27.5% (Sep 2026) | ↑ 13.5 pp (worse) |
 | Wales | 48.5% (Aug 2024) | 44.8% (Aug 2026) | ↓ 3.7 pp (better) |
 | Northern Ireland | 36.1% (Mar 2008) | 69.2% (Jun 2026) | Not like-for-like (encompass break) |
