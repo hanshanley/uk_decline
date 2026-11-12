@@ -2,28 +2,53 @@
 
 import csv
 from importlib import import_module
-from pathlib import Path
 
 import pytest
 
 
-@pytest.mark.parametrize("source,path,keys", [
-    ("trade", "data/trade_share_gdp.csv", ("country_code", "year")),
-    ("csew", "data/crime_csew_long.csv", ("region", "offence_group", "level", "date", "metric")),
-    ("homicide", "data/crime_homicide_long.csv", ("iso3", "year", "metric")),
-    ("nations", "data/crime_homicide_nations_long.csv", ("jurisdiction", "year", "metric")),
-    ("markets", "data/stock_market_size.csv", ("region_code", "year", "metric")),
+def example_rows(source):
+    if source == "trade":
+        from trade_data.worldbank import ROW_FIELDS
+        fields = ROW_FIELDS
+    elif source == "markets":
+        from markets_data.markets import ROW_FIELDS
+        fields = ROW_FIELDS
+    else:
+        module = import_module("crime_data.__main__")
+        fields = getattr(module, f"_{source.upper()}_FIELDS")
+    rows = []
+    for year in (1999, 2000, 2001):
+        row = dict.fromkeys(fields, "fixture")
+        row.update(year=year, value=100.0)
+        if "date" in row:
+            row["date"] = f"{year}-12-31"
+        if "metric" in row:
+            row["metric"] = "market_cap_usd" if source == "markets" else "count"
+        rows.append(row)
+    return fields, rows
+
+
+def save_rows(path, fields, rows):
+    with path.open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+@pytest.mark.parametrize("source,keys", [
+    ("trade", ("country_code", "year")),
+    ("csew", ("region", "offence_group", "level", "date", "metric")),
+    ("homicide", ("iso3", "year", "metric")),
+    ("nations", ("jurisdiction", "year", "metric")),
+    ("markets", ("region_code", "year", "metric")),
 ])
 @pytest.mark.parametrize("defect", ["missing", "duplicate", "nonfinite", "revision"])
 def test_source_writers_preserve_published_coverage(
-    tmp_path, monkeypatch, source, path, keys, defect,
+    tmp_path, monkeypatch, source, keys, defect,
 ):
-    with Path(path).open(newline="") as handle:
-        reader = csv.DictReader(handle)
-        fields = reader.fieldnames
-        rows = list(reader)
+    fields, rows = example_rows(source)
     target = tmp_path / "source.csv"
-    target.write_bytes(Path(path).read_bytes())
+    save_rows(target, fields, rows)
     original = target.read_bytes()
     if defect == "missing":
         rows.pop()
@@ -32,7 +57,7 @@ def test_source_writers_preserve_published_coverage(
     elif defect == "nonfinite":
         rows[0]["value"] = "nan"
     else:
-        rows[0]["value"] = str(float(rows[0]["value"]) + 1)
+        rows[0]["value"] += 1
 
     def write():
         if source == "trade":
@@ -54,7 +79,7 @@ def test_source_writers_preserve_published_coverage(
                 tuple(row[key] for key in keys): float(row["value"])
                 for row in csv.DictReader(handle)
             }
-        assert revised[tuple(rows[0][key] for key in keys)] == float(rows[0]["value"])
+        assert revised[tuple(str(rows[0][key]) for key in keys)] == float(rows[0]["value"])
     else:
         with pytest.raises((RuntimeError, ValueError), match="lose|duplicate|nonfinite"):
             write()
@@ -65,11 +90,10 @@ def test_source_writers_preserve_published_coverage(
 
 def test_explicit_market_window_retains_its_intentional_range(tmp_path, monkeypatch):
     from markets_data import combine
-    with Path("data/stock_market_size.csv").open(newline="") as handle:
-        previous = list(csv.DictReader(handle))
+    fields, previous = example_rows("markets")
     rows = [row for row in previous if 2000 <= int(row["year"]) <= 2001]
     target = tmp_path / "source.csv"
-    target.write_bytes(Path("data/stock_market_size.csv").read_bytes())
+    save_rows(target, fields, previous)
     monkeypatch.setattr(combine, "fetch_all", lambda *a: (rows, 2025))
     result = combine.build(
         2000, 2001, target, tmp_path / "wide.csv", tmp_path / "manifest.json",

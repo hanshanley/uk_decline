@@ -39,6 +39,10 @@ data/processed/*.csv
 !data/austerity_spending.csv
 !data/food_bank_calendar_year.csv
 !data/crime_csew_long.csv
+!data/crime_homicide_long.csv
+!data/crime_homicide_nations_long.csv
+!data/trade_share_gdp.csv
+!data/stock_market_size.csv
 !data/trust/trust_combined_long.csv
 !data/processed/tuition_history.csv
 !data/tuition_common_year.csv

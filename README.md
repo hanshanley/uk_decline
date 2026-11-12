@@ -93,6 +93,8 @@ modules from bypassing the shared Python HTTP policy. The Bank of England retain
 its separately bounded curl transport for provider compatibility.
 Trade, crime and stock-market refreshes also reject lost historical observations,
 duplicate keys and nonfinite values before replacing their published CSVs.
+Their complete source CSVs are tracked so these checks retain the previous
+successful history on a fresh GitHub runner, not just on a developer's machine.
 
 All World Bank clients use the same pooled HTTP helper, including trade, homicide,
 age structure and population pyramids. Requests revalidate cached responses from

@@ -1,0 +1,78 @@
+jurisdiction,year,metric,value,unit,source
+England & Wales,2000,homicide_rate_per_million,12.863,per million population,ONS Homicide Index
+England & Wales,2001,homicide_rate_per_million,14.576,per million population,ONS Homicide Index
+England & Wales,2002,homicide_rate_per_million,15.145,per million population,ONS Homicide Index
+England & Wales,2003,homicide_rate_per_million,17.908,per million population,ONS Homicide Index
+England & Wales,2004,homicide_rate_per_million,14.623,per million population,ONS Homicide Index
+England & Wales,2005,homicide_rate_per_million,14.618,per million population,ONS Homicide Index
+England & Wales,2006,homicide_rate_per_million,13.234,per million population,ONS Homicide Index
+England & Wales,2007,homicide_rate_per_million,13.179,per million population,ONS Homicide Index
+England & Wales,2008,homicide_rate_per_million,13.441,per million population,ONS Homicide Index
+England & Wales,2009,homicide_rate_per_million,11.615,per million population,ONS Homicide Index
+England & Wales,2010,homicide_rate_per_million,10.718,per million population,ONS Homicide Index
+England & Wales,2011,homicide_rate_per_million,11.33,per million population,ONS Homicide Index
+England & Wales,2012,homicide_rate_per_million,9.346,per million population,ONS Homicide Index
+England & Wales,2013,homicide_rate_per_million,9.597,per million population,ONS Homicide Index
+England & Wales,2014,homicide_rate_per_million,9.124,per million population,ONS Homicide Index
+England & Wales,2015,homicide_rate_per_million,8.774,per million population,ONS Homicide Index
+England & Wales,2016,homicide_rate_per_million,9.295,per million population,ONS Homicide Index
+England & Wales,2017,homicide_rate_per_million,11.805,per million population,ONS Homicide Index
+England & Wales,2018,homicide_rate_per_million,11.891,per million population,ONS Homicide Index
+England & Wales,2019,homicide_rate_per_million,10.863,per million population,ONS Homicide Index
+England & Wales,2020,homicide_rate_per_million,11.396,per million population,ONS Homicide Index
+England & Wales,2021,homicide_rate_per_million,9.339,per million population,ONS Homicide Index
+England & Wales,2022,homicide_rate_per_million,11.264,per million population,ONS Homicide Index
+England & Wales,2023,homicide_rate_per_million,9.644,per million population,ONS Homicide Index
+England & Wales,2024,homicide_rate_per_million,9.301,per million population,ONS Homicide Index
+England & Wales,2025,homicide_rate_per_million,8.578,per million population,ONS Homicide Index
+Northern Ireland,2000,homicide_rate_per_million,24.362,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2001,homicide_rate_per_million,30.79,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2002,homicide_rate_per_million,20.618,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2003,homicide_rate_per_million,22.288,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2004,homicide_rate_per_million,18.086,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2005,homicide_rate_per_million,16.206,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2006,homicide_rate_per_million,15.49,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2007,homicide_rate_per_million,14.759,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2008,homicide_rate_per_million,12.365,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2009,homicide_rate_per_million,14.498,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2010,homicide_rate_per_million,11.635,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2011,homicide_rate_per_million,12.126,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2012,homicide_rate_per_million,10.413,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2013,homicide_rate_per_million,10.373,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2014,homicide_rate_per_million,9.766,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2015,homicide_rate_per_million,11.321,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2016,homicide_rate_per_million,9.11,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2017,homicide_rate_per_million,11.199,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2018,homicide_rate_per_million,11.663,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2019,homicide_rate_per_million,13.695,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2020,homicide_rate_per_million,9.997,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2021,homicide_rate_per_million,9.451,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2022,homicide_rate_per_million,13.085,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2023,homicide_rate_per_million,5.207,per million population,Police Service of Northern Ireland; ONS population estimates
+Northern Ireland,2024,homicide_rate_per_million,9.337,per million population,Police Service of Northern Ireland; ONS population estimates
+Scotland,2000,homicide_rate_per_million,24.251,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2001,homicide_rate_per_million,20.936,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2002,homicide_rate_per_million,22.906,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2003,homicide_rate_per_million,24.674,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2004,homicide_rate_per_million,21.505,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2005,homicide_rate_per_million,26.946,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2006,homicide_rate_per_million,18.786,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2007,homicide_rate_per_million,23.573,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2008,homicide_rate_per_million,22.437,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2009,homicide_rate_per_million,19.028,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2010,homicide_rate_per_million,15.673,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2011,homicide_rate_per_million,19.003,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2012,homicide_rate_per_million,17.548,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2013,homicide_rate_per_million,11.868,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2014,homicide_rate_per_million,11.661,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2015,homicide_rate_per_million,11.817,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2016,homicide_rate_per_million,11.027,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2017,homicide_rate_per_million,12.096,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2018,homicide_rate_per_million,10.95,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2019,homicide_rate_per_million,11.869,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2020,homicide_rate_per_million,12.382,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2021,homicide_rate_per_million,10.908,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2022,homicide_rate_per_million,9.791,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2023,homicide_rate_per_million,9.73,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2024,homicide_rate_per_million,10.341,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
+Scotland,2025,homicide_rate_per_million,8.118,per million population,"Scottish Government, Homicide in Scotland 2024-25 (Scottish Parliament S6W-43088); ONS population estimates"
