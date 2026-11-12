@@ -4,7 +4,7 @@ Fetches the ``SP.POP.{band}.MA`` / ``SP.POP.{band}.FE`` count indicators (00-04 
 then converts each (band, sex) count to a share of that country-year's total population
 (the sum over all bands and both sexes, so the shares are internally consistent and sum
 to ~100%). Underlying data is the UN Population Division's World Population Prospects,
-redistributed by the World Bank (see :data:`age_data.config.CITATIONS`).
+redistributed by World Bank database 16 (see :data:`age_data.config.CITATIONS`).
 """
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ SOURCE = config.SOURCE_WB
 METRIC = "pop_band_share_pct"
 METRICS = (METRIC,)
 COUNTRY_BATCH_SIZE = 10
+POPULATION_SOURCE = 16
 
 
 def _batches(items: list[str], size: int = COUNTRY_BATCH_SIZE) -> Iterator[list[str]]:
@@ -38,7 +39,9 @@ def _fetch_counts(
         for band_code, band_label, _mid in config.AGE_BANDS:
             for sex_code, sex_label in config.SEXES.items():
                 indicator = f"SP.POP.{band_code}.{sex_code}"
-                for row in observations(indicator, batch, start, end, download=get_json):
+                for row in observations(
+                    indicator, batch, start, end, source=POPULATION_SOURCE, download=get_json,
+                ):
                     value = row.get("value")
                     iso3 = row.get("countryiso3code") or ""
                     if value is None or iso3 not in config.BY_ISO3:

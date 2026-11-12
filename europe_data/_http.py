@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import urlsplit
 
 import requests
 from tenacity import (
     Retrying,
     retry,
+    retry_if_exception,
     retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
@@ -31,12 +32,16 @@ def session() -> requests.Session:
 def get_json(
     url: str, params: dict[str, Any] | None = None, timeout: int = 60, *,
     attempts: int = 5,
+    retry_on: Callable[[BaseException], bool] | None = None,
 ) -> Any:
     """GET ``url`` and return parsed JSON, retrying transient network/HTTP errors."""
     if not 1 <= attempts <= 5:
         raise ValueError("JSON requests must use between one and five attempts")
     for attempt in Retrying(
-        retry=retry_if_exception_type((requests.RequestException,)),
+        retry=(
+            retry_if_exception(retry_on) if retry_on is not None
+            else retry_if_exception_type((requests.RequestException,))
+        ),
         stop=stop_after_attempt(attempts),
         wait=wait_exponential(multiplier=1, min=1, max=30),
         reraise=True,

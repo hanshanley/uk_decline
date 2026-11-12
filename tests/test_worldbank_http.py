@@ -92,6 +92,8 @@ def test_worldbank_consumers_recover_without_losing_request_parameters(client, s
     assert first.kwargs["timeout"] == 60
     if source == "trust":
         assert first.kwargs["params"]["source"] == 3
+    if source == "pyramids":
+        assert first.kwargs["params"]["source"] == 16
 
 
 @pytest.mark.parametrize("source", SOURCES)
@@ -181,3 +183,38 @@ def test_incomplete_pagination_is_rejected_without_returning_first_page(client):
     client.get.side_effect = [response(pages=2), missing]
     with pytest.raises(ValueError, match="Missing World Bank observations"):
         _worldbank.observations("SP.POP.65UP.TO.ZS", ["GBR"], 2024, 2024)
+
+
+def test_population_response_from_wrong_database_is_rejected(client):
+    wrong = response()
+    wrong.json.return_value[0]["sourceid"] = "2"
+    client.get.return_value = wrong
+    with pytest.raises(ValueError, match="Unexpected World Bank database"):
+        _worldbank.observations("SP.POP.0509.FE", ["GBR"], 2024, 2024, source=16)
+
+
+def test_bls_cached_503_recovery_uses_revalidation_and_preserves_query(client):
+    from tuition import cpi
+
+    failed = response()
+    failed.raise_for_status.side_effect = requests.HTTPError(
+        "503 cached gateway failure", response=Mock(status_code=503),
+    )
+    current = Mock()
+    current.json.return_value = {"status": "REQUEST_SUCCEEDED"}
+    client.get.side_effect = [failed, current]
+    params = {"startyear": 1973, "endyear": 1982, "annualaverage": "true"}
+    assert cpi.get_json(cpi.SOURCE_URL, params) == {"status": "REQUEST_SUCCEEDED"}
+    first, second = client.get.call_args_list
+    assert first.kwargs["params"] == second.kwargs["params"] == params
+    assert "headers" not in first.kwargs
+    assert second.kwargs["headers"] == {"Cache-Control": "no-cache"}
+
+
+def test_tuition_permanent_http_error_still_fails_without_retry(client):
+    from tuition import http
+
+    client.get.side_effect = requests.HTTPError("404", response=Mock(status_code=404))
+    with pytest.raises(requests.HTTPError, match="404"):
+        http.get_json("https://api.bls.gov/missing")
+    assert client.get.call_count == 1

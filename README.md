@@ -93,6 +93,9 @@ Age-structure, population-pyramid and governance queries also split transiently
 failing country/year ranges into smaller equivalent live queries. Pages are
 buffered until complete, so restarting a query cannot duplicate partial results;
 an indivisible query still has at most five attempts and must succeed.
+Population-pyramid counts explicitly request their existing World Bank database 16;
+governance estimates retain database 3. Tuition/BLS JSON requests share the central
+revalidation policy while still retrying only transient failures.
 The offline suite blocks external HTTP so incomplete mocks cannot turn validation
 into an accidental, flaky live-source check; loopback test servers remain allowed.
 

@@ -38,6 +38,8 @@ def _pages(
         if not isinstance(payload, list) or len(payload) < 2 or not isinstance(payload[0], dict):
             raise ValueError(f"Malformed World Bank response for {indicator}, page {page}")
         meta, observations = payload[:2]
+        if source is not None and "sourceid" in meta and str(meta["sourceid"]) != str(source):
+            raise ValueError(f"Unexpected World Bank database for {indicator}: {meta['sourceid']}")
         pages = int(meta.get("pages", 1))
         if page == 1 and (observations is None or observations == []) and pages in (0, 1):
             return []
