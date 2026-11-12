@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from typing import Iterable, Iterator
 
+from europe_data._worldbank import observations
+
 from . import config
 from ._http import get_json
 from .combine import make_row
@@ -33,33 +35,15 @@ def _fetch_counts(
     counts: dict[tuple[str, int, str, str], float] = {}
     batch_size = len(iso3s) if start == end else COUNTRY_BATCH_SIZE
     for batch in _batches(iso3s, batch_size):
-        codes = ";".join(batch)
         for band_code, band_label, _mid in config.AGE_BANDS:
             for sex_code, sex_label in config.SEXES.items():
                 indicator = f"SP.POP.{band_code}.{sex_code}"
-                page = 1
-                while True:
-                    payload = get_json(
-                        f"{config.WORLD_BANK_BASE}/country/{codes}/indicator/{indicator}",
-                        params={
-                            "format": "json",
-                            "per_page": 1000,
-                            "date": f"{start}:{end}",
-                            "page": page,
-                        },
-                    )
-                    if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
-                        break
-                    meta, rows = payload[0], payload[1]
-                    for row in rows:
-                        value = row.get("value")
-                        iso3 = row.get("countryiso3code") or ""
-                        if value is None or iso3 not in config.BY_ISO3:
-                            continue
-                        counts[(iso3, int(row["date"]), band_label, sex_label)] = float(value)
-                    if page >= int(meta.get("pages", 1)):
-                        break
-                    page += 1
+                for row in observations(indicator, batch, start, end, download=get_json):
+                    value = row.get("value")
+                    iso3 = row.get("countryiso3code") or ""
+                    if value is None or iso3 not in config.BY_ISO3:
+                        continue
+                    counts[(iso3, int(row["date"]), band_label, sex_label)] = float(value)
     return counts
 
 

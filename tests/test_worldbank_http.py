@@ -6,7 +6,7 @@ import pytest
 import requests
 from tenacity import wait_none
 
-from europe_data import _http
+from europe_data import _http, _worldbank
 
 SOURCES = ("trade", "ageing", "pyramids", "crime", "markets", "trust",
            "migration", "tuition", "gdp", "ppp")
@@ -49,10 +49,10 @@ def fetch_rows(source):
     raise AssertionError(source)
 
 
-def response(year=2024, pages=1):
+def response(year=2024, pages=1, code="GBR", value=1.5):
     result = Mock()
     result.json.return_value = [{"pages": pages}, [{
-        "countryiso3code": "GBR", "date": str(year), "value": 1.5,
+        "countryiso3code": code, "date": str(year), "value": value,
         "country": {"id": "GB", "value": "United Kingdom"},
     }]]
     return result
@@ -110,3 +110,74 @@ def test_retried_second_page_neither_duplicates_nor_skips_observations(client, s
     rows = fetch_rows(source)
     assert sorted(row["year"] for row in rows) == [2023, 2024]
     assert [call.kwargs["params"]["page"] for call in client.get.call_args_list] == [1, 2, 2]
+
+
+@pytest.mark.parametrize("failure", ["timeout", "gateway"])
+def test_bulk_recovery_discards_partial_pages_and_preserves_wgi_database(client, failure):
+    def download(url, params, **kwargs):
+        codes = url.split("/country/")[1].split("/indicator/")[0]
+        assert params["source"] == 3
+        assert params["date"] == "2024:2024"
+        if ";" in codes:
+            if params["page"] == 1:
+                return response(pages=2, value=999)
+            if failure == "timeout":
+                raise requests.ReadTimeout("bulk page two timed out")
+            raise requests.HTTPError("502", response=Mock(status_code=502))
+        return response(code=codes)
+
+    client.get.side_effect = download
+    rows = _worldbank.observations("GOV_WGI_CC.EST", ["GBR", "USA"], 2024, 2024, source=3)
+    assert sorted((row["countryiso3code"], row["value"]) for row in rows) == [
+        ("GBR", 1.5), ("USA", 1.5),
+    ]
+    assert client.get.call_count == 4
+
+
+def test_single_country_recovery_partitions_years_without_gaps_or_overlap(client):
+    def download(url, params, **kwargs):
+        start, end = map(int, params["date"].split(":"))
+        if start != end:
+            raise requests.ReadTimeout("multi-year query timed out")
+        return response(year=start)
+
+    client.get.side_effect = download
+    rows = _worldbank.observations("SP.POP.65UP.TO.ZS", ["GBR"], 2020, 2023)
+    assert [int(row["date"]) for row in rows] == [2020, 2021, 2022, 2023]
+    assert client.get.call_count == 7
+
+
+def test_failed_partition_never_returns_its_successful_sibling(client):
+    def download(url, **kwargs):
+        codes = url.split("/country/")[1].split("/indicator/")[0]
+        if codes != "GBR":
+            raise requests.ReadTimeout("bulk query or final partition failed")
+        return response()
+
+    client.get.side_effect = download
+    with pytest.raises(requests.ReadTimeout, match="final partition failed"):
+        _worldbank.observations("SP.POP.65UP.TO.ZS", ["GBR", "USA"], 2024, 2024)
+    assert client.get.call_count == 7
+
+
+def test_permanent_bulk_errors_are_not_hidden_by_query_partitioning(client):
+    client.get.side_effect = requests.HTTPError("404", response=Mock(status_code=404))
+    with pytest.raises(requests.HTTPError, match="404"):
+        _worldbank.observations("INVALID", ["GBR", "USA"], 2020, 2024)
+    assert client.get.call_count == 1
+
+
+@pytest.mark.parametrize("records", [None, []])
+def test_unpublished_year_has_no_observations_rather_than_invalid_pagination(client, records):
+    result = Mock()
+    result.json.return_value = [{"pages": 0, "total": 0}, records]
+    client.get.return_value = result
+    assert _worldbank.observations("GOV_WGI_CC.EST", ["GBR"], 1974, 1974, source=3) == []
+
+
+def test_incomplete_pagination_is_rejected_without_returning_first_page(client):
+    missing = Mock()
+    missing.json.return_value = [{"pages": 2}, []]
+    client.get.side_effect = [response(pages=2), missing]
+    with pytest.raises(ValueError, match="Missing World Bank observations"):
+        _worldbank.observations("SP.POP.65UP.TO.ZS", ["GBR"], 2024, 2024)

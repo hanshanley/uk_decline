@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import Iterable, Iterator
 
 from europe_data._http import get_json
+from europe_data._worldbank import observations
 
 from . import countries, metrics
 
@@ -32,40 +33,23 @@ def _fetch_indicator(
     indicator: str, iso3s: list[str], start: int, end: int
 ) -> Iterator[dict]:
     metric = INDICATORS[indicator]
-    codes = ";".join(iso3s)
-    page = 1
-    while True:
-        payload = get_json(
-            f"{BASE}/country/{codes}/indicator/{indicator}",
-            params={
-                "format": "json",
-                "source": WGI_SOURCE,
-                "per_page": 1000,
-                "date": f"{start}:{end}",
-                "page": page,
-            },
+    for row in observations(
+        indicator, iso3s, start, end, source=WGI_SOURCE, download=get_json,
+    ):
+        value = row.get("value")
+        if value is None:
+            continue
+        iso3 = row.get("countryiso3code") or ""
+        if iso3 not in countries.BY_ISO3:
+            continue
+        yield metrics.make_row(
+            iso3=iso3,
+            country=countries.name_for_iso3(iso3),
+            year=int(row["date"]),
+            metric=metric,
+            value=float(value),
+            source=SOURCE,
         )
-        if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
-            return
-        meta, rows = payload[0], payload[1]
-        for row in rows:
-            value = row.get("value")
-            if value is None:
-                continue
-            iso3 = row.get("countryiso3code") or ""
-            if iso3 not in countries.BY_ISO3:
-                continue
-            yield metrics.make_row(
-                iso3=iso3,
-                country=countries.name_for_iso3(iso3),
-                year=int(row["date"]),
-                metric=metric,
-                value=float(value),
-                source=SOURCE,
-            )
-        if page >= int(meta.get("pages", 1)):
-            return
-        page += 1
 
 
 def fetch(

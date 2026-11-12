@@ -97,7 +97,7 @@ def _wb_payload(rows):
 
 
 def test_worldbank_parse(monkeypatch):
-    def fake_get_json(url, params=None, timeout=60):
+    def fake_get_json(url, params=None, timeout=60, **kwargs):
         # Return the same 2-country payload for every indicator call.
         return _wb_payload([
             {"countryiso3code": "GBR", "date": "2024", "value": 19.5},

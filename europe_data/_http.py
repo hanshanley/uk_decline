@@ -28,11 +28,16 @@ def session() -> requests.Session:
     return _session
 
 
-def get_json(url: str, params: dict[str, Any] | None = None, timeout: int = 60) -> Any:
+def get_json(
+    url: str, params: dict[str, Any] | None = None, timeout: int = 60, *,
+    attempts: int = 5,
+) -> Any:
     """GET ``url`` and return parsed JSON, retrying transient network/HTTP errors."""
+    if not 1 <= attempts <= 5:
+        raise ValueError("JSON requests must use between one and five attempts")
     for attempt in Retrying(
         retry=retry_if_exception_type((requests.RequestException,)),
-        stop=stop_after_attempt(5),
+        stop=stop_after_attempt(attempts),
         wait=wait_exponential(multiplier=1, min=1, max=30),
         reraise=True,
     ):
