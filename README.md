@@ -89,6 +89,8 @@ the first attempt and retry network/HTTP failures up to five times with backoff.
 Retries preserve the country, year, indicator, source database and pagination
 parameters. Persistent upstream failures still stop publication; saved data is
 not substituted for a successful live refresh.
+The offline suite blocks external HTTP so incomplete mocks cannot turn validation
+into an accidental, flaky live-source check; loopback test servers remain allowed.
 
 Tuesday-Sunday runs at the same scheduled time check all live sources, tests and
 the site build without committing or deploying. Manual `source_check_only` runs

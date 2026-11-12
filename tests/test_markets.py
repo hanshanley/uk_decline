@@ -381,7 +381,7 @@ def test_lse_duplicate_and_missing_aim_counts_are_rejected(monkeypatch, lse_cata
         lse.aim_history(2025)
 
 
-def test_lse_missing_requested_year_preserves_saved_data(monkeypatch, tmp_path):
+def test_lse_missing_requested_year_preserves_saved_data(monkeypatch, tmp_path, lse_catalogue):
     import pytest
     from markets_data import lse_factsheets as lse
 
