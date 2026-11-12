@@ -19,6 +19,7 @@ from bs4 import BeautifulSoup
 
 from tuition import config
 from tuition.http import session
+from europe_data._http import request_get
 
 SOURCE_URL = (
     "https://research.collegeboard.org/media/xlsx/"
@@ -106,11 +107,9 @@ def main(argv: list[str] | None = None) -> None:
         source_url, edition = SOURCE_URL, LAST_YEAR
     else:
         client = session()
-        page = client.get(PUBLISHER_PAGE, timeout=60)
-        page.raise_for_status()
+        page = request_get(PUBLISHER_PAGE, timeout=60, client=client)
         source_url, edition = latest_workbook(page.text)
-        response = client.get(source_url, timeout=60)
-        response.raise_for_status()
+        response = request_get(source_url, timeout=60, client=client)
         content = response.content
     frame = pd.read_excel(BytesIO(content), sheet_name="Table CP-2", header=None)
     rows = parse(frame, edition=edition, source_url=source_url)

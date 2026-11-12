@@ -13,6 +13,7 @@ from urllib.parse import urljoin, urlsplit
 
 import pandas as pd
 import requests
+from europe_data._http import request_get
 from bs4 import BeautifulSoup
 
 from . import csew
@@ -54,8 +55,8 @@ def _ensure_host(url: str, allowed: tuple[str, ...]) -> None:
 def _get(url: str, allowed: tuple[str, ...], timeout: int = 120) -> requests.Response:
     for _ in range(6):
         _ensure_host(url, allowed)
-        response = requests.get(
-            url, headers=_UA, timeout=timeout, allow_redirects=False
+        response = request_get(
+            url, client=requests, headers=_UA, timeout=timeout, allow_redirects=False
         )
         if response.is_redirect or response.is_permanent_redirect:
             location = response.headers.get("Location")

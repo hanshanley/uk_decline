@@ -18,6 +18,7 @@ from urllib.parse import urljoin, urlsplit
 
 import pandas as pd
 import requests
+from europe_data._http import request_get
 from bs4 import BeautifulSoup
 
 COLLECTION_URL = "https://www.gov.uk/government/collections/national-statistics-release"
@@ -79,8 +80,9 @@ def _get(url: str, timeout: int = 60) -> requests.Response:
     """Fetch a GOV.UK resource while validating every redirect target."""
     for _ in range(5):
         _ensure_allowed_host(url)
-        response = requests.get(
+        response = request_get(
             url,
+            client=requests,
             timeout=timeout,
             allow_redirects=False,
             headers={"User-Agent": _USER_AGENT},

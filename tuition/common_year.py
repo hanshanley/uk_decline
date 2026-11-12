@@ -12,6 +12,7 @@ from urllib.parse import unquote, urljoin, urlsplit
 
 from bs4 import BeautifulSoup
 import pandas as pd
+from europe_data._http import request_get
 
 from tuition import build_dataset, config, dataset, rates
 from tuition.http import session
@@ -223,7 +224,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--year", type=int, help="Reference academic start year for --input")
     args = parser.parse_args(argv)
     client = session()
-    page = client.get(PAGE, timeout=90)
+    page = request_get(PAGE, client=client, timeout=90)
     page.raise_for_status()
     year, url = latest_workbook(page.text)
     if args.input:
@@ -231,7 +232,7 @@ def main(argv: list[str] | None = None) -> None:
             raise ValueError("Saved Eurydice workbook year must match the latest published reference year")
         content = args.input.read_bytes()
     else:
-        response = client.get(url, timeout=120)
+        response = request_get(url, client=client, timeout=120)
         response.raise_for_status()
         content = response.content
     book = pd.read_excel(io.BytesIO(content), sheet_name=[SHEET, "Eurostat data"], header=None)

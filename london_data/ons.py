@@ -28,6 +28,7 @@ from urllib.parse import unquote, urlsplit
 
 import pandas as pd
 import requests
+from europe_data._http import request_get
 
 ONS_HOST = "www.ons.gov.uk"
 DATASET_PAGE = (
@@ -86,7 +87,7 @@ def next_release(target_year: int, timeout: int = 60) -> dict | None:
         "content_type": "release",
         "limit": 20,
     }
-    resp = requests.get(RELEASE_SEARCH_URL, params=params, timeout=timeout,
+    resp = request_get(RELEASE_SEARCH_URL, client=requests, params=params, timeout=timeout,
                         headers={"User-Agent": _USER_AGENT})
     resp.raise_for_status()
     needle = f"1998 to {target_year}"
@@ -131,7 +132,7 @@ def _get(url: str, timeout: int) -> requests.Response:
     """
     for _ in range(5):
         _ensure_ons_host(url)
-        resp = requests.get(url, timeout=timeout, allow_redirects=False,
+        resp = request_get(url, client=requests, timeout=timeout, allow_redirects=False,
                             headers={"User-Agent": _USER_AGENT})
         if resp.is_redirect or resp.is_permanent_redirect:
             url = requests.compat.urljoin(url, resp.headers["Location"])

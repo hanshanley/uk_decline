@@ -16,7 +16,7 @@ from urllib.parse import urlsplit
 
 import pandas as pd
 import requests
-from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
+from europe_data._http import request_get
 
 ECB_HOST = "data-api.ecb.europa.eu"
 ECB_URL = (
@@ -54,17 +54,13 @@ def _transient_download_error(error: BaseException) -> bool:
     )
 
 
-@retry(
-    retry=retry_if_exception(_transient_download_error),
-    stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=1, min=1, max=30),
-    reraise=True,
-)
 def download_csv(url: str = ECB_URL, timeout: int = 120) -> bytes:
     """Download the official ECB CSV, retrying transient transport failures."""
     _ensure_host(url)
-    response = requests.get(
+    response = request_get(
         url,
+        client=requests,
+        retry_on=_transient_download_error,
         timeout=timeout,
         headers={
             "Accept": "text/csv",

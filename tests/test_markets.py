@@ -242,6 +242,7 @@ def test_lse_catalogue_and_published_download_errors_are_not_hidden(monkeypatch,
         response = requests.Response()
         response.url = url
         response.status_code = status
+        response._content_consumed = True
         return response
 
     lse._factsheet_catalogue.cache_clear()

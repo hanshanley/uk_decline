@@ -243,7 +243,7 @@ def test_ons_host_allowlist() -> None:
 
 @pytest.mark.parametrize("statuses", [
     (429, 200),
-    (429, 429, 429, 429),
+    (429, 429, 429, 429, 429),
     (404,),
 ])
 def test_ons_metadata_retries_rate_limits_but_surfaces_failures(monkeypatch, statuses):
@@ -267,7 +267,9 @@ def test_ons_metadata_retries_rate_limits_but_surfaces_failures(monkeypatch, sta
     thread.start()
     monkeypatch.setattr(csew, "ONS_BASE", f"http://127.0.0.1:{server.server_port}")
     monkeypatch.setattr(csew, "_ensure_ons_host", lambda url: None)
-    monkeypatch.setattr(csew._RETRY_ADAPTER.max_retries, "backoff_factor", 0)
+    from europe_data import _http
+    from tenacity import wait_none
+    monkeypatch.setattr(_http, "wait_exponential", lambda **kwargs: wait_none())
     try:
         if statuses[-1] == 200:
             assert csew._get_json("/dataset") == {"ok": True}

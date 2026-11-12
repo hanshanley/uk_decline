@@ -23,6 +23,7 @@ from urllib.parse import urljoin
 
 import pandas as pd
 import requests
+from europe_data._http import request_get
 
 from . import _http, _util
 from .metrics import make_row
@@ -87,29 +88,14 @@ def _polite_pause(url: str) -> None:
 
 @lru_cache(maxsize=None)
 def _html(url: str) -> str:
-    _http._ensure_allowed_host(url)
-    last_resp = None
-    for attempt in range(5):
-        _polite_pause(url)
-        resp = _http.session().get(url, timeout=60)
-        _http._ensure_allowed_host(resp.url)
-        last_resp = resp
-        if resp.status_code == 429:
-            retry_after = resp.headers.get("Retry-After")
-            delay = (
-                int(retry_after)
-                if retry_after and retry_after.isdigit() and int(retry_after) > 0
-                else 5 * 2**attempt
-            )
-            time.sleep(min(delay, 60))
-            continue
-        resp.raise_for_status()
+    def read(resp):
         if not resp.text.strip():
             raise ValueError(f"empty publication page: {url}")
         return html.unescape(resp.text)
-    if last_resp is not None:
-        last_resp.raise_for_status()
-    raise RuntimeError(f"failed to fetch {url}")
+    return request_get(
+        url, client=_http.session(), timeout=60, read=read,
+        validate_url=_http._ensure_allowed_host, before_request=_polite_pause,
+    )
 
 
 def _publication_pages(article_url: str, slug_fragment: str) -> list[str]:

@@ -9,12 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 import requests
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+from europe_data._http import get_bytes as _get_bytes, get_json as _get_json
 
 USER_AGENT = "uk_decline/0.1 (UK immigration over time; contact: local use)"
 
@@ -30,29 +25,13 @@ def session() -> requests.Session:
     return _session
 
 
-@retry(
-    retry=retry_if_exception_type((requests.RequestException,)),
-    stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=1, min=1, max=30),
-    reraise=True,
-)
 def get_json(url: str, params: dict[str, Any] | None = None, timeout: int = 60) -> Any:
     """GET ``url`` and return parsed JSON, retrying transient network/HTTP errors."""
-    resp = session().get(
-        url, params=params, timeout=timeout, headers={"Accept": "application/json"}
+    return _get_json(
+        url, params=params, timeout=timeout, headers={"Accept": "application/json"}, client=session(),
     )
-    resp.raise_for_status()
-    return resp.json()
 
 
-@retry(
-    retry=retry_if_exception_type((requests.RequestException,)),
-    stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=1, min=1, max=30),
-    reraise=True,
-)
 def get_bytes(url: str, params: dict[str, Any] | None = None, timeout: int = 120) -> bytes:
     """GET ``url`` and return the raw response body, retrying transient errors."""
-    resp = session().get(url, params=params, timeout=timeout)
-    resp.raise_for_status()
-    return resp.content
+    return _get_bytes(url, params=params, timeout=timeout, client=session())

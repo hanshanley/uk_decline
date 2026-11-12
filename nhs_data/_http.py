@@ -12,12 +12,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 import requests
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+from europe_data._http import get_json as _get_json, request_get
 
 USER_AGENT = "uk_decline/0.1 (UK NHS waiting-times research; contact: local use)"
 
@@ -57,29 +52,14 @@ def session() -> requests.Session:
     return _session
 
 
-@retry(
-    retry=retry_if_exception_type((requests.RequestException,)),
-    stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=1, min=1, max=30),
-    reraise=True,
-)
 def get_json(url: str, params: dict[str, Any] | None = None, timeout: int = 60) -> Any:
     """GET ``url`` and return parsed JSON, retrying transient network/HTTP errors."""
-    _ensure_allowed_host(url)
-    resp = session().get(
-        url, params=params, timeout=timeout, headers={"Accept": "application/json"}
+    return _get_json(
+        url, params=params, timeout=timeout, headers={"Accept": "application/json"},
+        client=session(), validate_url=_ensure_allowed_host,
     )
-    _ensure_allowed_host(resp.url)  # reject redirects to an untrusted host
-    resp.raise_for_status()
-    return resp.json()
 
 
-@retry(
-    retry=retry_if_exception_type((requests.RequestException,)),
-    stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=1, min=1, max=30),
-    reraise=True,
-)
 def get_bytes(
     url: str,
     params: dict[str, Any] | None = None,
@@ -92,10 +72,7 @@ def get_bytes(
     redirected body cannot exhaust memory. Only official UK health/gov hosts are
     permitted, before and after any redirect.
     """
-    _ensure_allowed_host(url)
-    with session().get(url, params=params, timeout=timeout, stream=True) as resp:
-        _ensure_allowed_host(resp.url)
-        resp.raise_for_status()
+    def read(resp):
         buffer = io.BytesIO()
         total = 0
         for chunk in resp.iter_content(chunk_size=1 << 16):
@@ -108,6 +85,10 @@ def get_bytes(
                 )
             buffer.write(chunk)
         return buffer.getvalue()
+    return request_get(
+        url, params=params, timeout=timeout, stream=True, client=session(),
+        validate_url=_ensure_allowed_host, read=read,
+    )
 
 
 def get_csv(url: str, params: dict[str, Any] | None = None, timeout: int = 120, **read_csv_kwargs: Any):

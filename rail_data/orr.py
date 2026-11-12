@@ -30,6 +30,7 @@ from urllib.parse import urlsplit
 
 import pandas as pd
 import requests
+from europe_data._http import request_get
 
 ORR_TABLE_3103_URL = (
     "https://dataportal.orr.gov.uk/media/1811/"
@@ -95,7 +96,7 @@ def _ensure_orr_host(url: str) -> None:
 def download_workbook(url: str = ORR_TABLE_3103_URL, timeout: int = 120) -> dict:
     """Download the ORR ODS workbook and return ``{sheet_name: DataFrame}``."""
     _ensure_orr_host(url)
-    resp = requests.get(url, timeout=timeout,
+    resp = request_get(url, client=requests, timeout=timeout,
                         headers={"User-Agent": "uk_decline/0.1 (rail performance research)"})
     _ensure_orr_host(resp.url)
     resp.raise_for_status()

@@ -83,6 +83,17 @@ complete-refresh date advances. Source failures, lost required coverage or stale
 figures stop publication. A partial `--only` run does not claim a complete refresh.
 The workflow tests and builds the result before pushing refreshed inputs.
 
+Source JSON, HTML, spreadsheet and streamed downloads share bounded transient-error
+retries: at most five attempts, cache revalidation on retry, and immediate failure
+for permanent HTTP errors. Rate-limit and service-unavailable `Retry-After` delays
+are honoured up to 60 seconds. Existing host checks, download limits and Northern
+Ireland request pacing remain enforced; interrupted streams restart from zero.
+Failure-injection tests cover production transport entry points and prevent source
+modules from bypassing the shared Python HTTP policy. The Bank of England retains
+its separately bounded curl transport for provider compatibility.
+Trade, crime and stock-market refreshes also reject lost historical observations,
+duplicate keys and nonfinite values before replacing their published CSVs.
+
 All World Bank clients use the same pooled HTTP helper, including trade, homicide,
 age structure and population pyramids. Requests revalidate cached responses from
 the first attempt and retry network/HTTP failures up to five times with backoff.

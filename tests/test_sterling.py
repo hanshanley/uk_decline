@@ -7,6 +7,8 @@ import io
 import pandas as pd
 import pytest
 import requests
+from tenacity import wait_none
+from europe_data import _http
 
 from sterling_data import charts, ecb
 
@@ -52,10 +54,11 @@ def test_download_recovers_from_transient_failures(monkeypatch, failure) -> None
         response = requests.Response()
         response.status_code = failure if len(calls) == 1 else 200
         response._content = b"official ECB CSV"
+        response._content_consumed = True
         return response
 
     monkeypatch.setattr(ecb.requests, "get", download)
-    monkeypatch.setattr(ecb.download_csv.retry, "sleep", lambda _: None)
+    monkeypatch.setattr(_http, "wait_exponential", lambda **kwargs: wait_none())
     assert ecb.download_csv(timeout=7) == b"official ECB CSV"
     assert len(calls) == 2
     assert all(url == ecb.ECB_URL and kwargs["timeout"] == 7 for url, kwargs in calls)
@@ -70,10 +73,11 @@ def test_download_failure_is_bounded_and_never_uses_saved_data(monkeypatch, stat
         calls.append(args)
         response = requests.Response()
         response.status_code = status
+        response._content_consumed = True
         return response
 
     monkeypatch.setattr(ecb.requests, "get", download)
-    monkeypatch.setattr(ecb.download_csv.retry, "sleep", lambda _: None)
+    monkeypatch.setattr(_http, "wait_exponential", lambda **kwargs: wait_none())
     with pytest.raises(requests.HTTPError):
         ecb.download_csv()
     assert len(calls) == attempts

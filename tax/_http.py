@@ -13,12 +13,7 @@ import io
 from typing import Any
 
 import requests
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+from europe_data._http import get_text as _get_text
 
 USER_AGENT = "uk_decline-tax/0.1 (UK vs EU vs US tax-burden comparison; local use)"
 
@@ -34,17 +29,9 @@ def session() -> requests.Session:
     return _session
 
 
-@retry(
-    retry=retry_if_exception_type((requests.RequestException,)),
-    stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=1, min=1, max=30),
-    reraise=True,
-)
 def get_text(url: str, params: dict[str, Any] | None = None, timeout: int = 90) -> str:
     """GET ``url`` and return the response body as text, retrying transient errors."""
-    resp = session().get(url, params=params, timeout=timeout)
-    resp.raise_for_status()
-    return resp.text
+    return _get_text(url, params=params, timeout=timeout, client=session())
 
 
 def sdmx_csv(

@@ -9,6 +9,7 @@ from urllib.parse import urljoin, urlsplit
 
 from bs4 import BeautifulSoup
 import requests
+from europe_data._http import request_get
 
 from .sources import CALENDAR_SOURCE, END_YEAR_PAGE, RAW_DIR, SOURCES, Source
 
@@ -30,8 +31,9 @@ def _check_host(url: str) -> None:
 
 def http_get(url: str, timeout: int = 60) -> bytes:
     _check_host(url)
-    response = requests.get(
+    response = request_get(
         url,
+        client=requests,
         timeout=timeout,
         headers={"User-Agent": "uk_decline food-bank analysis/1.0"},
     )

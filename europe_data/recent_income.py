@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
 import requests
+from europe_data._http import request_get
 
 from europe_data import eurostat
 from vizstyle import (
@@ -46,7 +47,7 @@ DEFINITIONS = {
 def download(url: str) -> bytes:
     if urlsplit(url).hostname not in {"www.ons.gov.uk", "www.census.gov", "www2.census.gov"}:
         raise ValueError(f"Unexpected national income source host: {url}")
-    response = requests.get(url, timeout=120)
+    response = request_get(url, client=requests, timeout=120)
     response.raise_for_status()
     return response.content
 

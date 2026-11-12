@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import csv
 import pathlib
+from europe_data._coverage import validate_csv_refresh
 
 from . import charts, csew, homicide, nations
 
@@ -30,6 +31,13 @@ _NATIONS_FIELDS = ["jurisdiction", "year", "metric", "value", "unit", "source"]
 def _write_csv(rows: list[dict], path: pathlib.Path, fields: list[str]) -> None:
     if not rows:
         raise RuntimeError(f"Crime source returned no observations; {path} was not replaced")
+    if fields == _CSEW_FIELDS:
+        keys = ("region", "offence_group", "level", "date", "metric")
+    elif fields == _HOMICIDE_FIELDS:
+        keys = ("iso3", "year", "metric")
+    else:
+        keys = ("jurisdiction", "year", "metric")
+    validate_csv_refresh(rows, path, keys)
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fields)

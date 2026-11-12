@@ -20,6 +20,7 @@ from urllib.parse import urlsplit
 
 import openpyxl
 import requests
+from europe_data._http import request_get
 
 DOCS_HOST = "docs.londonstockexchange.com"
 BASE = f"https://{DOCS_HOST}/reports"
@@ -49,7 +50,7 @@ def _factsheet_catalogue(market: str) -> dict[tuple[int, int], str]:
     )
     for edition in ("latest", "historic"):
         url = f"{BASE}/{MARKETS[market]}/{edition}.json"
-        response = requests.get(url, headers=_UA, timeout=90)
+        response = request_get(url, client=requests, headers=_UA, timeout=90)
         _ensure_lse_host(response.url)
         response.raise_for_status()
         for item in response.json()["Data"]:
@@ -76,7 +77,7 @@ def _factsheet_url(market: str, year: int, month: str = "December") -> str:
 
 def _download(url: str, timeout: int = 90) -> io.BytesIO:
     _ensure_lse_host(url)
-    resp = requests.get(url, headers=_UA, timeout=timeout)
+    resp = request_get(url, client=requests, headers=_UA, timeout=timeout)
     _ensure_lse_host(resp.url)
     resp.raise_for_status()
     return io.BytesIO(resp.content)

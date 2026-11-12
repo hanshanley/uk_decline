@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 from typing import Iterable
 
+from europe_data._coverage import validate_csv_refresh
 from . import markets, worldbank
 from .paths import DEFAULT_CSV, DEFAULT_MANIFEST, DEFAULT_WIDE_CSV
 
@@ -127,6 +128,9 @@ def build(
     df = to_frame(rows)
 
     path = Path(path)
+    validate_csv_refresh(
+        rows, path, ("region_code", "year", "metric"), start=start, end=end,
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(path, index=False)
     print(f"[markets_data] wrote {len(df)} rows -> {path}", file=sys.stderr)

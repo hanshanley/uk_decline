@@ -24,6 +24,7 @@ import re
 
 import pandas as pd
 import requests
+from europe_data._http import request_get
 
 from tuition import config
 
@@ -56,7 +57,9 @@ def _load_html(*, refresh: bool = False) -> str:
             cached = fh.read()
         if _valid(cached):
             return cached
-    resp = requests.get(NCES_URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=60)
+    resp = request_get(
+        NCES_URL, client=requests, headers={"User-Agent": "Mozilla/5.0"}, timeout=60,
+    )
     resp.raise_for_status()
     if not _valid(resp.text):
         raise RuntimeError(
