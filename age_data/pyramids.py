@@ -1,4 +1,4 @@
-"""World Bank WDI client: 5-year age-band population by sex, as shares (for pyramids).
+"""World Bank client: 5-year age-band population by sex, as shares (for pyramids).
 
 Fetches the ``SP.POP.{band}.MA`` / ``SP.POP.{band}.FE`` count indicators (00-04 … 80+),
 then converts each (band, sex) count to a share of that country-year's total population
@@ -9,8 +9,15 @@ redistributed by World Bank database 16 (see :data:`age_data.config.CITATIONS`).
 
 from __future__ import annotations
 
+import csv
+import io
+import math
+import zipfile
 from typing import Iterable, Iterator
 
+import requests
+
+from europe_data._http import get_bytes
 from europe_data._worldbank import observations
 
 from . import config
@@ -22,6 +29,7 @@ METRIC = "pop_band_share_pct"
 METRICS = (METRIC,)
 COUNTRY_BATCH_SIZE = 10
 POPULATION_SOURCE = 16
+BULK_URL = "https://databankfiles.worldbank.org/public/ddpext_download/HNP_Stats_CSV.zip"
 
 
 def _batches(items: list[str], size: int = COUNTRY_BATCH_SIZE) -> Iterator[list[str]]:
@@ -29,7 +37,7 @@ def _batches(items: list[str], size: int = COUNTRY_BATCH_SIZE) -> Iterator[list[
         yield items[start:start + size]
 
 
-def _fetch_counts(
+def _fetch_api_counts(
     iso3s: list[str], start: int, end: int
 ) -> dict[tuple[str, int, str, str], float]:
     """Return ``{(iso3, year, band_label, sex_label): count}`` for every 5-year band."""
@@ -48,6 +56,66 @@ def _fetch_counts(
                         continue
                     counts[(iso3, int(row["date"]), band_label, sex_label)] = float(value)
     return counts
+
+
+def _bulk_counts(iso3s: list[str], start: int, end: int) -> dict:
+    indicators = {
+        f"SP.POP.{code}.{sex}": (band, label)
+        for code, band, _mid in config.AGE_BANDS
+        for sex, label in config.SEXES.items()
+    }
+    countries = set(iso3s)
+    years = range(start, end + 1)
+    required = {"Country Code", "Indicator Code", *(str(year) for year in years)}
+    counts = {}
+    with zipfile.ZipFile(io.BytesIO(get_bytes(BULK_URL, timeout=180))) as archive:
+        try:
+            data = archive.open("HNP_StatsCSV.csv")
+        except KeyError as error:
+            raise ValueError("World Bank HNP bulk archive has no population data table") from error
+        with data, io.TextIOWrapper(data, encoding="utf-8-sig", newline="") as text:
+            rows = csv.DictReader(text)
+            if not required.issubset(rows.fieldnames or []):
+                raise ValueError("World Bank HNP bulk table is missing requested columns/years")
+            for row in rows:
+                iso3, indicator = row["Country Code"], row["Indicator Code"]
+                if iso3 not in countries or indicator not in indicators:
+                    continue
+                band, sex = indicators[indicator]
+                for year in years:
+                    raw = row[str(year)]
+                    if raw in (None, "", ".."):
+                        continue
+                    value = float(raw)
+                    key = (iso3, year, band, sex)
+                    if not math.isfinite(value) or value < 0 or key in counts:
+                        raise ValueError(f"Invalid or duplicate World Bank HNP count: {key}")
+                    counts[key] = value
+    expected = {
+        (iso3, year, band, sex)
+        for iso3 in countries for year in years for band, sex in indicators.values()
+    }
+    if expected - counts.keys():
+        raise ValueError("World Bank HNP bulk table is missing requested age-sex observations")
+    return counts
+
+
+def _fetch_counts(
+    iso3s: list[str], start: int, end: int
+) -> dict[tuple[str, int, str, str], float]:
+    if start > end:
+        raise ValueError("World Bank start year must not exceed end year")
+    if not iso3s:
+        return {}
+    try:
+        return _bulk_counts(iso3s, start, end)
+    except (requests.RequestException, ValueError, zipfile.BadZipFile) as error:
+        print(
+            f"[worldbank] HNP bulk transport unavailable ({error}); "
+            "retrying the same database through the API",
+            flush=True,
+        )
+        return _fetch_api_counts(iso3s, start, end)
 
 
 def _totals(counts: dict[tuple[str, int, str, str], float]) -> dict[tuple[str, int], float]:

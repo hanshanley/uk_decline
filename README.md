@@ -96,6 +96,10 @@ an indivisible query still has at most five attempts and must succeed.
 Population-pyramid counts explicitly request their existing World Bank database 16;
 governance estimates retain database 3. Tuition/BLS JSON requests share the central
 revalidation policy while still retrying only transient failures.
+Pyramid counts prefer the official, freshly downloaded HNP database-16 CSV archive
+on the World Bank's separate download host, avoiding hundreds of fragile API calls.
+Every requested country/year/age/sex cell must be present and valid; an unavailable
+or invalid archive retries the same live database through the API, never saved data.
 The offline suite blocks external HTTP so incomplete mocks cannot turn validation
 into an accidental, flaky live-source check; loopback test servers remain allowed.
 

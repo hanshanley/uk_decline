@@ -21,7 +21,7 @@ def fetch_rows(source):
         return worldbank.fetch(2024, 2024, iso3s=["GBR"])
     if source == "pyramids":
         from age_data import pyramids
-        return pyramids._fetch_counts(["GBR"], 2024, 2024)
+        return pyramids._fetch_api_counts(["GBR"], 2024, 2024)
     if source == "crime":
         from crime_data import homicide
         return homicide.build_rows(2024, 2024, iso3s=["GBR"])

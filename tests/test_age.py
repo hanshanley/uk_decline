@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 import os
+import zipfile
+from unittest.mock import Mock
 
 import pytest
+import requests
 
 from age_data import combine, config, fallback, fetch_age, median_age, pyramids, stats, worldbank
 
@@ -182,6 +187,81 @@ def test_median_age_does_not_invent_a_width_for_the_open_ended_band():
 
 
 # --- pyramids share computation ---------------------------------------------
+
+@pytest.fixture
+def hnp_rows():
+    return [
+        {"Country Code": iso3, "Indicator Code": f"SP.POP.{band}.{sex}",
+         "2024": "100", "2025": "100"}
+        for iso3 in ("GBR", "USA")
+        for band, _label, _mid in config.AGE_BANDS for sex in config.SEXES
+    ]
+
+
+def _hnp_archive(rows, name="HNP_StatsCSV.csv", years=("2024", "2025")):
+    text = io.StringIO()
+    writer = csv.DictWriter(
+        text, fieldnames=["Country Code", "Indicator Code", *years], extrasaction="ignore",
+    )
+    writer.writeheader()
+    writer.writerows(rows)
+    content = io.BytesIO()
+    with zipfile.ZipFile(content, "w") as archive:
+        archive.writestr(name, text.getvalue())
+    return content.getvalue()
+
+
+def test_live_bulk_pyramids_preserve_all_bands_and_exact_requested_scope(monkeypatch, hnp_rows):
+    hnp_rows[0].update({"2024": "not requested", "2025": "300"})
+    hnp_rows[1]["2025"] = "200"
+    for row in hnp_rows:
+        if row["Country Code"] == "USA":
+            row["2025"] = "not requested"
+    download = Mock(return_value=_hnp_archive(hnp_rows))
+    monkeypatch.setattr(pyramids, "get_bytes", download)
+    monkeypatch.setattr(pyramids, "_fetch_api_counts", Mock(side_effect=AssertionError("API used")))
+    rows = pyramids.fetch(2025, 2025, ["GBR"])
+    assert len(rows) == 34
+    assert {(r["iso3"], r["year"]) for r in rows} == {("GBR", 2025)}
+    assert sum(r["value"] for r in rows) == pytest.approx(100)
+    male = next(r for r in rows if r["age_band"] == "0-4" and r["sex"] == "male")
+    assert male["value"] == pytest.approx(100 * 300 / 3700)
+    assert download.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "defect", ["missing_cell", "duplicate", "negative", "nan", "wrong_table", "missing_year"],
+)
+def test_invalid_population_archive_retries_same_live_database_atomically(
+    monkeypatch, hnp_rows, defect,
+):
+    name, years = "HNP_StatsCSV.csv", ("2024", "2025")
+    if defect == "missing_cell":
+        hnp_rows[0]["2025"] = ""
+    elif defect == "duplicate":
+        hnp_rows.append(hnp_rows[0].copy())
+    elif defect in ("negative", "nan"):
+        hnp_rows[0]["2025"] = "-1" if defect == "negative" else "nan"
+    elif defect == "wrong_table":
+        name = "HNP_StatsCountry.csv"
+    elif defect == "missing_year":
+        years = ("2024",)
+    monkeypatch.setattr(pyramids, "get_bytes", lambda *a, **k: _hnp_archive(hnp_rows, name, years))
+    current = {("GBR", 2025, "0-4", "male"): 999.0}
+    api = Mock(return_value=current)
+    monkeypatch.setattr(pyramids, "_fetch_api_counts", api)
+    assert pyramids._fetch_counts(["GBR"], 2025, 2025) is current
+    api.assert_called_once_with(["GBR"], 2025, 2025)
+
+
+def test_population_transport_outage_never_substitutes_saved_data(monkeypatch):
+    monkeypatch.setattr(pyramids, "get_bytes", Mock(side_effect=requests.ReadTimeout("bulk down")))
+    api = Mock(side_effect=requests.HTTPError("API down"))
+    monkeypatch.setattr(pyramids, "_fetch_api_counts", api)
+    with pytest.raises(requests.HTTPError, match="API down"):
+        pyramids.fetch(2025, 2025, ["GBR"])
+    api.assert_called_once_with(["GBR"], 2025, 2025)
+
 
 def test_pyramid_rows_from_counts_sum_to_100():
     counts = {

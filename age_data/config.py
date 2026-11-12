@@ -174,9 +174,16 @@ CITATIONS: dict[str, str] = {
         "World Bank. World Development Indicators. Washington, DC: The World Bank. "
         "https://databank.worldbank.org/source/world-development-indicators. "
         f"Access via the World Bank API ({WORLD_BANK_BASE}), indicators SP.POP.* "
-        "(age structure, dependency ratios and 5-year age-sex population). Age/sex bands "
+        "(age structure and dependency ratios). Age/sex bands "
         "are World Bank staff estimates using the UN Population Division's World "
         "Population Prospects."
+    ),
+    "world_bank_hnp": (
+        "World Bank. Health Nutrition and Population Statistics (database 16). "
+        "https://datacatalog.worldbank.org/search/dataset/0037652/"
+        "health-nutrition-and-population-statistics. Indicators SP.POP.*.MA/FE "
+        "(5-year age-sex population counts); official live HNP_Stats_CSV.zip "
+        "bulk download or the same database's API."
     ),
 }
 
