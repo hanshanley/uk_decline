@@ -85,7 +85,11 @@ The workflow tests and builds the result before pushing refreshed inputs.
 
 Source JSON, HTML, spreadsheet and streamed downloads share bounded transient-error
 retries: at most five attempts, cache revalidation on retry, and immediate failure
-for permanent HTTP errors. Rate-limit and service-unavailable `Retry-After` delays
+for permanent HTTP errors. World Bank indicator endpoints also recover boundedly
+from intermittent HTTP 400 rejections of valid queries; structured API errors
+still fail immediately. These rejections include bounded response diagnostics
+and trigger the existing atomic country/year partition recovery.
+Rate-limit and service-unavailable `Retry-After` delays
 are honoured up to 60 seconds. Existing host checks, download limits and Northern
 Ireland request pacing remain enforced; interrupted streams restart from zero.
 Failure-injection tests cover production transport entry points and prevent source

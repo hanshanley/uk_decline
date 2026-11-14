@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
+import re
 from typing import Any, Callable
 from urllib.parse import urlsplit
 
@@ -34,6 +35,35 @@ def transient_error(error: BaseException) -> bool:
         status = error.response.status_code
         return status in (408, 429) or 500 <= status < 600
     return isinstance(error, requests.RequestException)
+
+
+def worldbank_bad_request(error: BaseException, url: str = "") -> bool:
+    """Some valid indicator queries intermittently receive unstructured HTTP 400s."""
+    if not isinstance(error, requests.HTTPError) or error.response is None:
+        return False
+    response = error.response
+    if response.status_code != 400:
+        return False
+    target = urlsplit(url or response.url or "")
+    if target.hostname != "api.worldbank.org" or not re.fullmatch(
+        r"/v2/(?:[a-z]{2}/)?country/[^/]+/indicator/[^/]+", target.path,
+    ):
+        return False
+    try:
+        payload = response.json()
+    except (ValueError, requests.RequestException):
+        payload = None
+    if isinstance(payload, dict) and ("message" in payload or "error" in payload):
+        return False
+    if isinstance(payload, list) and any(
+        isinstance(item, dict) and ("message" in item or "error" in item)
+        for item in payload
+    ):
+        return False
+    body = response.text
+    if isinstance(body, str) and re.search(r"<(?:\w+:)?(?:message|error)\b", body, re.I):
+        return False
+    return True
 
 
 def _retry_delay(state, backoff) -> float:
@@ -72,7 +102,10 @@ def request_get(
         raise ValueError("HTTP requests must use between one and five attempts")
     backoff = wait_exponential(multiplier=1, min=1, max=30)
     for attempt in Retrying(
-        retry=retry_if_exception(retry_on if retry_on is not None else transient_error),
+        retry=retry_if_exception(
+            lambda error: worldbank_bad_request(error, url)
+            or (retry_on if retry_on is not None else transient_error)(error)
+        ),
         stop=stop_after_attempt(attempts),
         wait=lambda state: _retry_delay(state, backoff),
         reraise=True,
@@ -99,7 +132,17 @@ def request_get(
             try:
                 if validate_url is not None:
                     validate_url(resp.url)
-                resp.raise_for_status()
+                try:
+                    resp.raise_for_status()
+                except requests.HTTPError as error:
+                    if worldbank_bad_request(error, url):
+                        preview = " ".join(resp.text[:240].split())
+                        print(
+                            f"[worldbank] retryable HTTP 400 for {url}; "
+                            f"content-type={resp.headers.get('Content-Type', '')}; body={preview!r}",
+                            flush=True,
+                        )
+                    raise
                 result = resp if read is None else read(resp)
                 returned = read is None
                 return result

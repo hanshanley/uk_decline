@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import requests
 
-from ._http import get_json
+from ._http import get_json, worldbank_bad_request
 
 BASE = "https://api.worldbank.org/v2"
 MAX_PAGES = 50
 
 
 def _transient(error: requests.RequestException) -> bool:
+    if worldbank_bad_request(error):
+        return True
     if isinstance(error, (requests.Timeout, requests.ConnectionError)):
         return True
     return (

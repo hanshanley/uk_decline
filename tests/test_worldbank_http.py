@@ -218,3 +218,100 @@ def test_tuition_permanent_http_error_still_fails_without_retry(client):
     with pytest.raises(requests.HTTPError, match="404"):
         http.get_json("https://api.bls.gov/missing")
     assert client.get.call_count == 1
+
+
+def bad_request(url="https://api.worldbank.org/v2/country/GBR/indicator/SP.POP.TOTL",
+                body=b"<html><title>400 Bad Request</title></html>"):
+    result = requests.Response()
+    result.status_code = 400
+    result.url = url
+    result._content = body
+    result._content_consumed = True
+    result.headers["Content-Type"] = "text/html"
+    return result
+
+
+@pytest.mark.parametrize("source", SOURCES)
+def test_worldbank_consumers_recover_from_intermittent_bad_request(client, source):
+    client.get.side_effect = lambda *a, **k: (
+        bad_request() if client.get.call_count == 1 else response()
+    )
+    assert fetch_rows(source)
+    first, second = client.get.call_args_list[:2]
+    assert first.args == second.args
+    assert first.kwargs == second.kwargs
+    assert all(
+        call.kwargs["headers"]["Cache-Control"] == "no-cache"
+        for call in client.get.call_args_list
+    )
+
+
+@pytest.mark.parametrize("source", SOURCES)
+def test_worldbank_bad_request_exhaustion_stops_without_saved_data(client, source):
+    client.get.side_effect = lambda *a, **k: bad_request()
+    with pytest.raises(requests.HTTPError, match="400"):
+        fetch_rows(source)
+    assert client.get.call_count == 5
+
+
+@pytest.mark.parametrize("body", [
+    b'[{"message":[{"id":"120","value":"Invalid parameter"}]}]',
+    b'{"error":"Invalid endpoint"}',
+    b'<wb:error><wb:message id="120">Invalid parameter</wb:message></wb:error>',
+])
+def test_structured_worldbank_bad_requests_still_fail_immediately(client, body):
+    client.get.return_value = bad_request(body=body)
+    with pytest.raises(requests.HTTPError, match="400"):
+        _worldbank.observations("INVALID", ["GBR", "USA"], 2020, 2024)
+    assert client.get.call_count == 1
+
+
+@pytest.mark.parametrize("url", [
+    "https://api.bls.gov/publicAPI/v2/timeseries/data",
+    "https://api.worldbank.org/v2/invalid",
+    "https://example.org/v2/country/GBR/indicator/SP.POP.TOTL",
+])
+def test_bad_request_recovery_is_scoped_to_worldbank_indicator_queries(client, url):
+    client.get.return_value = bad_request(url)
+    with pytest.raises(requests.HTTPError, match="400"):
+        _http.get_json(url)
+    assert client.get.call_count == 1
+
+
+def test_bad_request_on_later_bulk_page_restarts_atomically(client):
+    def download(url, params, **kwargs):
+        codes = url.split("/country/")[1].split("/indicator/")[0]
+        if ";" in codes:
+            if params["page"] == 1:
+                return response(pages=2, value=999)
+            return bad_request(url)
+        return response(code=codes)
+
+    client.get.side_effect = download
+    rows = _worldbank.observations("GOV_WGI_CC.EST", ["GBR", "USA"], 2024, 2024, source=3)
+    assert sorted((row["countryiso3code"], row["value"]) for row in rows) == [
+        ("GBR", 1.5), ("USA", 1.5),
+    ]
+    assert client.get.call_count == 4
+    assert all(call.kwargs["params"]["source"] == 3 for call in client.get.call_args_list)
+
+
+def test_persistent_bad_request_partition_does_not_return_successful_sibling(client):
+    def download(url, **kwargs):
+        codes = url.split("/country/")[1].split("/indicator/")[0]
+        return response() if codes == "GBR" else bad_request(url)
+
+    client.get.side_effect = download
+    with pytest.raises(requests.HTTPError, match="400"):
+        _worldbank.observations("SP.POP.65UP.TO.ZS", ["GBR", "USA"], 2024, 2024)
+    assert client.get.call_count == 7
+
+
+@pytest.mark.parametrize("source", ["trade", "gdp", "markets"])
+def test_later_page_bad_request_recovers_without_partial_or_duplicate_rows(client, source):
+    client.get.side_effect = [
+        response(2023, pages=2), bad_request(), response(2024, pages=2),
+    ]
+    rows = fetch_rows(source)
+    assert sorted(row["year"] for row in rows) == [2023, 2024]
+    assert [call.kwargs["params"]["page"] for call in client.get.call_args_list] == [1, 2, 2]
