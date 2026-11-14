@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Iterable, Iterator
 
 from europe_data._http import get_json
+from europe_data._worldbank import observations
 
 from . import markets, regions
 
@@ -19,32 +20,14 @@ def _fetch_indicator(
     indicator: str, codes: list[str], start: int, end: int
 ) -> Iterator[dict]:
     metric_id = markets.BY_INDICATOR[indicator]
-    joined = ";".join(codes)
-    page = 1
-    while True:
-        payload = get_json(
-            f"{BASE}/country/{joined}/indicator/{indicator}",
-            params={
-                "format": "json",
-                "per_page": 1000,
-                "date": f"{start}:{end}",
-                "page": page,
-            },
-        )
-        if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
-            return
-        meta, rows = payload[0], payload[1]
-        for row in rows:
-            value = row.get("value")
-            if value is None:
-                continue
-            country = row.get("country") or {}
-            code = row.get("countryiso3code") or country.get("id") or ""
-            name = regions.name_for_code(code) if code else (country.get("value") or code)
-            yield markets.make_row(name, code, int(row["date"]), metric_id, float(value))
-        if page >= int(meta.get("pages", 1)):
-            return
-        page += 1
+    for row in observations(indicator, codes, start, end, download=get_json):
+        value = row.get("value")
+        if value is None:
+            continue
+        country = row.get("country") or {}
+        code = row.get("countryiso3code") or country.get("id") or ""
+        name = regions.name_for_code(code) if code else (country.get("value") or code)
+        yield markets.make_row(name, code, int(row["date"]), metric_id, float(value))
 
 
 def fetch(
@@ -75,27 +58,8 @@ def fetch_us_cpi(start: int, end: int) -> dict[int, float]:
     Used to deflate the nominal current-US$ market-cap series to real terms. Only
     non-null observations are returned; the caller decides the rebasing year.
     """
-    joined = "USA"
     cpi: dict[int, float] = {}
-    page = 1
-    while True:
-        payload = get_json(
-            f"{BASE}/country/{joined}/indicator/{markets.CPI_INDICATOR}",
-            params={
-                "format": "json",
-                "per_page": 1000,
-                "date": f"{start}:{end}",
-                "page": page,
-            },
-        )
-        if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
-            return cpi
-        meta, rows = payload[0], payload[1]
-        for row in rows:
-            value = row.get("value")
-            if value is None:
-                continue
-            cpi[int(row["date"])] = float(value)
-        if page >= int(meta.get("pages", 1)):
-            return cpi
-        page += 1
+    for row in observations(markets.CPI_INDICATOR, ["USA"], start, end, download=get_json):
+        if row.get("value") is not None:
+            cpi[int(row["date"])] = float(row["value"])
+    return cpi

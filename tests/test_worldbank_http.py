@@ -1,6 +1,6 @@
 """Exercise real World Bank consumers against transient and persistent failures."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 import requests
@@ -15,7 +15,8 @@ SOURCES = ("trade", "ageing", "pyramids", "crime", "markets", "trust",
 def fetch_rows(source):
     if source == "trade":
         from trade_data import worldbank
-        return worldbank.fetch(2024, 2024)
+        with patch.dict(worldbank.COUNTRIES, {"GBR": "United Kingdom"}, clear=True):
+            return worldbank.fetch(2024, 2024)
     if source == "ageing":
         from age_data import worldbank
         return worldbank.fetch(2024, 2024, iso3s=["GBR"])
@@ -315,3 +316,47 @@ def test_later_page_bad_request_recovers_without_partial_or_duplicate_rows(clien
     rows = fetch_rows(source)
     assert sorted(row["year"] for row in rows) == [2023, 2024]
     assert [call.kwargs["params"]["page"] for call in client.get.call_args_list] == [1, 2, 2]
+
+
+def fetch_bulk(source):
+    if source == "gdp":
+        from europe_data import worldbank
+        return worldbank.fetch(2023, 2024, ["GBR", "USA"], ["NY.GDP.PCAP.KD"])
+    if source == "markets":
+        from markets_data import worldbank
+        return worldbank.fetch(2023, 2024, ["GBR", "USA"], ["CM.MKT.LCAP.GD.ZS"])
+    from trade_data import worldbank
+    with patch.dict(worldbank.COUNTRIES, {"GBR": "United Kingdom", "USA": "United States"}, clear=True):
+        return worldbank.fetch(2023, 2024)
+
+
+@pytest.mark.parametrize("source", ["gdp", "markets", "trade"])
+@pytest.mark.parametrize("failure", ["bad_request", "timeout"])
+def test_legacy_consumers_restart_failed_bulk_pages_with_equivalent_queries(client, source, failure):
+    def download(url, params, **kwargs):
+        codes = url.split("/country/")[1].split("/indicator/")[0]
+        assert params["date"] == "2023:2024"
+        if ";" in codes:
+            if params["page"] == 1:
+                return response(pages=2, value=999)
+            if failure == "timeout":
+                raise requests.ReadTimeout("bulk page failed")
+            return bad_request(url)
+        return response(code=codes)
+
+    client.get.side_effect = download
+    rows = fetch_bulk(source)
+    key = {"gdp": "iso3", "markets": "region_code", "trade": "country_code"}[source]
+    assert sorted((row[key], row["value"]) for row in rows) == [("GBR", 1.5), ("USA", 1.5)]
+    assert client.get.call_count == 4
+
+
+@pytest.mark.parametrize("source", ["gdp", "markets", "trade"])
+def test_legacy_consumers_never_return_a_successful_partition_alone(client, source):
+    def download(url, params, **kwargs):
+        codes = url.split("/country/")[1].split("/indicator/")[0]
+        return response() if codes == "GBR" else bad_request(url)
+
+    client.get.side_effect = download
+    with pytest.raises(requests.HTTPError, match="400"):
+        fetch_bulk(source)

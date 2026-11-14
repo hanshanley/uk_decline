@@ -500,7 +500,7 @@ def test_worldbank_parse_paged(monkeypatch) -> None:
         ],
     }
 
-    def fake_get_json(url, params=None, timeout=60):
+    def fake_get_json(url, params=None, timeout=60, **kwargs):
         return pages[params["page"]]
 
     monkeypatch.setattr(worldbank, "get_json", fake_get_json)

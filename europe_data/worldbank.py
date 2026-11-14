@@ -10,6 +10,7 @@ from typing import Iterable, Iterator
 
 from . import countries
 from ._http import get_json
+from ._worldbank import observations
 
 BASE = "https://api.worldbank.org/v2"
 
@@ -31,40 +32,22 @@ def _fetch_indicator(
     indicator: str, iso3s: list[str], start: int, end: int
 ) -> Iterator[dict]:
     metric, unit = INDICATORS[indicator]
-    codes = ";".join(iso3s)
-    page = 1
-    while True:
-        payload = get_json(
-            f"{BASE}/country/{codes}/indicator/{indicator}",
-            params={
-                "format": "json",
-                "per_page": 1000,
-                "date": f"{start}:{end}",
-                "page": page,
-            },
-        )
-        if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
-            return
-        meta, rows = payload[0], payload[1]
-        for row in rows:
-            value = row.get("value")
-            if value is None:
-                continue
-            iso3 = row.get("countryiso3code") or ""
-            curated = countries.BY_ISO3.get(iso3)
-            name = curated.name if curated else (row.get("country") or {}).get("value") or iso3
-            yield {
-                "iso3": iso3,
-                "country": name,
-                "year": int(row["date"]),
-                "metric": metric,
-                "value": float(value),
-                "unit": unit,
-                "source": SOURCE,
-            }
-        if page >= int(meta.get("pages", 1)):
-            return
-        page += 1
+    for row in observations(indicator, iso3s, start, end, download=get_json):
+        value = row.get("value")
+        if value is None:
+            continue
+        iso3 = row.get("countryiso3code") or ""
+        curated = countries.BY_ISO3.get(iso3)
+        name = curated.name if curated else (row.get("country") or {}).get("value") or iso3
+        yield {
+            "iso3": iso3,
+            "country": name,
+            "year": int(row["date"]),
+            "metric": metric,
+            "value": float(value),
+            "unit": unit,
+            "source": SOURCE,
+        }
 
 
 def fetch(
@@ -96,14 +79,9 @@ def us_cpi(start: int, end: int) -> dict[int, float]:
     Always fetched from 1960 so the 2015 base year is present regardless of ``start``.
     """
     out: dict[int, float] = {}
-    payload = get_json(
-        f"{BASE}/country/USA/indicator/FP.CPI.TOTL",
-        params={"format": "json", "per_page": 1000, "date": f"{min(start, 1960)}:{end}"},
-    )
-    if isinstance(payload, list) and len(payload) > 1 and payload[1]:
-        for row in payload[1]:
-            if row.get("value") is not None:
-                out[int(row["date"])] = float(row["value"])
+    for row in observations("FP.CPI.TOTL", ["USA"], min(start, 1960), end, download=get_json):
+        if row.get("value") is not None:
+            out[int(row["date"])] = float(row["value"])
     return out
 
 

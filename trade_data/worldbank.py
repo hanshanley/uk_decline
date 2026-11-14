@@ -6,6 +6,7 @@ from datetime import date
 from urllib.parse import urlsplit
 
 from europe_data._http import get_json
+from europe_data._worldbank import observations
 
 BASE = "https://api.worldbank.org/v2"
 INDICATOR = "NE.TRD.GNFS.ZS"
@@ -33,6 +34,10 @@ def parse_payload(payload) -> tuple[int, list[dict]]:
     if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
         raise ValueError("unexpected World Bank response")
     meta, observations = payload[0], payload[1]
+    return int(meta.get("pages", 1)), _parse_rows(observations)
+
+
+def _parse_rows(observations: list[dict]) -> list[dict]:
     rows: list[dict] = []
     for observation in observations:
         value = observation.get("value")
@@ -49,7 +54,7 @@ def parse_payload(payload) -> tuple[int, list[dict]]:
                 "source": SOURCE,
             }
         )
-    return int(meta.get("pages", 1)), rows
+    return rows
 
 
 def fetch(start: int = 2000, end: int | None = None, timeout: int = 60) -> list[dict]:
@@ -58,24 +63,10 @@ def fetch(start: int = 2000, end: int | None = None, timeout: int = 60) -> list[
     codes = ";".join(COUNTRIES)
     url = f"{BASE}/country/{codes}/indicator/{INDICATOR}"
     _ensure_host(url)
-    page = 1
-    rows: list[dict] = []
-    while True:
-        payload = get_json(
-            url,
-            params={
-                "format": "json",
-                "date": f"{start}:{end}",
-                "per_page": 1000,
-                "page": page,
-            },
-            timeout=timeout,
-        )
-        pages, parsed = parse_payload(payload)
-        rows.extend(parsed)
-        if page >= pages:
-            break
-        page += 1
+    def download(url, **options):
+        return get_json(url, timeout=timeout, **options)
+
+    rows = _parse_rows(observations(INDICATOR, list(COUNTRIES), start, end, download=download))
     rows.sort(key=lambda row: (row["country_code"], row["year"]))
     return rows
 
