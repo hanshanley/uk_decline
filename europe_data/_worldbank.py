@@ -5,6 +5,7 @@ from __future__ import annotations
 import requests
 
 from ._http import get_json, transient_error, worldbank_bad_request
+from . import _worldbank_bulk
 
 BASE = "https://api.worldbank.org/v2"
 MAX_PAGES = 50
@@ -57,6 +58,12 @@ def observations(
         raise ValueError("World Bank start year must not exceed end year")
     if not codes:
         return []
+    try:
+        bulk = _worldbank_bulk.observations(indicator, codes, start, end, source)
+        if bulk is not None:
+            return bulk
+    except ValueError as error:
+        print(f"[worldbank] invalid bulk query: {error}; trying live API", flush=True)
     splittable = len(codes) > 1 or start < end
     try:
         # Split slow bulk queries promptly; retain five retries for indivisible queries.

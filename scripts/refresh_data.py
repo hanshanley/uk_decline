@@ -190,7 +190,17 @@ def main() -> None:
     )
     parser.add_argument("--report", type=Path, help="Write machine-readable source-check diagnostics.")
     args = parser.parse_args()
-    refresh(only=args.only, check_all=args.check_all, report=args.report)
+    sys.path.insert(0, str(ROOT))
+    from europe_data._worldbank_bulk import fresh_bulk
+
+    selected = set(STEPS if args.only is None else args.only)
+    sources = []
+    if selected & {"gdp-income", "markets", "trade", "ageing"}:
+        sources.append(2)
+    if "trust" in selected:
+        sources.append(3)
+    with fresh_bulk(sources):
+        refresh(only=args.only, check_all=args.check_all, report=args.report)
 
 
 if __name__ == "__main__":

@@ -100,6 +100,15 @@ duplicate keys and nonfinite values before replacing their published CSVs.
 Their complete source CSVs are tracked so these checks retain the previous
 successful history on a fresh GitHub runner, not just on a developer's machine.
 
+Full refreshes first download the official WDI database-2 and WGI database-3 CSV
+archives from `databankfiles.worldbank.org`, independently of the indicator API.
+Selected indicators are shared between source subprocesses in a new temporary
+directory for that refresh only. The directory is deleted afterward and never
+restored from a previous run. GDP, markets, trade, broad age structure and governance
+retain their existing definitions, countries and years. Missing year columns,
+country profiles, duplicate records or nonfinite values reject the bulk query;
+an unavailable or invalid archive tries the live API, never saved observations.
+
 All World Bank clients use the same pooled HTTP helper, including trade, homicide,
 age structure and population pyramids. Requests revalidate cached responses from
 the first attempt and retry network/HTTP failures up to five times with backoff.
