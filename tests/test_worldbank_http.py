@@ -331,7 +331,7 @@ def fetch_bulk(source):
 
 
 @pytest.mark.parametrize("source", ["gdp", "markets", "trade"])
-@pytest.mark.parametrize("failure", ["bad_request", "timeout"])
+@pytest.mark.parametrize("failure", ["bad_request", "timeout", "http_timeout", "invalid_json"])
 def test_legacy_consumers_restart_failed_bulk_pages_with_equivalent_queries(client, source, failure):
     def download(url, params, **kwargs):
         codes = url.split("/country/")[1].split("/indicator/")[0]
@@ -341,6 +341,10 @@ def test_legacy_consumers_restart_failed_bulk_pages_with_equivalent_queries(clie
                 return response(pages=2, value=999)
             if failure == "timeout":
                 raise requests.ReadTimeout("bulk page failed")
+            if failure == "http_timeout":
+                raise requests.HTTPError("408", response=Mock(status_code=408))
+            if failure == "invalid_json":
+                raise requests.exceptions.JSONDecodeError("truncated response", "", 0)
             return bad_request(url)
         return response(code=codes)
 
