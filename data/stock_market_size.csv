@@ -269,268 +269,268 @@ World,WLD,2022,listed_domestic_companies,51026.0,companies,World Bank WDI
 World,WLD,2023,listed_domestic_companies,48748.0,companies,World Bank WDI
 World,WLD,2024,listed_domestic_companies,47980.0,companies,World Bank WDI
 World,WLD,2025,listed_domestic_companies,53087.0,companies,World Bank WDI
-China,CHN,2003,market_cap_pct_gdp,30.4636713403437,% of GDP,World Bank WDI
-China,CHN,2004,market_cap_pct_gdp,22.5643099574266,% of GDP,World Bank WDI
-China,CHN,2005,market_cap_pct_gdp,17.3395191009478,% of GDP,World Bank WDI
-China,CHN,2006,market_cap_pct_gdp,41.033691444197,% of GDP,World Bank WDI
-China,CHN,2007,market_cap_pct_gdp,124.272951099968,% of GDP,World Bank WDI
-China,CHN,2008,market_cap_pct_gdp,38.1112495628245,% of GDP,World Bank WDI
-China,CHN,2009,market_cap_pct_gdp,68.8524786238225,% of GDP,World Bank WDI
-China,CHN,2010,market_cap_pct_gdp,65.0431667921056,% of GDP,World Bank WDI
-China,CHN,2011,market_cap_pct_gdp,44.4762288163661,% of GDP,World Bank WDI
-China,CHN,2012,market_cap_pct_gdp,42.6276108457102,% of GDP,World Bank WDI
-China,CHN,2013,market_cap_pct_gdp,40.5326196174462,% of GDP,World Bank WDI
-China,CHN,2014,market_cap_pct_gdp,56.2548972900922,% of GDP,World Bank WDI
-China,CHN,2015,market_cap_pct_gdp,72.5835808340326,% of GDP,World Bank WDI
-China,CHN,2016,market_cap_pct_gdp,63.9029590501553,% of GDP,World Bank WDI
-China,CHN,2017,market_cap_pct_gdp,69.4813653656583,% of GDP,World Bank WDI
-China,CHN,2018,market_cap_pct_gdp,44.7058557619521,% of GDP,World Bank WDI
-China,CHN,2019,market_cap_pct_gdp,58.8558640185154,% of GDP,World Bank WDI
-China,CHN,2020,market_cap_pct_gdp,81.8646786726428,% of GDP,World Bank WDI
+China,CHN,2003,market_cap_pct_gdp,30.46367134034373,% of GDP,World Bank WDI
+China,CHN,2004,market_cap_pct_gdp,22.56430995742663,% of GDP,World Bank WDI
+China,CHN,2005,market_cap_pct_gdp,17.339519100947832,% of GDP,World Bank WDI
+China,CHN,2006,market_cap_pct_gdp,41.03369144419701,% of GDP,World Bank WDI
+China,CHN,2007,market_cap_pct_gdp,124.27295109996822,% of GDP,World Bank WDI
+China,CHN,2008,market_cap_pct_gdp,38.11124956282449,% of GDP,World Bank WDI
+China,CHN,2009,market_cap_pct_gdp,68.85247862382252,% of GDP,World Bank WDI
+China,CHN,2010,market_cap_pct_gdp,65.04316679210564,% of GDP,World Bank WDI
+China,CHN,2011,market_cap_pct_gdp,44.47622881636612,% of GDP,World Bank WDI
+China,CHN,2012,market_cap_pct_gdp,42.62761084571024,% of GDP,World Bank WDI
+China,CHN,2013,market_cap_pct_gdp,40.532619617446194,% of GDP,World Bank WDI
+China,CHN,2014,market_cap_pct_gdp,56.25489729009217,% of GDP,World Bank WDI
+China,CHN,2015,market_cap_pct_gdp,72.58358083403257,% of GDP,World Bank WDI
+China,CHN,2016,market_cap_pct_gdp,63.90295905015528,% of GDP,World Bank WDI
+China,CHN,2017,market_cap_pct_gdp,69.48136536565832,% of GDP,World Bank WDI
+China,CHN,2018,market_cap_pct_gdp,44.70585576195206,% of GDP,World Bank WDI
+China,CHN,2019,market_cap_pct_gdp,58.855864018515426,% of GDP,World Bank WDI
+China,CHN,2020,market_cap_pct_gdp,81.86467867264284,% of GDP,World Bank WDI
 China,CHN,2021,market_cap_pct_gdp,79.3192238397069,% of GDP,World Bank WDI
-China,CHN,2022,market_cap_pct_gdp,62.6166578891979,% of GDP,World Bank WDI
-China,CHN,2023,market_cap_pct_gdp,59.8556765846528,% of GDP,World Bank WDI
-China,CHN,2024,market_cap_pct_gdp,62.7654354387815,% of GDP,World Bank WDI
-China,CHN,2025,market_cap_pct_gdp,79.540605039043,% of GDP,World Bank WDI
-European Union,EUU,1975,market_cap_pct_gdp,10.9117857609188,% of GDP,World Bank WDI
+China,CHN,2022,market_cap_pct_gdp,62.616657889197946,% of GDP,World Bank WDI
+China,CHN,2023,market_cap_pct_gdp,59.85567658465284,% of GDP,World Bank WDI
+China,CHN,2024,market_cap_pct_gdp,62.76543543878146,% of GDP,World Bank WDI
+China,CHN,2025,market_cap_pct_gdp,79.54060503904296,% of GDP,World Bank WDI
+European Union,EUU,1975,market_cap_pct_gdp,10.911785760918841,% of GDP,World Bank WDI
 European Union,EUU,1976,market_cap_pct_gdp,10.527146065454,% of GDP,World Bank WDI
-European Union,EUU,1977,market_cap_pct_gdp,8.75257953052617,% of GDP,World Bank WDI
-European Union,EUU,1978,market_cap_pct_gdp,10.3980269767876,% of GDP,World Bank WDI
+European Union,EUU,1977,market_cap_pct_gdp,8.752579530526171,% of GDP,World Bank WDI
+European Union,EUU,1978,market_cap_pct_gdp,10.398026976787564,% of GDP,World Bank WDI
 European Union,EUU,1979,market_cap_pct_gdp,8.54865189193702,% of GDP,World Bank WDI
-European Union,EUU,1980,market_cap_pct_gdp,7.69593676943675,% of GDP,World Bank WDI
-European Union,EUU,1981,market_cap_pct_gdp,7.66803458373998,% of GDP,World Bank WDI
-European Union,EUU,1982,market_cap_pct_gdp,7.65171852632053,% of GDP,World Bank WDI
-European Union,EUU,1983,market_cap_pct_gdp,9.90959199609843,% of GDP,World Bank WDI
-European Union,EUU,1984,market_cap_pct_gdp,11.9200631194375,% of GDP,World Bank WDI
-European Union,EUU,1985,market_cap_pct_gdp,19.6089341204849,% of GDP,World Bank WDI
-European Union,EUU,1986,market_cap_pct_gdp,23.942118693096,% of GDP,World Bank WDI
-European Union,EUU,1987,market_cap_pct_gdp,19.2237967090595,% of GDP,World Bank WDI
-European Union,EUU,1988,market_cap_pct_gdp,22.2541241405092,% of GDP,World Bank WDI
-European Union,EUU,1989,market_cap_pct_gdp,30.3227041103508,% of GDP,World Bank WDI
-European Union,EUU,1990,market_cap_pct_gdp,21.7184656951531,% of GDP,World Bank WDI
-European Union,EUU,1991,market_cap_pct_gdp,23.6623849604102,% of GDP,World Bank WDI
-European Union,EUU,1992,market_cap_pct_gdp,18.7787961614739,% of GDP,World Bank WDI
+European Union,EUU,1980,market_cap_pct_gdp,7.695936769436755,% of GDP,World Bank WDI
+European Union,EUU,1981,market_cap_pct_gdp,7.668034583739983,% of GDP,World Bank WDI
+European Union,EUU,1982,market_cap_pct_gdp,7.651718526320533,% of GDP,World Bank WDI
+European Union,EUU,1983,market_cap_pct_gdp,9.909591996098426,% of GDP,World Bank WDI
+European Union,EUU,1984,market_cap_pct_gdp,11.920063119437534,% of GDP,World Bank WDI
+European Union,EUU,1985,market_cap_pct_gdp,19.60893412048493,% of GDP,World Bank WDI
+European Union,EUU,1986,market_cap_pct_gdp,23.942118693096035,% of GDP,World Bank WDI
+European Union,EUU,1987,market_cap_pct_gdp,19.223796709059474,% of GDP,World Bank WDI
+European Union,EUU,1988,market_cap_pct_gdp,22.25412414050919,% of GDP,World Bank WDI
+European Union,EUU,1989,market_cap_pct_gdp,30.322704110350756,% of GDP,World Bank WDI
+European Union,EUU,1990,market_cap_pct_gdp,21.71846569515309,% of GDP,World Bank WDI
+European Union,EUU,1991,market_cap_pct_gdp,23.662384960410154,% of GDP,World Bank WDI
+European Union,EUU,1992,market_cap_pct_gdp,18.778796161473934,% of GDP,World Bank WDI
 European Union,EUU,1993,market_cap_pct_gdp,26.0368693043894,% of GDP,World Bank WDI
-European Union,EUU,1994,market_cap_pct_gdp,28.1319088513665,% of GDP,World Bank WDI
-European Union,EUU,1995,market_cap_pct_gdp,28.0871498054568,% of GDP,World Bank WDI
-European Union,EUU,1996,market_cap_pct_gdp,33.8016465334792,% of GDP,World Bank WDI
-European Union,EUU,1997,market_cap_pct_gdp,44.7382024575967,% of GDP,World Bank WDI
-European Union,EUU,1998,market_cap_pct_gdp,41.1138465896196,% of GDP,World Bank WDI
-European Union,EUU,1999,market_cap_pct_gdp,74.4832115002418,% of GDP,World Bank WDI
-European Union,EUU,2000,market_cap_pct_gdp,78.3673526450538,% of GDP,World Bank WDI
-European Union,EUU,2001,market_cap_pct_gdp,62.2815645111189,% of GDP,World Bank WDI
-European Union,EUU,2002,market_cap_pct_gdp,45.8573334879408,% of GDP,World Bank WDI
-European Union,EUU,2003,market_cap_pct_gdp,53.623648469639,% of GDP,World Bank WDI
-European Union,EUU,2004,market_cap_pct_gdp,55.3576204626708,% of GDP,World Bank WDI
-European Union,EUU,2005,market_cap_pct_gdp,57.3739211020335,% of GDP,World Bank WDI
-European Union,EUU,2006,market_cap_pct_gdp,73.7222835047012,% of GDP,World Bank WDI
-European Union,EUU,2007,market_cap_pct_gdp,77.1649520362272,% of GDP,World Bank WDI
-European Union,EUU,2008,market_cap_pct_gdp,34.3796049539882,% of GDP,World Bank WDI
-European Union,EUU,2009,market_cap_pct_gdp,50.9434690361479,% of GDP,World Bank WDI
-European Union,EUU,2010,market_cap_pct_gdp,50.4654469601582,% of GDP,World Bank WDI
-European Union,EUU,2011,market_cap_pct_gdp,39.0072796180984,% of GDP,World Bank WDI
-European Union,EUU,2012,market_cap_pct_gdp,48.7035773541589,% of GDP,World Bank WDI
-European Union,EUU,2013,market_cap_pct_gdp,57.6951444579157,% of GDP,World Bank WDI
-European Union,EUU,2014,market_cap_pct_gdp,50.9837285464264,% of GDP,World Bank WDI
-European Union,EUU,2015,market_cap_pct_gdp,60.9718870107722,% of GDP,World Bank WDI
-European Union,EUU,2016,market_cap_pct_gdp,60.1074274654467,% of GDP,World Bank WDI
-European Union,EUU,2017,market_cap_pct_gdp,72.7871207670366,% of GDP,World Bank WDI
-European Union,EUU,2018,market_cap_pct_gdp,50.0193963808003,% of GDP,World Bank WDI
-United Kingdom,GBR,1975,market_cap_pct_gdp,35.4918446107949,% of GDP,World Bank WDI
-United Kingdom,GBR,1976,market_cap_pct_gdp,29.9622738238702,% of GDP,World Bank WDI
-United Kingdom,GBR,1977,market_cap_pct_gdp,43.8918253441279,% of GDP,World Bank WDI
-United Kingdom,GBR,1978,market_cap_pct_gdp,38.5336139510056,% of GDP,World Bank WDI
+European Union,EUU,1994,market_cap_pct_gdp,28.131908851366457,% of GDP,World Bank WDI
+European Union,EUU,1995,market_cap_pct_gdp,28.087149805456775,% of GDP,World Bank WDI
+European Union,EUU,1996,market_cap_pct_gdp,33.80164653347918,% of GDP,World Bank WDI
+European Union,EUU,1997,market_cap_pct_gdp,44.73820245759668,% of GDP,World Bank WDI
+European Union,EUU,1998,market_cap_pct_gdp,41.11384658961959,% of GDP,World Bank WDI
+European Union,EUU,1999,market_cap_pct_gdp,74.48321150024175,% of GDP,World Bank WDI
+European Union,EUU,2000,market_cap_pct_gdp,78.36735264505376,% of GDP,World Bank WDI
+European Union,EUU,2001,market_cap_pct_gdp,62.28156451111888,% of GDP,World Bank WDI
+European Union,EUU,2002,market_cap_pct_gdp,45.85733348794076,% of GDP,World Bank WDI
+European Union,EUU,2003,market_cap_pct_gdp,53.623648469638994,% of GDP,World Bank WDI
+European Union,EUU,2004,market_cap_pct_gdp,55.35762046267083,% of GDP,World Bank WDI
+European Union,EUU,2005,market_cap_pct_gdp,57.37392110203353,% of GDP,World Bank WDI
+European Union,EUU,2006,market_cap_pct_gdp,73.72228350470121,% of GDP,World Bank WDI
+European Union,EUU,2007,market_cap_pct_gdp,77.16495203622716,% of GDP,World Bank WDI
+European Union,EUU,2008,market_cap_pct_gdp,34.379604953988185,% of GDP,World Bank WDI
+European Union,EUU,2009,market_cap_pct_gdp,50.94346903614794,% of GDP,World Bank WDI
+European Union,EUU,2010,market_cap_pct_gdp,50.465446960158154,% of GDP,World Bank WDI
+European Union,EUU,2011,market_cap_pct_gdp,39.00727961809842,% of GDP,World Bank WDI
+European Union,EUU,2012,market_cap_pct_gdp,48.703577354158924,% of GDP,World Bank WDI
+European Union,EUU,2013,market_cap_pct_gdp,57.695144457915674,% of GDP,World Bank WDI
+European Union,EUU,2014,market_cap_pct_gdp,50.98372854642644,% of GDP,World Bank WDI
+European Union,EUU,2015,market_cap_pct_gdp,60.97188701077223,% of GDP,World Bank WDI
+European Union,EUU,2016,market_cap_pct_gdp,60.107427465446705,% of GDP,World Bank WDI
+European Union,EUU,2017,market_cap_pct_gdp,72.78712076703661,% of GDP,World Bank WDI
+European Union,EUU,2018,market_cap_pct_gdp,50.01939638080031,% of GDP,World Bank WDI
+United Kingdom,GBR,1975,market_cap_pct_gdp,35.491844610794885,% of GDP,World Bank WDI
+United Kingdom,GBR,1976,market_cap_pct_gdp,29.962273823870216,% of GDP,World Bank WDI
+United Kingdom,GBR,1977,market_cap_pct_gdp,43.891825344127945,% of GDP,World Bank WDI
+United Kingdom,GBR,1978,market_cap_pct_gdp,38.53361395100563,% of GDP,World Bank WDI
 United Kingdom,GBR,1979,market_cap_pct_gdp,6.85562107451771,% of GDP,World Bank WDI
-United Kingdom,GBR,1980,market_cap_pct_gdp,6.3679716380704,% of GDP,World Bank WDI
-United Kingdom,GBR,1981,market_cap_pct_gdp,35.0545659014809,% of GDP,World Bank WDI
-United Kingdom,GBR,1982,market_cap_pct_gdp,38.1034118474699,% of GDP,World Bank WDI
-United Kingdom,GBR,1983,market_cap_pct_gdp,46.1251335172337,% of GDP,World Bank WDI
-United Kingdom,GBR,1984,market_cap_pct_gdp,51.2264332443666,% of GDP,World Bank WDI
+United Kingdom,GBR,1980,market_cap_pct_gdp,6.367971638070399,% of GDP,World Bank WDI
+United Kingdom,GBR,1981,market_cap_pct_gdp,35.05456590148094,% of GDP,World Bank WDI
+United Kingdom,GBR,1982,market_cap_pct_gdp,38.10341184746993,% of GDP,World Bank WDI
+United Kingdom,GBR,1983,market_cap_pct_gdp,46.125133517233685,% of GDP,World Bank WDI
+United Kingdom,GBR,1984,market_cap_pct_gdp,51.22643324436657,% of GDP,World Bank WDI
 United Kingdom,GBR,1985,market_cap_pct_gdp,72.2432225237442,% of GDP,World Bank WDI
 United Kingdom,GBR,1986,market_cap_pct_gdp,78.6256952228919,% of GDP,World Bank WDI
-United Kingdom,GBR,1987,market_cap_pct_gdp,91.2165455508647,% of GDP,World Bank WDI
+United Kingdom,GBR,1987,market_cap_pct_gdp,91.21654555086465,% of GDP,World Bank WDI
 United Kingdom,GBR,1988,market_cap_pct_gdp,78.1792515323323,% of GDP,World Bank WDI
-United Kingdom,GBR,1989,market_cap_pct_gdp,87.855646708278,% of GDP,World Bank WDI
-United Kingdom,GBR,1990,market_cap_pct_gdp,77.7416472133746,% of GDP,World Bank WDI
-United Kingdom,GBR,1991,market_cap_pct_gdp,86.6223568752064,% of GDP,World Bank WDI
-United Kingdom,GBR,1992,market_cap_pct_gdp,80.9456098129937,% of GDP,World Bank WDI
-United Kingdom,GBR,1993,market_cap_pct_gdp,108.375316778903,% of GDP,World Bank WDI
-United Kingdom,GBR,1994,market_cap_pct_gdp,100.249024953167,% of GDP,World Bank WDI
-United Kingdom,GBR,1995,market_cap_pct_gdp,98.5799465675776,% of GDP,World Bank WDI
-United Kingdom,GBR,1996,market_cap_pct_gdp,120.061990896543,% of GDP,World Bank WDI
-United Kingdom,GBR,1997,market_cap_pct_gdp,131.792732085392,% of GDP,World Bank WDI
-United Kingdom,GBR,1998,market_cap_pct_gdp,138.344248296377,% of GDP,World Bank WDI
-United Kingdom,GBR,1999,market_cap_pct_gdp,174.484028978616,% of GDP,World Bank WDI
-United Kingdom,GBR,2000,market_cap_pct_gdp,154.163358398166,% of GDP,World Bank WDI
-United Kingdom,GBR,2001,market_cap_pct_gdp,129.787370279399,% of GDP,World Bank WDI
-United Kingdom,GBR,2002,market_cap_pct_gdp,103.666935952575,% of GDP,World Bank WDI
-United Kingdom,GBR,2003,market_cap_pct_gdp,117.688207622641,% of GDP,World Bank WDI
-United Kingdom,GBR,2004,market_cap_pct_gdp,115.892551894257,% of GDP,World Bank WDI
-United Kingdom,GBR,2005,market_cap_pct_gdp,119.864709043085,% of GDP,World Bank WDI
-United Kingdom,GBR,2006,market_cap_pct_gdp,139.043106242558,% of GDP,World Bank WDI
-United Kingdom,GBR,2007,market_cap_pct_gdp,123.891584653248,% of GDP,World Bank WDI
-United Kingdom,GBR,2008,market_cap_pct_gdp,63.4293117399204,% of GDP,World Bank WDI
-United Kingdom,GBR,2009,market_cap_pct_gdp,115.110417691876,% of GDP,World Bank WDI
-United Kingdom,GBR,2010,market_cap_pct_gdp,107.61553654272,% of GDP,World Bank WDI
-United Kingdom,GBR,2011,market_cap_pct_gdp,109.592307961893,% of GDP,World Bank WDI
-United Kingdom,GBR,2012,market_cap_pct_gdp,121.028819426289,% of GDP,World Bank WDI
-United Kingdom,GBR,2013,market_cap_pct_gdp,141.115984497304,% of GDP,World Bank WDI
-United Kingdom,GBR,2014,market_cap_pct_gdp,115.736607371526,% of GDP,World Bank WDI
-United Kingdom,GBR,2021,market_cap_pct_gdp,118.935321441875,% of GDP,World Bank WDI
-United Kingdom,GBR,2022,market_cap_pct_gdp,97.3198877208869,% of GDP,World Bank WDI
-Japan,JPN,1975,market_cap_pct_gdp,26.0620534427079,% of GDP,World Bank WDI
-Japan,JPN,1976,market_cap_pct_gdp,29.5833729414448,% of GDP,World Bank WDI
-Japan,JPN,1977,market_cap_pct_gdp,2.8608419583243,% of GDP,World Bank WDI
-Japan,JPN,1978,market_cap_pct_gdp,3.23411301328076,% of GDP,World Bank WDI
-Japan,JPN,1979,market_cap_pct_gdp,26.2694476710315,% of GDP,World Bank WDI
-Japan,JPN,1980,market_cap_pct_gdp,32.8846651487543,% of GDP,World Bank WDI
-Japan,JPN,1981,market_cap_pct_gdp,32.8715423133354,% of GDP,World Bank WDI
-Japan,JPN,1982,market_cap_pct_gdp,35.2796711894496,% of GDP,World Bank WDI
-Japan,JPN,1983,market_cap_pct_gdp,42.0652745204877,% of GDP,World Bank WDI
-Japan,JPN,1984,market_cap_pct_gdp,46.8947994172309,% of GDP,World Bank WDI
-Japan,JPN,1985,market_cap_pct_gdp,65.0800801474287,% of GDP,World Bank WDI
-Japan,JPN,1986,market_cap_pct_gdp,82.395504065924,% of GDP,World Bank WDI
-Japan,JPN,1987,market_cap_pct_gdp,103.463814577581,% of GDP,World Bank WDI
-Japan,JPN,1988,market_cap_pct_gdp,118.72089879086,% of GDP,World Bank WDI
-Japan,JPN,1989,market_cap_pct_gdp,134.188034539178,% of GDP,World Bank WDI
-Japan,JPN,1990,market_cap_pct_gdp,90.025788982626,% of GDP,World Bank WDI
-Japan,JPN,1991,market_cap_pct_gdp,80.6922968782168,% of GDP,World Bank WDI
+United Kingdom,GBR,1989,market_cap_pct_gdp,87.85564670827803,% of GDP,World Bank WDI
+United Kingdom,GBR,1990,market_cap_pct_gdp,77.74164721337463,% of GDP,World Bank WDI
+United Kingdom,GBR,1991,market_cap_pct_gdp,86.62235687520642,% of GDP,World Bank WDI
+United Kingdom,GBR,1992,market_cap_pct_gdp,80.94560981299372,% of GDP,World Bank WDI
+United Kingdom,GBR,1993,market_cap_pct_gdp,108.3753167789028,% of GDP,World Bank WDI
+United Kingdom,GBR,1994,market_cap_pct_gdp,100.24902495316668,% of GDP,World Bank WDI
+United Kingdom,GBR,1995,market_cap_pct_gdp,98.57994656757761,% of GDP,World Bank WDI
+United Kingdom,GBR,1996,market_cap_pct_gdp,120.06199089654326,% of GDP,World Bank WDI
+United Kingdom,GBR,1997,market_cap_pct_gdp,131.79273208539246,% of GDP,World Bank WDI
+United Kingdom,GBR,1998,market_cap_pct_gdp,138.34424829637697,% of GDP,World Bank WDI
+United Kingdom,GBR,1999,market_cap_pct_gdp,174.48402897861618,% of GDP,World Bank WDI
+United Kingdom,GBR,2000,market_cap_pct_gdp,154.16335839816648,% of GDP,World Bank WDI
+United Kingdom,GBR,2001,market_cap_pct_gdp,129.78737027939871,% of GDP,World Bank WDI
+United Kingdom,GBR,2002,market_cap_pct_gdp,103.66693595257507,% of GDP,World Bank WDI
+United Kingdom,GBR,2003,market_cap_pct_gdp,117.68820762264139,% of GDP,World Bank WDI
+United Kingdom,GBR,2004,market_cap_pct_gdp,115.89255189425707,% of GDP,World Bank WDI
+United Kingdom,GBR,2005,market_cap_pct_gdp,119.86470904308501,% of GDP,World Bank WDI
+United Kingdom,GBR,2006,market_cap_pct_gdp,139.0431062425579,% of GDP,World Bank WDI
+United Kingdom,GBR,2007,market_cap_pct_gdp,123.8915846532481,% of GDP,World Bank WDI
+United Kingdom,GBR,2008,market_cap_pct_gdp,63.42931173992038,% of GDP,World Bank WDI
+United Kingdom,GBR,2009,market_cap_pct_gdp,115.11041769187607,% of GDP,World Bank WDI
+United Kingdom,GBR,2010,market_cap_pct_gdp,107.61553654271994,% of GDP,World Bank WDI
+United Kingdom,GBR,2011,market_cap_pct_gdp,109.5923079618931,% of GDP,World Bank WDI
+United Kingdom,GBR,2012,market_cap_pct_gdp,121.02881942628893,% of GDP,World Bank WDI
+United Kingdom,GBR,2013,market_cap_pct_gdp,141.1159844973043,% of GDP,World Bank WDI
+United Kingdom,GBR,2014,market_cap_pct_gdp,115.73660737152645,% of GDP,World Bank WDI
+United Kingdom,GBR,2021,market_cap_pct_gdp,118.93532144187479,% of GDP,World Bank WDI
+United Kingdom,GBR,2022,market_cap_pct_gdp,97.31988772088692,% of GDP,World Bank WDI
+Japan,JPN,1975,market_cap_pct_gdp,26.06205344270786,% of GDP,World Bank WDI
+Japan,JPN,1976,market_cap_pct_gdp,29.583372941444846,% of GDP,World Bank WDI
+Japan,JPN,1977,market_cap_pct_gdp,2.860841958324297,% of GDP,World Bank WDI
+Japan,JPN,1978,market_cap_pct_gdp,3.2341130132807554,% of GDP,World Bank WDI
+Japan,JPN,1979,market_cap_pct_gdp,26.269447671031504,% of GDP,World Bank WDI
+Japan,JPN,1980,market_cap_pct_gdp,32.88466514875429,% of GDP,World Bank WDI
+Japan,JPN,1981,market_cap_pct_gdp,32.871542313335375,% of GDP,World Bank WDI
+Japan,JPN,1982,market_cap_pct_gdp,35.279671189449566,% of GDP,World Bank WDI
+Japan,JPN,1983,market_cap_pct_gdp,42.06527452048769,% of GDP,World Bank WDI
+Japan,JPN,1984,market_cap_pct_gdp,46.89479941723094,% of GDP,World Bank WDI
+Japan,JPN,1985,market_cap_pct_gdp,65.08008014742875,% of GDP,World Bank WDI
+Japan,JPN,1986,market_cap_pct_gdp,82.39550406592404,% of GDP,World Bank WDI
+Japan,JPN,1987,market_cap_pct_gdp,103.46381457758102,% of GDP,World Bank WDI
+Japan,JPN,1988,market_cap_pct_gdp,118.72089879085996,% of GDP,World Bank WDI
+Japan,JPN,1989,market_cap_pct_gdp,134.1880345391781,% of GDP,World Bank WDI
+Japan,JPN,1990,market_cap_pct_gdp,90.02578898262597,% of GDP,World Bank WDI
+Japan,JPN,1991,market_cap_pct_gdp,80.69229687821677,% of GDP,World Bank WDI
 Japan,JPN,1992,market_cap_pct_gdp,55.4761396749758,% of GDP,World Bank WDI
-Japan,JPN,1993,market_cap_pct_gdp,62.7374187658689,% of GDP,World Bank WDI
+Japan,JPN,1993,market_cap_pct_gdp,62.73741876586889,% of GDP,World Bank WDI
 Japan,JPN,1994,market_cap_pct_gdp,70.3790993119085,% of GDP,World Bank WDI
 Japan,JPN,1995,market_cap_pct_gdp,62.8639483771911,% of GDP,World Bank WDI
-Japan,JPN,1996,market_cap_pct_gdp,60.1367885801957,% of GDP,World Bank WDI
-Japan,JPN,1997,market_cap_pct_gdp,45.5342828414601,% of GDP,World Bank WDI
-Japan,JPN,1998,market_cap_pct_gdp,58.7792223542597,% of GDP,World Bank WDI
+Japan,JPN,1996,market_cap_pct_gdp,60.13678858019574,% of GDP,World Bank WDI
+Japan,JPN,1997,market_cap_pct_gdp,45.53428284146015,% of GDP,World Bank WDI
+Japan,JPN,1998,market_cap_pct_gdp,58.77922235425969,% of GDP,World Bank WDI
 Japan,JPN,1999,market_cap_pct_gdp,95.0173558482956,% of GDP,World Bank WDI
-Japan,JPN,2000,market_cap_pct_gdp,62.6136988673042,% of GDP,World Bank WDI
-Japan,JPN,2001,market_cap_pct_gdp,51.0167522686997,% of GDP,World Bank WDI
-Japan,JPN,2002,market_cap_pct_gdp,48.7358680988777,% of GDP,World Bank WDI
-Japan,JPN,2003,market_cap_pct_gdp,64.5709925284669,% of GDP,World Bank WDI
-Japan,JPN,2004,market_cap_pct_gdp,71.9960566684748,% of GDP,World Bank WDI
-Japan,JPN,2005,market_cap_pct_gdp,93.7906217560041,% of GDP,World Bank WDI
-Japan,JPN,2006,market_cap_pct_gdp,99.2687248330119,% of GDP,World Bank WDI
+Japan,JPN,2000,market_cap_pct_gdp,62.613698867304215,% of GDP,World Bank WDI
+Japan,JPN,2001,market_cap_pct_gdp,51.016752268699705,% of GDP,World Bank WDI
+Japan,JPN,2002,market_cap_pct_gdp,48.735868098877745,% of GDP,World Bank WDI
+Japan,JPN,2003,market_cap_pct_gdp,64.57099252846693,% of GDP,World Bank WDI
+Japan,JPN,2004,market_cap_pct_gdp,71.99605666847475,% of GDP,World Bank WDI
+Japan,JPN,2005,market_cap_pct_gdp,93.79062175600407,% of GDP,World Bank WDI
+Japan,JPN,2006,market_cap_pct_gdp,99.26872483301189,% of GDP,World Bank WDI
 Japan,JPN,2007,market_cap_pct_gdp,93.6482320199346,% of GDP,World Bank WDI
-Japan,JPN,2008,market_cap_pct_gdp,60.3814858968213,% of GDP,World Bank WDI
-Japan,JPN,2009,market_cap_pct_gdp,61.9491699156553,% of GDP,World Bank WDI
-Japan,JPN,2010,market_cap_pct_gdp,65.8646262325499,% of GDP,World Bank WDI
-Japan,JPN,2011,market_cap_pct_gdp,52.9569038140964,% of GDP,World Bank WDI
-Japan,JPN,2012,market_cap_pct_gdp,54.9248375717532,% of GDP,World Bank WDI
-Japan,JPN,2013,market_cap_pct_gdp,86.1705838607882,% of GDP,World Bank WDI
-Japan,JPN,2014,market_cap_pct_gdp,87.8099122589042,% of GDP,World Bank WDI
-Japan,JPN,2015,market_cap_pct_gdp,107.949838400187,% of GDP,World Bank WDI
-Japan,JPN,2016,market_cap_pct_gdp,96.9658143386727,% of GDP,World Bank WDI
-Japan,JPN,2017,market_cap_pct_gdp,123.512090450451,% of GDP,World Bank WDI
-Japan,JPN,2018,market_cap_pct_gdp,102.765022446672,% of GDP,World Bank WDI
-Japan,JPN,2019,market_cap_pct_gdp,118.020633625372,% of GDP,World Bank WDI
-Japan,JPN,2020,market_cap_pct_gdp,129.465480808821,% of GDP,World Bank WDI
-Japan,JPN,2021,market_cap_pct_gdp,125.227453889557,% of GDP,World Bank WDI
-Japan,JPN,2022,market_cap_pct_gdp,120.9645737572,% of GDP,World Bank WDI
-Japan,JPN,2023,market_cap_pct_gdp,140.237275891347,% of GDP,World Bank WDI
-Japan,JPN,2024,market_cap_pct_gdp,150.612627620477,% of GDP,World Bank WDI
-Japan,JPN,2025,market_cap_pct_gdp,171.595579915317,% of GDP,World Bank WDI
-United States,USA,1975,market_cap_pct_gdp,41.7709258212931,% of GDP,World Bank WDI
-United States,USA,1976,market_cap_pct_gdp,47.1385899097476,% of GDP,World Bank WDI
-United States,USA,1977,market_cap_pct_gdp,40.0724171952891,% of GDP,World Bank WDI
-United States,USA,1978,market_cap_pct_gdp,36.6542510011273,% of GDP,World Bank WDI
-United States,USA,1979,market_cap_pct_gdp,37.8174711770453,% of GDP,World Bank WDI
-United States,USA,1980,market_cap_pct_gdp,47.5901889436452,% of GDP,World Bank WDI
-United States,USA,1981,market_cap_pct_gdp,39.3995804855629,% of GDP,World Bank WDI
-United States,USA,1982,market_cap_pct_gdp,43.5692922011526,% of GDP,World Bank WDI
-United States,USA,1983,market_cap_pct_gdp,49.7802829799798,% of GDP,World Bank WDI
-United States,USA,1984,market_cap_pct_gdp,39.6808634210361,% of GDP,World Bank WDI
-United States,USA,1985,market_cap_pct_gdp,53.0276339203301,% of GDP,World Bank WDI
-United States,USA,1986,market_cap_pct_gdp,55.4180500568714,% of GDP,World Bank WDI
-United States,USA,1987,market_cap_pct_gdp,52.1453262110947,% of GDP,World Bank WDI
-United States,USA,1988,market_cap_pct_gdp,53.0883913836085,% of GDP,World Bank WDI
-United States,USA,1989,market_cap_pct_gdp,59.9518858192208,% of GDP,World Bank WDI
-United States,USA,1990,market_cap_pct_gdp,51.8761327916951,% of GDP,World Bank WDI
-United States,USA,1991,market_cap_pct_gdp,67.5464122300783,% of GDP,World Bank WDI
-United States,USA,1992,market_cap_pct_gdp,69.7180371475234,% of GDP,World Bank WDI
+Japan,JPN,2008,market_cap_pct_gdp,60.38148589682133,% of GDP,World Bank WDI
+Japan,JPN,2009,market_cap_pct_gdp,61.949169915655325,% of GDP,World Bank WDI
+Japan,JPN,2010,market_cap_pct_gdp,65.86462623254987,% of GDP,World Bank WDI
+Japan,JPN,2011,market_cap_pct_gdp,52.95690381409644,% of GDP,World Bank WDI
+Japan,JPN,2012,market_cap_pct_gdp,54.92483757175324,% of GDP,World Bank WDI
+Japan,JPN,2013,market_cap_pct_gdp,86.17058386078816,% of GDP,World Bank WDI
+Japan,JPN,2014,market_cap_pct_gdp,87.80991225890416,% of GDP,World Bank WDI
+Japan,JPN,2015,market_cap_pct_gdp,107.94983840018652,% of GDP,World Bank WDI
+Japan,JPN,2016,market_cap_pct_gdp,96.96581433867274,% of GDP,World Bank WDI
+Japan,JPN,2017,market_cap_pct_gdp,123.51209045045088,% of GDP,World Bank WDI
+Japan,JPN,2018,market_cap_pct_gdp,102.76502244667165,% of GDP,World Bank WDI
+Japan,JPN,2019,market_cap_pct_gdp,118.02063362537234,% of GDP,World Bank WDI
+Japan,JPN,2020,market_cap_pct_gdp,129.46548080882053,% of GDP,World Bank WDI
+Japan,JPN,2021,market_cap_pct_gdp,125.22745388955725,% of GDP,World Bank WDI
+Japan,JPN,2022,market_cap_pct_gdp,120.96457375720004,% of GDP,World Bank WDI
+Japan,JPN,2023,market_cap_pct_gdp,140.23727589134657,% of GDP,World Bank WDI
+Japan,JPN,2024,market_cap_pct_gdp,150.61262762047716,% of GDP,World Bank WDI
+Japan,JPN,2025,market_cap_pct_gdp,171.59557991531693,% of GDP,World Bank WDI
+United States,USA,1975,market_cap_pct_gdp,41.77092582129308,% of GDP,World Bank WDI
+United States,USA,1976,market_cap_pct_gdp,47.138589909747566,% of GDP,World Bank WDI
+United States,USA,1977,market_cap_pct_gdp,40.072417195289134,% of GDP,World Bank WDI
+United States,USA,1978,market_cap_pct_gdp,36.65425100112732,% of GDP,World Bank WDI
+United States,USA,1979,market_cap_pct_gdp,37.81747117704531,% of GDP,World Bank WDI
+United States,USA,1980,market_cap_pct_gdp,47.59018894364519,% of GDP,World Bank WDI
+United States,USA,1981,market_cap_pct_gdp,39.39958048556286,% of GDP,World Bank WDI
+United States,USA,1982,market_cap_pct_gdp,43.56929220115264,% of GDP,World Bank WDI
+United States,USA,1983,market_cap_pct_gdp,49.780282979979845,% of GDP,World Bank WDI
+United States,USA,1984,market_cap_pct_gdp,39.68086342103614,% of GDP,World Bank WDI
+United States,USA,1985,market_cap_pct_gdp,53.02763392033011,% of GDP,World Bank WDI
+United States,USA,1986,market_cap_pct_gdp,55.418050056871394,% of GDP,World Bank WDI
+United States,USA,1987,market_cap_pct_gdp,52.14532621109467,% of GDP,World Bank WDI
+United States,USA,1988,market_cap_pct_gdp,53.08839138360848,% of GDP,World Bank WDI
+United States,USA,1989,market_cap_pct_gdp,59.95188581922085,% of GDP,World Bank WDI
+United States,USA,1990,market_cap_pct_gdp,51.87613279169512,% of GDP,World Bank WDI
+United States,USA,1991,market_cap_pct_gdp,67.54641223007832,% of GDP,World Bank WDI
+United States,USA,1992,market_cap_pct_gdp,69.71803714752343,% of GDP,World Bank WDI
 United States,USA,1993,market_cap_pct_gdp,76.562432866729,% of GDP,World Bank WDI
-United States,USA,1994,market_cap_pct_gdp,70.5032725713837,% of GDP,World Bank WDI
-United States,USA,1995,market_cap_pct_gdp,90.9980943091193,% of GDP,World Bank WDI
-United States,USA,1996,market_cap_pct_gdp,105.046065202533,% of GDP,World Bank WDI
-United States,USA,1997,market_cap_pct_gdp,125.561966864206,% of GDP,World Bank WDI
-United States,USA,1998,market_cap_pct_gdp,142.588998542065,% of GDP,World Bank WDI
-United States,USA,1999,market_cap_pct_gdp,153.432909307403,% of GDP,World Bank WDI
-United States,USA,2000,market_cap_pct_gdp,147.379004408566,% of GDP,World Bank WDI
-United States,USA,2001,market_cap_pct_gdp,132.146662484694,% of GDP,World Bank WDI
-United States,USA,2002,market_cap_pct_gdp,101.146680955115,% of GDP,World Bank WDI
-United States,USA,2003,market_cap_pct_gdp,124.5260586831,% of GDP,World Bank WDI
-United States,USA,2004,market_cap_pct_gdp,133.612707285698,% of GDP,World Bank WDI
-United States,USA,2005,market_cap_pct_gdp,130.382756468822,% of GDP,World Bank WDI
-United States,USA,2006,market_cap_pct_gdp,141.644203505563,% of GDP,World Bank WDI
-United States,USA,2007,market_cap_pct_gdp,137.639671145155,% of GDP,World Bank WDI
-United States,USA,2008,market_cap_pct_gdp,78.4724852540938,% of GDP,World Bank WDI
-United States,USA,2009,market_cap_pct_gdp,104.138803474248,% of GDP,World Bank WDI
-United States,USA,2010,market_cap_pct_gdp,114.848062900779,% of GDP,World Bank WDI
-United States,USA,2011,market_cap_pct_gdp,100.262665025271,% of GDP,World Bank WDI
-United States,USA,2012,market_cap_pct_gdp,114.85399080963,% of GDP,World Bank WDI
-United States,USA,2013,market_cap_pct_gdp,142.380811961222,% of GDP,World Bank WDI
-United States,USA,2014,market_cap_pct_gdp,149.536476770003,% of GDP,World Bank WDI
-United States,USA,2015,market_cap_pct_gdp,137.018385168116,% of GDP,World Bank WDI
-United States,USA,2016,market_cap_pct_gdp,145.452418312172,% of GDP,World Bank WDI
-United States,USA,2017,market_cap_pct_gdp,163.780010169231,% of GDP,World Bank WDI
-United States,USA,2018,market_cap_pct_gdp,147.344852587919,% of GDP,World Bank WDI
-United States,USA,2019,market_cap_pct_gdp,158.243991893772,% of GDP,World Bank WDI
-United States,USA,2020,market_cap_pct_gdp,194.476328849197,% of GDP,World Bank WDI
-United States,USA,2021,market_cap_pct_gdp,204.624734627868,% of GDP,World Bank WDI
-United States,USA,2022,market_cap_pct_gdp,154.667347288277,% of GDP,World Bank WDI
-United States,USA,2023,market_cap_pct_gdp,176.111924063689,% of GDP,World Bank WDI
-United States,USA,2024,market_cap_pct_gdp,212.252227889994,% of GDP,World Bank WDI
-United States,USA,2025,market_cap_pct_gdp,224.04464850161,% of GDP,World Bank WDI
-World,WLD,1975,market_cap_pct_gdp,27.0005721094105,% of GDP,World Bank WDI
-World,WLD,1976,market_cap_pct_gdp,30.5484427796554,% of GDP,World Bank WDI
-World,WLD,1977,market_cap_pct_gdp,25.8797554829833,% of GDP,World Bank WDI
-World,WLD,1978,market_cap_pct_gdp,23.0378971836487,% of GDP,World Bank WDI
-World,WLD,1979,market_cap_pct_gdp,25.3319444963523,% of GDP,World Bank WDI
-World,WLD,1980,market_cap_pct_gdp,29.3300958826574,% of GDP,World Bank WDI
-World,WLD,1981,market_cap_pct_gdp,27.3569011147171,% of GDP,World Bank WDI
-World,WLD,1982,market_cap_pct_gdp,30.6937248773241,% of GDP,World Bank WDI
-World,WLD,1983,market_cap_pct_gdp,36.5101892085471,% of GDP,World Bank WDI
-World,WLD,1984,market_cap_pct_gdp,34.3005051480785,% of GDP,World Bank WDI
-World,WLD,1985,market_cap_pct_gdp,46.597530830331,% of GDP,World Bank WDI
-World,WLD,1986,market_cap_pct_gdp,52.9969003858535,% of GDP,World Bank WDI
-World,WLD,1987,market_cap_pct_gdp,54.9848452187425,% of GDP,World Bank WDI
-World,WLD,1988,market_cap_pct_gdp,59.2913417811116,% of GDP,World Bank WDI
-World,WLD,1989,market_cap_pct_gdp,68.5698028801172,% of GDP,World Bank WDI
-World,WLD,1990,market_cap_pct_gdp,50.2509753156854,% of GDP,World Bank WDI
-World,WLD,1991,market_cap_pct_gdp,56.1828379479652,% of GDP,World Bank WDI
-World,WLD,1992,market_cap_pct_gdp,49.7103196723855,% of GDP,World Bank WDI
-World,WLD,1993,market_cap_pct_gdp,61.0099616083819,% of GDP,World Bank WDI
-World,WLD,1994,market_cap_pct_gdp,60.0461926324235,% of GDP,World Bank WDI
-World,WLD,1995,market_cap_pct_gdp,63.0265651612034,% of GDP,World Bank WDI
-World,WLD,1996,market_cap_pct_gdp,70.9875898004359,% of GDP,World Bank WDI
-World,WLD,1997,market_cap_pct_gdp,79.3276600190459,% of GDP,World Bank WDI
+United States,USA,1994,market_cap_pct_gdp,70.50327257138372,% of GDP,World Bank WDI
+United States,USA,1995,market_cap_pct_gdp,90.99809430911931,% of GDP,World Bank WDI
+United States,USA,1996,market_cap_pct_gdp,105.04606520253255,% of GDP,World Bank WDI
+United States,USA,1997,market_cap_pct_gdp,125.56196686420556,% of GDP,World Bank WDI
+United States,USA,1998,market_cap_pct_gdp,142.5889985420648,% of GDP,World Bank WDI
+United States,USA,1999,market_cap_pct_gdp,153.43290930740307,% of GDP,World Bank WDI
+United States,USA,2000,market_cap_pct_gdp,147.37900440856615,% of GDP,World Bank WDI
+United States,USA,2001,market_cap_pct_gdp,132.14666248469442,% of GDP,World Bank WDI
+United States,USA,2002,market_cap_pct_gdp,101.14668095511546,% of GDP,World Bank WDI
+United States,USA,2003,market_cap_pct_gdp,124.52605868309992,% of GDP,World Bank WDI
+United States,USA,2004,market_cap_pct_gdp,133.61270728569795,% of GDP,World Bank WDI
+United States,USA,2005,market_cap_pct_gdp,130.3827564688224,% of GDP,World Bank WDI
+United States,USA,2006,market_cap_pct_gdp,141.64420350556324,% of GDP,World Bank WDI
+United States,USA,2007,market_cap_pct_gdp,137.63967114515538,% of GDP,World Bank WDI
+United States,USA,2008,market_cap_pct_gdp,78.47248525409377,% of GDP,World Bank WDI
+United States,USA,2009,market_cap_pct_gdp,104.13880347424833,% of GDP,World Bank WDI
+United States,USA,2010,market_cap_pct_gdp,114.84806290077907,% of GDP,World Bank WDI
+United States,USA,2011,market_cap_pct_gdp,100.26266502527095,% of GDP,World Bank WDI
+United States,USA,2012,market_cap_pct_gdp,114.8539908096299,% of GDP,World Bank WDI
+United States,USA,2013,market_cap_pct_gdp,142.38081196122218,% of GDP,World Bank WDI
+United States,USA,2014,market_cap_pct_gdp,149.5364767700026,% of GDP,World Bank WDI
+United States,USA,2015,market_cap_pct_gdp,137.01838516811597,% of GDP,World Bank WDI
+United States,USA,2016,market_cap_pct_gdp,145.45241831217191,% of GDP,World Bank WDI
+United States,USA,2017,market_cap_pct_gdp,163.78001016923122,% of GDP,World Bank WDI
+United States,USA,2018,market_cap_pct_gdp,147.34485258791946,% of GDP,World Bank WDI
+United States,USA,2019,market_cap_pct_gdp,158.24399189377226,% of GDP,World Bank WDI
+United States,USA,2020,market_cap_pct_gdp,194.47632884919733,% of GDP,World Bank WDI
+United States,USA,2021,market_cap_pct_gdp,204.62473462786787,% of GDP,World Bank WDI
+United States,USA,2022,market_cap_pct_gdp,154.66734728827686,% of GDP,World Bank WDI
+United States,USA,2023,market_cap_pct_gdp,176.11192406368917,% of GDP,World Bank WDI
+United States,USA,2024,market_cap_pct_gdp,212.25222788999378,% of GDP,World Bank WDI
+United States,USA,2025,market_cap_pct_gdp,224.04464850161037,% of GDP,World Bank WDI
+World,WLD,1975,market_cap_pct_gdp,27.000572109410513,% of GDP,World Bank WDI
+World,WLD,1976,market_cap_pct_gdp,30.548442779655414,% of GDP,World Bank WDI
+World,WLD,1977,market_cap_pct_gdp,25.87975548298328,% of GDP,World Bank WDI
+World,WLD,1978,market_cap_pct_gdp,23.037897183648667,% of GDP,World Bank WDI
+World,WLD,1979,market_cap_pct_gdp,25.331944496352303,% of GDP,World Bank WDI
+World,WLD,1980,market_cap_pct_gdp,29.330095882657382,% of GDP,World Bank WDI
+World,WLD,1981,market_cap_pct_gdp,27.356901114717086,% of GDP,World Bank WDI
+World,WLD,1982,market_cap_pct_gdp,30.693724877324108,% of GDP,World Bank WDI
+World,WLD,1983,market_cap_pct_gdp,36.51018920854709,% of GDP,World Bank WDI
+World,WLD,1984,market_cap_pct_gdp,34.30050514807848,% of GDP,World Bank WDI
+World,WLD,1985,market_cap_pct_gdp,46.59753083033097,% of GDP,World Bank WDI
+World,WLD,1986,market_cap_pct_gdp,52.99690038585349,% of GDP,World Bank WDI
+World,WLD,1987,market_cap_pct_gdp,54.98484521874247,% of GDP,World Bank WDI
+World,WLD,1988,market_cap_pct_gdp,59.29134178111163,% of GDP,World Bank WDI
+World,WLD,1989,market_cap_pct_gdp,68.56980288011722,% of GDP,World Bank WDI
+World,WLD,1990,market_cap_pct_gdp,50.250975315685416,% of GDP,World Bank WDI
+World,WLD,1991,market_cap_pct_gdp,56.18283794796518,% of GDP,World Bank WDI
+World,WLD,1992,market_cap_pct_gdp,49.71031967238553,% of GDP,World Bank WDI
+World,WLD,1993,market_cap_pct_gdp,61.009961608381936,% of GDP,World Bank WDI
+World,WLD,1994,market_cap_pct_gdp,60.04619263242351,% of GDP,World Bank WDI
+World,WLD,1995,market_cap_pct_gdp,63.02656516120339,% of GDP,World Bank WDI
+World,WLD,1996,market_cap_pct_gdp,70.98758980043593,% of GDP,World Bank WDI
+World,WLD,1997,market_cap_pct_gdp,79.32766001904587,% of GDP,World Bank WDI
 World,WLD,1998,market_cap_pct_gdp,88.3786573038747,% of GDP,World Bank WDI
-World,WLD,1999,market_cap_pct_gdp,114.230376135574,% of GDP,World Bank WDI
-World,WLD,2000,market_cap_pct_gdp,100.15631284945,% of GDP,World Bank WDI
-World,WLD,2001,market_cap_pct_gdp,87.6254017924836,% of GDP,World Bank WDI
-World,WLD,2002,market_cap_pct_gdp,72.0337860467506,% of GDP,World Bank WDI
-World,WLD,2003,market_cap_pct_gdp,84.2280958645483,% of GDP,World Bank WDI
-World,WLD,2004,market_cap_pct_gdp,88.4659636324804,% of GDP,World Bank WDI
-World,WLD,2005,market_cap_pct_gdp,91.7951372430675,% of GDP,World Bank WDI
-World,WLD,2006,market_cap_pct_gdp,105.157728256953,% of GDP,World Bank WDI
-World,WLD,2007,market_cap_pct_gdp,112.94123896984,% of GDP,World Bank WDI
-World,WLD,2008,market_cap_pct_gdp,55.5672533092401,% of GDP,World Bank WDI
-World,WLD,2009,market_cap_pct_gdp,82.9056199429343,% of GDP,World Bank WDI
+World,WLD,1999,market_cap_pct_gdp,114.23037613557393,% of GDP,World Bank WDI
+World,WLD,2000,market_cap_pct_gdp,100.15631284944998,% of GDP,World Bank WDI
+World,WLD,2001,market_cap_pct_gdp,87.62540179248363,% of GDP,World Bank WDI
+World,WLD,2002,market_cap_pct_gdp,72.03378604675056,% of GDP,World Bank WDI
+World,WLD,2003,market_cap_pct_gdp,84.22809586454832,% of GDP,World Bank WDI
+World,WLD,2004,market_cap_pct_gdp,88.46596363248038,% of GDP,World Bank WDI
+World,WLD,2005,market_cap_pct_gdp,91.79513724306754,% of GDP,World Bank WDI
+World,WLD,2006,market_cap_pct_gdp,105.15772825695288,% of GDP,World Bank WDI
+World,WLD,2007,market_cap_pct_gdp,112.94123896984034,% of GDP,World Bank WDI
+World,WLD,2008,market_cap_pct_gdp,55.56725330924008,% of GDP,World Bank WDI
+World,WLD,2009,market_cap_pct_gdp,82.90561994293425,% of GDP,World Bank WDI
 World,WLD,2010,market_cap_pct_gdp,86.3253174515057,% of GDP,World Bank WDI
-World,WLD,2011,market_cap_pct_gdp,67.9632519027541,% of GDP,World Bank WDI
-World,WLD,2012,market_cap_pct_gdp,77.4768084589143,% of GDP,World Bank WDI
-World,WLD,2013,market_cap_pct_gdp,87.8921726365883,% of GDP,World Bank WDI
-World,WLD,2014,market_cap_pct_gdp,89.128685995058,% of GDP,World Bank WDI
-World,WLD,2015,market_cap_pct_gdp,93.2694956962577,% of GDP,World Bank WDI
-World,WLD,2016,market_cap_pct_gdp,95.6081542194693,% of GDP,World Bank WDI
-World,WLD,2017,market_cap_pct_gdp,109.422732595345,% of GDP,World Bank WDI
-World,WLD,2018,market_cap_pct_gdp,93.078713399618,% of GDP,World Bank WDI
-World,WLD,2019,market_cap_pct_gdp,107.111152473346,% of GDP,World Bank WDI
-World,WLD,2020,market_cap_pct_gdp,130.790929179159,% of GDP,World Bank WDI
-World,WLD,2021,market_cap_pct_gdp,128.943997319252,% of GDP,World Bank WDI
-World,WLD,2022,market_cap_pct_gdp,103.881238025095,% of GDP,World Bank WDI
-World,WLD,2023,market_cap_pct_gdp,114.910360576633,% of GDP,World Bank WDI
-World,WLD,2024,market_cap_pct_gdp,129.362809638919,% of GDP,World Bank WDI
-World,WLD,2025,market_cap_pct_gdp,148.539439352084,% of GDP,World Bank WDI
+World,WLD,2011,market_cap_pct_gdp,67.96325190275411,% of GDP,World Bank WDI
+World,WLD,2012,market_cap_pct_gdp,77.47680845891428,% of GDP,World Bank WDI
+World,WLD,2013,market_cap_pct_gdp,87.89217263658827,% of GDP,World Bank WDI
+World,WLD,2014,market_cap_pct_gdp,89.12868599505798,% of GDP,World Bank WDI
+World,WLD,2015,market_cap_pct_gdp,93.26949569625766,% of GDP,World Bank WDI
+World,WLD,2016,market_cap_pct_gdp,95.60815421946926,% of GDP,World Bank WDI
+World,WLD,2017,market_cap_pct_gdp,109.42273259534491,% of GDP,World Bank WDI
+World,WLD,2018,market_cap_pct_gdp,93.07871339961798,% of GDP,World Bank WDI
+World,WLD,2019,market_cap_pct_gdp,107.11115247334574,% of GDP,World Bank WDI
+World,WLD,2020,market_cap_pct_gdp,130.79092917915884,% of GDP,World Bank WDI
+World,WLD,2021,market_cap_pct_gdp,128.94399731925165,% of GDP,World Bank WDI
+World,WLD,2022,market_cap_pct_gdp,103.88123802509458,% of GDP,World Bank WDI
+World,WLD,2023,market_cap_pct_gdp,114.91036057663335,% of GDP,World Bank WDI
+World,WLD,2024,market_cap_pct_gdp,129.36280963891892,% of GDP,World Bank WDI
+World,WLD,2025,market_cap_pct_gdp,148.53943935208426,% of GDP,World Bank WDI
 China,CHN,2003,market_cap_usd,512978770000.0,current US$,World Bank WDI
 China,CHN,2004,market_cap_usd,447720260000.0,current US$,World Bank WDI
 China,CHN,2005,market_cap_usd,401852250000.0,current US$,World Bank WDI
@@ -545,7 +545,7 @@ China,CHN,2013,market_cap_usd,3949143490000.0,current US$,World Bank WDI
 China,CHN,2014,market_cap_usd,6004947670000.0,current US$,World Bank WDI
 China,CHN,2015,market_cap_usd,8188019320000.0,current US$,World Bank WDI
 China,CHN,2016,market_cap_usd,7320738379789.18,current US$,World Bank WDI
-China,CHN,2017,market_cap_usd,8711267220000.0,current US$,World Bank WDI
+China,CHN,2017,market_cap_usd,8711267220000.001,current US$,World Bank WDI
 China,CHN,2018,market_cap_usd,6324879760000.0,current US$,World Bank WDI
 China,CHN,2019,market_cap_usd,8569512150000.0,current US$,World Bank WDI
 China,CHN,2020,market_cap_usd,12276766270000.0,current US$,World Bank WDI
@@ -595,9 +595,9 @@ European Union,EUU,2012,market_cap_usd,6333175460000.0,current US$,World Bank WD
 European Union,EUU,2013,market_cap_usd,7979084650000.0,current US$,World Bank WDI
 European Union,EUU,2014,market_cap_usd,7232514050000.0,current US$,World Bank WDI
 European Union,EUU,2015,market_cap_usd,6313031250000.0,current US$,World Bank WDI
-European Union,EUU,2016,market_cap_usd,6371346756992.73,current US$,World Bank WDI
-European Union,EUU,2017,market_cap_usd,8223952238357.22,current US$,World Bank WDI
-European Union,EUU,2018,market_cap_usd,5831802504500.47,current US$,World Bank WDI
+European Union,EUU,2016,market_cap_usd,6371346756992.732,current US$,World Bank WDI
+European Union,EUU,2017,market_cap_usd,8223952238357.222,current US$,World Bank WDI
+European Union,EUU,2018,market_cap_usd,5831802504500.474,current US$,World Bank WDI
 United Kingdom,GBR,1975,market_cap_usd,85803890000.0,current US$,World Bank WDI
 United Kingdom,GBR,1976,market_cap_usd,69696610000.0,current US$,World Bank WDI
 United Kingdom,GBR,1977,market_cap_usd,115464670000.0,current US$,World Bank WDI
@@ -624,7 +624,7 @@ United Kingdom,GBR,1997,market_cap_usd,2068246130000.0,current US$,World Bank WD
 United Kingdom,GBR,1998,market_cap_usd,2297650970000.0,current US$,World Bank WDI
 United Kingdom,GBR,1999,market_cap_usd,2954815470000.0,current US$,World Bank WDI
 United Kingdom,GBR,2000,market_cap_usd,2576991340000.0,current US$,World Bank WDI
-United Kingdom,GBR,2001,market_cap_usd,2149500800000.0,current US$,World Bank WDI
+United Kingdom,GBR,2001,market_cap_usd,2149500799999.9998,current US$,World Bank WDI
 United Kingdom,GBR,2002,market_cap_usd,1856194400000.0,current US$,World Bank WDI
 United Kingdom,GBR,2003,market_cap_usd,2425822000000.0,current US$,World Bank WDI
 United Kingdom,GBR,2004,market_cap_usd,2815928030000.0,current US$,World Bank WDI
@@ -654,7 +654,7 @@ Japan,JPN,1985,market_cap_usd,948262520000.0,current US$,World Bank WDI
 Japan,JPN,1986,market_cap_usd,1783639430000.0,current US$,World Bank WDI
 Japan,JPN,1987,market_cap_usd,2726369260000.0,current US$,World Bank WDI
 Japan,JPN,1988,market_cap_usd,3789032960000.0,current US$,World Bank WDI
-Japan,JPN,1989,market_cap_usd,4260382520000.0,current US$,World Bank WDI
+Japan,JPN,1989,market_cap_usd,4260382519999.9995,current US$,World Bank WDI
 Japan,JPN,1990,market_cap_usd,2928533730000.0,current US$,World Bank WDI
 Japan,JPN,1991,market_cap_usd,3005697400000.0,current US$,World Bank WDI
 Japan,JPN,1992,market_cap_usd,2254844100000.0,current US$,World Bank WDI
@@ -672,7 +672,7 @@ Japan,JPN,2003,market_cap_usd,2953098300000.0,current US$,World Bank WDI
 Japan,JPN,2004,market_cap_usd,3557674430000.0,current US$,World Bank WDI
 Japan,JPN,2005,market_cap_usd,4572901030000.0,current US$,World Bank WDI
 Japan,JPN,2006,market_cap_usd,4614068830000.0,current US$,World Bank WDI
-Japan,JPN,2007,market_cap_usd,4330921860000.0,current US$,World Bank WDI
+Japan,JPN,2007,market_cap_usd,4330921860000.0005,current US$,World Bank WDI
 Japan,JPN,2008,market_cap_usd,3115803730000.0,current US$,World Bank WDI
 Japan,JPN,2009,market_cap_usd,3306082050000.0,current US$,World Bank WDI
 Japan,JPN,2010,market_cap_usd,3827774200000.0,current US$,World Bank WDI
@@ -721,7 +721,7 @@ United States,USA,2001,market_cap_usd,13983666000000.0,current US$,World Bank WD
 United States,USA,2002,market_cap_usd,11054430000000.0,current US$,World Bank WDI
 United States,USA,2003,market_cap_usd,14266265650000.0,current US$,World Bank WDI
 United States,USA,2004,market_cap_usd,16323726330000.0,current US$,World Bank WDI
-United States,USA,2005,market_cap_usd,17000864470000.0,current US$,World Bank WDI
+United States,USA,2005,market_cap_usd,17000864469999.998,current US$,World Bank WDI
 United States,USA,2006,market_cap_usd,19568972500000.0,current US$,World Bank WDI
 United States,USA,2007,market_cap_usd,19922279820000.0,current US$,World Bank WDI
 United States,USA,2008,market_cap_usd,11590277780000.0,current US$,World Bank WDI
@@ -766,25 +766,25 @@ World,WLD,1995,market_cap_usd,17263728480000.0,current US$,World Bank WDI
 World,WLD,1996,market_cap_usd,19806690830000.0,current US$,World Bank WDI
 World,WLD,1997,market_cap_usd,22029761480000.0,current US$,World Bank WDI
 World,WLD,1998,market_cap_usd,24555200630000.0,current US$,World Bank WDI
-World,WLD,1999,market_cap_usd,33181158958442.6,current US$,World Bank WDI
-World,WLD,2000,market_cap_usd,30925434367933.2,current US$,World Bank WDI
-World,WLD,2001,market_cap_usd,26792162470741.5,current US$,World Bank WDI
-World,WLD,2002,market_cap_usd,22802792394180.4,current US$,World Bank WDI
-World,WLD,2003,market_cap_usd,31107425315024.1,current US$,World Bank WDI
-World,WLD,2004,market_cap_usd,36540979694420.4,current US$,World Bank WDI
-World,WLD,2005,market_cap_usd,40512446419170.1,current US$,World Bank WDI
+World,WLD,1999,market_cap_usd,33181158958442.574,current US$,World Bank WDI
+World,WLD,2000,market_cap_usd,30925434367933.242,current US$,World Bank WDI
+World,WLD,2001,market_cap_usd,26792162470741.496,current US$,World Bank WDI
+World,WLD,2002,market_cap_usd,22802792394180.438,current US$,World Bank WDI
+World,WLD,2003,market_cap_usd,31107425315024.113,current US$,World Bank WDI
+World,WLD,2004,market_cap_usd,36540979694420.375,current US$,World Bank WDI
+World,WLD,2005,market_cap_usd,40512446419170.125,current US$,World Bank WDI
 World,WLD,2006,market_cap_usd,50074965608306.6,current US$,World Bank WDI
-World,WLD,2007,market_cap_usd,60456082457876.5,current US$,World Bank WDI
-World,WLD,2008,market_cap_usd,32418515670953.4,current US$,World Bank WDI
-World,WLD,2009,market_cap_usd,47471292783750.0,current US$,World Bank WDI
-World,WLD,2010,market_cap_usd,54259517739629.9,current US$,World Bank WDI
-World,WLD,2011,market_cap_usd,47521341225558.9,current US$,World Bank WDI
-World,WLD,2012,market_cap_usd,54503236899688.7,current US$,World Bank WDI
-World,WLD,2013,market_cap_usd,64367842410397.4,current US$,World Bank WDI
-World,WLD,2014,market_cap_usd,67177254463959.2,current US$,World Bank WDI
-World,WLD,2015,market_cap_usd,62268183687150.3,current US$,World Bank WDI
-World,WLD,2016,market_cap_usd,65117714419402.8,current US$,World Bank WDI
-World,WLD,2017,market_cap_usd,79501947538294.8,current US$,World Bank WDI
+World,WLD,2007,market_cap_usd,60456082457876.48,current US$,World Bank WDI
+World,WLD,2008,market_cap_usd,32418515670953.414,current US$,World Bank WDI
+World,WLD,2009,market_cap_usd,47471292783750.016,current US$,World Bank WDI
+World,WLD,2010,market_cap_usd,54259517739629.875,current US$,World Bank WDI
+World,WLD,2011,market_cap_usd,47521341225558.945,current US$,World Bank WDI
+World,WLD,2012,market_cap_usd,54503236899688.734,current US$,World Bank WDI
+World,WLD,2013,market_cap_usd,64367842410397.36,current US$,World Bank WDI
+World,WLD,2014,market_cap_usd,67177254463959.17,current US$,World Bank WDI
+World,WLD,2015,market_cap_usd,62268183687150.27,current US$,World Bank WDI
+World,WLD,2016,market_cap_usd,65117714419402.79,current US$,World Bank WDI
+World,WLD,2017,market_cap_usd,79501947538294.81,current US$,World Bank WDI
 World,WLD,2018,market_cap_usd,70500698715983.6,current US$,World Bank WDI
 World,WLD,2019,market_cap_usd,78670670120000.0,current US$,World Bank WDI
 World,WLD,2020,market_cap_usd,94968574460000.0,current US$,World Bank WDI
@@ -807,7 +807,7 @@ China,CHN,2013,market_cap_usd_real,5317727180982.276,constant 2024 US$,"World Ba
 China,CHN,2014,market_cap_usd_real,7956895878449.851,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 China,CHN,2015,market_cap_usd_real,10836734191225.053,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 China,CHN,2016,market_cap_usd_real,9568188789479.037,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-China,CHN,2017,market_cap_usd_real,11148139263033.344,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+China,CHN,2017,market_cap_usd_real,11148139263033.346,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 China,CHN,2018,market_cap_usd_real,7901195385847.106,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 China,CHN,2019,market_cap_usd_real,10514696986374.584,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 China,CHN,2020,market_cap_usd_real,14879900809312.023,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
@@ -856,9 +856,9 @@ European Union,EUU,2012,market_cap_usd_real,8652870468806.812,constant 2024 US$,
 European Union,EUU,2013,market_cap_usd_real,10744252628476.523,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 European Union,EUU,2014,market_cap_usd_real,9583490880824.885,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 European Union,EUU,2015,market_cap_usd_real,8355212527410.993,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-European Union,EUU,2016,market_cap_usd_real,8327336048839.521,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-European Union,EUU,2017,market_cap_usd_real,10524503786917.592,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-European Union,EUU,2018,market_cap_usd_real,7285231148762.694,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+European Union,EUU,2016,market_cap_usd_real,8327336048839.524,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+European Union,EUU,2017,market_cap_usd_real,10524503786917.594,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+European Union,EUU,2018,market_cap_usd_real,7285231148762.699,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 United Kingdom,GBR,1975,market_cap_usd_real,500137296058.747,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 United Kingdom,GBR,1976,market_cap_usd_real,384180083962.89124,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 United Kingdom,GBR,1977,market_cap_usd_real,597607220517.2805,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
@@ -885,7 +885,7 @@ United Kingdom,GBR,1997,market_cap_usd_real,4041858886299.73,constant 2024 US$,"
 United Kingdom,GBR,1998,market_cap_usd_real,4421537460374.2,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 United Kingdom,GBR,1999,market_cap_usd_real,5564416133871.11,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 United Kingdom,GBR,2000,market_cap_usd_real,4694386799969.214,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-United Kingdom,GBR,2001,market_cap_usd_real,3808025592249.9766,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+United Kingdom,GBR,2001,market_cap_usd_real,3808025592249.976,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 United Kingdom,GBR,2002,market_cap_usd_real,3237067162061.7847,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 United Kingdom,GBR,2003,market_cap_usd_real,4136552333704.1646,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 United Kingdom,GBR,2004,market_cap_usd_real,4676564961517.657,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
@@ -1025,25 +1025,25 @@ World,WLD,1995,market_cap_usd_real,35538262140706.164,constant 2024 US$,"World B
 World,WLD,1996,market_cap_usd_real,39611971556625.414,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 World,WLD,1997,market_cap_usd_real,43051543000349.52,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 World,WLD,1998,market_cap_usd_real,47253364784360.24,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,1999,market_cap_usd_real,62485721400700.51,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2000,market_cap_usd_real,56335443828127.055,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,1999,market_cap_usd_real,62485721400700.45,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2000,market_cap_usd_real,56335443828127.13,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 World,WLD,2001,market_cap_usd_real,47464620790233.24,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2002,market_cap_usd_real,39766400794288.35,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2003,market_cap_usd_real,53044903040037.95,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2004,market_cap_usd_real,60685594048529.22,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2005,market_cap_usd_real,65073447677620.19,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2002,market_cap_usd_real,39766400794288.42,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2003,market_cap_usd_real,53044903040037.98,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2004,market_cap_usd_real,60685594048529.18,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2005,market_cap_usd_real,65073447677620.22,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 World,WLD,2006,market_cap_usd_real,77919676942051.45,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2007,market_cap_usd_real,91464150360526.67,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2008,market_cap_usd_real,47232737005932.11,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2009,market_cap_usd_real,69410938207206.836,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2010,market_cap_usd_real,78056296754604.67,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2011,market_cap_usd_real,66270869179359.11,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2012,market_cap_usd_real,74466506099879.64,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2013,market_cap_usd_real,86674648827954.83,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2014,market_cap_usd_real,89013668152391.05,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2015,market_cap_usd_real,82411109306960.42,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2016,market_cap_usd_real,85108707999229.17,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
-World,WLD,2017,market_cap_usd_real,101741659445878.11,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2007,market_cap_usd_real,91464150360526.64,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2008,market_cap_usd_real,47232737005932.13,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2009,market_cap_usd_real,69410938207206.86,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2010,market_cap_usd_real,78056296754604.64,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2011,market_cap_usd_real,66270869179359.17,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2012,market_cap_usd_real,74466506099879.69,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2013,market_cap_usd_real,86674648827954.78,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2014,market_cap_usd_real,89013668152391.0,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2015,market_cap_usd_real,82411109306960.39,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2016,market_cap_usd_real,85108707999229.16,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
+World,WLD,2017,market_cap_usd_real,101741659445878.12,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 World,WLD,2018,market_cap_usd_real,88071207126588.39,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 World,WLD,2019,market_cap_usd_real,96528045418178.56,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
 World,WLD,2020,market_cap_usd_real,115105471334070.05,constant 2024 US$,"World Bank WDI + World Bank (FP.CPI.TOTL, US CPI)"
