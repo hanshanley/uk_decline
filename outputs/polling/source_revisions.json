@@ -98,5 +98,32 @@
       "retrieved_utc": "2026-11-12T20:42:11+00:00",
       "snapshot_sha256": "35e12fe560f26a5e4f4e01836a58192cfc23068477998eacdf8bd21eff785392"
     }
+  },
+  {
+    "reason": "source citation update; same unique fieldwork and headline results, no loss of reported metadata",
+    "pollster": "Trajectory Partnership",
+    "source_url": "https://trajectorypartnership.com/mp-files/voting-intention-november-2026.pdf/",
+    "previous": {
+      "poll_id": "f04846a1d8c2ef94ce37",
+      "fieldwork_start": "2026-11-03 00:00:00",
+      "fieldwork_end": "2026-11-12 00:00:00",
+      "source_url": "https://bsky.app/profile/electionmaps.uk/post/3n27a6ga5ik2f",
+      "source_title": "\u2191 \"Westminster Voting Intention\" . Election Maps UK. 13 November 2026 . Retrieved 13 November 2026 .",
+      "sample_size_reported": "TBA",
+      "reported_results": "{\"Con\": \"21%\", \"Grn\": \"8%\", \"LD\": \"12%\", \"Lab\": \"29%\", \"Lead\": \"8\", \"Others\": \"TBA\", \"PC\": \"TBA\", \"RB\": \"5%\", \"Ref\": \"19%\", \"SNP\": \"3%\"}",
+      "retrieved_utc": "2026-11-14T15:51:58+00:00",
+      "snapshot_sha256": "9d3c48b43939adfcc844747c95693d6614bbc9f2fe4d27be7ef4af5b9d84b2b6"
+    },
+    "current": {
+      "poll_id": "b33c5a0a81bf7dc6cf53",
+      "fieldwork_start": "2026-11-03 00:00:00",
+      "fieldwork_end": "2026-11-12 00:00:00",
+      "source_url": "https://trajectorypartnership.com/mp-files/voting-intention-november-2026.pdf/",
+      "source_title": "\u2191 \"Optimism Index Opinion Polling\" . Trajectory Partnership. 13 November 2026 . Retrieved 13 November 2026 .",
+      "sample_size_reported": "1,264",
+      "reported_results": "{\"Con\": \"21%\", \"Grn\": \"8%\", \"LD\": \"12%\", \"Lab\": \"29%\", \"Lead\": \"8\", \"Others\": \"3% YP 1% Other 2%\", \"PC\": \"1%\", \"RB\": \"5%\", \"Ref\": \"19%\", \"SNP\": \"3%\"}",
+      "retrieved_utc": "2026-11-16T16:41:28+00:00",
+      "snapshot_sha256": "4764c924ff2f2e6f5ec794b24e942dbb67029c1e3411e2e40a456affc0a94c6c"
+    }
   }
 ]
