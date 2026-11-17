@@ -109,6 +109,11 @@ and military expenditure retain their existing definitions, countries and years.
 country profiles, duplicate records or nonfinite values reject the bulk query;
 an unavailable or invalid archive tries the live API, never saved observations.
 
+If PIP's country-list or targeted survey endpoint exhausts transient-error retries,
+income refreshes request fresh all-country PIP surveys and filter locally. Both
+paths retain the 2021 PPP vintage, national observed surveys and original welfare
+definitions; failure of both requests still blocks publication.
+
 All World Bank clients use the same pooled HTTP helper, including trade, homicide,
 age structure and population pyramids. Requests revalidate cached responses from
 the first attempt and retry network/HTTP failures up to five times with backoff.

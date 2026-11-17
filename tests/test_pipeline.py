@@ -106,6 +106,68 @@ def test_pip_request_pins_ppp_vintage_and_labels_it(monkeypatch):
     assert rows[0]["unit"] == "2021 PPP $ per day"
 
 
+def test_pip_fresh_all_country_recovery_bypasses_failed_metadata_or_targeted_query(monkeypatch):
+    import requests
+    from europe_data import pip
+
+    for failed_stage in ("metadata", "surveys"):
+        calls = []
+        monkeypatch.setattr(pip, "_valid_codes", None)
+
+        def download(url, params=None):
+            calls.append((url, params))
+            if params and params.get("country") == "all":
+                assert params["ppp_version"] == 2021
+                assert params["fill_gaps"] == "false" and params["year"] == "all"
+                common = dict(reporting_year=2021, reporting_level="national", welfare_type="income")
+                return [
+                    dict(common, country_code="GBR", median=50, survey_comparability=0),
+                    dict(common, country_code="GBR", median=999, is_interpolated=True),
+                    dict(common, country_code="USA", median=70),
+                    dict(common, country_code="AGO", median=2),
+                ]
+            if url == pip.AUX_COUNTRIES and failed_stage == "surveys":
+                return [{"country_code": code} for code in ("GBR", "USA")]
+            response = requests.Response()
+            response.status_code = 502
+            raise requests.HTTPError("Bad Gateway", response=response)
+
+        monkeypatch.setattr(pip, "get_json", download)
+        rows = pip.fetch(2021, 2021, iso3s=["GBR", "USA", "XXX"])
+        assert [(row["iso3"], row["value"]) for row in rows] == [("GBR", 50), ("USA", 70)]
+        assert rows[0]["survey_comparability"] == 0
+        assert len(calls) == (2 if failed_stage == "metadata" else 3)
+
+
+def test_pip_all_country_failure_propagates_and_permanent_errors_are_not_retried(monkeypatch):
+    from unittest.mock import Mock
+    import pytest
+    import requests
+    from europe_data import pip
+
+    for status, expected in ((502, 2), (400, 1)):
+        monkeypatch.setattr(pip, "_valid_codes", None)
+        response = requests.Response()
+        response.status_code = status
+        download = Mock(side_effect=requests.HTTPError("source unavailable", response=response))
+        monkeypatch.setattr(pip, "get_json", download)
+        with pytest.raises(requests.HTTPError, match="source unavailable"):
+            pip.fetch(2021, 2021, iso3s=["GBR"])
+        assert download.call_count == expected
+
+
+def test_pip_malformed_country_metadata_cannot_silently_remove_all_income(monkeypatch):
+    import pytest
+    from europe_data import pip
+
+    monkeypatch.setattr(pip, "_valid_codes", None)
+    for payload in ({"error": "unavailable"}, [], [{}]):
+        monkeypatch.setattr(pip, "get_json", lambda *a, **k: payload)
+        with pytest.raises(ValueError, match="country-list"):
+            pip.fetch(2021, 2021, iso3s=["GBR"])
+        assert pip._valid_codes is None
+
+
 def test_pip_selected_survey_metadata_survives_long_and_wide(monkeypatch, tmp_path):
     from europe_data import pip
 

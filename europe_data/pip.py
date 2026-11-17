@@ -13,8 +13,10 @@ from __future__ import annotations
 import math
 from typing import Iterable
 
+import requests
+
 from . import countries
-from ._http import get_json
+from ._http import get_json, transient_error
 
 BASE = "https://api.worldbank.org/pip/v1/pip"
 AUX_COUNTRIES = "https://api.worldbank.org/pip/v1/aux?table=countries&format=json"
@@ -34,8 +36,11 @@ def valid_country_codes() -> set[str]:
     global _valid_codes
     if _valid_codes is None:
         payload = get_json(AUX_COUNTRIES)
-        rows = payload if isinstance(payload, list) else []
-        _valid_codes = {r["country_code"] for r in rows if r.get("country_code")}
+        if not isinstance(payload, list) or not payload or any(
+            not isinstance(row, dict) or not row.get("country_code") for row in payload
+        ):
+            raise ValueError("Invalid PIP country-list response")
+        _valid_codes = {r["country_code"] for r in payload}
     return _valid_codes
 
 
@@ -49,28 +54,33 @@ def fetch(
     Returns tidy rows with the source's comparability identifier and welfare type.
     """
     requested = list(iso3s) if iso3s is not None else [*countries.iso3_codes(), "USA"]
-    # PIP returns a 404 if *any* requested code is absent, so pre-filter to valid codes.
-    valid = valid_country_codes()
-    iso3_list = [c for c in requested if c in valid]
-    if not iso3_list:
+    if not requested:
         return []
-    payload = get_json(
-        BASE,
-        params={
-            "country": ",".join(iso3_list),
-            "year": "all",
-            "fill_gaps": "false",
-            "format": "json",
-            "ppp_version": PPP_VERSION,
-        },
-    )
-    if not isinstance(payload, list):
-        return []
+    params = dict(year="all", fill_gaps="false", format="json", ppp_version=PPP_VERSION)
+    all_countries = False
+    try:
+        # A targeted query fails if even one requested country is absent from PIP.
+        valid = valid_country_codes()
+        iso3_list = [c for c in requested if c in valid]
+        if not iso3_list:
+            return []
+        payload = get_json(BASE, params={**params, "country": ",".join(iso3_list)})
+    except requests.RequestException as error:
+        if not transient_error(error):
+            raise
+        print("[pip] targeted query unavailable; requesting fresh all-country surveys", flush=True)
+        payload = get_json(BASE, params={**params, "country": "all"})
+        iso3_list = requested
+        all_countries = True
+    if not isinstance(payload, list) or any(not isinstance(row, dict) for row in payload):
+        raise ValueError("Invalid PIP survey response")
 
     # Choose one observation per (country, year): national level, preferred welfare type.
     # Each entry is (preference_rank, record); lower rank wins on ties (first-seen).
     best: dict[tuple[str, int], tuple[int, dict]] = {}
     for row in payload:
+        if all_countries and row.get("country_code") not in iso3_list:
+            continue
         if row.get("reporting_level") not in (None, "national"):
             continue
         if row.get("is_interpolated") is True:
