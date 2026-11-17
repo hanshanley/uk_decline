@@ -31,9 +31,10 @@ def required_indicators():
     from markets_data.markets import BY_INDICATOR, CPI_INDICATOR
     from trade_data.worldbank import INDICATOR as TRADE
     from trust_data.worldbank import INDICATORS as WGI
+    from investment_data.sources import MILITARY_INDICATOR
 
     return {
-        2: set(GDP) | set(BY_INDICATOR) | {CPI_INDICATOR, TRADE}
+        2: set(GDP) | set(BY_INDICATOR) | {CPI_INDICATOR, TRADE, MILITARY_INDICATOR}
            | {indicator for indicator, _ in BROAD_INDICATORS.values()},
         3: set(WGI),
     }

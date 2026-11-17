@@ -153,7 +153,10 @@ def test_bulk_cache_is_deleted_after_success_and_next_refresh_downloads_again(mo
     assert bulk.ENV not in os.environ
 
 
-def test_refresh_entrypoint_prepares_both_live_databases_before_sources(monkeypatch):
+@pytest.mark.parametrize("selection, expected", [
+    ([], [2, 3]), (["--only", "investment-funding"], [2]),
+])
+def test_refresh_entrypoint_prepares_live_databases_before_sources(monkeypatch, selection, expected):
     from contextlib import contextmanager
     from scripts import refresh_data
     events = []
@@ -166,6 +169,36 @@ def test_refresh_entrypoint_prepares_both_live_databases_before_sources(monkeypa
 
     monkeypatch.setattr(bulk, "fresh_bulk", fresh)
     monkeypatch.setattr(refresh_data, "refresh", lambda **kwargs: events.append(("refresh",)))
-    monkeypatch.setattr("sys.argv", ["refresh_data.py", "--check-all"])
+    monkeypatch.setattr("sys.argv", ["refresh_data.py", "--check-all", *selection])
     refresh_data.main()
-    assert events == [("prepare", [2, 3]), ("refresh",), ("cleanup",)]
+    assert events == [("prepare", expected), ("refresh",), ("cleanup",)]
+
+
+def test_military_expenditure_uses_fresh_archive_when_api_is_unavailable(monkeypatch):
+    from investment_data import sources
+
+    output = io.StringIO()
+    years = [str(year) for year in range(sources.START, YEAR + 1)]
+    writer = csv.DictWriter(output, fieldnames=[*bulk.FIELDS, *years])
+    writer.writeheader()
+    for code in sources.BASELINES[sources.MILITARY]:
+        writer.writerow({
+            "Country Name": sources.COUNTRIES[code], "Country Code": code,
+            "Indicator Name": "Military expenditure (% of GDP)",
+            "Indicator Code": sources.MILITARY_INDICATOR,
+            **{year: "2.3" for year in years},
+        })
+    content = io.BytesIO()
+    with ZipFile(content, "w") as archive_file:
+        archive_file.writestr(bulk.ARCHIVES[2][1], output.getvalue())
+    required = bulk.required_indicators()
+    assert sources.MILITARY_INDICATOR in required[2]
+    monkeypatch.setattr(bulk, "required_indicators", lambda: {2: {sources.MILITARY_INDICATOR}})
+    monkeypatch.setattr(bulk, "get_bytes", lambda *a, **k: content.getvalue())
+    monkeypatch.setattr(sources, "get_json", Mock(side_effect=AssertionError("API offline")))
+    with bulk.fresh_bulk([2]):
+        rows = sources.fetch_military("2026-11-17T00:00:00Z", YEAR)
+    assert len(rows) == len(years) * 4
+    assert {row["iso3"] for row in rows} == {"GBR", "USA", "POL", "EUU"}
+    assert all(row["value"] == 2.3 and row["status"] == "" for row in rows)
+    sources.get_json.assert_not_called()

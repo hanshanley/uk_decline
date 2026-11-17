@@ -182,6 +182,43 @@ def test_military_parser_rejects_incomplete_or_incompatible_data(mutation):
         sources.validate(frame)
 
 
+def test_military_api_recovery_splits_failed_query_and_preserves_flags(monkeypatch):
+    calls = []
+
+    def download(url, **kwargs):
+        codes = url.split("/country/")[1].split("/indicator/")[0].split(";")
+        calls.append(codes)
+        assert kwargs["params"]["source"] == 2
+        if len(codes) > 1:
+            response = requests.Response()
+            response.status_code = 502
+            raise requests.HTTPError("Bad Gateway", response=response)
+        rows = [row for row in military_payload()[1] if row["countryiso3code"] in codes]
+        rows[0]["obs_status"] = "E"
+        return [dict(pages=1, sourceid="2", total=len(rows)), rows]
+
+    monkeypatch.setattr(sources, "get_json", download)
+    rows = sources.fetch_military("2026-11-17T00:00:00Z", 2025)
+    assert len(rows) == 104
+    assert sum(row["status"] == "E" for row in rows) == 4
+    assert len(calls) == 7
+
+
+def test_military_recovery_never_returns_successful_siblings_after_failure(monkeypatch):
+    def download(url, **kwargs):
+        codes = url.split("/country/")[1].split("/indicator/")[0].split(";")
+        if codes == ["GBR"]:
+            rows = [row for row in military_payload()[1] if row["countryiso3code"] == "GBR"]
+            return [dict(pages=1, sourceid="2"), rows]
+        response = requests.Response()
+        response.status_code = 502 if len(codes) > 1 else 404
+        raise requests.HTTPError("source unavailable", response=response)
+
+    monkeypatch.setattr(sources, "get_json", download)
+    with pytest.raises(requests.HTTPError, match="source unavailable"):
+        sources.fetch_military("2026-11-17T00:00:00Z", 2025)
+
+
 def test_validation_rejects_lost_history_and_corrupted_ratio(funding_frame):
     with pytest.raises(ValueError, match="baseline coverage"):
         sources.validate(funding_frame.drop(index=0))

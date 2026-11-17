@@ -105,7 +105,7 @@ archives from `databankfiles.worldbank.org`, independently of the indicator API.
 Selected indicators are shared between source subprocesses in a new temporary
 directory for that refresh only. The directory is deleted afterward and never
 restored from a previous run. GDP, markets, trade, broad age structure and governance
-retain their existing definitions, countries and years. Missing year columns,
+and military expenditure retain their existing definitions, countries and years. Missing year columns,
 country profiles, duplicate records or nonfinite values reject the bulk query;
 an unavailable or invalid archive tries the live API, never saved observations.
 

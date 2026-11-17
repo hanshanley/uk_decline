@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from europe_data._http import get_json, get_text
+from europe_data._worldbank import observations
 from europe_data.eurostat import BASE as EUROSTAT, _iter_values
 
 BASE = "https://sdmx.oecd.org/public/rest/v1/data"
@@ -204,8 +205,12 @@ def parse_military(payload: list, retrieved: str, end: int) -> list[dict]:
         or not isinstance(payload[1], list) or payload[0].get("total") != len(payload[1])
     ):
         raise ValueError("Incomplete World Bank military-expenditure response")
+    return military_rows(payload[1], retrieved, end)
+
+
+def military_rows(observations: list[dict], retrieved: str, end: int) -> list[dict]:
     rows = []
-    for item in payload[1]:
+    for item in observations:
         code, year = item["countryiso3code"], int(item["date"])
         if (
             item["indicator"]["id"] != MILITARY_INDICATOR
@@ -214,7 +219,7 @@ def parse_military(payload: list, retrieved: str, end: int) -> list[dict]:
             raise ValueError("Unexpected World Bank military-expenditure definition")
         if item["value"] is None:
             continue
-        status = flags(item["obs_status"])
+        status = flags(item.get("obs_status", ""))
         if "F" in status:
             continue
         rows.append(_record(MILITARY, code, year, dict(
@@ -224,6 +229,14 @@ def parse_military(payload: list, retrieved: str, end: int) -> list[dict]:
             source_url=f"https://api.worldbank.org/v2/country/{code}/indicator/{MILITARY_INDICATOR}",
         ), retrieved))
     return rows
+
+
+def fetch_military(retrieved: str, end: int) -> list[dict]:
+    military = observations(
+        MILITARY_INDICATOR, list(BASELINES[MILITARY]), START, end,
+        source=2, download=get_json,
+    )
+    return military_rows(military, retrieved, end)
 
 
 def validate(frame: pd.DataFrame, previous: pd.DataFrame | None = None) -> pd.DataFrame:
@@ -305,8 +318,5 @@ def fetch() -> pd.DataFrame:
         sinceTimePeriod=str(START), untilTimePeriod=str(end),
     ), timeout=120)
     rows += parse_eu_budget(eu, retrieved, end)
-    military = get_json(MILITARY_URL, params={
-        "format": "json", "date": f"{START}:{end}", "per_page": 1000,
-    }, timeout=120)
-    rows += parse_military(military, retrieved, end)
+    rows += fetch_military(retrieved, end)
     return validate(pd.DataFrame(rows, columns=FIELDS))

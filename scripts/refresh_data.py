@@ -195,7 +195,7 @@ def main() -> None:
 
     selected = set(STEPS if args.only is None else args.only)
     sources = []
-    if selected & {"gdp-income", "markets", "trade", "ageing"}:
+    if selected & {"gdp-income", "markets", "trade", "ageing", "investment-funding"}:
         sources.append(2)
     if "trust" in selected:
         sources.append(3)
