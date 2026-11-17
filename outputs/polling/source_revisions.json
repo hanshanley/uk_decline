@@ -125,5 +125,32 @@
       "retrieved_utc": "2026-11-16T16:41:28+00:00",
       "snapshot_sha256": "4764c924ff2f2e6f5ec794b24e942dbb67029c1e3411e2e40a456affc0a94c6c"
     }
+  },
+  {
+    "reason": "source citation update; same unique fieldwork and headline results, no loss of reported metadata",
+    "pollster": "Survation",
+    "source_url": "https://cdn.survation.com/wp-content/uploads/2026/11/12125702/Survation_VI_2026-11-12_Tables-1.xlsx",
+    "previous": {
+      "poll_id": "e6940c050ae75f42828d",
+      "fieldwork_start": "2026-11-11 00:00:00",
+      "fieldwork_end": "2026-11-12 00:00:00",
+      "source_url": "https://bsky.app/profile/electionmaps.uk/post/3n24mnjayts2x",
+      "source_title": "\u2191 \"Westminster Voting Intention\" . Election Maps UK. 12 November 2026 . Retrieved 12 November 2026 .",
+      "sample_size_reported": "TBA",
+      "reported_results": "{\"Con\": \"21%\", \"Grn\": \"7%\", \"LD\": \"10%\", \"Lab\": \"29%\", \"Lead\": \"6\", \"Others\": \"TBA\", \"PC\": \"TBA\", \"RB\": \"2%\", \"Ref\": \"23%\", \"SNP\": \"3%\"}",
+      "retrieved_utc": "2026-11-16T16:41:28+00:00",
+      "snapshot_sha256": "4764c924ff2f2e6f5ec794b24e942dbb67029c1e3411e2e40a456affc0a94c6c"
+    },
+    "current": {
+      "poll_id": "54a97bb708bc2ee0d21e",
+      "fieldwork_start": "2026-11-11 00:00:00",
+      "fieldwork_end": "2026-11-12 00:00:00",
+      "source_url": "https://cdn.survation.com/wp-content/uploads/2026/11/12125702/Survation_VI_2026-11-12_Tables-1.xlsx",
+      "source_title": "\u2191 \"Survation voting intention 12th November\" . Survation. 17 November 2026 . Retrieved 17 November 2026 .",
+      "sample_size_reported": "2,005",
+      "reported_results": "{\"Con\": \"21%\", \"Grn\": \"7%\", \"LD\": \"10%\", \"Lab\": \"29%\", \"Lead\": \"6\", \"Others\": \"4%\", \"PC\": \"1%\", \"RB\": \"2%\", \"Ref\": \"23%\", \"SNP\": \"3%\"}",
+      "retrieved_utc": "2026-11-17T23:24:50+00:00",
+      "snapshot_sha256": "918c9f8b72c540952cc3fbf5f3aa9f87fae9399bd1f6cc31fb3d550a66399652"
+    }
   }
 ]
