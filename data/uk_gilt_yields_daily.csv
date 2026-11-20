@@ -6789,3 +6789,6 @@ date,country,metric,value,unit,source,series_id
 2026-11-11,United Kingdom,uk_gilt_yield_10y_daily,5.2044,percent per annum,"Bank of England, daily 10-year nominal par gilt yield",IUDMNPY
 2026-11-12,United Kingdom,uk_gilt_yield_10y_daily,5.2514,percent per annum,"Bank of England, daily 10-year nominal par gilt yield",IUDMNPY
 2026-11-13,United Kingdom,uk_gilt_yield_10y_daily,5.3011,percent per annum,"Bank of England, daily 10-year nominal par gilt yield",IUDMNPY
+2026-11-16,United Kingdom,uk_gilt_yield_10y_daily,5.3151,percent per annum,"Bank of England, daily 10-year nominal par gilt yield",IUDMNPY
+2026-11-17,United Kingdom,uk_gilt_yield_10y_daily,5.352,percent per annum,"Bank of England, daily 10-year nominal par gilt yield",IUDMNPY
+2026-11-18,United Kingdom,uk_gilt_yield_10y_daily,5.268,percent per annum,"Bank of England, daily 10-year nominal par gilt yield",IUDMNPY
