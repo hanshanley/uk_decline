@@ -9,6 +9,7 @@ caveats here so downstream charts/summaries can be honest about comparability.
 
 from __future__ import annotations
 
+import math
 from typing import Any, NamedTuple
 
 # Tidy long-format row schema returned by every source module.
@@ -191,6 +192,15 @@ def series_breaks(metric_id: str, nation_code: str) -> tuple[tuple[str, str], ..
     return ()
 
 
+def validate_value(metric: str, value: float) -> float:
+    if metric not in METRICS:
+        raise KeyError(f"unknown metric id: {metric!r}")
+    value = float(value)
+    if not math.isfinite(value) or value < 0 or (METRICS[metric].unit == "percent" and value > 100):
+        raise ValueError(f"Invalid NHS {metric} value: {value}")
+    return value
+
+
 def make_row(
     nation: str,
     nation_code: str,
@@ -201,15 +211,14 @@ def make_row(
     source: str,
 ) -> dict[str, Any]:
     """Build a validated tidy row, deriving the unit from the metric id."""
-    if metric not in METRICS:
-        raise KeyError(f"unknown metric id: {metric!r}")
+    value = validate_value(metric, value)
     return {
         "nation": nation,
         "nation_code": nation_code,
         "period": period,
         "date": date,
         "metric": metric,
-        "value": float(value),
+        "value": value,
         "unit": METRICS[metric].unit,
         "source": source,
     }

@@ -93,6 +93,8 @@ def to_frame(rows: list[dict]):
     """Return a sorted pandas DataFrame with the canonical column order."""
     import pandas as pd
 
+    for row in rows:
+        metrics.validate_value(row["metric"], row["value"])
     df = pd.DataFrame(rows, columns=list(metrics.ROW_FIELDS))
     if not df.empty:
         df = df.sort_values(["metric", "nation_code", "date"]).reset_index(drop=True)

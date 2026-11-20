@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import calendar
 import json
+import math
 import re
 from datetime import datetime
 from typing import Iterable, Iterator
@@ -127,6 +128,13 @@ def _row(period_label: object, metric: str, value: float) -> dict:
     return metrics.make_row(NATION, NATION_CODE, period, period_date, metric, value, SOURCE)
 
 
+def _field(row: dict, name: str):
+    values = [value for key, value in row.items() if key.strip().casefold() == name.casefold()]
+    if len(values) != 1:
+        raise ValueError(f"missing or ambiguous StatsWales column: {name}")
+    return values[0]
+
+
 def _fetch_rtt() -> Iterator[dict]:
     """Yield both RTT metrics from a single pass over the shared RTT view."""
     median_desc = "Median waiting time (decimal weeks)"
@@ -140,7 +148,7 @@ def _fetch_rtt() -> Iterator[dict]:
             continue
         value = _number(row.get("Data values"))
         if value is not None:
-            yield _row(row["Date"], metric, value)
+            yield _row(_field(row, "Date"), metric, value)
 
 
 def _fetch_ae_4hr_pct() -> Iterator[dict]:
@@ -156,7 +164,7 @@ def _fetch_ae_4hr_pct() -> Iterator[dict]:
     for row in _view_rows(DATASETS["ae_performance"], filters):
         value = _number(row.get("Data values"))
         if value is not None:
-            yield _row(row["Date"], "ae_4hr_pct", value)
+            yield _row(_field(row, "Date"), "ae_4hr_pct", value)
 
 
 def _fetch_cancer_62day_pct() -> Iterator[dict]:
@@ -172,20 +180,20 @@ def _fetch_cancer_62day_pct() -> Iterator[dict]:
         value = _number(row.get("Data values"))
         if value is None:
             continue
-        out = _row(row["Date"], "cancer_62day_pct", value)
+        out = _row(_field(row, "Date"), "cancer_62day_pct", value)
         seen.add(out["period"])
         yield out
 
     historic_filters = (
-        ("local health board", "Wales"),
-        ("tumour site", "Total"),
+        ("Local health board", "Wales"),
+        ("Tumour site", "Total"),
         ("Data description", CANCER_HISTORIC_DESC),
     )
     for row in _view_rows(DATASETS["cancer_historic_urgent"], historic_filters):
         value = _number(row.get("Data values"))
         if value is None:
             continue
-        out = _row(row["Date"], "cancer_62day_pct", value)
+        out = _row(_field(row, "Date"), "cancer_62day_pct", value)
         if out["period"] not in seen:
             yield out
 
@@ -207,27 +215,42 @@ def _diagnostics_pct_from_rows(
     totals: dict[str, float] = {}
     breaches: dict[str, float] = {}
     dates: dict[str, str] = {}
+    seen = set()
 
     for row in rows:
+        description = str(_field(row, "Data description")).strip().casefold()
+        if description == "percentage":
+            continue
+        if description != "pathways waiting":
+            raise ValueError(f"unexpected StatsWales diagnostics measure: {description!r}")
         value = _number(row.get("Data values"))
         if value is None:
             continue
-        period, period_date = _period_end(row["Date"])
+        if not math.isfinite(value) or value < 0:
+            raise ValueError("invalid StatsWales diagnostic pathway count")
+        period, period_date = _period_end(_field(row, "Date"))
         dates[period] = period_date
-        weeks = row.get(weeks_column)
-        if weeks == "Total Waiting":
+        weeks = str(_field(row, weeks_column)).strip().casefold()
+        if (period, weeks) in seen:
+            raise ValueError(f"duplicate StatsWales diagnostics count: {period} {weeks}")
+        seen.add((period, weeks))
+        if grouped_over8 and weeks not in {"total waiting", "up to 8 weeks", "over 8 weeks"}:
+            raise ValueError(f"unexpected StatsWales grouped diagnostics band: {weeks!r}")
+        if weeks == "total waiting":
             totals[period] = value
         elif (
-            (grouped_over8 and weeks == "Over 8 Weeks")
-            or _is_exact_diagnostics_6week_breach(weeks)
+            weeks == "over 8 weeks" if grouped_over8
+            else _is_exact_diagnostics_6week_breach(weeks)
         ):
             breaches[period] = breaches.get(period, 0.0) + value
 
     for period, total in totals.items():
-        if total <= 0:
-            continue
         breach = breaches.get(period)
         if breach is None:
+            continue
+        if breach > total:
+            raise ValueError(f"StatsWales diagnostic breaches exceed total pathways: {period}")
+        if total == 0:
             continue
         yield metrics.make_row(
             NATION,

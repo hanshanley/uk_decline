@@ -494,14 +494,16 @@ def test_welsh_diagnostic_thresholds_remain_separate(monkeypatch) -> None:
     def records(dataset, filters):
         if dataset == wales.DATASETS["diagnostics_current"]:
             return iter([
-                {"Date": "Aug-2024", "Weeks waiting": band, "Data values": value}
+                {"Date": "Aug-2024", "Weeks waiting": band, "Data values": value,
+                 "Data description": "Pathways waiting"}
                 for band, value in [
                     ("Total Waiting", 100), ("Over 6 weeks and up to 7 weeks", 20),
                     ("Over 8 Weeks", 10), ("Forty weeks and over", 10)
                 ]
             ])
         return iter([
-            {"Date": "Jul-2024", "Grouped weeks waiting": band, "Data values": value}
+            {"Date": "Jul-2024", "Grouped weeks waiting": band, "Data values": value,
+             "Data description": "pathways waiting"}
             for band, value in [("Total Waiting", 100), ("Over 8 Weeks", 10)]
         ])
 
@@ -511,6 +513,84 @@ def test_welsh_diagnostic_thresholds_remain_separate(monkeypatch) -> None:
         ("2024-08", "diagnostics_6week_breach_pct", 30),
         ("2024-07", "diagnostics_8week_breach_pct", 10),
     ]
+
+
+@pytest.mark.parametrize("percentage_first", [False, True])
+def test_welsh_grouped_diagnostics_never_mix_counts_and_percentages(percentage_first):
+    from nhs_data import wales
+
+    counts = [
+        {"Date": "September 2026", "Grouped weeks waiting": band,
+         "Data description": "pathways waiting", "Data values": value}
+        for band, value in [("Total Waiting", 110887), ("Up to 8 Weeks", 75911),
+                            ("Over 8 Weeks", 34976)]
+    ]
+    percentages = [
+        {**row, "Data description": "percentage", "Data values": percent}
+        for row, percent in zip(counts, [100, 68.5, 31.5])
+    ]
+    raw = percentages + counts if percentage_first else counts + percentages
+    result = list(wales._diagnostics_pct_from_rows(raw, "Grouped weeks waiting", grouped_over8=True))
+    assert len(result) == 1
+    assert result[0]["value"] == pytest.approx(34976 / 110887 * 100)
+    assert result[0]["metric"] == "diagnostics_8week_breach_pct"
+
+
+@pytest.mark.parametrize("defect", ["measure", "duplicate", "excess", "negative", "nonfinite", "zero_total"])
+def test_welsh_diagnostics_reject_ambiguous_units_and_invalid_counts(defect):
+    from nhs_data import wales
+
+    rows = [
+        {"Date": "September 2026", "Grouped weeks waiting": band,
+         "Data description": "pathways waiting", "Data values": value}
+        for band, value in [("Total Waiting", 100), ("Over 8 Weeks", 30)]
+    ]
+    if defect == "measure":
+        rows[0]["Data description"] = "Unknown unit"
+    elif defect == "duplicate":
+        rows.append(rows[0].copy())
+    elif defect == "zero_total":
+        rows[0]["Data values"] = 0
+    else:
+        rows[1]["Data values"] = {"excess": 101, "negative": -1, "nonfinite": "inf"}[defect]
+    with pytest.raises(ValueError):
+        list(wales._diagnostics_pct_from_rows(rows, "Grouped weeks waiting", grouped_over8=True))
+
+
+@pytest.mark.parametrize("date_header", ["date", "DATE"])
+def test_welsh_cancer_preserves_history_with_current_case_sensitive_filter_names(monkeypatch, date_header):
+    from nhs_data import wales
+
+    def view(dataset, filters):
+        if dataset == wales.DATASETS["cancer_current"]:
+            return iter([{"Date": "June 2019", "Data values": 62.6}])
+        assert dict(filters) == {
+            "Local health board": "Wales", "Tumour site": "Total",
+            "Data description": wales.CANCER_HISTORIC_DESC,
+        }
+        return iter([
+            {date_header: "May 2019", "Data values": 88.1},
+            {date_header: "June 2019", "Data values": 90},
+        ])
+
+    monkeypatch.setattr(wales, "_view_rows", view)
+    rows = list(wales._fetch_cancer_62day_pct())
+    assert [(row["period"], row["value"]) for row in rows] == [("2019-06", 62.6), ("2019-05", 88.1)]
+
+
+@pytest.mark.parametrize("value", [100.01, -1, float("nan"), float("inf")])
+def test_invalid_nhs_percentages_cannot_replace_the_published_csv(tmp_path, value):
+    path = tmp_path / "nhs.csv"
+    row = metrics.make_row("Wales", "WAL", "2026-09", "2026-09-30",
+                           "diagnostics_8week_breach_pct", 31.5, "StatsWales")
+    combine.write_csv([row], path)
+    before = path.read_bytes()
+    with pytest.raises(ValueError, match="Invalid NHS"):
+        metrics.make_row("Wales", "WAL", "2026-09", "2026-09-30",
+                         "diagnostics_8week_breach_pct", value, "StatsWales")
+    with pytest.raises(ValueError, match="Invalid NHS"):
+        combine.write_csv([{**row, "value": value}], path)
+    assert path.read_bytes() == before
 
 
 def test_english_ae_excludes_decision_to_admission_delays(monkeypatch) -> None:
