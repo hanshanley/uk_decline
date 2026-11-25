@@ -69,6 +69,7 @@ EXPECTED_NHS_OMISSION = re.compile(
 CURATED_INPUTS = (
     "National tuition schedules and cross-country fee selections",
     "Historical source URLs and manually compiled reference observations",
+    "Retired ORR Table 3103 rail history (1997-March 2026; checksum-verified archive)",
 )
 
 

@@ -129,7 +129,8 @@ def _chart(df, metric, title, subtitle, ylabel, filename, out_dir):
         if official else
         "Source: Office of Rail and Road (ORR), Data Portal Table 3103. "
         "Reconstructed sector aggregates; percentages weighted by planned trains "
-        "across four consecutive quarters, not official sector moving annual averages."
+        "across four consecutive quarters, not official sector moving annual averages. "
+        "Historical archive: ORR discontinued Table 3103; series ends March 2026."
     )
     definition = (
         "Counts full or part cancellations and trains arriving more than 30 minutes late."

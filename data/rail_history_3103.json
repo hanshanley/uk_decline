@@ -1,0 +1,21 @@
+{
+  "status": "retired",
+  "source_table": "ORR Table 3103",
+  "source_url": "https://dataportal.orr.gov.uk/media/1811/table-3103-historic-passenger-trains-planned-ppm-and-casl-quarterly-by-operator.ods",
+  "withdrawal_report": "https://dataportal.orr.gov.uk/media/ndjpawzn/performance-stats-release-2026-27-apr-jun.pdf",
+  "withdrawal_report_date": "2026-09-17",
+  "withdrawal_report_page": 2,
+  "extracted_from": "Retained local ORR-derived data/rail_performance.csv, not a tracked source workbook",
+  "retained_source_sha256": "0953b9bb6cf3c6aa11293d6bd29a229a9fe76e96623d01ea35a0ae824eaada5d",
+  "verified_against_commit": "84b59cc8539bcd8f95f385b1bf97fb0c74416adc",
+  "verified_chart_observations": 452,
+  "verified_chart_sha256": {
+    "outputs/rail/rail_london_ppm.json": "4c120ba64654f8b13006bdd897e7cbf2cb11c336677d87b1426033ddb84cd76b",
+    "outputs/rail/rail_london_casl.json": "bea68f6eaa30d827c2522d4ed947779916f07ad2369795ead1aed81237384f12"
+  },
+  "archive_kind": "Previously plotted reconstructed sector observations, not the original operator workbook",
+  "row_count": 464,
+  "first_quarter_end": "1997-06-30",
+  "last_quarter_end": "2026-03-31",
+  "sha256": "782d831342328b048505bde59ef99fbf85d1dcde122017ddc10b82cbcd88fad2"
+}

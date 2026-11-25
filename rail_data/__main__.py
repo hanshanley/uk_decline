@@ -11,6 +11,8 @@ import argparse
 import csv
 import pathlib
 
+from europe_data._coverage import validate_csv_refresh
+
 from . import charts, orr
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -25,7 +27,7 @@ def _write_csv(rows: list[dict], path: pathlib.Path) -> None:
         raise RuntimeError("Rail source returned no observations; existing data was not replaced")
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=_FIELDS)
+        writer = csv.DictWriter(f, fieldnames=_FIELDS, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -46,7 +48,10 @@ def main(argv: list[str] | None = None) -> int:
         if not rows:
             raise RuntimeError("Rail source returned no observations; existing data was not replaced")
         rows += orr.build_official_rows()
+        validate_csv_refresh(rows, pathlib.Path(args.csv), ("region", "metric", "date"))
         _write_csv(rows, pathlib.Path(args.csv))
+        print("[rail_data] Table 3103: checksum-verified retired history, Apr 1997-Mar 2026; "
+              "Table 3113: freshly fetched official observations")
         print(f"[rail_data] wrote {len(rows)} rows -> {args.csv}")
         source = args.csv
 

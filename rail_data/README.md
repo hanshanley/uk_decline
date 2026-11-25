@@ -19,8 +19,23 @@ hidden by joining the lines.
 ## The story
 
 The longer historical figures below use two reconstructed metrics, both drawn
-as a four-quarter share weighted by planned-train counts. Their Table 3103 source currently ends in
-**January–March 2026**; a newer rail release does not extend that historical workbook.
+as a four-quarter share weighted by planned-train counts. Their Table 3103 source ends in
+**January–March 2026**. ORR **discontinued and removed Table 3103**, confirmed on
+page 2 of its [17 September 2026 release](https://dataportal.orr.gov.uk/media/ndjpawzn/performance-stats-release-2026-27-apr-jun.pdf).
+The retired history is preserved explicitly, not reported as freshly fetched data:
+[complete historical observations and denominators](../data/rail_history_3103.csv)
+and [archive provenance and checksum](../data/rail_history_3103.json).
+All 464 previously published reconstructed observations are retained, from
+April–June 1997 through January–March 2026. No replacement measure is spliced in.
+The archive was extracted without changing any fields from the retained local
+ORR-derived dataset. All 452 plotted annual values were checked against the
+published chart observations at commit `84b59cc8539bcd8f95f385b1bf97fb0c74416adc`.
+The provenance records both file hashes; this is not the original operator-level workbook.
+Current official Table 3113 is still downloaded on every refresh. Its workbook
+link is discovered from the official table page rather than a fixed media path.
+Missing, ambiguous, or failed current downloads still stop publication; they do
+not switch to saved data. Archive corruption and lost published rail dates also
+stop publication before replacing the combined CSV.
 
 | Metric | What it is | Trend |
 |---|---|---|
@@ -75,7 +90,7 @@ invalidate the whole annual window.
 ## Run
 
 ```bash
-# fetch ORR data, write data/rail_performance.csv, render charts to outputs/rail/
+# verify retired history + fetch current ORR data, write CSV and render charts
 ./.venv/bin/python -m rail_data
 
 # rebuild charts from an existing CSV (no fetch):
@@ -85,7 +100,7 @@ invalidate the whole annual window.
 ## Outputs
 
 - `data/rail_performance.csv` — tidy long table: `region, period, date, year, quarter,
-  metric, value, trains_planned, unit, source` (git-ignored, regenerable).
+  metric, value, trains_planned, unit, source` (tracked, regenerable).
   Planned-train counts accompany reconstructed quarters; official Table 3113
   percentages do not need these weights and leave that field blank. Regenerate
   older CSVs without the denominators before using `--from-csv`.

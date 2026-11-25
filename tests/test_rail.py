@@ -1,9 +1,83 @@
 """Offline regression tests for ORR aggregation and smoothing."""
 
+import csv
+import hashlib
+import json
+from types import SimpleNamespace
+
 import pandas as pd
 import pytest
 
 from rail_data import charts, orr
+
+
+def test_retired_history_rebuild_never_requests_removed_workbook(monkeypatch):
+    def removed(*args, **kwargs):
+        raise AssertionError("Retired Table 3103 must not make live requests")
+
+    monkeypatch.setattr(orr, "request_get", removed)
+    rows = orr.build_rows()
+    assert len(rows) == 464
+    assert {row["metric"] for row in rows} == {"ppm_pct", "casl_pct"}
+    assert min(row["date"] for row in rows) == "1997-06-30"
+    assert max(row["date"] for row in rows) == "2026-03-31"
+    assert all(row["trains_planned"] > 0 for row in rows)
+
+
+@pytest.mark.parametrize("defect", ["checksum", "missing", "duplicate", "value", "denominator"])
+def test_retired_history_corruption_fails_closed(tmp_path, defect):
+    path = tmp_path / "history.csv"
+    manifest = json.loads(orr.HISTORIC_CSV.with_suffix(".json").read_text())
+    with orr.HISTORIC_CSV.open(newline="") as handle:
+        reader = csv.DictReader(handle)
+        fields, rows = reader.fieldnames, list(reader)
+    if defect == "missing":
+        rows.pop()
+    elif defect == "duplicate":
+        rows.append(rows[0].copy())
+    elif defect == "value":
+        rows[0]["value"] = "nan"
+    elif defect == "denominator":
+        rows[0]["trains_planned"] = "0"
+    with path.open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+    if defect == "checksum":
+        path.write_bytes(path.read_bytes() + b"\n")
+    else:
+        manifest["sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    path.with_suffix(".json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="ORR:"):
+        orr.historic_rows(path)
+
+
+def test_current_orr_workbook_is_discovered_from_official_page(monkeypatch):
+    url = "https://dataportal.orr.gov.uk/media/relocated/table-3113-current.ods?cb=new"
+    calls = []
+
+    def get(page, **kwargs):
+        assert page == orr.ORR_TABLE_3113_PAGE
+        kwargs["validate_url"](page)
+        return SimpleNamespace(url=page, text=f'<a href="{url}">Download</a>')
+
+    monkeypatch.setattr(orr, "request_get", get)
+    monkeypatch.setattr(orr, "download_workbook", lambda actual: calls.append(actual) or _official_workbook())
+    assert len(orr.build_official_rows()) == 8
+    assert calls == [url]
+
+
+@pytest.mark.parametrize("links", [
+    [], ["https://example.com/table-3113-current.ods"],
+    ["/media/one/table-3113-one.ods", "/media/two/table-3113-two.ods"],
+])
+def test_current_orr_discovery_never_guesses_or_uses_a_saved_workbook(monkeypatch, links):
+    monkeypatch.setattr(orr, "request_get", lambda *a, **k: SimpleNamespace(
+        url=orr.ORR_TABLE_3113_PAGE,
+        text="".join(f'<a href="{url}">Download</a>' for url in links),
+    ))
+    with pytest.raises(ValueError):
+        orr.build_official_rows()
 
 
 def test_empty_fetch_preserves_saved_rail_data(monkeypatch, tmp_path):
@@ -218,6 +292,9 @@ def test_rail_charts_explain_delay_thresholds_without_measure_acronyms(monkeypat
         assert "PPM" not in visible
         assert "CaSL" not in visible
         caption = fig.texts[0].get_text()
+        if "Table 3103" in caption:
+            assert "ORR discontinued Table 3103" in caption
+            assert "series ends March 2026" in caption
         if "disruption" in ax.get_title():
             assert "more than 30 minutes late" in visible
             assert "full or part cancellations" in caption
@@ -241,3 +318,32 @@ def test_official_fetch_failure_preserves_saved_rail_dataset(monkeypatch, tmp_pa
     with pytest.raises(ValueError, match="incomplete official"):
         cli.main(["--csv", str(path)])
     assert path.read_text() == "saved rail data\n"
+
+
+def test_retired_history_does_not_hide_a_current_source_outage(monkeypatch, tmp_path):
+    from rail_data import __main__ as cli
+
+    path = tmp_path / "rail.csv"
+    path.write_text("previous complete dataset\n")
+
+    def outage(*args, **kwargs):
+        raise RuntimeError("current official ORR source unavailable")
+
+    monkeypatch.setattr(orr, "request_get", outage)
+    with pytest.raises(RuntimeError, match="current official ORR source unavailable"):
+        cli.main(["--csv", str(path)])
+    assert path.read_text() == "previous complete dataset\n"
+
+
+def test_rail_refresh_rejects_lost_published_quarters_before_overwrite(monkeypatch, tmp_path):
+    from rail_data import __main__ as cli
+
+    path = tmp_path / "rail.csv"
+    old = orr.build_rows() + orr.build_official_rows(_official_workbook())
+    cli._write_csv(old, path)
+    previous = path.read_bytes()
+    current = orr.build_official_rows(_official_workbook())[:-1]
+    monkeypatch.setattr(orr, "build_official_rows", lambda: current)
+    with pytest.raises(RuntimeError, match="lose 1 published observations"):
+        cli.main(["--csv", str(path)])
+    assert path.read_bytes() == previous

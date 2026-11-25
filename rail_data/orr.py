@@ -18,16 +18,25 @@ Two metrics are produced:
     5 min for LSE/regional services). The lenient headline measure.
   - ``casl_pct`` — Cancellations and Significant Lateness: % of trains cancelled or
     significantly late. The disruption measure (higher = worse).
+
+ORR retired and removed Table 3103 in its September 2026 release. Its retained
+reconstruction is an explicit, checksum-verified historical input, not a live
+download or an outage fallback. Current Table 3113 remains a required live source.
 """
 
 from __future__ import annotations
 
 import datetime as dt
+import csv
+import hashlib
 import io
+import json
 import math
+from pathlib import Path
 import re
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 
+from bs4 import BeautifulSoup
 import pandas as pd
 import requests
 from europe_data._http import request_get
@@ -40,6 +49,11 @@ ORR_TABLE_3113_URL = (
     "https://dataportal.orr.gov.uk/media/1428/"
     "table-3113-public-performance-measure-by-operator-and-sector.ods"
 )
+ORR_TABLE_3113_PAGE = (
+    "https://dataportal.orr.gov.uk/statistics/performance/passenger-rail-performance/"
+    "table-3113-public-performance-measure-by-operator-and-sector/"
+)
+HISTORIC_CSV = Path(__file__).resolve().parents[1] / "data/rail_history_3103.csv"
 SOURCE = ("Office of Rail and Road (ORR) Data Portal, Table 3103 "
           "(historic PPM & CaSL by operator, quarterly)")
 OFFICIAL_SOURCE = (
@@ -93,7 +107,7 @@ def _ensure_orr_host(url: str) -> None:
         raise ValueError(f"refusing to fetch untrusted host: {url!r}")
 
 
-def download_workbook(url: str = ORR_TABLE_3103_URL, timeout: int = 120) -> dict:
+def download_workbook(url: str = ORR_TABLE_3113_URL, timeout: int = 120) -> dict:
     """Download the ORR ODS workbook and return ``{sheet_name: DataFrame}``."""
     _ensure_orr_host(url)
     resp = request_get(url, client=requests, timeout=timeout,
@@ -101,6 +115,52 @@ def download_workbook(url: str = ORR_TABLE_3103_URL, timeout: int = 120) -> dict
     _ensure_orr_host(resp.url)
     resp.raise_for_status()
     return pd.read_excel(io.BytesIO(resp.content), sheet_name=None, header=None)
+
+
+def current_workbook_url() -> str:
+    response = request_get(
+        ORR_TABLE_3113_PAGE, client=requests, timeout=60, validate_url=_ensure_orr_host,
+    )
+    links = set()
+    for anchor in BeautifulSoup(response.text, "html.parser").select("a[href]"):
+        url = urljoin(response.url, anchor["href"])
+        path = urlsplit(url).path.lower()
+        if re.search(r"/table-3113-[^/]+\.ods$", path):
+            _ensure_orr_host(url)
+            links.add(url)
+    if len(links) != 1:
+        raise ValueError("ORR: missing or ambiguous current Table 3113 workbook link")
+    return links.pop()
+
+
+def historic_rows(path: Path | None = None) -> list[dict]:
+    """Load the explicitly retired Table 3103 series, never a live-source fallback."""
+    path = HISTORIC_CSV if path is None else Path(path)
+    content = path.read_bytes()
+    manifest = json.loads(path.with_suffix(".json").read_text())
+    if hashlib.sha256(content).hexdigest() != manifest["sha256"]:
+        raise ValueError("ORR: retired Table 3103 archive checksum mismatch")
+    rows = list(csv.DictReader(io.StringIO(content.decode())))
+    expected_dates = set(pd.date_range("1997-06-30", "2026-03-31", freq="QE").strftime("%Y-%m-%d"))
+    expected = {
+        (region, metric, date)
+        for region in (LONDON_SE, GREAT_BRITAIN)
+        for metric in ("ppm_pct", "casl_pct") for date in expected_dates
+    }
+    keys = {(row["region"], row["metric"], row["date"]) for row in rows}
+    if len(keys) != len(rows) or keys != expected:
+        raise ValueError("ORR: incomplete or duplicate retired Table 3103 history")
+    for row in rows:
+        row["year"], row["quarter"] = int(row["year"]), int(row["quarter"])
+        row["value"], row["trains_planned"] = float(row["value"]), float(row["trains_planned"])
+        period = _parse_period(row["period"])
+        if (not math.isfinite(row["value"]) or not 0 <= row["value"] <= 100
+                or not math.isfinite(row["trains_planned"]) or row["trains_planned"] <= 0
+                or row["unit"] != "percent" or row["source"] != SOURCE
+                or period is None
+                or period[1:] != (row["year"], row["quarter"], row["date"])):
+            raise ValueError("ORR: invalid retired Table 3103 observation")
+    return rows
 
 
 def _to_float(value) -> float | None:
@@ -157,7 +217,7 @@ def _weighted_series(trains: pd.DataFrame, values: pd.DataFrame,
 def build_rows(workbook: dict | None = None) -> list[dict]:
     """Return tidy rows: one per (region, metric, quarter) for PPM and CaSL."""
     if workbook is None:
-        workbook = download_workbook()
+        return historic_rows()
     trains = workbook[_SHEET_TRAINS]
     metric_sheets = {"ppm_pct": workbook[_SHEET_PPM], "casl_pct": workbook[_SHEET_CASL]}
     regions = {LONDON_SE: LONDON_SE_FRANCHISES, GREAT_BRITAIN: None}
@@ -189,7 +249,7 @@ def build_rows(workbook: dict | None = None) -> list[dict]:
 def build_official_rows(workbook: dict | None = None) -> list[dict]:
     """Read published sector PPM and trains-weighted MAA without splicing Table 3103."""
     if workbook is None:
-        workbook = download_workbook(ORR_TABLE_3113_URL)
+        workbook = download_workbook(current_workbook_url())
     table = workbook["3113_PPM_(quarterly)"]
     labels = [" ".join(str(value).split()) for value in table.iloc[:, 0]]
     sections = {}

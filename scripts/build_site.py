@@ -132,7 +132,12 @@ ANALYSES = (
              "Waiting lists and treatment standards across the four nations, with scope breaks."),
     Analysis("rail", "Rail performance", "Public services", "rail_data", "rail",
              ("rail_london_ppm_official.png", "rail_london_casl.png"),
-             "Official punctuality and cancellation measures, distinct from historical reconstruction."),
+             "Current official punctuality, separate from retired reconstructed disruption history ending March 2026.",
+             data_downloads=(
+                 ("data/rail_performance.csv", "Complete current and historical rail observations (CSV)"),
+                 ("data/rail_history_3103.csv", "Retired Table 3103 observations and denominators (CSV)"),
+                 ("data/rail_history_3103.json", "Retired series provenance and checksum (JSON)"),
+             )),
     Analysis("tax", "Tax", "Households", "tax", "tax",
              ("tax_to_gdp_over_time.png", "tax_wedge_by_earnings.png"),
              "National tax revenue and household labour-tax wedges are different measures."),

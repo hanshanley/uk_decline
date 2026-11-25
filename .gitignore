@@ -46,6 +46,9 @@ data/processed/*.csv
 !data/trust/trust_combined_long.csv
 !data/processed/tuition_history.csv
 !data/tuition_common_year.csv
+!data/rail_history_3103.csv
+!data/rail_history_3103.json
+!data/rail_performance.csv
 
 # Generated charts: committed showcase outputs live under outputs/<analysis>/ (TRACKED so
 # they render on GitHub). Only truly transient/duplicate chart dirs are ignored.
