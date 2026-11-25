@@ -1,5 +1,5 @@
 {
-  "last_successful_refresh_utc": "2026-11-23T18:55:11+00:00",
+  "last_successful_refresh_utc": "2026-11-25T18:21:56+00:00",
   "automated_analyses": [
     "gdp-income",
     "markets",
@@ -25,6 +25,7 @@
   ],
   "curated_inputs": [
     "National tuition schedules and cross-country fee selections",
-    "Historical source URLs and manually compiled reference observations"
+    "Historical source URLs and manually compiled reference observations",
+    "Retired ORR Table 3103 rail history (1997-March 2026; checksum-verified archive)"
   ]
 }
